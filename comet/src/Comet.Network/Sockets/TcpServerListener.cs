@@ -47,7 +47,9 @@ namespace Comet.Network.Sockets
             int bufferSize = 4096, 
             bool delay = false,
             bool exchange = false,
-            int footerLength = 0)
+            int footerLength = 0,
+            int maxConnPerIP = 10,
+            int maxAttemptsPerMinute = 15)
         {
             // Initialize and configure server socket
             this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
@@ -61,7 +63,8 @@ namespace Comet.Network.Sockets
             this.EnableKeyExchange = exchange;
             this.FooterLength = footerLength;
             this.ReceiveTasks = new TaskFactory(this.ShutdownToken.Token);
-            this.Registry = new TcpServerRegistry();
+            this.Registry = new TcpServerRegistry(
+                maxActiveConn: maxConnPerIP, maxAttemptsPerMinute: maxAttemptsPerMinute);
 
             // Initialize preallocated buffer pool
             for (int i = 0; i < maxConn; i++)

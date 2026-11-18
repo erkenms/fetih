@@ -120,7 +120,7 @@ namespace Comet.Network.Sockets
             if (collection.TryGetValue(ip, out int count))
             {
                 count++;
-                if (count > this.MaxActiveConnections)
+                if (count > ceiling)
                 {
                     this.Blocks.TryAdd(ip, DateTime.UtcNow.AddMinutes(this.BanMinutes));
                     return false;

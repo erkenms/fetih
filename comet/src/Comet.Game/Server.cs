@@ -31,7 +31,9 @@ namespace Comet.Game
         /// </summary>
         /// <param name="config">The server's read configuration file</param>
         public Server(ServerConfiguration config) 
-            : base(maxConn: config.GameNetwork.MaxConn, exchange: true, footerLength: 8)
+            : base(maxConn: config.GameNetwork.MaxConn, exchange: true, footerLength: 8,
+                maxConnPerIP: config.GameNetwork.MaxConnPerIP,
+                maxAttemptsPerMinute: config.GameNetwork.MaxAttemptsPerMinute)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);

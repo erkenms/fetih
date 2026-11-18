@@ -35,6 +35,11 @@ namespace Comet.Account.Database
             public string IPAddress { get; set; }
             public int Port { get; set; }
             public int MaxConn { get; set; }
+
+            // Connections from one IP address: more at once, or more attempts in a
+            // minute, blocks the address for 15 minutes
+            public int MaxConnPerIP { get; set; } = 10;
+            public int MaxAttemptsPerMinute { get; set; } = 15;
         }
 
         /// <summary>

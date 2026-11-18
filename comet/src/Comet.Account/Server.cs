@@ -28,7 +28,10 @@ namespace Comet.Account
         /// channels and worker threads. Initializes the TCP server listener.
         /// </summary>
         /// <param name="config">The server's read configuration file</param>
-        public Server(ServerConfiguration config) : base(maxConn: config.Network.MaxConn)
+        public Server(ServerConfiguration config)
+            : base(maxConn: config.Network.MaxConn,
+                maxConnPerIP: config.Network.MaxConnPerIP,
+                maxAttemptsPerMinute: config.Network.MaxAttemptsPerMinute)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);
