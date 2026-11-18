@@ -32,3 +32,6 @@ msbuild.wrn
 
 # Docker volumes
 sql/data
+
+# Server logs
+logs/
