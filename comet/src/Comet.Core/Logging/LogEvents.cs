@@ -41,6 +41,11 @@ namespace Comet.Core.Logging
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";
 
+        // Movement
+        public const string MoveWalk = "move.walk";
+        public const string MoveJump = "move.jump";
+        public const string MoveRejected = "move.rejected";
+
         // Packets
         public const string PacketUnhandled = "packet.unhandled";
         public const string PacketError = "packet.error";

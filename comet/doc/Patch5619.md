@@ -59,6 +59,10 @@ for an independent model of the client used to make the test vectors.
 | MsgItem | 1009 | client binary | 88 bytes; first fields as in 5187. |
 | MsgPlayer | 10014 | client binary | Mesh at 4, ID at 8, guild at 12, status flags at 22 (20 bytes), equipment item types 44 to 76, X/Y at 92/94, hair at 96, facing at 98, action at 99, reborn at 106, level at 107, class at 219, a byte at 225 that must be 0 for the client to set the position, strings (name, "", clan) at 226. Field meanings are from the reference, which has three fields 5619 lacks: a ushort before X, a sixth uint before the colors at 131, and a country code before 221. |
 | Remove entity | 10010 | reference | MsgAction 135 with the entity's ID at 4. |
+| MsgWalk | 10005 | seen in VM | 24 bytes: direction at 4 (any number; the direction is its remainder by 8), character ID at 8, mode at 12 (1 when walking), timestamp at 16, map at 20 (0). Steps: 0 +Y, 1 -X+Y, 2 -X, 3 -X-Y, 4 -Y, 5 +X-Y, 6 +X, 7 +X+Y (reference). |
+| Jump | 10010 | seen in VM | MsgAction 137: target X in the low half of Command, Y in the high half, current cell at X/Y (24/26), map at 28 sent as 0, -1 at 32. The reference allows 16 cells; the longest of 88 VM jumps was 13. |
+| Teleport | 10010 | reference | MsgAction 86: map in Command, cell at X/Y. Also used to put a player back after a refused move. |
+| Turn, emote | 10010 | reference | MsgAction 79 (direction at 22) and 81 (stance in Command); passed on to others in view, not echoed. |
 
 ### Map files
 

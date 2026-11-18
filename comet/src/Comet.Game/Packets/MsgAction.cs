@@ -30,6 +30,28 @@ namespace Comet.Game.Packets
         public ushort Extra { get; set; }
 
         /// <summary>
+        /// Builds the action that puts a player at a cell, also used to put them back
+        /// when a move is refused.
+        /// </summary>
+        /// <remarks>
+        /// 5619: from reference (action 86 with the map in Command and the cell at X and
+        /// Y, the layout of the LoginSpawn reply, which is confirmed in VM).
+        /// </remarks>
+        public static MsgAction Teleport(uint identity, uint mapID, ushort x, ushort y, byte direction) =>
+            new MsgAction
+            {
+                Type = PacketType.MsgAction,
+                CharacterID = identity,
+                Command = mapID,
+                Arguments = new ushort[2],
+                Timestamp = (uint)Environment.TickCount,
+                Action = ActionType.MapTeleport,
+                Direction = direction,
+                X = x,
+                Y = y
+            };
+
+        /// <summary>
         /// Builds the action that takes an entity off the client's screen.
         /// </summary>
         /// <remarks>5619: from reference (action 135 with the entity's ID at 4).</remarks>
@@ -144,6 +166,28 @@ namespace Comet.Game.Packets
                 // The last login step: the client has loaded the map. Not echoed
                 // (5619: from reference).
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
+
+                [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
+
+                // Turning and emotes go to everyone in view, not back to the player
+                // (5619: from reference)
+                [ActionType.CharacterDirection] = (msg, client) =>
+                {
+                    if (client.Character == null)
+                        return Task.CompletedTask;
+                    client.Character.Direction = (byte)(msg.Direction % 8);
+                    msg.CharacterID = client.ID;
+                    return Movement.SendToViewAsync(client, msg);
+                },
+                [ActionType.CharacterEmote] = (msg, client) =>
+                {
+                    if (client.Character == null)
+                        return Task.CompletedTask;
+                    client.Character.Stance = msg.Command;
+                    client.Character.Direction = (byte)(msg.Direction % 8);
+                    msg.CharacterID = client.ID;
+                    return Movement.SendToViewAsync(client, msg);
+                },
             };
 
         /// <summary>True if the server handles this action (others are only echoed).</summary>

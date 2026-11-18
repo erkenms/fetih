@@ -19,6 +19,7 @@ namespace Comet.Game.Packets
         public ushort Y { get; set; }
         public ushort Hairstyle { get; set; }
         public byte Direction { get; set; }
+        public uint Stance { get; set; }
         public byte Rebirths { get; set; }
         public ushort Level { get; set; }
         public ushort CurrentClass { get; set; }
@@ -38,6 +39,7 @@ namespace Comet.Game.Packets
             this.Y = character.Y;
             this.Hairstyle = character.Hairstyle;
             this.Direction = character.Direction;
+            this.Stance = character.Stance;
             this.Rebirths = character.Rebirths;
             this.Level = character.Level;
             this.CurrentClass = character.CurrentClass;
@@ -81,7 +83,7 @@ namespace Comet.Game.Packets
             writer.Write(this.Y);                   // 94
             writer.Write(this.Hairstyle);           // 96
             writer.Write(this.Direction);           // 98
-            writer.Write(0u);                       // 99  action (stand, sit, emotes)
+            writer.Write(this.Stance);              // 99  action (stand, sit, emotes)
             writer.Write((ushort)0);                // 103
             writer.Write((byte)0);                  // 105
             writer.Write(this.Rebirths);            // 106

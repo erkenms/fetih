@@ -19,6 +19,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgItem] = () => new MsgItem(),
                 [PacketType.MsgAction] = () => new MsgAction(),
                 [PacketType.MsgConnect] = () => new MsgConnect(),
+                [PacketType.MsgWalk] = () => new MsgWalk(),
             };
 
         /// <summary>A new message for a packet type, or null if it isn't handled.</summary>

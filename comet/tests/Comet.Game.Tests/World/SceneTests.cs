@@ -132,6 +132,17 @@ namespace Comet.Game.Tests.World
             Assert.Empty(blocked);
         }
 
+        [Fact]
+        public void EveryJumpSeenInVmIsWithinTheJumpLimit()
+        {
+            // The server refuses jumps longer than this; real players must never hit it
+            var longest = File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "World", "Fixtures", "jumps-1010.txt"))
+                .Where(line => line.Trim().Length > 0)
+                .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray())
+                .Max(j => Math.Max(Math.Abs(j[3] - j[1]), Math.Abs(j[4] - j[2])));
+            Assert.InRange(longest, 1, Movement.MaxJumpDistance);
+        }
+
         [RealClientFact]
         public void EveryListedMapWithFilesLoads()
         {

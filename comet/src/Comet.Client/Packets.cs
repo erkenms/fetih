@@ -20,6 +20,7 @@ namespace Comet.Client
         public const ushort MsgLoginChallengeS = 1213;
         public const ushort MsgLoginProofC = 1214;
         public const ushort MsgAction = 10010;
+        public const ushort MsgWalk = 10005;
         public const ushort MsgPlayer = 10014;
     }
 
@@ -58,28 +59,57 @@ namespace Comet.Client
     /// <summary>Another player coming into view (MsgPlayer), as the 5619 client reads it.</summary>
     public sealed record PlayerSpawn(
         uint Id, uint Mesh, ushort X, ushort Y, ushort Hairstyle, byte Direction,
-        ushort Level, ushort Class, string Name)
+        uint Stance, ushort Level, ushort Class, string Name)
     {
         public static PlayerSpawn Parse(byte[] packet) => new PlayerSpawn(
             BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 4),
             BitConverter.ToUInt16(packet, 92), BitConverter.ToUInt16(packet, 94),
-            BitConverter.ToUInt16(packet, 96), packet[98],
+            BitConverter.ToUInt16(packet, 96), packet[98], BitConverter.ToUInt32(packet, 99),
             BitConverter.ToUInt16(packet, 107), BitConverter.ToUInt16(packet, 219),
             Packet.ReadStrings(packet, 226)[0]);
     }
 
     /// <summary>A general action (MsgAction), 38 bytes in 5619.</summary>
     public sealed record ActionMessage(
-        uint CharacterId, uint Command, ushort Action, ushort X, ushort Y)
+        uint CharacterId, uint Command, ushort Action, ushort Direction, ushort X, ushort Y)
     {
         public const ushort LoginSpawn = 74;
-        public const ushort LoginComplete = 251;
+        public const ushort Turn = 79;
+        public const ushort Emote = 81;
+        public const ushort Teleport = 86;
         public const ushort RemoveEntity = 135;
+        public const ushort Jump = 137;
+        public const ushort LoginComplete = 251;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
-            BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 24),
-            BitConverter.ToUInt16(packet, 26));
+            BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
+            BitConverter.ToUInt16(packet, 24), BitConverter.ToUInt16(packet, 26));
+
+        public static byte[] Build(uint characterId, ushort action, uint command = 0,
+            int direction = 0, int x = 0, int y = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgAction, 38);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), characterId);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), command);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(22), (ushort)direction);
+            BitConverter.TryWriteBytes(packet.AsSpan(24), (ushort)x);
+            BitConverter.TryWriteBytes(packet.AsSpan(26), (ushort)y);
+            return packet;
+        }
+
+        /// <summary>
+        /// Builds a jump the way the 5619 client does: the target folded into Command
+        /// (X low, Y high), the current cell at X and Y, and -1 at 32 (seen in VM).
+        /// </summary>
+        public static byte[] BuildJump(uint characterId, int fromX, int fromY, int toX, int toY)
+        {
+            var packet = Build(characterId, Jump, (uint)(toX | (toY << 16)), x: fromX, y: fromY);
+            BitConverter.TryWriteBytes(packet.AsSpan(32), -1);
+            return packet;
+        }
 
         /// <summary>
         /// Builds LoginComplete the way the 5619 client sends it: ID 0, and 1 where the
@@ -92,13 +122,26 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(20), LoginComplete);
             return packet;
         }
+    }
 
-        public static byte[] Build(uint characterId, ushort action)
+    /// <summary>One step (MsgWalk), 24 bytes in 5619.</summary>
+    public sealed record WalkMessage(uint Direction, uint CharacterId, uint Mode)
+    {
+        public static WalkMessage Parse(byte[] packet) => new WalkMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12));
+
+        /// <summary>
+        /// Builds a step the way the 5619 client does: some number whose remainder by 8
+        /// is the direction, mode 1, map 0 (seen in VM).
+        /// </summary>
+        public static byte[] Build(uint characterId, int direction)
         {
-            var packet = Packet.Create(PacketTypes.MsgAction, 38);
-            BitConverter.TryWriteBytes(packet.AsSpan(4), characterId);
+            var packet = Packet.Create(PacketTypes.MsgWalk, 24);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), (uint)(8 * Random.Shared.Next(1, 30) + direction));
+            BitConverter.TryWriteBytes(packet.AsSpan(8), characterId);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), 1u);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
-            BitConverter.TryWriteBytes(packet.AsSpan(20), action);
             return packet;
         }
     }

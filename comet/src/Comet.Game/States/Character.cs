@@ -20,6 +20,10 @@ namespace Comet.Game.States
         [NotMapped]
         public byte Direction { get; set; }
 
+        // What the character is doing (standing, sitting, an emote), kept in memory only
+        [NotMapped]
+        public uint Stance { get; set; }
+
         /// <summary>
         /// Instantiates a new instance of <see cref="Character"/> using a database fetched
         /// <see cref="DbCharacter"/>. Copies attributes over to the base class of this

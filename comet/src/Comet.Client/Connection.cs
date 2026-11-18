@@ -1,6 +1,7 @@
 namespace Comet.Client
 {
     using System;
+    using System.Collections.Generic;
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Channels;
@@ -24,6 +25,7 @@ namespace Comet.Client
         private readonly CancellationTokenSource Closing = new CancellationTokenSource();
         private readonly byte[] Footer;
         private Task ReadTask;
+        private readonly List<byte[]> Kept = new List<byte[]>();
         protected ICipher Cipher;
 
         protected Connection(TcpClient tcp, ICipher cipher, string footer)
@@ -97,20 +99,45 @@ namespace Comet.Client
         }
 
         /// <summary>
-        /// Returns the next packet of a type, skipping others, or null if the server
-        /// closed the connection first.
+        /// Returns the next packet of a type, or null if the server closed the connection
+        /// first. Packets of other types are kept for later calls (see
+        /// <see cref="ReceiveAsync(Func{byte[], bool}, TimeSpan?)"/>).
         /// </summary>
-        public async Task<byte[]> ReceiveAsync(ushort type, TimeSpan? timeout = null)
+        public Task<byte[]> ReceiveAsync(ushort type, TimeSpan? timeout = null) =>
+            this.ReceiveAsync(packet => BitConverter.ToUInt16(packet, 2) == type, timeout);
+
+        /// <summary>
+        /// Returns the first packet that matches, or null if the server closed the
+        /// connection first. Packets that don't match are kept, in order, and searched
+        /// first by later calls, so waiting for one packet never loses another. Throws
+        /// <see cref="TimeoutException"/> if nothing matches in time.
+        /// </summary>
+        public async Task<byte[]> ReceiveAsync(Func<byte[], bool> match, TimeSpan? timeout = null)
         {
+            int kept = this.Kept.FindIndex(p => match(p));
+            if (kept >= 0)
+            {
+                var packet = this.Kept[kept];
+                this.Kept.RemoveAt(kept);
+                return packet;
+            }
+
             var deadline = DateTime.UtcNow + (timeout ?? DefaultTimeout);
             while (true)
             {
                 var left = deadline - DateTime.UtcNow;
                 var packet = await this.ReceiveAsync(left > TimeSpan.Zero ? left : TimeSpan.Zero);
-                if (packet == null || BitConverter.ToUInt16(packet, 2) == type)
+                if (packet == null || match(packet))
                     return packet;
+                this.Kept.Add(packet);
             }
         }
+
+        /// <summary>
+        /// Drops the packets kept by earlier waits, so that later waits only see packets
+        /// from now on.
+        /// </summary>
+        public void ForgetKept() => this.Kept.Clear();
 
         /// <summary>
         /// Waits for the server to close the connection, skipping any packets. Returns

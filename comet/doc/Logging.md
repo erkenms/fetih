@@ -187,6 +187,18 @@ value of either event is the current player count (for a Grafana "players online
 Maps are listed at startup from the client's GameMap.dat and each map's cells are read
 the first time the map is used, so `map.loaded` appears once per map per server run.
 
+### Movement
+
+| Event | Level | Fields |
+|-------|-------|--------|
+| `move.walk` | debug | `name`, `x`, `y`, `mapId`: a step the server accepted |
+| `move.jump` | debug | `name`, `x`, `y`, `mapId`: a jump the server accepted |
+| `move.rejected` | warn | `name`, `kind` (`walk`, `jump`), `x`, `y` (where the player is), `toX`, `toY`, `mapId`, `reason` (`blocked_cell`, `outside_map`, `too_far`, `wrong_id`) |
+
+A rejected move puts the player back at `x`, `y` with a teleport. Many `move.rejected`
+lines for one player point to a speed or wall hack, or to a map cell the server reads
+wrong.
+
 ### Packets
 
 | Event | Level | Fields |

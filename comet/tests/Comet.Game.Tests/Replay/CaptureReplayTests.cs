@@ -35,11 +35,7 @@ namespace Comet.Game.Tests.Replay
         public static readonly Dictionary<(ushort Type, uint? Action), string> NotHandledYet =
             new Dictionary<(ushort, uint?), string>
             {
-                [(10005, null)] = "MsgWalk: 1.5 movement",
-                [(10010, 79)] = "MsgAction CharacterDirection: 1.5 movement",
-                [(10010, 81)] = "MsgAction CharacterEmote: 1.5 movement",
-                [(10010, 137)] = "MsgAction MapJump: 1.5 movement",
-                [(10010, 161)] = "MsgAction CharacterAway: 1.5 movement",
+                [(10010, 161)] = "MsgAction CharacterAway: to do with emotes",
                 [(10010, 166)] = "MsgAction 166 (unknown, sent in game): to identify",
                 [(10010, 75)] = "MsgAction LoginInventory: echoed; P3 items",
                 [(10010, 76)] = "MsgAction LoginRelationships: echoed; P5 friends",
