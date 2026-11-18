@@ -15,7 +15,6 @@ namespace Comet.Account.States
     {
         // Fields and Properties
         public DbAccount Account;
-        public uint Seed;
 
         // SRP6 login in progress (set by MsgAccountSRP6, checked by MsgLoginProofC)
         public Srp6 Srp;

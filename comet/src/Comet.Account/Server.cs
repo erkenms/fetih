@@ -46,9 +46,8 @@ namespace Comet.Account
         {
             uint partition = this.Processor.SelectPartition();
             var client = new Client(socket, buffer, partition);
-            client.Seed = (uint)(await Kernel.NextAsync(10000, int.MaxValue));
-
-            await client.SendAsync(new MsgEncryptCode(client.Seed));
+            var seed = (uint)(await Kernel.NextAsync(10000, int.MaxValue));
+            await client.SendAsync(new MsgEncryptCode(seed));
             return client;
         }
 
