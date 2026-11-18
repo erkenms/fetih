@@ -39,7 +39,7 @@ namespace Comet.Game.Packets
         /// sent as zeroes: the 5619 cipher (<see cref="Cast5Cipher"/>) always starts from
         /// a zero IV, so the client has no use for them.
         /// </summary>
-        /// <remarks>5619: from reference (zero IVs; same layout as 5187).</remarks>
+        /// <remarks>5619: confirmed in VM (zero IVs; same layout as 5187).</remarks>
         /// <param name="dh">Diffie-Hellman key exchange instance for the actor</param>
         public MsgHandshake(DiffieHellman dh)
         {

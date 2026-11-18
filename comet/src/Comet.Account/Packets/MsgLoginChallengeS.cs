@@ -41,7 +41,7 @@ namespace Comet.Account.Packets
         /// method. Encodes using byte ordering rules interoperable with the game client.
         /// </summary>
         /// <remarks>
-        /// 5619: from client binary (the client reads B from 4 and the salt from 391, each
+        /// 5619: confirmed in VM (the client reads B from 4 and the salt from 391, each
         /// a length byte and little-endian bytes; g and N fill the slots between, in the
         /// order the WoW-style SRP6 challenge uses).
         /// </remarks>

@@ -11,7 +11,7 @@ namespace Comet.Network.Security
     /// a salt and verifier per account, sends a challenge, and checks the client's proof.
     /// </summary>
     /// <remarks>
-    /// <para>5619: from client binary. The scheme follows the well known World of Warcraft
+    /// <para>5619: confirmed in VM. The scheme follows the well known World of Warcraft
     /// variant: N is a 256-bit prime, g = 7, k = 3, SHA-1 throughout, and the session key
     /// interleaves two SHA-1 digests of the shared secret. TQ's changes: the identity is
     /// left out of x, and the password is hashed with MD5 and a fixed salt first:</para>

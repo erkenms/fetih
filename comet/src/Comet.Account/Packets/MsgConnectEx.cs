@@ -49,7 +49,7 @@ namespace Comet.Account.Packets
         /// method. Encodes using byte ordering rules interoperable with the game client.
         /// </summary>
         /// <remarks>
-        /// 5619: from client binary. Accept (88 bytes): the token's low half at 4 (the
+        /// 5619: confirmed in VM. Accept (88 bytes): the token's low half at 4 (the
         /// client treats zero as a rejection) and high half at 8, which the client returns
         /// in MsgConnect; then two game server addresses, each a port at 12 or 52 and an
         /// IP address text at 20 or 56. The client pings both and connects to the faster,

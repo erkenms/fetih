@@ -10,17 +10,19 @@ code is marked the same way:
   client where possible.
 * **5619: confirmed in VM**: seen working with the real client.
 
-Nothing has been confirmed in the VM yet.
+The first VM test (log in, create a Pirate, reach the map, log in again) confirmed
+everything below except MsgEncryptCode's role, MsgItem, and the MsgUserInfo fields
+marked as guesses.
 
 ## Account server
 
 | Message | Type | Source | Layout |
 |---|---|---|---|
 | MsgEncryptCode | 1059 | reference | Seed at 4. Still sent, unused by the SRP6 login. |
-| MsgAccountSRP6 | 1124 | client binary | 240 bytes. Account name at 8 (128), realm at 136 (16). No password. |
-| MsgLoginChallengeS | 1213 | client binary | 520 bytes. Four fields, each a length byte and a 128 byte slot: B at 4, g at 133, N at 262, salt at 391. The client reads only B and the salt. |
-| MsgLoginProofC | 1214 | client binary | 262 bytes. A at 4, M1 at 133, same field format. |
-| MsgConnectEx | 1055 | client binary | Accept, 88 bytes: token low half at 4 (zero means reject), high half at 8, port at 12, IP at 20 (32), second port at 52, second IP at 56. The client pings both addresses and uses the faster. Reject: 0 at 4, code at 8. |
+| MsgAccountSRP6 | 1124 | confirmed in VM | 240 bytes. Account name at 8 (128), realm at 136 (16). No password. |
+| MsgLoginChallengeS | 1213 | confirmed in VM | 520 bytes. Four fields, each a length byte and a 128 byte slot: B at 4, g at 133, N at 262, salt at 391. The client reads only B and the salt. |
+| MsgLoginProofC | 1214 | confirmed in VM | 262 bytes. A at 4, M1 at 133, same field format. |
+| MsgConnectEx | 1055 | confirmed in VM | Accept, 88 bytes: token low half at 4 (zero means reject), high half at 8, port at 12, IP at 20 (32), second port at 52, second IP at 56. The client pings both addresses and uses the faster. Reject: 0 at 4, code at 8. |
 
 The account socket cipher is unchanged (TQCipher). There is no server proof (M2): after
 MsgLoginProofC the client waits for MsgConnectEx.
@@ -42,18 +44,19 @@ for an independent model of the client used to make the test vectors.
 
 | Part | Source | Notes |
 |---|---|---|
-| Cipher | client binary | CAST5 in CFB64 mode with a zero IV in both directions. Starting key `BC234xs45nme7HU9`. The current reference uses `C238xs65pjy7HU9Q`, which belongs to a later patch. |
-| Key after DH | reference, client binary | s1 = hex MD5 of the shared secret up to its first zero byte; key = s1 + hex MD5(s1 + s1). The client passes all 64 characters to CAST_set_key, which uses 16. IVs reset to zero. |
-| Handshake | reference | Same layout as 5187, with zero IVs. |
+| Cipher | confirmed in VM | CAST5 in CFB64 mode with a zero IV in both directions. Starting key `BC234xs45nme7HU9`. The current reference uses `C238xs65pjy7HU9Q`, which belongs to a later patch. |
+| Key after DH | confirmed in VM | s1 = hex MD5 of the shared secret up to its first zero byte; key = s1 + hex MD5(s1 + s1). The client passes all 64 characters to CAST_set_key, which uses 16. IVs reset to zero. |
+| Handshake | confirmed in VM | Same layout as 5187, with zero IVs. |
 | Footer | client binary | `TQServer` / `TQClient`, as before. |
 
 | Message | Type | Source | Layout |
 |---|---|---|---|
-| MsgConnect | 1052 | client binary | 28 bytes, same offsets as 5187: the two MsgConnectEx halves at 4 and 8. After creating a character the client sends it again on the same connection (reference). |
-| MsgRegister | 1001 | client binary | 124 bytes: id at 4, name at 24, body at 72, class at 74, token at 76, MAC text at 80. Which of 4 and 76 carries the MsgConnect token isn't confirmed; either is accepted. |
-| MsgTalk | 1004 | client binary | Same as 5187; strings at 24. |
-| MsgUserInfo | 1006 | client binary, reference | Mesh at 10 (a ushort was added at 8), stats from 52, level 68, class 69, strings at 110. The positions of previous class (70), ancestor class (71) and the VIP level are guesses or left out. |
-| MsgAction | 10010 | client binary | 38 bytes: the 5187 layout plus a ushort at 36. Login actions are 74 to 78, 97 and 132 (LoginComplete), as in 5187. |
+| MsgConnect | 1052 | confirmed in VM | 28 bytes, same offsets as 5187: the two MsgConnectEx halves at 4 and 8. After creating a character the client sends it again on the same connection. |
+| MsgRegister | 1001 | confirmed in VM | 124 bytes: zero at 4, name at 24, body at 72, class at 74, the MsgConnect token at 76, MAC text at 80. |
+| MsgTalk | 1004 | confirmed in VM | Same as 5187; strings at 24. |
+| MsgUserInfo | 1006 | confirmed in VM, except guesses | Mesh at 10 (a ushort was added at 8), stats from 52, level 68, class 69, strings at 110. The positions of previous class (70), ancestor class (71) and the VIP level are guesses or left out. |
+| MsgAction | 10010 | confirmed in VM | 38 bytes: the 5187 layout plus a ushort at 36. Login actions are 74 to 78, 97 and 132 (LoginComplete), as in 5187 (from client binary). The client also sends action 251 while logging in; its purpose isn't known. |
 | MsgItem | 1009 | client binary | 88 bytes; first fields as in 5187. |
 
-New classes in the client data: Monk (60) and Pirate (70).
+New classes in the client data: Monk (60) and Pirate (70). Creating a Pirate was
+confirmed in VM.

@@ -27,7 +27,7 @@ namespace Comet.Account.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <remarks>
-        /// 5619: from client binary (262 bytes: A as a length byte at 4 and 128 byte slot
+        /// 5619: confirmed in VM (262 bytes: A as a length byte at 4 and 128 byte slot
         /// at 5, M1 as a length byte at 133 and slot at 134; both little-endian).
         /// </remarks>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>

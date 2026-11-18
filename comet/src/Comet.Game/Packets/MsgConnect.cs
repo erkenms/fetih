@@ -37,7 +37,7 @@ namespace Comet.Game.Packets
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
         /// <remarks>
-        /// 5619: from client binary (28 bytes, same offsets as 5187: the two IDs from
+        /// 5619: confirmed in VM (28 bytes, same offsets as 5187: the two IDs from
         /// MsgConnectEx at 4 and 8 read as one token, patch at 12, language at 14, MAC
         /// address at 16, version at 24).
         /// </remarks>
@@ -84,7 +84,7 @@ namespace Comet.Game.Packets
         public override async Task ProcessAsync(Client client)
         {
             // Validate access token. Remove consumes the token so it can't be reused.
-            // 5619: from reference: after creating a character, the client sends
+            // 5619: confirmed in VM: after creating a character, the client sends
             // MsgConnect again on the same connection, so a connection may repeat the
             // token it already authenticated with.
             TransferAuthArgs auth;

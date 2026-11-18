@@ -34,8 +34,9 @@ namespace Comet.Game.Packets
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
         /// <remarks>
-        /// 5619: from client binary (38 bytes: the 5187 layout plus a ushort at 36; the
-        /// client sends actions 74 to 78, 97 and 132 while logging in).
+        /// 5619: confirmed in VM (38 bytes: the 5187 layout plus a ushort at 36). While
+        /// logging in, the client sends actions 74 to 78, 97 and 132 (from client binary)
+        /// and 251, whose purpose isn't known (seen in VM).
         /// </remarks>
         public override void Decode(byte[] bytes)
         {

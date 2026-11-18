@@ -77,10 +77,11 @@ namespace Comet.Game.Packets
         /// method. Encodes using byte ordering rules interoperable with the game client.
         /// </summary>
         /// <remarks>
-        /// 5619: from client binary (every offset below is one the client reads, and the
-        /// string list at 110), and the reference (what the fields mean). Fields marked
-        /// "guess" are written where an older or newer layout suggests; new characters
-        /// have zero in all of them.
+        /// 5619: confirmed in VM, except the fields marked "guess" (every offset below is
+        /// one the client reads, and the string list at 110; the reference gave what the
+        /// fields mean). Guessed fields are written where an older or newer layout
+        /// suggests; new characters have zero in all of them, so the VM test can't show
+        /// whether they're right.
         /// </remarks>
         /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()

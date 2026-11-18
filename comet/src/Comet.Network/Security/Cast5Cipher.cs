@@ -13,8 +13,7 @@ namespace Comet.Network.Security
     /// IVs as well.
     /// </summary>
     /// <remarks>
-    /// 5619: from client binary (initial key, mode and IV), and the reference server (mode
-    /// and rekeying).
+    /// 5619: confirmed in VM (initial key, mode, IV and rekeying).
     /// </remarks>
     public sealed class Cast5Cipher : ICipher
     {

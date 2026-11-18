@@ -82,7 +82,7 @@ namespace Comet.Network.Security
         /// byte) and hashed with MD5. The lowercase hex digest, s1, is followed by the hex
         /// MD5 of s1 + s1, giving 64 ASCII characters. The cipher uses the first 16.
         /// </summary>
-        /// <remarks>5619: from reference, and the client binary.</remarks>
+        /// <remarks>5619: confirmed in VM.</remarks>
         /// <returns>The 64 byte ASCII key for <see cref="Cast5Cipher"/>.</returns>
         public byte[] ComputeCipherKey() =>
             DiffieHellman.DeriveCipherKey(this.PrivateKey.ToByteArrayUnsigned());
