@@ -16,7 +16,7 @@ namespace Comet.Network.Security
     public sealed class TQCipher : ICipher
     {
         // Static fields and properties
-        private static byte[] KInit = new byte[0x200];
+        internal static readonly byte[] KInit = new byte[0x200];
         
         // Local fields and properties
         private byte[] K;

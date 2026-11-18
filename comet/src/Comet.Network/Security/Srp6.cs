@@ -162,7 +162,7 @@ namespace Comet.Network.Security
         /// Hashes the even and odd bytes of the secret separately and interleaves the two
         /// digests into a 40 byte key.
         /// </summary>
-        private static byte[] Interleave(byte[] secret)
+        internal static byte[] Interleave(byte[] secret)
         {
             var even = SHA1.HashData(secret.Where((_, i) => i % 2 == 0).ToArray());
             var odd = SHA1.HashData(secret.Where((_, i) => i % 2 == 1).ToArray());
@@ -185,7 +185,7 @@ namespace Comet.Network.Security
             value.IsZero ? Array.Empty<byte>()
                 : value.ToByteArray(isUnsigned: true, isBigEndian: false);
 
-        private static byte[] Concat(params byte[][] parts) =>
+        internal static byte[] Concat(params byte[][] parts) =>
             parts.SelectMany(x => x).ToArray();
     }
 }
