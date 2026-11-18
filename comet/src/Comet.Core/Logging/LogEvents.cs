@@ -34,6 +34,11 @@ namespace Comet.Core.Logging
         public const string CharacterCreated = "character.created";
         public const string CharacterCreateFailed = "character.create_failed";
 
+        // World
+        public const string MapIndexLoaded = "map.index_loaded";
+        public const string MapLoaded = "map.loaded";
+        public const string MapLoadFailed = "map.load_failed";
+
         // Packets
         public const string PacketUnhandled = "packet.unhandled";
         public const string PacketError = "packet.error";

@@ -150,6 +150,17 @@ characters without spaces, and no `[GM]` or `[PM]`. Names are unique regardless 
 value of either event is the current player count (for a Grafana "players online" panel).
 `durationSec` is the time in the world.
 
+### World
+
+| Event | Level | Fields |
+|-------|-------|--------|
+| `map.index_loaded` | info | `mapCount`, `directory` |
+| `map.loaded` | debug | `mapId`, `width`, `height`, `portalCount`, `loadMs` |
+| `map.load_failed` | error | `mapId`, `path` (the exception is in `exc`) |
+
+Maps are listed at startup from the client's GameMap.dat and each map's cells are read
+the first time the map is used, so `map.loaded` appears once per map per server run.
+
 ### Packets
 
 | Event | Level | Fields |

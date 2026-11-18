@@ -7,6 +7,7 @@
     using Comet.Core.Logging;
     using Comet.Game.Database;
     using Comet.Game.Packets;
+    using Comet.Game.World;
     using Comet.Network.RPC;
     using Comet.Network.Security;
     using Serilog;
@@ -49,6 +50,19 @@
             if (!ServerDbContext.Ping())
             {
                 Log.Error("Invalid database configuration");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            // Read the map list (grids are loaded when a map is first used)
+            try
+            {
+                Kernel.Maps = new MapStore(config.Maps.ClientDirectory);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read map data from {Directory}; set Maps:ClientDirectory " +
+                    "to a copy of the 5619 client", config.Maps.ClientDirectory);
                 Log.CloseAndFlush();
                 return;
             }

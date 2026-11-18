@@ -1,6 +1,7 @@
 namespace Comet.Game
 {
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Services;
     using System.Collections.Generic;
     using System.Collections.Concurrent;
@@ -21,6 +22,9 @@ namespace Comet.Game
 
         // Characters in the game world, by character ID and name
         public static PlayerRegistry<Client> Players = new PlayerRegistry<Client>();
+
+        // Map grids, read from the client's map files at startup
+        public static MapStore Maps;
 
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();

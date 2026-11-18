@@ -14,6 +14,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Comet.Game\Comet.Game.csproj" />
+    <!-- Writes test map files -->
+    <ProjectReference Include="..\..\src\Comet.Client\Comet.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A small DMap packed with libarchive's 7z writer, to test reading .7z maps -->
+    <None Include="World\Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

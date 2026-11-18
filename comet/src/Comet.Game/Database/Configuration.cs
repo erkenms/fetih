@@ -17,6 +17,7 @@ namespace Comet.Game.Database
         public RpcNetworkConfiguration RpcNetwork { get; set; }
         public AuthenticationConfiguration Authentication { get; set; }
         public LoggingConfiguration Logging { get; set; }
+        public MapsConfiguration Maps { get; set; }
 
         /// <summary>
         /// Encapsulates database configuration for Entity Framework.
@@ -68,6 +69,15 @@ namespace Comet.Game.Database
         }
 
         /// <summary>
+        /// Where the server reads map data: a copy of the client folder (at least its
+        /// ini/GameMap.dat and map/map folder), relative to the working directory.
+        /// </summary>
+        public class MapsConfiguration
+        {
+            public string ClientDirectory { get; set; }
+        }
+
+        /// <summary>
         /// Instantiates a new instance of <see cref="ServerConfiguration"/> with command-line
         /// arguments from the user and a configuration file for the application. Builds the
         /// configuration file and binds to this instance of the ServerConfiguration class.
@@ -89,6 +99,7 @@ namespace Comet.Game.Database
             this.Database != null && 
             this.GameNetwork != null &&
             this.RpcNetwork != null &&
-            this.Authentication != null;
+            this.Authentication != null &&
+            !string.IsNullOrEmpty(this.Maps?.ClientDirectory);
     }
 }

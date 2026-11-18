@@ -47,6 +47,7 @@ namespace Comet.Integration.Tests
         public int AccountPort { get; private set; }
         public int GamePort { get; private set; }
         public string LogDirectory { get; }
+        public string MapDirectory { get; }
         private readonly string RepoRoot;
         private readonly string BuildConfiguration;
 
@@ -63,6 +64,7 @@ namespace Comet.Integration.Tests
             if (Directory.Exists(logRoot))
                 Directory.Delete(logRoot, recursive: true);
             this.LogDirectory = Path.Combine(logRoot, this.RunId);
+            this.MapDirectory = Path.Combine(Path.GetTempPath(), "comet-test-maps-" + this.RunId);
         }
 
         private static string Env(string name, string fallback) =>
@@ -120,8 +122,12 @@ namespace Comet.Integration.Tests
                 Username = DbUser, Password = DbPassword
             };
 
+            // Synthetic map files, so the tests don't need a copy of the client
+            this.WriteMaps();
+
             // The game server first, so the account server finds its RPC port
             this.StartServer("Comet.Game", this.GameSchema, "game",
+                "--Maps:ClientDirectory=" + this.MapDirectory,
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
                 "--GameNetwork:HandshakeTimeoutSeconds=" + HandshakeTimeoutSeconds,
@@ -135,6 +141,21 @@ namespace Comet.Integration.Tests
             await this.WaitForEventAsync("game", "rpc.connected", _ => true, StartTimeout);
         }
 
+        /// <summary>
+        /// Writes the maps the tests use: newbie village (1010), where new characters
+        /// start, and Twin City (1002), each as a plain DMap with every cell walkable.
+        /// </summary>
+        private void WriteMaps()
+        {
+            var maps = Path.Combine(this.MapDirectory, "map", "map");
+            Directory.CreateDirectory(maps);
+            Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
+                MapFiles.GameMapDat((1010, "map/map/newbie.7z"), (1002, "map/map/newplain.7z")));
+            File.WriteAllBytes(Path.Combine(maps, "newbie.DMap"), MapFiles.DMap(132, 132));
+            File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972));
+        }
+
         public async Task DisposeAsync()
         {
             foreach (var process in this.Processes)
@@ -143,6 +164,9 @@ namespace Comet.Integration.Tests
                 catch (InvalidOperationException) { }
                 process.Dispose();
             }
+
+            if (Directory.Exists(this.MapDirectory))
+                Directory.Delete(this.MapDirectory, recursive: true);
 
             await using var db = new MySqlConnection(this.ConnectionString());
             await db.OpenAsync();

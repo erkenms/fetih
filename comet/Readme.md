@@ -33,3 +33,11 @@ Test projects:
 In the top directory, you can find files for containers:
 
 * [compose.yaml](compose.yaml): Runs local MariaDB container.
+
+## Map Data
+
+The game server reads map data from a copy of the 5619 client: `ini/GameMap.dat` for
+the list of maps, and the `.7z` (or `.DMap`) files under `map/map` for each map's cells.
+Set `Maps:ClientDirectory` in `Comet.Game.config` to that folder; the default,
+`../../../_CLIENT/5619`, is a `_CLIENT` folder next to the `comet` folder (it isn't
+committed). A map is loaded the first time it's used, then kept in memory.
