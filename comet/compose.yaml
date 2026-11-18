@@ -1,0 +1,14 @@
+services:
+  db:
+    container_name: comet-db
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: password
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - ./sql/data:/var/lib/mysql
+      # Auto-seed schemas on first run
+      - ./sql/comet.account.sql:/docker-entrypoint-initdb.d/01-account.sql:ro
+      - ./sql/comet.game.sql:/docker-entrypoint-initdb.d/02-game.sql:ro
