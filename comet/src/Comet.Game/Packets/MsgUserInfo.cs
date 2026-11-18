@@ -1,7 +1,6 @@
 namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
-    using System.IO;
     using Comet.Game.Database.Models;
     using Comet.Game.States;
     using Comet.Network.Packets;
@@ -36,7 +35,6 @@ namespace Comet.Game.Packets
         public byte AncestorClass { get; set; }
         public uint QuizPoints { get; set; }
         public ushort EnlightenPoints { get; set; }
-        public uint VIPLevel { get; set; }
         public string CharacterName { get; set; }
         public string SpouseName { get; set; }
 
@@ -69,7 +67,6 @@ namespace Comet.Game.Packets
             this.Rebirths = character.Rebirths;
             this.EnlightenPoints = character.EnlightenPoints;
             this.QuizPoints = character.QuizPoints;
-            this.VIPLevel = character.VIPLevel;
             this.CharacterName = character.Name;
             this.SpouseName = "None";
         }
@@ -79,39 +76,53 @@ namespace Comet.Game.Packets
         /// that can be sent to the client. Invoked automatically by the client's send 
         /// method. Encodes using byte ordering rules interoperable with the game client.
         /// </summary>
+        /// <remarks>
+        /// 5619: from client binary (every offset below is one the client reads, and the
+        /// string list at 110), and the reference (what the fields mean). Fields marked
+        /// "guess" are written where an older or newer layout suggests; new characters
+        /// have zero in all of them.
+        /// </remarks>
         /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);
-            writer.Write(this.CharacterID);
-            writer.Write(this.Mesh);
-            writer.Write(this.Hairstyle);
-            writer.Write(this.Silver);
-            writer.Write(this.Jewels);
-            writer.Write(this.Experience);
-            writer.Write((ulong)0);
-            writer.Write((ulong)0);
-            writer.Write((uint)0);
-            writer.Write(this.Strength);
-            writer.Write(this.Agility);
-            writer.Write(this.Vitality);
-            writer.Write(this.Spirit);
-            writer.Write(this.AttributePoints);
-            writer.Write(this.HealthPoints);
-            writer.Write(this.ManaPoints);
-            writer.Write(this.KillPoints);
-            writer.Write(this.Level);
-            writer.Write(this.CurrentClass);
-            writer.Write(this.PreviousClass);
-            writer.Write(this.Rebirths);
-            writer.Write(this.AncestorClass);
-            writer.Write(this.QuizPoints);
-            writer.Write(this.EnlightenPoints);
-            writer.BaseStream.Seek(8, SeekOrigin.Current);
-            writer.Write((uint)this.VIPLevel);
-            writer.Write(new List<string>{
+            writer.Write(this.CharacterID);         // 4
+            writer.Write((ushort)0);                // 8  appearance type (default)
+            writer.Write(this.Mesh);                // 10
+            writer.Write(this.Hairstyle);           // 14
+            writer.Write(this.Silver);              // 16
+            writer.Write(this.Jewels);              // 20
+            writer.Write(this.Experience);          // 24
+            writer.Write(new byte[20]);             // 32 deed, medals, virtue, mete level
+            writer.Write(this.Strength);            // 52
+            writer.Write(this.Agility);             // 54
+            writer.Write(this.Vitality);            // 56
+            writer.Write(this.Spirit);              // 58
+            writer.Write(this.AttributePoints);     // 60
+            writer.Write(this.HealthPoints);        // 62
+            writer.Write(this.ManaPoints);          // 64
+            writer.Write(this.KillPoints);          // 66
+            writer.Write(this.Level);               // 68
+            writer.Write(this.CurrentClass);        // 69
+            writer.Write(this.PreviousClass);       // 70 guess
+            writer.Write(this.AncestorClass);       // 71 guess
+            writer.Write((byte)0);                  // 72 nobility rank
+            writer.Write(this.Rebirths);            // 73
+            writer.Write((byte)0);                  // 74
+            writer.Write(this.QuizPoints);          // 75
+            writer.Write(this.EnlightenPoints);     // 79
+            writer.Write(new byte[6]);              // 81
+            writer.Write((uint)0);                  // 87
+            writer.Write((ushort)0);                // 91 title
+            writer.Write((uint)0);                  // 93 bound CPs
+            writer.Write((byte)0);                  // 97
+            writer.Write((uint)0);                  // 98 sub-professions
+            writer.Write((uint)0);                  // 102
+            writer.Write((uint)0);                  // 106
+            writer.Write(new List<string>{          // 110
                 this.CharacterName,
+                string.Empty,
                 this.SpouseName
             });
             return writer.ToArray();
