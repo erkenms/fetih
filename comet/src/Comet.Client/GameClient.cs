@@ -152,15 +152,15 @@ namespace Comet.Client
 
         /// <summary>
         /// Asks to be placed on the map (LoginSpawn) and finishes logging in
-        /// (LoginComplete), as the client does after MsgUserInfo. Returns the spawn
-        /// reply: the map in Command and the position in X and Y.
+        /// (LoginComplete, 251), as the 5619 client does after MsgUserInfo. The server
+        /// doesn't answer LoginComplete. Returns the spawn reply: the map in Command and
+        /// the position in X and Y.
         /// </summary>
         public async Task<ActionMessage> EnterMapAsync(uint characterId)
         {
             await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginSpawn));
             var spawn = await this.ReceiveActionAsync(ActionMessage.LoginSpawn);
-            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginComplete));
-            await this.ReceiveActionAsync(ActionMessage.LoginComplete);
+            await this.SendAsync(ActionMessage.BuildLoginComplete());
             return spawn;
         }
 

@@ -50,8 +50,10 @@ namespace Comet.Game.Packets
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
         /// <remarks>
         /// 5619: confirmed in VM (38 bytes: the 5187 layout plus a ushort at 36). While
-        /// logging in, the client sends actions 74 to 78, 97 and 132 (from client binary)
-        /// and 251, whose purpose isn't known (seen in VM).
+        /// logging in, the client sends actions 74 to 78, 96 and 97, each after the
+        /// server's reply to the one before, then 251 (LoginComplete) with an ID of 0
+        /// (seen in VM; 251 is LoginComplete in the reference too). 5187's LoginComplete,
+        /// 132, isn't sent.
         /// </remarks>
         public override void Decode(byte[] bytes)
         {
@@ -119,7 +121,8 @@ namespace Comet.Game.Packets
                     break;
 
                 case ActionType.LoginComplete:
-                    await client.SendAsync(this);
+                    // The last login step: the client has loaded the map. Not echoed
+                    // (5619: from reference).
                     await Visibility.EnterAsync(client);
                     break;
 
@@ -176,8 +179,7 @@ namespace Comet.Game.Packets
             MapGold,
             RelationshipsEnemy = 123,
             ClientDialog = 126,
-            LoginComplete = 132,
-            MapEffect,
+            MapEffect = 133,
             LoginOfflineMessages,
             MapRemoveSpawn = 135,
             MapJump = 137,
@@ -187,7 +189,8 @@ namespace Comet.Game.Packets
             CharacterAvatar = 151,
             CharacterPartnerInfo,
             CharacterAway = 161,
-            MapPathfinding
+            MapPathfinding,
+            LoginComplete = 251
         }
     }
 }

@@ -72,13 +72,25 @@ namespace Comet.Client
         uint CharacterId, uint Command, ushort Action, ushort X, ushort Y)
     {
         public const ushort LoginSpawn = 74;
-        public const ushort LoginComplete = 132;
+        public const ushort LoginComplete = 251;
         public const ushort RemoveEntity = 135;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 24),
             BitConverter.ToUInt16(packet, 26));
+
+        /// <summary>
+        /// Builds LoginComplete the way the 5619 client sends it: ID 0, and 1 where the
+        /// timestamp usually is (seen in VM).
+        /// </summary>
+        public static byte[] BuildLoginComplete()
+        {
+            var packet = Packet.Create(PacketTypes.MsgAction, 38);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), 1u);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), LoginComplete);
+            return packet;
+        }
 
         public static byte[] Build(uint characterId, ushort action)
         {

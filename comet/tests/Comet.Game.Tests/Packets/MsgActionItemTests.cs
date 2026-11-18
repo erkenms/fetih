@@ -18,7 +18,7 @@ namespace Comet.Game.Tests.Packets
             BitConverter.TryWriteBytes(bytes.AsSpan(2), (ushort)10010);
             BitConverter.TryWriteBytes(bytes.AsSpan(4), 1000001u);
             BitConverter.TryWriteBytes(bytes.AsSpan(16), 123456u);
-            BitConverter.TryWriteBytes(bytes.AsSpan(20), (ushort)132);
+            BitConverter.TryWriteBytes(bytes.AsSpan(20), (ushort)251);
             BitConverter.TryWriteBytes(bytes.AsSpan(24), (ushort)61);
             BitConverter.TryWriteBytes(bytes.AsSpan(26), (ushort)109);
             BitConverter.TryWriteBytes(bytes.AsSpan(36), (ushort)7);
@@ -33,6 +33,20 @@ namespace Comet.Game.Tests.Packets
             var encoded = msg.Encode();
             Assert.Equal(38, encoded.Length);
             Assert.Equal(bytes.AsSpan(2, 36).ToArray(), encoded.AsSpan(2).ToArray());
+        }
+
+        [Fact]
+        public void LoginCompleteFromTheRealClientIsAction251()
+        {
+            // The last action the 5619 client sent while logging in (VM log, 18:55:20)
+            var bytes = Convert.FromHexString(
+                "2600" + "1A27" + "00000000" + "00000000" + "00000000" + "01000000" +
+                "FB00" + "0000" + "0000" + "0000" + "00000000" + "00000000" + "0000" +
+                "5451436C69656E74");
+            var msg = new MsgAction();
+            msg.Decode(bytes);
+            Assert.Equal(MsgAction.ActionType.LoginComplete, msg.Action);
+            Assert.Equal(0u, msg.CharacterID);
         }
 
         [Fact]
