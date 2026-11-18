@@ -101,6 +101,14 @@ namespace Comet.Network.Sockets
                             "Send failed for connection {ConnId}", this.ConnId);
                     return Task.FromException(e);
                 }
+                catch (ObjectDisposedException)
+                {
+                    // The connection was already closed; nothing to send to
+                    Log.ForContext<TcpServerActor>().Debug(
+                        "Dropped {Length} byte send to closed connection {ConnId}",
+                        packet.Length, this.ConnId);
+                    return Task.CompletedTask;
+                }
             }
         }
 

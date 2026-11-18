@@ -390,6 +390,14 @@ namespace Comet.Network.Sockets
         /// <param name="actor">Actor being disconnected</param>
         private void Disconnecting(TActor actor)
         {
+            // Close the socket so the client sees the disconnect. Without this, a
+            // connection that timed out or broke the protocol stayed open forever
+            // while the server ignored it.
+            try { actor.Socket.Shutdown(SocketShutdown.Both); }
+            catch (SocketException) { }
+            catch (ObjectDisposedException) { }
+            actor.Socket.Close();
+
             // Reclaim resources and release back to server pools
             actor.Buffer.Span.Clear();
             this.BufferPool.Push(actor.Buffer);
