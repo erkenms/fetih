@@ -62,8 +62,8 @@ namespace Comet.Game.Packets
         /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
-            // Validate access token
-            var auth = Kernel.Logins.Get(this.Token.ToString()) as TransferAuthArgs;
+            // Validate access token. Remove consumes the token so it can't be reused.
+            var auth = Kernel.Logins.Remove(this.Token.ToString()) as TransferAuthArgs;
             if (!IsAuthorized(auth, client.IPAddress, StrictAuthentication))
             {
                 await client.SendAsync(MsgTalk.LoginInvalid);
