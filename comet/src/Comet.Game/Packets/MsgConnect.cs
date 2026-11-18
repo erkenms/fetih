@@ -83,6 +83,16 @@ namespace Comet.Game.Packets
         /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
+            // Once a character is in the game, a repeated login would reload it from the
+            // database and drop any changes not saved yet, so ignore it.
+            if (client.Character != null)
+            {
+                Serilog.Log.ForContext<MsgConnect>().Warning(
+                    "Connection {ConnId} sent MsgConnect while {Name} is already in the game; ignored",
+                    client.ConnId, client.Character.Name);
+                return;
+            }
+
             // Validate access token. Remove consumes the token so it can't be reused.
             // 5619: confirmed in VM: after creating a character, the client sends
             // MsgConnect again on the same connection, so a connection may repeat the
