@@ -26,5 +26,16 @@ namespace Comet.Account.Database.Tests
             Assert.Equal("localhost", config.Database.Hostname);
             Assert.Equal(args.Length > 0 ? 9961 : 9960, config.Network.Port);
         }
+
+        [Theory]
+        [InlineData("info")]
+        [InlineData("trace", "--Logging:Level=trace")]
+        public void LoggingConfiguration(string expectedLevel, params string[] args)
+        {
+            var config = new ServerConfiguration(args);
+            Assert.Equal(expectedLevel, config.Logging.Level);
+            Assert.Equal("logs", config.Logging.Directory);
+            Assert.Equal(30, config.Logging.RetainDays);
+        }
     }
 }

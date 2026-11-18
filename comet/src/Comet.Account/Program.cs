@@ -6,6 +6,8 @@
     using System.Threading.Tasks;
     using Comet.Account.Database;
     using Comet.Account.Database.Repositories;
+    using Comet.Core.Logging;
+    using Serilog;
 
     /// <summary>
     /// The account server accepts clients and authenticates players from the client's 
@@ -30,18 +32,21 @@
 
             // Read configuration file and command-line arguments
             var config = new ServerConfiguration(args);
+            LogSetup.Configure("account", config.Logging);
             if (!config.Valid) 
             {
-                Console.WriteLine("Invalid server configuration file");
+                Log.Error("Invalid server configuration file");
+                Log.CloseAndFlush();
                 return;
             }
 
             // Initialize the database
-            Console.WriteLine("Initializing server...");
+            Log.Information("Initializing server...");
             ServerDbContext.Configuration = config.Database;
             if (!ServerDbContext.Ping())
             {
-                Console.WriteLine("Invalid database configuration");
+                Log.Error("Invalid database configuration");
+                Log.CloseAndFlush();
                 return;
             }
 
@@ -56,13 +61,14 @@
             await Task.WhenAll(tasks.ToArray());
             
             // Start the server listener
-            Console.WriteLine("Launching server listener...");
+            Log.Information("Launching server listener...");
             var server = new Server(config);
             var serverTask = server.StartAsync(config.Network.Port, config.Network.IPAddress);
 
             // Output all clear and wait for user input
-            Console.WriteLine("Listening for new connections");
-            Console.WriteLine();
+            LogEvents.For(typeof(Program), LogEvents.ServerStart).Information(
+                "Listening for new connections on {IPAddress}:{Port}",
+                config.Network.IPAddress, config.Network.Port);
             
             await serverTask;
         }

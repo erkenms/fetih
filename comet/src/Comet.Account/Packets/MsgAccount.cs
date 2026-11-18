@@ -5,8 +5,10 @@ namespace Comet.Account.Packets
     using System.Threading.Tasks;
     using Comet.Account.Database.Repositories;
     using Comet.Account.States;
+    using Comet.Core.Logging;
     using Comet.Network.Packets;
     using Comet.Network.Security;
+    using Comet.Network.Sockets;
     using Comet.Shared.Models;
     using static Comet.Account.Packets.MsgConnectEx;
 
@@ -38,8 +40,12 @@ namespace Comet.Account.Packets
             if (client.Account == null || !AccountsRepository.CheckPassword(
                 this.DecryptPassword(this.Password, client.Seed), client.Account.Password, client.Account.Salt))
             {
+                LogEvents.For<MsgAccount>(LogEvents.AccountLoginFailed).Warning(
+                    "Login failed for {Username} from {IP}: {Reason}",
+                    this.Username, client.IPAddress,
+                    client.Account == null ? "unknown_account" : "bad_password");
                 await client.SendAsync(new MsgConnectEx(RejectionCode.InvalidPassword));
-                client.Socket.Disconnect(false);
+                client.Disconnect(DisconnectReasons.AuthFailed);
                 return;
             }
 
@@ -47,8 +53,11 @@ namespace Comet.Account.Packets
             Database.Models.DbRealm server;
             if (!Kernel.Realms.TryGetValue(this.Realm, out server) || !server.Rpc.Online)
             {
+                LogEvents.For<MsgAccount>(LogEvents.AccountLoginFailed).Warning(
+                    "Login failed for {Username} from {IP}: {Reason} ({Realm})",
+                    this.Username, client.IPAddress, "realm_offline", this.Realm);
                 await client.SendAsync(new MsgConnectEx(RejectionCode.ServerDown));
-                client.Socket.Disconnect(false);
+                client.Disconnect(DisconnectReasons.AuthFailed);
                 return;
             }
 
@@ -61,6 +70,10 @@ namespace Comet.Account.Packets
 
             ulong token = await server.Rpc.CallAsync<ulong>("TransferAuth", args);
             await client.SendAsync(new MsgConnectEx(server.GameIPAddress, server.GamePort, token));
+            LogEvents.For<MsgAccount>(LogEvents.AccountLogin).Information(
+                "{Username} (account {AccountId}) logged in from {IP}, redirected to realm {Realm}",
+                this.Username, client.Account.AccountID, client.IPAddress, this.Realm);
+            client.SetDisconnectReason(DisconnectReasons.Redirected);
         }
 
         /// <summary>

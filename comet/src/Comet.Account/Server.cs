@@ -7,6 +7,7 @@ namespace Comet.Account
     using Comet.Account.Database;
     using Comet.Account.Packets;
     using Comet.Account.States;
+    using Comet.Core.Logging;
     using Comet.Network.Packets;
     using Comet.Network.Sockets;
 
@@ -89,9 +90,9 @@ namespace Comet.Account
                     case PacketType.MsgAccount: msg = new MsgAccount(); break;
 
                     default:
-                        Console.WriteLine(
-                            "Missing packet {0}, Length {1}\n{2}", 
-                            type, length, PacketDump.Hex(packet));
+                        LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
+                            "Unhandled packet {PacketType} ({Length} bytes) from connection {ConnId}: {Hex}",
+                            type, length, actor.ConnId, Convert.ToHexString(packet));
                     return;
                 }
 
@@ -101,7 +102,9 @@ namespace Comet.Account
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                LogEvents.For<Server>(LogEvents.PacketError).Error(e,
+                    "Failed to process packet {PacketType} from connection {ConnId}",
+                    type, actor.ConnId);
             }
         }
     }

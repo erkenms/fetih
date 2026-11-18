@@ -1,5 +1,6 @@
 namespace Comet.Account.Database
 {
+    using Comet.Core.Logging;
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -13,6 +14,7 @@ namespace Comet.Account.Database
         // Properties and fields
         public DatabaseConfiguration Database { get; set; }
         public NetworkConfiguration Network { get; set; }
+        public LoggingConfiguration Logging { get; set; }
 
         /// <summary>
         /// Encapsulates database configuration for Entity Framework.
