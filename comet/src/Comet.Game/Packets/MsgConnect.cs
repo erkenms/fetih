@@ -85,14 +85,15 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // If another client has already connected using this account, disconnect
-            // that other client and permit this one to take its place.
-            if (Kernel.Clients.TryRemove(auth.AccountID, out Client observer))
+            // If another client has already connected using this account, take its
+            // place and disconnect it.
+            client.AccountID = auth.AccountID;
+            var previous = Kernel.Clients.Replace(auth.AccountID, client);
+            if (previous != null)
             {
-                observer.Socket.Disconnect(false);
+                try { previous.Disconnect(); }
+                catch (Exception e) { Console.WriteLine(e); }
             }
-
-            Kernel.Clients.TryAdd(auth.AccountID, client);
 
             // Check for an existing character
             var character = await CharactersRepository.FindAsync(auth.AccountID);

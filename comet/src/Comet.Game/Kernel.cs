@@ -16,7 +16,7 @@ namespace Comet.Game
     public static class Kernel
     {
         // State caches
-        public static ConcurrentDictionary<uint, Client> Clients = new ConcurrentDictionary<uint, Client>();
+        public static SessionRegistry<Client> Clients = new SessionRegistry<Client>();
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

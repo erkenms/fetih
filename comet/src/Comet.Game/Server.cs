@@ -165,7 +165,9 @@ namespace Comet.Game
         {
             if (actor == null) return;
             this.Processor.DeselectPartition(actor.Partition);
-            Kernel.Clients.TryRemove(actor.ID, out _);
+            // Only removes the registry entry if it still belongs to this client; a
+            // replacing login for the same account keeps its entry.
+            Kernel.Clients.Remove(actor.AccountID, actor);
 
             if (actor.Creation != null)
                 Kernel.Registration.TryRemove(actor.Creation.Token, out _);

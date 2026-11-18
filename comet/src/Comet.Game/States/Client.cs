@@ -18,6 +18,9 @@ namespace Comet.Game.States
         public Creation Creation = null;
         public DiffieHellman DiffieHellman = null;
 
+        // Account the client authenticated as (0 until MsgConnect succeeds)
+        public uint AccountID { get; set; }
+
         // Client unique identifier
         public uint ID => Character?.CharacterID ?? 0;
 
