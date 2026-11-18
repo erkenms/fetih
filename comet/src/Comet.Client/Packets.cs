@@ -12,6 +12,7 @@ namespace Comet.Client
         public const ushort MsgRegister = 1001;
         public const ushort MsgTalk = 1004;
         public const ushort MsgUserInfo = 1006;
+        public const ushort MsgItem = 1009;
         public const ushort MsgConnect = 1052;
         public const ushort MsgConnectEx = 1055;
         public const ushort MsgEncryptCode = 1059;

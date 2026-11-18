@@ -14,6 +14,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Comet.Account\Comet.Account.csproj" />
+    <!-- Reads recorded captures of the real client -->
+    <ProjectReference Include="..\..\src\Comet.Client\Comet.Client.csproj" />
   </ItemGroup>
 
 </Project>

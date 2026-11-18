@@ -61,3 +61,43 @@ the starting point for bots.
 One difference from the real client: the real client hashes 32 bytes of the SRP6 shared
 secret even when the secret is shorter, so about 1 real login in 256 fails. Comet.Client
 pads with zeros like the server, so tests never fail that way.
+
+## Captures of the real client
+
+Our test client is written from our own understanding of the protocol, so where that
+understanding is wrong, the tests and the server agree with each other and both are
+wrong (that's how the 5619 LoginComplete, 251 not 132, got past the tests). Captures
+close that gap: they are packet traces recorded from the real client in a VM, kept in
+`tests/Captures/5619`, and replayed by `Replay/CaptureReplayTests` in Comet.Game.Tests
+and Comet.Account.Tests:
+
+* Every packet the client sent must either be handled by the server and decode to its
+  own length, or be listed in that test's `NotHandledYet`, with the roadmap step that
+  will handle it.
+* Anything else fails the test, which prints the line to add to `NotHandledYet` (or the
+  packet that needs a handler).
+* When a packet gets a handler, the test fails until it's taken off `NotHandledYet`.
+* With no captures, the replay tests are skipped.
+
+### Recording a capture
+
+1. Trace the VM's address on both servers, in `Logging:PacketTrace` of each config file
+   (or on the command line):
+   ```json
+   "PacketTrace": { "All": false, "Accounts": [], "IPs": ["172.16.60.128"] }
+   ```
+2. Restart both servers and play through what the capture should cover: logging in,
+   creating a character, walking, jumping, chatting, logging out.
+3. Copy the trace into a capture file, one per session, named for what it covers
+   (from `comet/src`):
+   ```bash
+   jq -c 'select(.event=="packet.in" or .event=="packet.out" or .event=="server.start")' \
+     Comet.Account/logs/account-*.jsonl Comet.Game/logs/game-*.jsonl \
+     > ../tests/Captures/5619/2026-11-18-login-walk.jsonl
+   ```
+   Add `select(.ts > "2026-11-18T19:30")` to the filter to take only part of a log.
+   Keep `server.start`: connection numbers start again after a restart.
+4. Run the tests and commit the capture.
+
+Captures hold what the client sent, including account names and the SRP6 proof (not
+the password). Record them with test accounts only.
