@@ -12,8 +12,9 @@ namespace Comet.Game.World
     public readonly record struct MapPortal(ushort X, ushort Y, uint Index);
 
     /// <summary>
-    /// The cell grid of a map, read from the client's DMap file: which cells can be
-    /// walked on, each cell's elevation (for jump checks), and the portal cells.
+    /// The cell grid of a map, read from the client's DMap file and the scene files its
+    /// terrain objects place: which cells can be walked on, each cell's elevation (for
+    /// jump checks), and the portal cells.
     /// </summary>
     /// <remarks>
     /// <para>5619: from client data (checked against newbie and newplain). Layout, all
@@ -27,10 +28,19 @@ namespace Comet.Game.World
     /// 276  rows: width cells of (uint16 access, uint16 surface, int16 elevation),
     ///      then a uint32 row checksum
     ///      uint32 portal count, then per portal uint32 x, y, index
-    ///      scene objects (decoration, sound, effects; not read)
+    ///      uint32 object count, then per object a uint32 type and:
+    ///        1  terrain: char[260] scene file, int32 x, y      (272 bytes in all)
+    ///        4  cover:   char[260] animation, char[128] title,
+    ///                    7 int32                               (420)
+    ///        10 effect:  char[64] name, int32 x, y             (76)
+    ///        15 sound:   char[260] file, int32 x, y, range,
+    ///                    volume                                (280)
     /// </code>
-    /// <para>An access value of 0 means the cell can be walked on. Buildings and walls
-    /// are already blocked in this grid, so the scene objects aren't needed for it.</para>
+    /// <para>An access value of 0 means the cell can be walked on. The base grid blocks
+    /// most raised ground: bridges, platforms and stairs are terrain objects, whose
+    /// scene cells replace the base cells under them (see <see cref="SceneFile"/>).
+    /// On map 1010 the base grid alone blocks 26 of the 85 cells seen in VM jumps.
+    /// Every object in the 5619 maps is one of the four types above.</para>
     /// </remarks>
     public sealed class MapGrid
     {
@@ -69,9 +79,18 @@ namespace Comet.Game.World
             this.Contains(x, y) ? this.Elevations[y * this.Width + x]
                 : throw new ArgumentOutOfRangeException(nameof(x), $"({x},{y}) is outside the map");
 
-        /// <summary>Parses a DMap file.</summary>
+        /// <summary>Parses a DMap file without applying its terrain objects.</summary>
         /// <exception cref="InvalidDataException">The file is cut short or malformed.</exception>
-        public static MapGrid Parse(ReadOnlySpan<byte> data)
+        public static MapGrid Parse(ReadOnlySpan<byte> data) => Parse(data, null);
+
+        /// <summary>Parses a DMap file and applies its terrain objects' scenes.</summary>
+        /// <param name="data">DMap file</param>
+        /// <param name="scenes">
+        /// Returns the parts of a scene file given its path from the DMap (e.g.
+        /// map\Scene\stand06.scene); null to ignore scene objects
+        /// </param>
+        /// <exception cref="InvalidDataException">The file is cut short or malformed.</exception>
+        public static MapGrid Parse(ReadOnlySpan<byte> data, Func<string, IReadOnlyList<ScenePart>> scenes)
         {
             if (data.Length < HeaderSize)
                 throw new InvalidDataException("DMap header is cut short");
@@ -111,7 +130,57 @@ namespace Comet.Game.World
                     (ushort)BinaryPrimitives.ReadUInt32LittleEndian(data[(offset + 4)..]),
                     BinaryPrimitives.ReadUInt32LittleEndian(data[(offset + 8)..]));
 
+            if (scenes != null)
+                ApplyObjects(data, offset, width, height, walkable, elevations, scenes);
             return new MapGrid(width, height, walkable, elevations, portals);
+        }
+
+        /// <summary>
+        /// Reads the objects after the portal list and lays each terrain object's scene
+        /// cells over the grid.
+        /// </summary>
+        private static void ApplyObjects(ReadOnlySpan<byte> data, int offset, int width,
+            int height, bool[] walkable, short[] elevations,
+            Func<string, IReadOnlyList<ScenePart>> scenes)
+        {
+            if (data.Length < offset + 4)
+                throw new InvalidDataException("DMap object list is cut short");
+            uint count = BinaryPrimitives.ReadUInt32LittleEndian(data[offset..]);
+            offset += 4;
+            for (uint i = 0; i < count; i++)
+            {
+                if (data.Length < offset + 4)
+                    throw new InvalidDataException("DMap objects are cut short");
+                uint type = BinaryPrimitives.ReadUInt32LittleEndian(data[offset..]);
+                int size = type switch { 1 => 272, 4 => 420, 10 => 76, 15 => 280, _ => 0 };
+                if (size == 0)
+                    throw new InvalidDataException($"DMap object {i} has an unknown type {type}");
+                if (data.Length < offset + size)
+                    throw new InvalidDataException("DMap objects are cut short");
+
+                if (type == 1)
+                {
+                    var name = data.Slice(offset + 4, 260);
+                    int end = name.IndexOf((byte)0);
+                    string path = System.Text.Encoding.Latin1.GetString(end < 0 ? name : name[..end]);
+                    int objectX = BinaryPrimitives.ReadInt32LittleEndian(data[(offset + 264)..]);
+                    int objectY = BinaryPrimitives.ReadInt32LittleEndian(data[(offset + 268)..]);
+                    foreach (var part in scenes(path))
+                    for (int j = 0; j < part.Height; j++)
+                    for (int k = 0; k < part.Width; k++)
+                    {
+                        int x = objectX + part.OffsetX - k;
+                        int y = objectY + part.OffsetY - j;
+                        if (x < 0 || y < 0 || x >= width || y >= height)
+                            continue;
+                        var cell = part[k, j];
+                        walkable[y * width + x] = cell.Walkable;
+                        elevations[y * width + x] = cell.Elevation;
+                    }
+                }
+
+                offset += size;
+            }
         }
     }
 }

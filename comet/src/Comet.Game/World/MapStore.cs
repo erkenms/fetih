@@ -22,6 +22,8 @@ namespace Comet.Game.World
         private readonly Dictionary<uint, GameMapEntry> Entries;
         private readonly ConcurrentDictionary<uint, Lazy<MapGrid>> Grids =
             new ConcurrentDictionary<uint, Lazy<MapGrid>>();
+        private readonly ConcurrentDictionary<string, IReadOnlyList<ScenePart>> Scenes =
+            new ConcurrentDictionary<string, IReadOnlyList<ScenePart>>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Number of maps listed in GameMap.dat.</summary>
         public int Count => this.Entries.Count;
@@ -70,7 +72,7 @@ namespace Comet.Game.World
             var watch = Stopwatch.StartNew();
             try
             {
-                var grid = MapGrid.Parse(this.ReadDMap(entry));
+                var grid = MapGrid.Parse(this.ReadDMap(entry), this.ReadScene);
                 LogEvents.For<MapStore>(LogEvents.MapLoaded).Debug(
                     "Loaded map {MapId} ({Width}x{Height}, {PortalCount} portals) in {LoadMs} ms",
                     entry.Id, grid.Width, grid.Height, grid.Portals.Count,
@@ -84,6 +86,19 @@ namespace Comet.Game.World
                 throw;
             }
         }
+
+        /// <summary>
+        /// Reads a scene file named by a terrain object (paths like map\Scene\x.scene are
+        /// relative to the client folder). Each scene is read once and shared by every map.
+        /// </summary>
+        /// <exception cref="InvalidDataException">The scene file is missing or malformed.</exception>
+        private IReadOnlyList<ScenePart> ReadScene(string path) =>
+            this.Scenes.GetOrAdd(path.Replace('\\', '/'), p =>
+            {
+                var file = ResolveFile(this.ClientDirectory, p)
+                    ?? throw new InvalidDataException($"Scene file {p} not found");
+                return SceneFile.Parse(File.ReadAllBytes(file));
+            });
 
         /// <summary>
         /// Reads the DMap bytes for a map: from its .7z archive, or from a plain .DMap

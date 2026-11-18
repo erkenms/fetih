@@ -19,7 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- A small DMap packed with libarchive's 7z writer, to test reading .7z maps -->
+    <!-- A small DMap packed with libarchive's 7z writer, to test reading .7z maps, and
+         jumps seen in VM on map 1010, to check the real map's walkable cells -->
     <None Include="World\Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

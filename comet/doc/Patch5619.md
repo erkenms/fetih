@@ -60,6 +60,14 @@ for an independent model of the client used to make the test vectors.
 | MsgPlayer | 10014 | client binary | Mesh at 4, ID at 8, guild at 12, status flags at 22 (20 bytes), equipment item types 44 to 76, X/Y at 92/94, hair at 96, facing at 98, action at 99, reborn at 106, level at 107, class at 219, a byte at 225 that must be 0 for the client to set the position, strings (name, "", clan) at 226. Field meanings are from the reference, which has three fields 5619 lacks: a ushort before X, a sixth uint before the colors at 131, and a country code before 221. |
 | Remove entity | 10010 | reference | MsgAction 135 with the entity's ID at 4. |
 
+### Map files
+
+`ini/GameMap.dat` lists each map's `.7z` archive, which holds its DMap. A DMap's base
+grid blocks most raised ground; bridges, platforms and stairs come from terrain objects
+that place `map/Scene/*.scene` parts over it, counted backwards from the object's cell.
+See `MapGrid.cs` and `SceneFile.cs` for the layouts. Checked against 88 jumps seen in VM
+on map 1010: the base grid alone blocks 26 of their 85 cells, the full grid none.
+
 Players are shown to each other when the client sends LoginComplete (132): the server
 puts the character on the map then and exchanges MsgPlayer with everyone within 18
 cells (the reference's view range, measured as the larger of the X and Y distances).
