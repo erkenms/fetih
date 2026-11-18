@@ -1,6 +1,7 @@
 namespace Comet.Network.Security.Tests
 {
     using System;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Org.BouncyCastle.Math;
@@ -37,6 +38,51 @@ namespace Comet.Network.Security.Tests
             
             dh.ComputePrivateKey(DiffieHellmanTests.ClientKey);
             Assert.Equal(ExpectedPrivateKey, Hex.ToHexString(dh.PrivateKey.ToByteArrayUnsigned()));
+
+            // The shared secret above has a zero byte at offset 10, so only the first ten
+            // bytes are hashed (the client reads it as a C string).
+            Assert.Equal(
+                "c5eb5aceef378461c0f9c4c8f8e75c304011aacada9b3e1442439081840f4c19",
+                Encoding.ASCII.GetString(dh.ComputeCipherKey()));
+        }
+
+        [Fact]
+        public async Task ClientAndServerAgreeOnCipherAfterExchangeAsync()
+        {
+            // Server side, as in the game server's accept and exchange handlers
+            // (the modulus is set by hand so the prime generator service isn't needed)
+            var server = new DiffieHellman();
+            server.Modulus = new BigInteger(DiffieHellmanTests.Modulus, 16);
+            await server.ComputePublicKeyAsync();
+
+            // Client side: a private exponent, its public key and the shared secret
+            var clientPrivate = new BigInteger("5e3d9a0c7b21f4486a1d0e9c3b7f2a65", 16);
+            var clientPublic = server.Generator.ModPow(clientPrivate, server.PrimeRoot);
+            var clientSecret = server.PublicKey.ModPow(clientPrivate, server.PrimeRoot);
+            var clientCipher = new Cast5Cipher();
+            clientCipher.GenerateKeys(new object[] {
+                DiffieHellman.DeriveCipherKey(clientSecret.ToByteArrayUnsigned()) });
+
+            server.ComputePrivateKey(Hex.ToHexString(clientPublic.ToByteArrayUnsigned()));
+            var serverCipher = new Cast5Cipher();
+            serverCipher.GenerateKeys(new object[] { server.ComputeCipherKey() });
+
+            var packet = Encoding.ASCII.GetBytes("\u001c\0\u001c\u0004 first packet TQClient");
+            var wire = (byte[])packet.Clone();
+            clientCipher.Encrypt(wire, wire);
+            serverCipher.Decrypt(wire, wire);
+            Assert.Equal(packet, wire);
+        }
+
+        [Fact]
+        public void DeriveCipherKeyHashesWholeSecretWithoutZeroByte()
+        {
+            // Expected: md5(secret) as s1, then s1 + md5(s1 + s1), both lowercase hex
+            var secret = new byte[32];
+            for (int i = 0; i < secret.Length; i++) secret[i] = (byte)(i + 1);
+            Assert.Equal(
+                "5985331bcec971b262122aa1ca5ad4114c855ff0bfb0262b4c9f95161a88e073",
+                Encoding.ASCII.GetString(DiffieHellman.DeriveCipherKey(secret)));
         }
     }
 }

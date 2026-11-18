@@ -7,7 +7,7 @@ namespace Comet.Network.Security
 
     /// <summary>
     /// CAST-128 (RFC 2144) in CFB64 mode, used on the game server from patch 5619 in place
-    /// of <see cref="BlowfishCipher"/>. The client uses OpenSSL's CAST_set_key and
+    /// of Blowfish (patches 5018 to 5187). The client uses OpenSSL's CAST_set_key and
     /// CAST_cfb64_encrypt: keys longer than 16 bytes are cut to 16, and both directions
     /// start from an all-zero IV. Generating new keys after the key exchange resets the
     /// IVs as well.

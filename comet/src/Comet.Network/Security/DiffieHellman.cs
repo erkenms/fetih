@@ -1,6 +1,8 @@
 namespace Comet.Network.Security
 {
     using System;
+    using System.Security.Cryptography;
+    using System.Text;
     using System.Threading.Tasks;
     using Comet.Network.Services;
     using Org.BouncyCastle.Math;
@@ -8,8 +10,8 @@ namespace Comet.Network.Security
 
     /// <summary>
     /// This implementation of the Diffie Hellman Key Exchange implements the base modulo
-    /// and big number operations without a hash algorithm. This is non-standard, and was
-    /// later fixed in higher versions of Conquer Online using MD5.
+    /// and big number operations. The shared secret isn't used as the cipher key directly:
+    /// from patch 5619 it is post-processed with MD5 (see <see cref="ComputeCipherKey"/>).
     /// </summary>
     public sealed class DiffieHellman
     {
@@ -26,10 +28,6 @@ namespace Comet.Network.Security
         public BigInteger Modulus { get; set; }
         public BigInteger PublicKey { get; private set; }
         public BigInteger PrivateKey { get; private set; }
-
-        // Blowfish IV exchange properties
-        public byte[] DecryptionIV { get; private set; }
-        public byte[] EncryptionIV { get; private set; }
 
         /// <summary>
         /// Generate the modulus integer as a static constant. This is an unfortunate
@@ -55,8 +53,6 @@ namespace Comet.Network.Security
         {
             this.PrimeRoot = new BigInteger(p, 16);
             this.Generator = new BigInteger(g, 16);
-            this.DecryptionIV = new byte[8];
-            this.EncryptionIV = new byte[8];
         }
 
         /// <summary>Computes the public key for sending to the client.</summary>
@@ -73,11 +69,37 @@ namespace Comet.Network.Security
 
         /// <summary>Computes the private key given the client response.</summary>
         /// <param name="clientKeyString">Client key from the exchange</param>
-        /// <returns>Bytes representing the private key for Blowfish Cipher.</returns>
+        /// <remarks>The shared secret is stored in <see cref="PrivateKey"/>.</remarks>
         public void ComputePrivateKey(string clientKeyString)
         {
             BigInteger clientKey = new BigInteger(clientKeyString, 16);
             this.PrivateKey = clientKey.ModPow(this.Modulus, this.PrimeRoot);
         }
+
+        /// <summary>
+        /// Derives the game cipher key from the shared secret the way the 5619 client does:
+        /// the secret's big-endian bytes are read as a C string (cut at the first zero
+        /// byte) and hashed with MD5. The lowercase hex digest, s1, is followed by the hex
+        /// MD5 of s1 + s1, giving 64 ASCII characters. The cipher uses the first 16.
+        /// </summary>
+        /// <remarks>5619: from reference, and the client binary.</remarks>
+        /// <returns>The 64 byte ASCII key for <see cref="Cast5Cipher"/>.</returns>
+        public byte[] ComputeCipherKey() =>
+            DiffieHellman.DeriveCipherKey(this.PrivateKey.ToByteArrayUnsigned());
+
+        /// <summary>Derives the game cipher key from raw shared secret bytes.</summary>
+        /// <param name="sharedSecret">Big-endian shared secret, without padding</param>
+        public static byte[] DeriveCipherKey(byte[] sharedSecret)
+        {
+            int length = Array.IndexOf(sharedSecret, (byte)0);
+            if (length < 0) length = sharedSecret.Length;
+
+            string first = DiffieHellman.HexMD5(sharedSecret.AsSpan(0, length));
+            string second = DiffieHellman.HexMD5(Encoding.ASCII.GetBytes(first + first));
+            return Encoding.ASCII.GetBytes(first + second);
+        }
+
+        private static string HexMD5(ReadOnlySpan<byte> data) =>
+            Convert.ToHexString(MD5.HashData(data)).ToLowerInvariant();
     }
 }

@@ -11,8 +11,8 @@ namespace Comet.Game.Packets
 
     /// <summary>
     /// Message containing keys necessary for conducting the Diffie-Hellman key exchange.
-    /// The initial message to the client is sent on connect, and contains initial seeds
-    /// for Blowfish. The response message from the client then contains the shared key. 
+    /// The initial message to the client is sent on connect. The response message from the
+    /// client then contains the client's public key. 
     /// </summary>
     public sealed class MsgHandshake : MsgBase<Client>
     {
@@ -35,18 +35,19 @@ namespace Comet.Game.Packets
 
         /// <summary>
         /// Instantiates a new instance of <see cref="MsgHandshake"/>. This constructor
-        /// is called to construct the initial request to the client.
+        /// is called to construct the initial request to the client. The IV fields are
+        /// sent as zeroes: the 5619 cipher (<see cref="Cast5Cipher"/>) always starts from
+        /// a zero IV, so the client has no use for them.
         /// </summary>
+        /// <remarks>5619: from reference (zero IVs; same layout as 5187).</remarks>
         /// <param name="dh">Diffie-Hellman key exchange instance for the actor</param>
-        /// <param name="encryptionIV">Initial seed for Blowfish's encryption IV</param>
-        /// <param name="decryptionIV">Initial seed for Blowfish's decryption IV</param>
-        public MsgHandshake(DiffieHellman dh, byte[] encryptionIV, byte[] decryptionIV)
+        public MsgHandshake(DiffieHellman dh)
         {
             this.PrimeRoot = Hex.ToHexString(dh.PrimeRoot.ToByteArrayUnsigned()).ToUpper();
             this.Generator = Hex.ToHexString(dh.Generator.ToByteArrayUnsigned()).ToUpper();
             this.ServerKey = Hex.ToHexString(dh.PublicKey.ToByteArrayUnsigned()).ToUpper();
-            this.EncryptionIV = (byte[])encryptionIV.Clone();
-            this.DecryptionIV = (byte[])decryptionIV.Clone();
+            this.EncryptionIV = new byte[Cast5Cipher.BlockSize];
+            this.DecryptionIV = new byte[Cast5Cipher.BlockSize];
         }
 
         /// <summary>Randomizes padding for the message.</summary>

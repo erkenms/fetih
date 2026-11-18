@@ -151,6 +151,7 @@ namespace Comet.Network.Sockets
             var actor = state as TActor;
             var timeout = new CancellationTokenSource();
             int consumed = 0, examined = 0, remaining = 0;
+            bool firstPacketPending = true;
 
             if (actor.Socket.Connected && !this.ShutdownToken.IsCancellationRequested)
             {
@@ -220,20 +221,36 @@ namespace Comet.Network.Sockets
                         actor.Buffer[consumed..examined].Span,
                         actor.Buffer[consumed..examined].Span);
 
+                    int exchangeEnd = consumed;
                     if (!this.Splitting(actor, examined, ref consumed))
                     {
-                        actor.Disconnect(DisconnectReasons.ProtocolError);
+                        this.FirstPacketUnreadable(actor);
                         this.Disconnecting(actor);
                         return;
                     }
                     
+                    firstPacketPending = consumed == exchangeEnd;
                     remaining = examined - consumed;
                     actor.Buffer[consumed..examined].CopyTo(actor.Buffer);
                 }
             }
 
             // Start receiving packets
-            await this.ReceivingAsync(state, remaining);
+            await this.ReceivingAsync(state, remaining, firstPacketPending);
+        }
+
+        /// <summary>
+        /// Called when the first packet after the key exchange can't be read. The usual
+        /// cause is that the client and server derived different cipher keys, so this is
+        /// recorded as a failed handshake rather than a protocol error.
+        /// </summary>
+        /// <param name="actor">Actor whose first packet couldn't be split</param>
+        private void FirstPacketUnreadable(TActor actor)
+        {
+            Serilog.Log.ForContext(this.GetType()).Warning(
+                "Connection {ConnId} sent unreadable data right after the key exchange; " +
+                "the cipher keys probably don't match", actor.ConnId);
+            actor.Disconnect(DisconnectReasons.HandshakeFailed);
         }
 
         /// <summary>
@@ -245,7 +262,7 @@ namespace Comet.Network.Sockets
         /// <returns>Returns task details for fault tolerance processing.</returns>
         private Task ReceivingAsync(object state)
         {
-            return this.ReceivingAsync(state, 0);
+            return this.ReceivingAsync(state, 0, false);
         }
 
         /// <summary>
@@ -255,8 +272,11 @@ namespace Comet.Network.Sockets
         /// </summary>
         /// <param name="state">Created actor around the accepted client socket</param>
         /// <param name="remaining">Starting offset to receive bytes to</param>
+        /// <param name="firstPacketPending">
+        /// True if a key exchange just finished and no packet has been read since
+        /// </param>
         /// <returns>Returns task details for fault tolerance processing.</returns>
-        private async Task ReceivingAsync(object state, int remaining)
+        private async Task ReceivingAsync(object state, int remaining, bool firstPacketPending)
         {
             // Initialize multiple receive variables
             var actor = state as TActor;
@@ -298,10 +318,12 @@ namespace Comet.Network.Sockets
                 consumed = 0;
                 if (!this.Splitting(actor, examined + remaining, ref consumed))
                 {
-                    actor.Disconnect(DisconnectReasons.ProtocolError);
+                    if (firstPacketPending) this.FirstPacketUnreadable(actor);
+                    else actor.Disconnect(DisconnectReasons.ProtocolError);
                     break;
                 }
                 
+                firstPacketPending &= consumed == 0;
                 remaining = examined + remaining - consumed;
                 actor.Buffer.Slice(consumed, remaining).CopyTo(actor.Buffer);
             }

@@ -101,7 +101,7 @@ to pair `net.connect` with `net.disconnect` and other events of the same connect
 | `timeout` | Nothing was received for 30 s (network drop, frozen client) |
 | `socket_error` | Any other socket failure (logged with details at warn) |
 | `protocol_error` | The client sent bytes that couldn't be split into packets |
-| `handshake_failed` | The key exchange failed |
+| `handshake_failed` | The key exchange failed, or the first packet after it couldn't be read (usually mismatched cipher keys) |
 | `auth_failed` | A login was rejected |
 | `replaced` | Another login to the same account took over |
 | `redirected` | The account server handed the client to the game server (normal) |

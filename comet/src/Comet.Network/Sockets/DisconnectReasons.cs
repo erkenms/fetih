@@ -22,7 +22,7 @@ namespace Comet.Network.Sockets
         /// <summary>The client sent data that could not be split into packets.</summary>
         public const string ProtocolError = "protocol_error";
 
-        /// <summary>The key exchange failed or timed out.</summary>
+        /// <summary>The key exchange failed, or the first packet after it was unreadable.</summary>
         public const string HandshakeFailed = "handshake_failed";
 
         /// <summary>Server-side disconnect without a more specific reason.</summary>

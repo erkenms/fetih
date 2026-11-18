@@ -41,7 +41,7 @@ namespace Comet.Game.States
         /// <param name="buffer">Preallocated buffer from the server listener</param>
         /// <param name="partition">Packet processing partition</param>
         public Client(Socket socket, Memory<byte> buffer, uint partition) 
-            : base(socket, buffer, new BlowfishCipher(BlowfishCipher.Default), partition, "TQServer")
+            : base(socket, buffer, new Cast5Cipher(), partition, "TQServer")
         {
             this.DiffieHellman = new DiffieHellman();
         }

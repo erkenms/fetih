@@ -1,7 +1,6 @@
 namespace Comet.Game
 {
     using System;
-    using System.Collections.Generic;
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -50,18 +49,9 @@ namespace Comet.Game
         {
             var partition = this.Processor.SelectPartition();
             var client = new Client(socket, buffer, partition);
-            var tasks = new List<Task>();
+            await client.DiffieHellman.ComputePublicKeyAsync();
 
-            tasks.Add(client.DiffieHellman.ComputePublicKeyAsync());
-            tasks.Add(Kernel.NextBytesAsync(client.DiffieHellman.DecryptionIV));
-            tasks.Add(Kernel.NextBytesAsync(client.DiffieHellman.EncryptionIV));
-            await Task.WhenAll(tasks);
-
-            var handshakeRequest = new MsgHandshake(
-                client.DiffieHellman, 
-                client.DiffieHellman.EncryptionIV,
-                client.DiffieHellman.DecryptionIV);
-
+            var handshakeRequest = new MsgHandshake(client.DiffieHellman);
             await handshakeRequest.RandomizeAsync();
             await client.SendAsync(handshakeRequest);
             return client;
@@ -84,11 +74,9 @@ namespace Comet.Game
 
                 actor.DiffieHellman.ComputePrivateKey(msg.ClientKey);
 
-                actor.Cipher.GenerateKeys(new object[] { 
-                    actor.DiffieHellman.PrivateKey.ToByteArrayUnsigned() });
-                (actor.Cipher as BlowfishCipher).SetIVs(
-                    actor.DiffieHellman.DecryptionIV, 
-                    actor.DiffieHellman.EncryptionIV);
+                // Rekeying also resets both IVs to zero, as the client does
+                actor.Cipher.GenerateKeys(new object[] {
+                    actor.DiffieHellman.ComputeCipherKey() });
 
                 actor.DiffieHellman = null;
                 return true;
