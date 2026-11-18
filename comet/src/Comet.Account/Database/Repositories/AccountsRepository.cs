@@ -61,8 +61,8 @@ namespace Comet.Account.Database.Repositories
         }
 
         /// <summary>
-        /// Starts an SRP6 login for the account, or returns null if no password has been
-        /// set for SRP6 yet (accounts from before patch 5619).
+        /// Starts an SRP6 login for the account, or returns null if the account has no
+        /// password set (no SRP6 salt and verifier).
         /// </summary>
         /// <param name="account">Account logging in</param>
         public static Srp6 BeginLogin(DbAccount account)

@@ -89,8 +89,8 @@
         }
 
         /// <summary>
-        /// Sets an account's password for the SRP6 login used from patch 5619. Accounts
-        /// from older patches need this once: their password hashes can't be converted.
+        /// Sets an account's password: stores a new SRP6 salt and verifier. This is the
+        /// only way to set a password, since the verifier can't be computed in SQL.
         /// </summary>
         /// <param name="username">Username of the account</param>
         /// <param name="password">New password</param>
