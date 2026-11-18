@@ -18,7 +18,7 @@ namespace Comet.Game
         // State caches
         public static ConcurrentDictionary<uint, Client> Clients = new ConcurrentDictionary<uint, Client>();
         public static MemoryCache Logins = MemoryCache.Default;
-        public static List<uint> Registration = new List<uint>();
+        public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 
         // Background services
         public static class Services

@@ -102,7 +102,7 @@ namespace Comet.Game.Packets
                 client.Creation = new Creation();
                 client.Creation.AccountID = auth.AccountID;
                 client.Creation.Token = (uint)this.Token;
-                Kernel.Registration.Add(client.Creation.Token);
+                Kernel.Registration.TryAdd(client.Creation.Token, 0);
                 await client.SendAsync(MsgTalk.LoginNewRole);
             }
             else

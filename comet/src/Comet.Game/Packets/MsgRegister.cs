@@ -59,7 +59,7 @@ namespace Comet.Game.Packets
         {
             // Validate that the player has access to character creation
             if (client.Creation == null || this.Token != client.Creation.Token || 
-                !Kernel.Registration.Contains(this.Token))
+                !Kernel.Registration.ContainsKey(this.Token))
             {
                 await client.SendAsync(MsgTalk.RegisterInvalid);
                 client.Disconnect();
@@ -114,7 +114,7 @@ namespace Comet.Game.Packets
             { 
                 // Save the character and continue with login
                 await CharactersRepository.CreateAsync(character); 
-                Kernel.Registration.Remove(client.Creation.Token);
+                Kernel.Registration.TryRemove(client.Creation.Token, out _);
                 await client.SendAsync(MsgTalk.RegisterOk);
             }
             catch 

@@ -168,7 +168,7 @@ namespace Comet.Game
             Kernel.Clients.TryRemove(actor.ID, out _);
 
             if (actor.Creation != null)
-                Kernel.Registration.Remove(actor.Creation.Token);
+                Kernel.Registration.TryRemove(actor.Creation.Token, out _);
 
             if (actor.Character != null)
                 actor.Character.SaveAsync(true).GetAwaiter();
