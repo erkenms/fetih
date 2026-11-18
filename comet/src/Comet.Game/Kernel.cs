@@ -15,8 +15,13 @@ namespace Comet.Game
     /// </summary>
     public static class Kernel
     {
-        // State caches
+        // State caches. Clients holds every authenticated connection by account,
+        // including ones still creating a character.
         public static SessionRegistry<Client> Clients = new SessionRegistry<Client>();
+
+        // Characters in the game world, by character ID and name
+        public static PlayerRegistry<Client> Players = new PlayerRegistry<Client>();
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

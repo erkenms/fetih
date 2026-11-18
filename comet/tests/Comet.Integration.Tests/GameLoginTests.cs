@@ -60,6 +60,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task OnlineCountGoesUpAndDownWithPlayers()
+        {
+            // Other tests' players may still be leaving, so compare two of ours
+            var (first, _) = await this.PlayingAsync();
+            await using var firstGuard = first;
+            var (second, _) = await this.PlayingAsync();
+            async Task<int> OnlineAtAsync(string eventName, string name) =>
+                (await this.Servers.WaitForEventAsync("game", eventName, "name", name))
+                    .GetProperty("online").GetInt32();
+
+            int withBoth = await OnlineAtAsync("session.login", second.User.Name);
+            Assert.True(withBoth >= 2);
+            await second.DisposeAsync();
+            Assert.True(await OnlineAtAsync("session.logout", second.User.Name) < withBoth);
+        }
+
+        [Fact]
         public async Task LoggingInAgainClosesTheFirstConnection()
         {
             var (first, email) = await this.PlayingAsync();

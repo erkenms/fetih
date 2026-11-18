@@ -157,11 +157,14 @@ namespace Comet.Game.Packets
                 // Character already exists
                 client.Character = new Character(character);
                 client.LoggedInAt = DateTime.UtcNow;
+                Kernel.Players.Add(character.CharacterID, character.Name, client);
                 LogEvents.For<MsgConnect>(LogEvents.SessionLogin).Information(
                     "{Name} logged in (connection {ConnId}, account {AccountId}, " +
-                    "character {CharacterId}, level {Level}, from {IP}, map {MapId} at {X},{Y})",
+                    "character {CharacterId}, level {Level}, from {IP}, map {MapId} at {X},{Y}; " +
+                    "{Online} online)",
                     character.Name, client.ConnId, auth.AccountID, character.CharacterID,
-                    character.Level, client.IPAddress, character.MapID, character.X, character.Y);
+                    character.Level, client.IPAddress, character.MapID, character.X, character.Y,
+                    Kernel.Players.Count);
                 await client.SendAsync(MsgTalk.LoginOk);
                 await client.SendAsync(new MsgUserInfo(client.Character));
             }            

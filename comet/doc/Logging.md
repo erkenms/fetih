@@ -135,8 +135,8 @@ email addresses of up to 127 characters; passwords are 6 to 16 printable charact
 | Event | Level | Fields |
 |-------|-------|--------|
 | `game.auth_failed` | warn | `connId`, `ip`, `reason` (`invalid_token`, `ip_mismatch`) |
-| `session.login` | info | `name`, `connId`, `accountId`, `characterId`, `level`, `ip`, `mapId`, `x`, `y` |
-| `session.logout` | info | `name`, `reason`, `durationSec`, `connId`, `accountId`, `characterId`, `ip`, `mapId`, `x`, `y` |
+| `session.login` | info | `name`, `connId`, `accountId`, `characterId`, `level`, `ip`, `mapId`, `x`, `y`, `online` |
+| `session.logout` | info | `name`, `reason`, `durationSec`, `connId`, `accountId`, `characterId`, `ip`, `mapId`, `x`, `y`, `online` |
 | `session.replaced` | info | `accountId`, `ip`, `previousConnId`, `previousIp` |
 | `character.created` | info | `name`, `accountId`, `characterId`, `class`, `mesh` |
 | `character.create_failed` | info/warn/error | `reason` (`name_taken`, `invalid_name`, `invalid_input`, `invalid_token`, `db_error`) plus `accountId` and `name`, or `connId` and `ip` for `invalid_token` |
@@ -146,6 +146,8 @@ characters without spaces, and no `[GM]` or `[PM]`. Names are unique regardless 
 
 `session.login` is written when an existing character enters the world.
 `session.logout` is written once per `session.login`, when that connection ends.
+`online` is the number of players in the world right after the event, so the latest
+value of either event is the current player count (for a Grafana "players online" panel).
 `durationSec` is the time in the world.
 
 ### Packets

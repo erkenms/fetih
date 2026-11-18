@@ -180,14 +180,15 @@ namespace Comet.Game
             if (actor.Character != null && actor.LoggedInAt.HasValue)
             {
                 var character = actor.Character;
+                Kernel.Players.Remove(character.CharacterID, character.Name, actor);
                 LogEvents.For<Server>(LogEvents.SessionLogout).Information(
                     "{Name} logged out: {Reason} after {DurationSec}s " +
                     "(connection {ConnId}, account {AccountId}, character {CharacterId}, " +
-                    "from {IP}, map {MapId} at {X},{Y})",
+                    "from {IP}, map {MapId} at {X},{Y}; {Online} online)",
                     character.Name, actor.DisconnectReason ?? DisconnectReasons.Server,
                     Math.Round((DateTime.UtcNow - actor.LoggedInAt.Value).TotalSeconds, 3),
                     actor.ConnId, actor.AccountID, character.CharacterID, actor.IPAddress,
-                    character.MapID, character.X, character.Y);
+                    character.MapID, character.X, character.Y, Kernel.Players.Count);
             }
 
             actor.LogoutAsync().ContinueWith(
