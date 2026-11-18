@@ -20,11 +20,12 @@ namespace Comet.Game.Packets
     public sealed class MsgRegister : MsgBase<Client>
     {
         // Packet Properties
-        public string Username { get; set; }
+        public uint Identity { get; set; }
         public string CharacterName { get; set; }
         public ushort Mesh { get; set; }
         public ushort Class { get; set; }
         public uint Token { get; set; }
+        public string MacAddress { get; set; }
 
         // Registration constants
         private static readonly byte[] Hairstyles = new byte[] {
@@ -37,18 +38,33 @@ namespace Comet.Game.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
+        /// <remarks>
+        /// 5619: from client binary (124 bytes: id at 4, name at 24, body at 72, class
+        /// at 74, token at 76, MAC address text at 80), matching the reference.
+        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
             this.Length = reader.ReadUInt16();
             this.Type = (PacketType)reader.ReadUInt16();
-            this.Username = reader.ReadString(16);
+            this.Identity = reader.ReadUInt32();
+            reader.BaseStream.Seek(24, SeekOrigin.Begin);
             this.CharacterName = reader.ReadString(16);
-            reader.BaseStream.Seek(16, SeekOrigin.Current);
+            reader.BaseStream.Seek(72, SeekOrigin.Begin);
             this.Mesh = reader.ReadUInt16();
             this.Class = reader.ReadUInt16();
             this.Token = reader.ReadUInt32();
+            this.MacAddress = reader.ReadString(40);
         }
+
+        /// <summary>
+        /// Returns true if the message belongs to the creation session the client opened
+        /// with MsgConnect. The 5619 client sends two IDs (at 4 and 76) and it isn't
+        /// confirmed which one carries the token from MsgConnect, so either may match.
+        /// </summary>
+        /// <param name="creationToken">Token stored when character creation began</param>
+        public bool MatchesToken(uint creationToken) =>
+            this.Token == creationToken || this.Identity == creationToken;
 
         /// <summary>
         /// Process can be invoked by a packet after decode has been called to structure
@@ -60,8 +76,11 @@ namespace Comet.Game.Packets
         public override async Task ProcessAsync(Client client)
         {
             // Validate that the player has access to character creation
-            if (client.Creation == null || this.Token != client.Creation.Token || 
-                !Kernel.Registration.ContainsKey(this.Token))
+            Serilog.Log.ForContext<MsgRegister>().Debug(
+                "Character creation request with id {Identity} and token {Token}",
+                this.Identity, this.Token);
+            if (client.Creation == null || !this.MatchesToken(client.Creation.Token) ||
+                !Kernel.Registration.ContainsKey(client.Creation.Token))
             {
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Warning(
                     "Character creation rejected for connection {ConnId} from {IP}: {Reason}",

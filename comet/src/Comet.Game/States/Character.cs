@@ -87,6 +87,8 @@ namespace Comet.Game.States
         Warrior = 20,
         Archer = 40,
         Ninja = 50,
+        Monk = 60,      // 5619: from client data (ini/ProfessionalName.ini)
+        Pirate = 70,    // 5619: from client data (ini/ProfessionalName.ini)
         Taoist = 100
     }
 }
