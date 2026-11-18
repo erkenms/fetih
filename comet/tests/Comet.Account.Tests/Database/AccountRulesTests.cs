@@ -65,5 +65,15 @@ namespace Comet.Account.Database.Tests
         {
             Assert.Equal("invalid_password", AccountRules.CheckPassword(password));
         }
+
+        [Theory]
+        [InlineData("invalid_username", "email address")]
+        [InlineData("invalid_password", "6 to 16 characters")]
+        [InlineData("username_taken", "already exists")]
+        [InlineData("unknown_account", "no account")]
+        public void ExplainsEveryReason(string reason, string expected)
+        {
+            Assert.Contains(expected, AccountRules.Explain(reason));
+        }
     }
 }

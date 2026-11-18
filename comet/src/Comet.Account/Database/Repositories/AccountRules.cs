@@ -53,5 +53,23 @@ namespace Comet.Account.Database.Repositories
                 return "invalid_password";
             return null;
         }
+
+        /// <summary>
+        /// Explains a reason from account creation or a password change to a person, for
+        /// the command line or a sign-up page.
+        /// </summary>
+        /// <param name="reason">Reason code, as logged in account.create_failed</param>
+        public static string Explain(string reason) => reason switch
+        {
+            "invalid_username" => "The account name must be an email address of at most " +
+                $"{MaxUsernameLength} characters, like player@example.com.",
+            "invalid_password" => $"The password must be {MinPasswordLength} to " +
+                $"{MaxPasswordLength} characters long, using English letters, digits, " +
+                "spaces and symbols.",
+            "username_taken" => "An account with this email address already exists " +
+                "(capital letters don't make a different address).",
+            "unknown_account" => "There is no account with this email address.",
+            _ => reason
+        };
     }
 }

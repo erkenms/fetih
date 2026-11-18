@@ -103,17 +103,21 @@
         private static async Task<int> RunCommandAsync(
             string command, string username, string password)
         {
+            string reason;
             if (command == "create-account")
+                reason = (await AccountsRepository.CreateAsync(username, password)).Error;
+            else
             {
-                var (account, _) = await AccountsRepository.CreateAsync(username, password);
-                return account != null ? 0 : 1;
+                reason = await AccountsRepository.SetPasswordAsync(username, password);
+                if (reason == null)
+                    Log.Information("Password set for {Username}", username);
+                else
+                    Log.Error("Password not set for {Username}: {Reason}", username, reason);
             }
 
-            string reason = await AccountsRepository.SetPasswordAsync(username, password);
-            if (reason == null)
-                Log.Information("Password set for {Username}", username);
-            else
-                Log.Error("Password not set for {Username}: {Reason}", username, reason);
+            // The log line has the reason code; say what it means
+            if (reason != null)
+                Console.WriteLine("  " + AccountRules.Explain(reason));
             return reason == null ? 0 : 1;
         }
     }
