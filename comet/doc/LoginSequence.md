@@ -6,7 +6,7 @@ Conquer Online's login sequence is split between two stages: account and game. T
 
 First, the game client connects to the Account server and the server sends a seed using a MsgEncryptCode message. Older clients used it to encrypt the password with RC5; from patch 5532 the password never leaves the client, so the seed goes unused. The client sends MsgAccountSRP6 with the account name and realm name.
 
-The account server answers with an SRP6 challenge (MsgLoginChallengeS): the server's public key and the account's salt. The client proves it knows the password with MsgLoginProofC, which holds its public key and a proof. The server checks the proof against the verifier stored for the account; the password itself is never stored or sent. Accounts from older patches have no verifier and must have their password set once with `dotnet Comet.Account.dll set-password <username> <password>`.
+The account server answers with an SRP6 challenge (MsgLoginChallengeS): the server's public key and the account's salt. The client proves it knows the password with MsgLoginProofC, which holds its public key and a proof. The server checks the proof against the verifier stored for the account; the password itself is never stored or sent. An account without a verifier (`SrpSalt` and `SrpVerifier` in the account table) can't log in. The verifier can't be computed in SQL, so passwords are set by a tool that uses `Srp6.ComputeVerifier`.
 
 After the account server verifies the proof, it gets a single-use authentication token from the game server and sends it to the client in a MsgConnectEx message, which also contains the game server's IP address and port. The game client then disconnects and reconnects to that game server.
 

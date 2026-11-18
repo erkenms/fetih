@@ -7,7 +7,8 @@
     /// <summary>
     /// Account information for a registered player. The account server uses this information
     /// to authenticate the player on login, and track permissions and player access to the
-    /// server. Passwords are hashed using a salted SHA-1 for user protection.
+    /// server. Passwords aren't stored: the account keeps an SRP6 salt and verifier, which
+    /// only let the server check the client's proof that it knows the password.
     /// </summary>
     [Table("account")]
     public partial class DbAccount
@@ -23,8 +24,6 @@
         // Column Properties
         public uint AccountID { get; private set; }
         public string Username { get; set; }
-        public string Password { get; set; }
-        public string Salt { get; set; }
         public string SrpSalt { get; set; }
         public string SrpVerifier { get; set; }
         public ushort AuthorityID { get; set; }

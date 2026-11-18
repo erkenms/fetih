@@ -2,7 +2,6 @@ namespace Comet.Account.Database.Repositories
 {
     using System;
     using System.Linq;
-    using System.Text;
     using System.Threading.Tasks;
     using Comet.Account.Database.Models;
     using Comet.Network.Security;
@@ -31,38 +30,8 @@ namespace Comet.Account.Database.Repositories
         }
 
         /// <summary>
-        /// Sets an account's password for the SRP6 login: stores a new random salt and the
-        /// verifier computed from the password. The password itself isn't stored.
-        /// </summary>
-        /// <param name="username">Username of the account</param>
-        /// <param name="password">New password, as it will be typed in the client</param>
-        /// <returns>Returns false if the account doesn't exist.</returns>
-        public static async Task<bool> SetPasswordAsync(string username, string password)
-        {
-            using var db = new ServerDbContext();
-            var account = await db.Accounts.SingleOrDefaultAsync(x => x.Username == username);
-            if (account == null)
-                return false;
-
-            SetPassword(account, password);
-            await db.SaveChangesAsync();
-            return true;
-        }
-
-        /// <summary>Stores a new salt and verifier for a password on the account.</summary>
-        /// <param name="account">Account to update</param>
-        /// <param name="password">New password, as it will be typed in the client</param>
-        public static void SetPassword(DbAccount account, string password)
-        {
-            var salt = Srp6.CreateSalt();
-            account.SrpSalt = Convert.ToHexString(salt);
-            account.SrpVerifier = Convert.ToHexString(
-                Srp6.ComputeVerifier(salt, Encoding.Latin1.GetBytes(password)));
-        }
-
-        /// <summary>
-        /// Starts an SRP6 login for the account, or returns null if no password has been
-        /// set for SRP6 yet (accounts from before patch 5619).
+        /// Starts an SRP6 login for the account, or returns null if the account has no
+        /// password set (no SRP6 salt and verifier).
         /// </summary>
         /// <param name="account">Account logging in</param>
         public static Srp6 BeginLogin(DbAccount account)

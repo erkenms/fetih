@@ -27,8 +27,6 @@ DROP TABLE IF EXISTS `account`;
 CREATE TABLE `account` (
   `AccountID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Username` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `Password` varchar(70) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `Salt` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `SrpSalt` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `SrpVerifier` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `AuthorityID` smallint(6) unsigned NOT NULL DEFAULT '1',
@@ -51,47 +49,13 @@ CREATE TABLE `account` (
 -- Dumping data for table `account`
 --
 
+-- The seed account's password is "test". Passwords are stored as an SRP6 salt and
+-- verifier (see Srp6.cs in Comet.Network), which can't be computed in SQL.
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'Spirited','9ef5afd9eb73933ffc8ecd558014d94d8fb4b8ae','83d6f3dec10a59b07b16a330c9e5522c',NULL,NULL,1,1,NULL,NULL,NULL,'2018-09-26 00:17:40');
+INSERT INTO `account` VALUES (1,'Spirited','95D528FECD46DEDEBD2683A15E4503C4B33A5F0064EA69FD09D15B55F7C4965A','8A10E1743D5AD977D2358E1F3A587BE77E736A0E401B776D9D6DAD9D805A9E0A',1,1,NULL,NULL,NULL,'2018-09-26 00:17:40');
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8 */ ;
-/*!50003 SET character_set_results = utf8 */ ;
-/*!50003 SET collation_connection  = utf8_general_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'STRICT_TRANS_TABLES,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`localhost`*/ /*!50003 TRIGGER `account_passwordhash` BEFORE INSERT ON `account` FOR EACH ROW BEGIN
-  --
-  -- Name:   Password Hash
-  -- Author: Gareth Jensen (Spirited)
-  -- Date:   2018-09-25
-  --
-  -- Description:
-  -- When a plain text password without a hash or salt has been inserted into the database 
-  -- along with a new account, then the plain text password will be SHA1 hashed using a 
-  -- generated salt from a random string. Due to client limitations, passwords cannot be
-  -- longer than 16 characters.
-  -- 
-  IF (NEW.`Salt` IS NULL) THEN
-
-    IF (LENGTH(NEW.`Password`) > 16) THEN
-      SET NEW.`Password` = NULL;
-        END IF;
-
-        SET NEW.`Salt` = MD5(RAND());
-        SET NEW.`Password` = SHA(CONCAT(NEW.`Password`, NEW.`Salt`));
-    END IF;
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `account_authority`
