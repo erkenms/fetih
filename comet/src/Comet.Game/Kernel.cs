@@ -26,6 +26,9 @@ namespace Comet.Game
         // Map grids, read from the client's map files at startup
         public static MapStore Maps;
 
+        // Running maps and who is on them
+        public static WorldMaps<Client> World;
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

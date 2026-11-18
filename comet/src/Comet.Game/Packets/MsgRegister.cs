@@ -7,6 +7,7 @@ namespace Comet.Game.Packets
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Packets;
     using Comet.Network.Sockets;
     using Microsoft.EntityFrameworkCore;
@@ -122,9 +123,9 @@ namespace Comet.Game.Packets
             character.Mesh = this.Mesh;
             character.Silver = 1000;
             character.Level = 1;
-            character.MapID = 1010;
-            character.X = 61;
-            character.Y = 109;
+            character.MapID = StartPosition.MapID;
+            character.X = StartPosition.X;
+            character.Y = StartPosition.Y;
             character.Strength = 4;
             character.Agility = 6;
             character.Vitality = 12;

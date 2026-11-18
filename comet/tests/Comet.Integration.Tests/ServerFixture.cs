@@ -31,6 +31,9 @@ namespace Comet.Integration.Tests
 
         // Short, so tests can idle longer than it without being slow
         public const int HandshakeTimeoutSeconds = 2;
+
+        // The one cell of the test Twin City (1002) that can't be walked on
+        public static readonly (int X, int Y) BlockedCell = (100, 100);
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -143,7 +146,8 @@ namespace Comet.Integration.Tests
 
         /// <summary>
         /// Writes the maps the tests use: newbie village (1010), where new characters
-        /// start, and Twin City (1002), each as a plain DMap with every cell walkable.
+        /// start, and Twin City (1002), each as a plain DMap. Every cell is walkable
+        /// except <see cref="BlockedCell"/> in Twin City.
         /// </summary>
         private void WriteMaps()
         {
@@ -153,7 +157,8 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
                 MapFiles.GameMapDat((1010, "map/map/newbie.7z"), (1002, "map/map/newplain.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newbie.DMap"), MapFiles.DMap(132, 132));
-            File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972));
+            File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
+                walkable: (x, y) => (x, y) != BlockedCell));
         }
 
         public async Task DisposeAsync()
@@ -244,9 +249,16 @@ namespace Comet.Integration.Tests
         }
 
         /// <summary>Runs SQL against the test account database.</summary>
-        public async Task ExecuteAccountSqlAsync(string sql, params (string, object)[] parameters)
+        public Task ExecuteAccountSqlAsync(string sql, params (string, object)[] parameters) =>
+            this.ExecuteSqlAsync(this.AccountSchema, sql, parameters);
+
+        /// <summary>Runs SQL against the test game database.</summary>
+        public Task ExecuteGameSqlAsync(string sql, params (string, object)[] parameters) =>
+            this.ExecuteSqlAsync(this.GameSchema, sql, parameters);
+
+        private async Task ExecuteSqlAsync(string schema, string sql, (string, object)[] parameters)
         {
-            await using var db = new MySqlConnection(this.ConnectionString(this.AccountSchema));
+            await using var db = new MySqlConnection(this.ConnectionString(schema));
             await db.OpenAsync();
             var command = new MySqlCommand(sql, db);
             foreach (var (name, value) in parameters)

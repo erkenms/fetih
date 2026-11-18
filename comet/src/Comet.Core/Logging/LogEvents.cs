@@ -33,6 +33,8 @@ namespace Comet.Core.Logging
         public const string SessionReplaced = "session.replaced";
         public const string CharacterCreated = "character.created";
         public const string CharacterCreateFailed = "character.create_failed";
+        public const string CharacterRelocated = "character.relocated";
+        public const string CharacterSaved = "character.saved";
 
         // World
         public const string MapIndexLoaded = "map.index_loaded";

@@ -7,6 +7,7 @@
     using Comet.Core.Logging;
     using Comet.Game.Database;
     using Comet.Game.Packets;
+    using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.RPC;
     using Comet.Network.Security;
@@ -58,6 +59,7 @@
             try
             {
                 Kernel.Maps = new MapStore(config.Maps.ClientDirectory);
+                Kernel.World = new WorldMaps<Client>(Kernel.Maps);
             }
             catch (Exception e)
             {

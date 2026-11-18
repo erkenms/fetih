@@ -139,6 +139,8 @@ email addresses of up to 127 characters; passwords are 6 to 16 printable charact
 | `session.logout` | info | `name`, `reason`, `durationSec`, `connId`, `accountId`, `characterId`, `ip`, `mapId`, `x`, `y`, `online` |
 | `session.replaced` | info | `accountId`, `ip`, `previousConnId`, `previousIp` |
 | `character.created` | info | `name`, `accountId`, `characterId`, `class`, `mesh` |
+| `character.relocated` | warn | `name`, `fromMapId`, `fromX`, `fromY`, `reason` (`unknown_map`, `blocked_cell`): the saved position couldn't be used, so the character entered at the start position |
+| `character.saved` | debug | `name`, `characterId`, `mapId`, `x`, `y`: written after the logout save finishes (`session.logout` comes before it) |
 | `character.create_failed` | info/warn/error | `reason` (`name_taken`, `invalid_name`, `invalid_input`, `invalid_token`, `db_error`) plus `accountId` and `name`, or `connId` and `ip` for `invalid_token` |
 
 `invalid_name` means the name breaks the character name rules: 4 to 15 printable ASCII

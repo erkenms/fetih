@@ -6,6 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Packets;
     using Comet.Network.Sockets;
     using Comet.Shared.Models;
@@ -154,20 +155,62 @@ namespace Comet.Game.Packets
             }
             else
             {
-                // Character already exists
+                // Character already exists: put it on its map, then in the world
                 client.Character = new Character(character);
+                if (!PlaceOnMap(client))
+                {
+                    await client.SendAsync(MsgTalk.LoginInvalid);
+                    client.Disconnect(DisconnectReasons.Server);
+                    return;
+                }
+
+                var entered = client.Character;
                 client.LoggedInAt = DateTime.UtcNow;
-                Kernel.Players.Add(character.CharacterID, character.Name, client);
+                Kernel.Players.Add(entered.CharacterID, entered.Name, client);
                 LogEvents.For<MsgConnect>(LogEvents.SessionLogin).Information(
                     "{Name} logged in (connection {ConnId}, account {AccountId}, " +
                     "character {CharacterId}, level {Level}, from {IP}, map {MapId} at {X},{Y}; " +
                     "{Online} online)",
-                    character.Name, client.ConnId, auth.AccountID, character.CharacterID,
-                    character.Level, client.IPAddress, character.MapID, character.X, character.Y,
+                    entered.Name, client.ConnId, auth.AccountID, entered.CharacterID,
+                    entered.Level, client.IPAddress, entered.MapID, entered.X, entered.Y,
                     Kernel.Players.Count);
                 await client.SendAsync(MsgTalk.LoginOk);
                 await client.SendAsync(new MsgUserInfo(client.Character));
             }            
+        }
+
+        /// <summary>
+        /// Puts the client's character on its saved map and cell. If that map can't be
+        /// loaded or the cell is blocked (a removed map, or a position saved by a bug),
+        /// the character is moved to the start position instead.
+        /// </summary>
+        /// <returns>False if not even the start map could be loaded.</returns>
+        private static bool PlaceOnMap(Client client)
+        {
+            var character = client.Character;
+            if (!Kernel.World.TryGet(character.MapID, out var map) ||
+                !map.Grid.IsWalkable(character.X, character.Y))
+            {
+                LogEvents.For<MsgConnect>(LogEvents.CharacterRelocated).Warning(
+                    "{Name} was saved at map {FromMapId} at {FromX},{FromY}, where they can't " +
+                    "stand ({Reason}); moving them to the start position",
+                    character.Name, character.MapID, character.X, character.Y,
+                    map == null ? "unknown_map" : "blocked_cell");
+                character.MapID = StartPosition.MapID;
+                character.X = StartPosition.X;
+                character.Y = StartPosition.Y;
+                if (!Kernel.World.TryGet(character.MapID, out map))
+                {
+                    Serilog.Log.ForContext<MsgConnect>().Error(
+                        "Start map {MapId} can't be loaded; {Name} can't enter the game",
+                        character.MapID, character.Name);
+                    return false;
+                }
+            }
+
+            map.Add(client, character.X, character.Y);
+            client.Map = map;
+            return true;
         }
     }
 }

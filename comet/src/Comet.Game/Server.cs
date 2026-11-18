@@ -180,6 +180,7 @@ namespace Comet.Game
             if (actor.Character != null && actor.LoggedInAt.HasValue)
             {
                 var character = actor.Character;
+                actor.Map?.Remove(actor);
                 Kernel.Players.Remove(character.CharacterID, character.Name, actor);
                 LogEvents.For<Server>(LogEvents.SessionLogout).Information(
                     "{Name} logged out: {Reason} after {DurationSec}s " +
