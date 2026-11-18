@@ -101,6 +101,10 @@ namespace Comet.Game.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
+        /// <remarks>
+        /// 5619: from client binary (same layout as 5187: color at 4, channel at 8, style
+        /// at 10, three uints at 12, string list at 24) and the reference (channels).
+        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);

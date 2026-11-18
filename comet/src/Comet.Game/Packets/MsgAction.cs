@@ -25,6 +25,7 @@ namespace Comet.Game.Packets
         public ushort Y { get; set; }
         public uint Map { get; set; }
         public uint Color { get; set; }
+        public ushort Extra { get; set; }
 
         /// <summary>
         /// Decodes a byte packet into the packet structure defined by this message class. 
@@ -32,6 +33,10 @@ namespace Comet.Game.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
+        /// <remarks>
+        /// 5619: from client binary (38 bytes: the 5187 layout plus a ushort at 36; the
+        /// client sends actions 74 to 78, 97 and 132 while logging in).
+        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -49,6 +54,8 @@ namespace Comet.Game.Packets
             this.Y = reader.ReadUInt16();
             this.Map = reader.ReadUInt32();
             this.Color = reader.ReadUInt32();
+            if (this.Length >= 38)
+                this.Extra = reader.ReadUInt16();
         }
 
         /// <summary>
@@ -72,6 +79,7 @@ namespace Comet.Game.Packets
             writer.Write(this.Y);
             writer.Write(this.Map);
             writer.Write(this.Color);
+            writer.Write(this.Extra);
             return writer.ToArray();
         }
 

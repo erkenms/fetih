@@ -14,6 +14,9 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgItem : MsgBase<Client>
     {
+        // 5619: from client binary (the client builds MsgItem with 88 bytes)
+        public const int Size = 88;
+
         // Packet Properties
         public uint CharacterID { get; set; }
         public uint Command { get; set; }
@@ -27,6 +30,10 @@ namespace Comet.Game.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
+        /// <remarks>
+        /// 5619: from client binary (id at 4, data at 8, action at 12, timestamp at 16)
+        /// and the reference (argument at 20).
+        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -54,6 +61,7 @@ namespace Comet.Game.Packets
             writer.Write((uint)this.Action);
             writer.Write(this.Timestamp);
             writer.Write(this.Argument);
+            writer.Write(new byte[MsgItem.Size - 24]);
             return writer.ToArray();
         }
 
