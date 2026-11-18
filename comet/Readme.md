@@ -38,6 +38,9 @@ In the top directory, you can find files for containers:
 
 The game server reads map data from a copy of the 5619 client: `ini/GameMap.dat` for
 the list of maps, and the `.7z` (or `.DMap`) files under `map/map` for each map's cells.
-Set `Maps:ClientDirectory` in `Comet.Game.config` to that folder; the default,
-`../../../_CLIENT/5619`, is a `_CLIENT` folder next to the `comet` folder (it isn't
-committed). A map is loaded the first time it's used, then kept in memory.
+Set `Maps:ClientDirectory` in `Comet.Game.config` to that folder. A relative path is
+relative to the server's build folder (`src/Comet.Game/bin/<Configuration>/net11.0`), so
+the default, `../../../../../../_CLIENT/5619`, is a `_CLIENT` folder next to the `comet`
+folder (it isn't committed). The server also reads `map/Scene` there: terrain scenes
+make bridges and platforms walkable. A map is loaded the first time it's used, then kept
+in memory.

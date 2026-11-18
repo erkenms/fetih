@@ -69,11 +69,17 @@ namespace Comet.Game.Database
 
         /// <summary>
         /// Where the server reads map data: a copy of the client folder (at least its
-        /// ini/GameMap.dat and map/map folder), relative to the working directory.
+        /// ini, map/map and map/Scene folders). A relative path is relative to the
+        /// server's own folder (where Comet.Game.dll is), so the server finds it however
+        /// it's started.
         /// </summary>
         public class MapsConfiguration
         {
             public string ClientDirectory { get; set; }
+
+            /// <summary>The client folder as a full path.</summary>
+            public string ResolveClientDirectory() =>
+                System.IO.Path.GetFullPath(this.ClientDirectory, System.AppContext.BaseDirectory);
         }
 
         /// <summary>

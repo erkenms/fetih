@@ -58,13 +58,13 @@
             // Read the map list (grids are loaded when a map is first used)
             try
             {
-                Kernel.Maps = new MapStore(config.Maps.ClientDirectory);
+                Kernel.Maps = new MapStore(config.Maps.ResolveClientDirectory());
                 Kernel.World = new WorldMaps<Client>(Kernel.Maps);
             }
             catch (Exception e)
             {
                 Log.Error(e, "Can't read map data from {Directory}; set Maps:ClientDirectory " +
-                    "to a copy of the 5619 client", config.Maps.ClientDirectory);
+                    "to a copy of the 5619 client", config.Maps.ResolveClientDirectory());
                 Log.CloseAndFlush();
                 return;
             }
