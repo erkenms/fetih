@@ -17,7 +17,7 @@
     /// </summary>
     internal static class Program
     {
-        private static async Task Main(string[] args)
+        private static async Task<int> Main(string[] args)
         {
             // Copyright notice may not be commented out. If adding your own copyright or
             // claim of ownership, you may include a second copyright above the existing
@@ -30,22 +30,25 @@
             Console.WriteLine("  Patch 5619");
             Console.WriteLine();
 
-            // "set-password <username> <password>" sets a password and exits
-            bool setPassword = args.Length > 0 && args[0] == "set-password";
-            if (setPassword && args.Length < 3)
+            // "create-account <email> <password>" and "set-password <email> <password>"
+            // change the database and exit instead of starting the server
+            string command = args.Length > 0 &&
+                (args[0] == "create-account" || args[0] == "set-password") ? args[0] : null;
+            if (command != null && args.Length < 3)
             {
-                Console.WriteLine("  Usage: Comet.Account set-password <username> <password>");
-                return;
+                Console.WriteLine("  Usage: Comet.Account create-account <email> <password>");
+                Console.WriteLine("         Comet.Account set-password <email> <password>");
+                return 2;
             }
 
             // Read configuration file and command-line arguments
-            var config = new ServerConfiguration(setPassword ? args[3..] : args);
+            var config = new ServerConfiguration(command != null ? args[3..] : args);
             LogSetup.Configure("account", config.Logging);
             if (!config.Valid) 
             {
                 Log.Error("Invalid server configuration file");
                 Log.CloseAndFlush();
-                return;
+                return 1;
             }
 
             // Initialize the database
@@ -55,14 +58,14 @@
             {
                 Log.Error("Invalid database configuration");
                 Log.CloseAndFlush();
-                return;
+                return 1;
             }
 
-            if (setPassword)
+            if (command != null)
             {
-                await Program.SetPasswordAsync(args[1], args[2]);
+                int exitCode = await Program.RunCommandAsync(command, args[1], args[2]);
                 Log.CloseAndFlush();
-                return;
+                return exitCode;
             }
 
             // Recover caches from the database
@@ -86,20 +89,32 @@
                 config.Network.IPAddress, config.Network.Port);
             
             await serverTask;
+            return 0;
         }
 
         /// <summary>
-        /// Sets an account's password: stores a new SRP6 salt and verifier. This is the
-        /// only way to set a password, since the verifier can't be computed in SQL.
+        /// Runs a command-line account command. These are the only ways to create an
+        /// account or set a password, since the SRP6 verifier can't be computed in SQL.
         /// </summary>
-        /// <param name="username">Username of the account</param>
-        /// <param name="password">New password</param>
-        private static async Task SetPasswordAsync(string username, string password)
+        /// <param name="command">create-account or set-password</param>
+        /// <param name="username">Account name (email address)</param>
+        /// <param name="password">Password, as it will be typed in the client</param>
+        /// <returns>Process exit code: 0 on success, 1 on failure.</returns>
+        private static async Task<int> RunCommandAsync(
+            string command, string username, string password)
         {
-            if (await AccountsRepository.SetPasswordAsync(username, password))
+            if (command == "create-account")
+            {
+                var (account, _) = await AccountsRepository.CreateAsync(username, password);
+                return account != null ? 0 : 1;
+            }
+
+            string reason = await AccountsRepository.SetPasswordAsync(username, password);
+            if (reason == null)
                 Log.Information("Password set for {Username}", username);
             else
-                Log.Error("No account named {Username}", username);
+                Log.Error("Password not set for {Username}: {Reason}", username, reason);
+            return reason == null ? 0 : 1;
         }
     }
 }

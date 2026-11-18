@@ -26,7 +26,7 @@ DROP TABLE IF EXISTS `account`;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `account` (
   `AccountID` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `Username` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `Username` varchar(127) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `SrpSalt` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `SrpVerifier` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `AuthorityID` smallint(6) unsigned NOT NULL DEFAULT '1',
@@ -49,9 +49,11 @@ CREATE TABLE `account` (
 -- Dumping data for table `account`
 --
 
--- The seed account "test" has the password "test". Passwords are stored as an SRP6
--- salt and verifier, which can't be computed in SQL: set them with
---   dotnet Comet.Account.dll set-password <username> <password>
+-- The seed account "test" has the password "test". New accounts use an email address as
+-- their name. Passwords are stored as an SRP6 salt and verifier, which can't be computed
+-- in SQL: create accounts and set passwords with
+--   dotnet Comet.Account.dll create-account <email> <password>
+--   dotnet Comet.Account.dll set-password <email> <password>
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
 INSERT INTO `account` VALUES (1,'test','E662B6D5DDED2A085435284DA8C0269EBF6AA7AF669FDF2A757DC60D6394BB84','F01F1DFA5DD3BF010969829BE832E5B4F0CA392CF477888CED5F1A28E1368330',1,1,NULL,NULL,NULL,'2026-11-18 11:47:00');

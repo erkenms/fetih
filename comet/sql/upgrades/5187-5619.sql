@@ -3,6 +3,8 @@ USE `comet.account`;
 -- Patch 5619 logs in with SRP6: the account server keeps a salt and verifier per
 -- account instead of a password hash. Neither can be made from the old Password and
 -- Salt columns, so those are dropped and each account's password has to be set again.
+-- Account names become email addresses, so the name column is widened to the 127
+-- bytes the client can send.
 
 DROP TRIGGER IF EXISTS `account_passwordhash`;
 DROP PROCEDURE IF EXISTS `upgrade_5187_5619`;
@@ -56,6 +58,9 @@ BEGIN
 END //
 
 DELIMITER ;
+
+ALTER TABLE `account` MODIFY COLUMN `Username` VARCHAR(127) CHARACTER SET utf8
+  COLLATE utf8_general_ci NOT NULL;
 
 CALL `upgrade_5187_5619`();
 DROP PROCEDURE `upgrade_5187_5619`;

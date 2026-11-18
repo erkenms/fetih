@@ -23,6 +23,8 @@ namespace Comet.Core.Logging
         // Account server
         public const string AccountLogin = "account.login";
         public const string AccountLoginFailed = "account.login_failed";
+        public const string AccountCreated = "account.created";
+        public const string AccountCreateFailed = "account.create_failed";
 
         // Game server sessions
         public const string GameAuthFailed = "game.auth_failed";
