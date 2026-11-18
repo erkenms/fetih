@@ -89,7 +89,7 @@ namespace Comet.Integration.Tests
         public static IEnumerable<object[]> BadNames() => new[]
         {
             new object[] { new byte[0] },
-            new object[] { Encoding.ASCII.GetBytes("Ab") },
+            new object[] { Encoding.ASCII.GetBytes("Abc") },
             new object[] { Encoding.ASCII.GetBytes("SixteenCharsLong") },
             new object[] { Encoding.ASCII.GetBytes("Two Words") },
             new object[] { new byte[] { 0xC7, 0x61, 0xF0, 0x72, 0xFD } },       // Çağrı in Windows-1254

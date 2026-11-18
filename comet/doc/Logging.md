@@ -141,7 +141,7 @@ email addresses of up to 127 characters; passwords are 6 to 16 printable charact
 | `character.created` | info | `name`, `accountId`, `characterId`, `class`, `mesh` |
 | `character.create_failed` | info/warn/error | `reason` (`name_taken`, `invalid_name`, `invalid_input`, `invalid_token`, `db_error`) plus `accountId` and `name`, or `connId` and `ip` for `invalid_token` |
 
-`invalid_name` means the name breaks the character name rules: 3 to 15 printable ASCII
+`invalid_name` means the name breaks the character name rules: 4 to 15 printable ASCII
 characters without spaces, and no `[GM]` or `[PM]`. Names are unique regardless of case.
 
 `session.login` is written when an existing character enters the world.

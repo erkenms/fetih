@@ -4,14 +4,14 @@ namespace Comet.Game.Tests.States
     using Xunit;
 
     /// <summary>
-    /// Character names are 3 to 15 printable ASCII characters without spaces, and can't
+    /// Character names are 4 to 15 printable ASCII characters without spaces, and can't
     /// carry the staff tags.
     /// </summary>
     public class CharacterRulesTests
     {
         [Theory]
         [InlineData("Hero")]
-        [InlineData("Abc")]
+        [InlineData("Abcd")]
         [InlineData("FifteenCharsMax")]
         [InlineData("~*Dark_Lord*~")]
         [InlineData("#01Smile#02")]
@@ -24,7 +24,7 @@ namespace Comet.Game.Tests.States
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        [InlineData("Ab")]
+        [InlineData("Abc")]
         [InlineData("SixteenCharsLong")]
         [InlineData("Two Words")]
         [InlineData("Çağrı")]

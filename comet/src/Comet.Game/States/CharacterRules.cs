@@ -12,7 +12,7 @@ namespace Comet.Game.States
     public static class CharacterRules
     {
         // Constants
-        public const int MinNameLength = 3;
+        public const int MinNameLength = 4;       // the 5619 client asks for 4 to 15
         public const int MaxNameLength = 15;
         private static readonly string[] StaffTags = new[] { "[GM]", "[PM]" };
 
