@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageReference Include="BouncyCastle.NetCore" Version="1.9.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
-    <PackageReference Include="StreamJsonRpc" Version="2.12.27" />
+    <PackageReference Include="StreamJsonRpc" Version="2.26.150" />
     <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
   </ItemGroup>
 
