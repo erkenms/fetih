@@ -7,6 +7,7 @@
     using Comet.Account.Database;
     using Comet.Account.Database.Repositories;
     using Comet.Core.Logging;
+    using Comet.Network.Sockets;
     using Serilog;
 
     /// <summary>
@@ -44,6 +45,7 @@
             // Read configuration file and command-line arguments
             var config = new ServerConfiguration(command != null ? args[3..] : args);
             LogSetup.Configure("account", config.Logging);
+            PacketTrace.Configure(config.Logging?.PacketTrace);
             if (!config.Valid) 
             {
                 Log.Error("Invalid server configuration file");

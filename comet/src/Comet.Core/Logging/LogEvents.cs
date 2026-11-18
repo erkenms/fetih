@@ -44,6 +44,8 @@ namespace Comet.Core.Logging
         // Packets
         public const string PacketUnhandled = "packet.unhandled";
         public const string PacketError = "packet.error";
+        public const string PacketIn = "packet.in";
+        public const string PacketOut = "packet.out";
 
         /// <summary>
         /// Returns the global logger tagged with an event name and source class:

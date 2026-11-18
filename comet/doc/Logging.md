@@ -46,6 +46,30 @@ Each server's config file (`Comet.Account.config`, `Comet.Game.config`) has a
 Any value can be overridden on the command line, for example
 `dotnet Comet.Game.dll --Logging:Level=trace`.
 
+### Packet trace
+
+`Logging:PacketTrace` picks connections whose every packet is logged, as `packet.in`
+(after decryption) and `packet.out` (before encryption), with the raw bytes in hex:
+
+```json
+"PacketTrace": { "All": false, "Accounts": [3], "IPs": ["172.16.60.128"] }
+```
+
+A connection is traced if any of these match: `All`, its account ID (from the moment
+the account is known: after `MsgAccountSRP6` on the account server, after `MsgConnect`
+on the game server), or its IP address (from the first byte, so the key exchange and
+login are included). Trace events are written at trace level whatever `Level` is, and
+only to the JSON files, never the console. On the command line:
+`--Logging:PacketTrace:IPs:0=172.16.60.128`.
+
+To read a session's packets in order:
+
+```bash
+jq -r 'select(.event=="packet.in" or .event=="packet.out")
+  | [.ts[11:23], .event[7:], .connId, (.packetName // .packetType), (.action // ""), .length]
+  | @tsv' logs/game-*.jsonl
+```
+
 ## Line format (schema v1)
 
 ```json
@@ -169,6 +193,11 @@ the first time the map is used, so `map.loaded` appears once per map per server 
 |-------|-------|--------|
 | `packet.unhandled` | warn | `packetType`, `length`, `hex`, plus `action` for MsgAction/MsgItem |
 | `packet.error` | error | `packetType` (with `exc`) |
+| `packet.in` | trace | `packetName` (null if unknown), `packetType`, `length`, `connId`, `hex`, plus `accountId` once known and `action` for MsgAction/MsgItem; only for traced connections (see Packet trace) |
+| `packet.out` | trace | same as `packet.in` |
+
+The first `packet.in` of a game connection is the client's key exchange reply and the
+first `packet.out` is the server's handshake; neither has a real packet type.
 
 ## Using the logs
 

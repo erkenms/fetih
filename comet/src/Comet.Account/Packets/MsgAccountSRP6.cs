@@ -59,6 +59,7 @@ namespace Comet.Account.Packets
         {
             // Fetch account info from the database
             client.Account = await AccountsRepository.FindAsync(this.Username).ConfigureAwait(false);
+            client.AccountID = client.Account?.AccountID ?? 0;
             client.Srp = client.Account != null
                 ? AccountsRepository.BeginLogin(client.Account) : null;
             if (client.Srp == null)

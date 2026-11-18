@@ -242,6 +242,7 @@ namespace Comet.Network.Sockets
                     actor.Buffer[9..(consumed)].Span);
 
                 // Process the exchange now that bytes are decrypted
+                PacketTrace.In(actor, actor.Buffer[..consumed].Span);
                 if (!this.Exchanged(actor, actor.Buffer[..consumed].Span))
                 {
                     actor.Disconnect(DisconnectReasons.HandshakeFailed);
@@ -430,6 +431,7 @@ namespace Comet.Network.Sockets
                 if (length > buffer.Length) return false;
                 if (expected > examined) break;
 
+                PacketTrace.In(actor, buffer.Slice(consumed, length));
                 this.Received(actor, buffer.Slice(consumed, length + this.FooterLength));
                 consumed += length + this.FooterLength;
             }

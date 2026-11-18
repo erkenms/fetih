@@ -52,6 +52,8 @@ namespace Comet.Integration.Tests
         public int GamePort { get; private set; }
         public string LogDirectory { get; }
         public string MapDirectory { get; }
+        private readonly Dictionary<string, (long Position, List<JsonElement> Events)> LogFiles =
+            new Dictionary<string, (long, List<JsonElement>)>();
         private readonly string RepoRoot;
         private readonly string BuildConfiguration;
 
@@ -211,7 +213,7 @@ namespace Comet.Integration.Tests
         private void StartServer(string project, string schema, string server, params string[] args)
         {
             var process = this.StartProcess(project, server, DatabaseArgs(schema)
-                .Concat(new[] { "--Logging:Level=debug" }).Concat(args).ToArray());
+                .Concat(new[] { "--Logging:Level=debug", "--Logging:PacketTrace:All=true" }).Concat(args).ToArray());
             this.Processes.Add(process);
         }
 
@@ -306,24 +308,46 @@ namespace Comet.Integration.Tests
         /// <summary>All log events a server has written so far.</summary>
         public List<JsonElement> Events(string server)
         {
-            var events = new List<JsonElement>();
             var dir = Path.Combine(this.LogDirectory, server);
             if (!Directory.Exists(dir))
-                return events;
-            foreach (var file in Directory.GetFiles(dir, "*.jsonl"))
+                return new List<JsonElement>();
+
+            // Files only grow, so each read parses just the lines added since the last
+            // one (packet traces make the files large)
+            lock (this.LogFiles)
             {
-                using var stream = new FileStream(
-                    file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                using var reader = new StreamReader(stream);
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                var events = new List<JsonElement>();
+                foreach (var file in Directory.GetFiles(dir, "*.jsonl").OrderBy(f => f))
                 {
-                    if (line.Length == 0) continue;
-                    try { events.Add(JsonDocument.Parse(line).RootElement.Clone()); }
-                    catch (JsonException) { }
+                    if (!this.LogFiles.TryGetValue(file, out var read))
+                        this.LogFiles[file] = read = (0, new List<JsonElement>());
+
+                    using var stream = new FileStream(
+                        file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                    stream.Seek(read.Position, SeekOrigin.Begin);
+                    var added = new byte[stream.Length - read.Position];
+                    int length = stream.Read(added, 0, added.Length);
+
+                    // Only whole lines: the server may be halfway through writing one
+                    int end = length > 0 ? Array.LastIndexOf(added, (byte)'\n', length - 1) : -1;
+                    if (end >= 0)
+                    {
+                        foreach (var line in System.Text.Encoding.UTF8.GetString(added, 0, end).Split('\n'))
+                        {
+                            if (line.Length == 0) continue;
+                            try { read.Events.Add(JsonDocument.Parse(line).RootElement.Clone()); }
+                            catch (JsonException) { }
+                        }
+
+                        read.Position += end + 1;
+                        this.LogFiles[file] = read;
+                    }
+
+                    events.AddRange(read.Events);
                 }
+
+                return events;
             }
-            return events;
         }
 
         /// <summary>

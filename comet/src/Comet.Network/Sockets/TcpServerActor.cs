@@ -26,6 +26,9 @@ namespace Comet.Network.Sockets
         public readonly uint Partition;
         private readonly object SendLock;
 
+        // Account the connection logged in as (0 until known); used by the packet trace
+        public uint AccountID { get; set; }
+
         // Connection identity and lifetime, used to correlate log events
         private static long NextConnId;
         public readonly long ConnId;
@@ -103,6 +106,7 @@ namespace Comet.Network.Sockets
 
             BitConverter.TryWriteBytes(encrypted, (ushort)packet.Length);
             Array.Copy(this.PacketFooter, 0, encrypted, packet.Length, this.PacketFooter.Length);
+            PacketTrace.Out(this, encrypted.AsSpan(0, packet.Length));
 
             lock (SendLock)
             {

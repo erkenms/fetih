@@ -18,6 +18,12 @@ namespace Comet.Core.Logging
         public static LoggingLevelSwitch Level { get; } = new LoggingLevelSwitch();
 
         /// <summary>
+        /// Source of packet trace events (Comet.Network.Sockets.PacketTrace). They are
+        /// written at trace level whatever the configured level, and only to the files.
+        /// </summary>
+        public const string PacketTraceSource = "Comet.Network.Sockets.PacketTrace";
+
+        /// <summary>
         /// Creates and installs the global logger.
         /// </summary>
         /// <param name="server">Short server name written to every line ("account", "game")</param>
@@ -35,7 +41,12 @@ namespace Comet.Core.Logging
             foreach (var entry in config.Overrides)
                 logger.MinimumLevel.Override(entry.Key, LogLevels.Parse(entry.Value));
 
-            logger.WriteTo.Console(new ConsoleLogFormatter(colors: !Console.IsOutputRedirected));
+            // Which connections are traced is decided by PacketTrace itself
+            logger.MinimumLevel.Override(PacketTraceSource, LogEventLevel.Verbose);
+
+            logger.WriteTo.Logger(console => console
+                .Filter.ByExcluding(Serilog.Filters.Matching.FromSource(PacketTraceSource))
+                .WriteTo.Console(new ConsoleLogFormatter(colors: !Console.IsOutputRedirected)));
             logger.WriteTo.File(
                 new JsonLogFormatter(),
                 Path.Combine(config.Directory, server + "-.jsonl"),

@@ -22,9 +22,6 @@ namespace Comet.Game.States
         public Creation Creation = null;
         public DiffieHellman DiffieHellman = null;
 
-        // Account the client authenticated as (0 until MsgConnect succeeds)
-        public uint AccountID { get; set; }
-
         // Login token this connection authenticated with, and what it was issued for.
         // Kept so the client can repeat MsgConnect on the same connection.
         public ulong AuthenticationToken { get; set; }

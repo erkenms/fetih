@@ -5,6 +5,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
+    using Comet.Network.Sockets;
     using Comet.Game.Database;
     using Comet.Game.Packets;
     using Comet.Game.States;
@@ -37,6 +38,7 @@
             // Read configuration file and command-line arguments
             var config = new ServerConfiguration(args);
             LogSetup.Configure("game", config.Logging);
+            PacketTrace.Configure(config.Logging?.PacketTrace);
             if (!config.Valid) 
             {
                 Log.Error("Invalid server configuration file");

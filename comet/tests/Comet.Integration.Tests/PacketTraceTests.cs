@@ -1,0 +1,87 @@
+namespace Comet.Integration.Tests
+{
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Text.Json;
+    using System.Threading.Tasks;
+    using Xunit;
+
+    /// <summary>
+    /// The test servers trace every connection, so a login can be followed packet by
+    /// packet in both servers' logs.
+    /// </summary>
+    public class PacketTraceTests : IntegrationTest
+    {
+        public PacketTraceTests(ServerFixture servers) : base(servers) { }
+
+        /// <summary>The traced packets of one connection, in order.</summary>
+        private List<string> Trace(string server, long connId) => this.Servers.Events(server)
+            .Where(e => e.TryGetProperty("event", out var ev) && ev.GetString().StartsWith("packet.") &&
+                        e.TryGetProperty("hex", out _) &&
+                        e.TryGetProperty("connId", out var c) && c.GetInt64() == connId)
+            .Select(Describe)
+            .ToList();
+
+        private static string Describe(JsonElement e) =>
+            e.GetProperty("event").GetString()[7..] + " " +
+            (e.TryGetProperty("packetName", out var name) && name.ValueKind == JsonValueKind.String
+                ? name.GetString() : e.GetProperty("packetType").GetUInt16().ToString()) +
+            (e.TryGetProperty("action", out var action) ? " " + action.GetRawText() : "");
+
+        [Fact]
+        public async Task GameLoginIsTracedInOrder()
+        {
+            var (player, _) = await this.PlayingAsync();
+            await using (player)
+            {
+                var login = await this.Servers.WaitForEventAsync("game", "session.login", "name", player.User.Name);
+                long connId = login.GetProperty("connId").GetInt64();
+
+                // The client's LoginComplete (251) is the last packet of the login
+                await this.Servers.WaitForEventAsync("game", "packet.in",
+                    e => e.GetProperty("connId").GetInt64() == connId &&
+                         e.TryGetProperty("action", out var a) && a.GetInt32() == 251);
+
+                var trace = this.Trace("game", connId);
+
+                // Key exchange first (no packet type), then a new account's login: creating
+                // the character, logging in again on the same connection, entering the map
+                Assert.Equal(new[]
+                {
+                    "in MsgConnect", "out MsgTalk",             // NEW_ROLE
+                    "in MsgRegister", "out MsgTalk",            // ANSWER_OK
+                    "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
+                    "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
+                    "in MsgAction 251"                          // LoginComplete
+                }, trace.Skip(2).Take(10));
+            }
+        }
+
+        [Fact]
+        public async Task AccountLoginIsTraced()
+        {
+            var email = await this.Servers.CreateAccountAsync(Password);
+            var login = await this.Servers.LoginAsync(email, Password);
+            Assert.True(login.Accepted);
+            // The connection that sent this account's name
+            var name = Convert.ToHexString(Encoding.Latin1.GetBytes(email));
+            var request = await this.Servers.WaitForEventAsync("account", "packet.in",
+                e => e.GetProperty("packetType").GetUInt16() == 1124 &&
+                     e.GetProperty("hex").GetString().Contains(name));
+            long connId = request.GetProperty("connId").GetInt64();
+
+            var answer = await this.Servers.WaitForEventAsync("account", "packet.out",
+                e => e.GetProperty("connId").GetInt64() == connId &&
+                     e.GetProperty("packetType").GetUInt16() == 1055);
+            Assert.True(answer.TryGetProperty("accountId", out _));
+            var trace = this.Trace("account", connId);
+            Assert.Equal(new[]
+            {
+                "out MsgEncryptCode", "in MsgAccountSRP6", "out MsgLoginChallengeS",
+                "in MsgLoginProofC", "out MsgConnectEx"
+            }, trace);
+        }
+    }
+}

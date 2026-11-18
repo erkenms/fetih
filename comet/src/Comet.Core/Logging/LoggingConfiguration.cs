@@ -22,5 +22,27 @@ namespace Comet.Core.Logging
 
         /// <summary>Number of daily log files to keep before deleting the oldest.</summary>
         public int RetainDays { get; set; } = 30;
+
+        /// <summary>
+        /// Which connections get every packet logged (packet.in and packet.out, trace
+        /// level, JSON files only). Tracing works at any <see cref="Level"/>.
+        /// </summary>
+        public PacketTraceConfiguration PacketTrace { get; set; } = new PacketTraceConfiguration();
+    }
+
+    /// <summary>
+    /// "Logging:PacketTrace" section: connections whose packets are logged. A connection
+    /// is traced if any of these match it.
+    /// </summary>
+    public class PacketTraceConfiguration
+    {
+        /// <summary>Trace every connection.</summary>
+        public bool All { get; set; }
+
+        /// <summary>Account IDs to trace (from the moment the account is known).</summary>
+        public List<uint> Accounts { get; set; } = new List<uint>();
+
+        /// <summary>Client IP addresses to trace, e.g. a test VM.</summary>
+        public List<string> IPs { get; set; } = new List<string>();
     }
 }
