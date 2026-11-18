@@ -15,6 +15,7 @@ Server projects:
 
 Library projects:
 
+* [Comet.Client](src/Comet.Client/): A headless 5619 game client for integration tests and bots.
 * [Comet.Core](src/Comet.Core/): Contains language or system additions that are not game centric.
 * [Comet.Network](src/Comet.Network/): Contains base networking classes for creating networked actors.
 * [Comet.Shared](src/Comet.Shared/): Contains shared message classes for RPC between the servers.
@@ -23,6 +24,8 @@ Test projects:
 
 * [Comet.Account.Tests](tests/Comet.Account.Tests/): Unit tests for validating basic account server functionality.
 * [Comet.Core.Tests](tests/Comet.Core.Tests/): Unit tests for validating core functionality.
+* [Comet.Game.Tests](tests/Comet.Game.Tests/): Unit tests for game server packets and rules.
+* [Comet.Integration.Tests](tests/Comet.Integration.Tests/): Runs both servers against throwaway databases and plays through them with Comet.Client (see [doc/Testing.md](doc/Testing.md)).
 * [Comet.Network.Tests](tests/Comet.Network.Tests/): Unit tests for validating network and base server functionality.
 
 ## Container Files
