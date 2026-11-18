@@ -1,6 +1,7 @@
 namespace Comet.Game.Packets
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.States;
@@ -110,33 +111,43 @@ namespace Comet.Game.Packets
         /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
-            switch (this.Action)
+            if (Handlers.TryGetValue(this.Action, out var handler))
             {
-                case ActionType.LoginSpawn:
-                    this.CharacterID = client.ID;
-                    this.Command = client.Character.MapID;
-                    this.X = client.Character.X;
-                    this.Y = client.Character.Y;
-                    await client.SendAsync(this);
-                    break;
-
-                case ActionType.LoginComplete:
-                    // The last login step: the client has loaded the map. Not echoed
-                    // (5619: from reference).
-                    await Visibility.EnterAsync(client);
-                    break;
-
-                default:
-                    await client.SendAsync(this);
-                    await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
-                        String.Format("Missing packet {0}, Action {1}, Length {2}",
-                        this.Type, this.Action, this.Length)));
-                    LogEvents.For(this.GetType(), LogEvents.PacketUnhandled).Warning(
-                        "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
-                        this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
-                    break;
+                await handler(this, client);
+                return;
             }
+
+            // Not handled yet: echo it, since the client waits for the reply to each
+            // login step (75 to 78, 96, 97) before sending the next
+            await client.SendAsync(this);
+            await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
+                String.Format("Missing packet {0}, Action {1}, Length {2}",
+                this.Type, this.Action, this.Length)));
+            LogEvents.For(this.GetType(), LogEvents.PacketUnhandled).Warning(
+                "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
+                this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
         }
+
+        /// <summary>The actions the server handles, and how.</summary>
+        private static readonly Dictionary<ActionType, Func<MsgAction, Client, Task>> Handlers =
+            new Dictionary<ActionType, Func<MsgAction, Client, Task>>
+            {
+                [ActionType.LoginSpawn] = async (msg, client) =>
+                {
+                    msg.CharacterID = client.ID;
+                    msg.Command = client.Character.MapID;
+                    msg.X = client.Character.X;
+                    msg.Y = client.Character.Y;
+                    await client.SendAsync(msg);
+                },
+
+                // The last login step: the client has loaded the map. Not echoed
+                // (5619: from reference).
+                [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
+            };
+
+        /// <summary>True if the server handles this action (others are only echoed).</summary>
+        public static bool Handles(ActionType action) => Handlers.ContainsKey(action);
 
         /// <summary>
         /// Defines actions that may be requested by the user, or given to by the server.

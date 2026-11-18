@@ -131,23 +131,17 @@ namespace Comet.Game
 
             try
             {
-                // Switch on the packet type
-                MsgBase<Client> msg = null;
-                switch (type)
+                // Find the handler for the packet type
+                MsgBase<Client> msg = PacketHandlers.Create(type);
+                if (msg == null)
                 {
-                    case PacketType.MsgRegister: msg = new MsgRegister(); break;
-                    case PacketType.MsgItem:     msg = new MsgItem(); break;
-                    case PacketType.MsgAction:   msg = new MsgAction(); break;
-                    case PacketType.MsgConnect:  msg = new MsgConnect(); break;
-
-                    default:
-                        LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
-                            "Unhandled packet {PacketType} ({Length} bytes): {Hex}",
-                            type, length, Convert.ToHexString(packet));
-                        await actor.SendAsync(new MsgTalk(actor.ID, MsgTalk.TalkChannel.Service,
-                            String.Format("Missing packet {0}, Length {1}",
-                            type, length)));
-                        return;
+                    LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
+                        "Unhandled packet {PacketType} ({Length} bytes): {Hex}",
+                        type, length, Convert.ToHexString(packet));
+                    await actor.SendAsync(new MsgTalk(actor.ID, MsgTalk.TalkChannel.Service,
+                        String.Format("Missing packet {0}, Length {1}",
+                        type, length)));
+                    return;
                 }
 
                 // Decode packet bytes into the structure and process

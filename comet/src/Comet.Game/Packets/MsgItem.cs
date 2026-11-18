@@ -1,6 +1,7 @@
 namespace Comet.Game.Packets
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.States;
@@ -74,23 +75,31 @@ namespace Comet.Game.Packets
         /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
-            switch (this.Action)
+            if (Handlers.TryGetValue(this.Action, out var handler))
             {
-                case ItemActionType.ClientPing:
-                    await client.SendAsync(this);
-                    break;
-
-                default:
-                    await client.SendAsync(this);
-                    await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
-                        String.Format("Missing packet {0}, Action {1}, Length {2}",
-                        this.Type, this.Action, this.Length)));
-                    LogEvents.For(this.GetType(), LogEvents.PacketUnhandled).Warning(
-                        "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
-                        this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
-                    break;
+                await handler(this, client);
+                return;
             }
+
+            await client.SendAsync(this);
+            await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
+                String.Format("Missing packet {0}, Action {1}, Length {2}",
+                this.Type, this.Action, this.Length)));
+            LogEvents.For(this.GetType(), LogEvents.PacketUnhandled).Warning(
+                "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
+                this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
         }
+
+        /// <summary>The actions the server handles, and how.</summary>
+        private static readonly Dictionary<ItemActionType, Func<MsgItem, Client, Task>> Handlers =
+            new Dictionary<ItemActionType, Func<MsgItem, Client, Task>>
+            {
+                // The client checks the connection with pings; the reply is the echo
+                [ItemActionType.ClientPing] = (msg, client) => client.SendAsync(msg),
+            };
+
+        /// <summary>True if the server handles this action.</summary>
+        public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);
 
         /// <summary>
         /// Enumeration type for defining item actions that may be requested by the user, 

@@ -87,16 +87,12 @@ namespace Comet.Account
             try
             {
                 // Switch on the packet type
-                MsgBase<Client> msg = null;
-                switch (type)
+                MsgBase<Client> msg = PacketHandlers.Create(type);
+                if (msg == null)
                 {
-                    case PacketType.MsgAccountSRP6: msg = new MsgAccountSRP6(); break;
-                    case PacketType.MsgLoginProofC: msg = new MsgLoginProofC(); break;
-
-                    default:
-                        LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
-                            "Unhandled packet {PacketType} ({Length} bytes) from connection {ConnId}: {Hex}",
-                            type, length, actor.ConnId, Convert.ToHexString(packet));
+                    LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
+                        "Unhandled packet {PacketType} ({Length} bytes) from connection {ConnId}: {Hex}",
+                        type, length, actor.ConnId, Convert.ToHexString(packet));
                     return;
                 }
 
