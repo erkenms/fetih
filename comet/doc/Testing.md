@@ -36,7 +36,7 @@ and `COMET_TEST_DB_PASSWORD` (defaults: `localhost`, `root`, `password`, as in
 |---|---|
 | `AccountCreationTests` | `create-account` and `set-password` commands; names that aren't email addresses or are too long; passwords outside 6 to 16 printable characters; the same email in another case; ten simultaneous creations of one email (one wins); twenty different accounts at once |
 | `AccountLoginTests` | right, wrong, empty and wrong-case passwords; unknown account; email in another case; account without a password; unknown realm; banned and locked accounts (and that a wrong password doesn't reveal a ban); a proof sent without a challenge; twenty logins at once; one account logging in twice at once |
-| `GameLoginTests` | made-up token; reusing a token; new account asked to create a character; returning player goes straight to the map; logging in again closes the first connection; twenty players on the map at once |
+| `GameLoginTests` | made-up token; reusing a token; new account asked to create a character; returning player goes straight to the map; logging in again closes the first connection; `MsgConnect` from a player already in the game is ignored; twenty players on the map at once |
 | `CharacterCreationTests` | every class and body (stats, spawn point, logs); unknown classes and bodies; names breaking the rules (length, spaces, non-ASCII, `[GM]`/`[PM]`); names with symbols and `#NN` emoji codes; taken names in any case; two players racing for one name; wrong creation token; an account with a character trying to create another |
 
 ### Writing a test

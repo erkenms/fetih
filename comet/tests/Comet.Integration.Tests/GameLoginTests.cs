@@ -75,6 +75,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task LoginAgainWhileInTheGameIsIgnored()
+        {
+            var (player, _) = await this.PlayingAsync();
+            await using (player)
+            {
+                // Even a made-up token gets no answer once the character is in the game
+                await player.Game.SendAsync(GameClient.BuildConnect(0x0123456789ABCDEF));
+                await Assert.ThrowsAsync<TimeoutException>(() =>
+                    player.Game.ReceiveAsync(PacketTypes.MsgTalk, TimeSpan.FromSeconds(1)));
+
+                // The connection still works
+                var spawn = await player.Game.EnterMapAsync(player.User.Id);
+                Assert.Equal(1010u, spawn.Command);
+            }
+        }
+
+        [Fact]
         public async Task ManyPlayersCanPlayAtOnce()
         {
             var players = await Task.WhenAll(Enumerable.Range(0, 20).Select(_ => this.PlayingAsync()));
