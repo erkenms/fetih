@@ -29,5 +29,17 @@ namespace Comet.Game.Tests.Packets
         {
             Assert.False(MsgConnect.IsAuthorized(null, "10.0.0.5", strict));
         }
+
+        [Theory]
+        [InlineData(0, 0)]
+        [InlineData(101, 5)]
+        [InlineData(1111, 15)]
+        [InlineData(123, 123)]  // not binary digits: raw value, no exception
+        [InlineData(-1, -1)]    // negative: raw value, no exception
+        [InlineData(int.MaxValue, int.MaxValue)]
+        public void ParseVersion(int raw, int expected)
+        {
+            Assert.Equal(expected, MsgConnect.ParseVersion(raw));
+        }
     }
 }

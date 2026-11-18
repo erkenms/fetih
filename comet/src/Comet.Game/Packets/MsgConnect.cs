@@ -1,6 +1,7 @@
 namespace Comet.Game.Packets
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Game.Database.Repositories;
     using Comet.Game.States;
@@ -42,7 +43,20 @@ namespace Comet.Game.Packets
             this.Patch = reader.ReadUInt16();
             this.Language = reader.ReadString(2);
             this.MacAddress = Hex.ToHexString(reader.ReadBytes(8));
-            this.Version = Convert.ToInt32(reader.ReadInt32().ToString(), 2);
+            this.Version = ParseVersion(reader.ReadInt32());
+        }
+
+        /// <summary>
+        /// The client writes its version as a number whose decimal digits are binary
+        /// digits (e.g. 101 = 5). Falls back to the raw value when it isn't in that form,
+        /// instead of throwing and dropping the login.
+        /// </summary>
+        public static int ParseVersion(int raw)
+        {
+            var digits = raw.ToString();
+            if (raw < 0 || digits.Length > 31 || digits.Any(c => c != '0' && c != '1'))
+                return raw;
+            return Convert.ToInt32(digits, 2);
         }
 
         /// <summary>
