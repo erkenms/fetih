@@ -36,6 +36,11 @@ namespace Comet.Game.Packets
         /// follows TQ Digital's byte ordering rules for an all-binary protocol.
         /// </summary>
         /// <param name="bytes">Bytes from the packet processor or client socket</param>
+        /// <remarks>
+        /// 5619: from client binary (28 bytes, same offsets as 5187: the two IDs from
+        /// MsgConnectEx at 4 and 8 read as one token, patch at 12, language at 14, MAC
+        /// address at 16, version at 24).
+        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -79,7 +84,22 @@ namespace Comet.Game.Packets
         public override async Task ProcessAsync(Client client)
         {
             // Validate access token. Remove consumes the token so it can't be reused.
-            var auth = Kernel.Logins.Remove(this.Token.ToString()) as TransferAuthArgs;
+            // 5619: from reference: after creating a character, the client sends
+            // MsgConnect again on the same connection, so a connection may repeat the
+            // token it already authenticated with.
+            TransferAuthArgs auth;
+            if (client.Authentication != null && client.AuthenticationToken == this.Token)
+            {
+                auth = client.Authentication;
+                Serilog.Log.ForContext<MsgConnect>().Debug(
+                    "Connection {ConnId} repeated its login for account {AccountId}",
+                    client.ConnId, auth.AccountID);
+            }
+            else
+            {
+                auth = Kernel.Logins.Remove(this.Token.ToString()) as TransferAuthArgs;
+            }
+
             if (!IsAuthorized(auth, client.IPAddress, StrictAuthentication))
             {
                 LogEvents.For<MsgConnect>(LogEvents.GameAuthFailed).Warning(
@@ -95,8 +115,10 @@ namespace Comet.Game.Packets
             // place, disconnect it, and wait for its logout save before loading the
             // character so this login can't read stale data.
             client.AccountID = auth.AccountID;
+            client.Authentication = auth;
+            client.AuthenticationToken = this.Token;
             var previous = Kernel.Clients.Replace(auth.AccountID, client);
-            if (previous != null)
+            if (previous != null && previous != client)
             {
                 LogEvents.For<MsgConnect>(LogEvents.SessionReplaced).Information(
                     "Account {AccountId} logged in again from {IP}; closing connection " +

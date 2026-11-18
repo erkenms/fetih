@@ -5,6 +5,7 @@ namespace Comet.Game.States
     using System.Threading.Tasks;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
+    using Comet.Shared.Models;
 
     /// <summary>
     /// Client encapsules the accepted client socket's actor and game server state.
@@ -21,6 +22,11 @@ namespace Comet.Game.States
 
         // Account the client authenticated as (0 until MsgConnect succeeds)
         public uint AccountID { get; set; }
+
+        // Login token this connection authenticated with, and what it was issued for.
+        // Kept so the client can repeat MsgConnect on the same connection.
+        public ulong AuthenticationToken { get; set; }
+        public TransferAuthArgs Authentication { get; set; }
 
         // When the character entered the game (set on session.login)
         public DateTime? LoggedInAt { get; set; }
