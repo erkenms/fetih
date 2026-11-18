@@ -44,10 +44,9 @@ namespace Comet.Game.Database
             public int MaxConnPerIP { get; set; } = 10;
             public int MaxAttemptsPerMinute { get; set; } = 15;
 
-            // Time a new connection has to start talking (key exchange or first
-            // packet). There's no idle limit after that; dead connections are found
-            // by TCP keepalive.
-            public int HandshakeTimeoutSeconds { get; set; } = 30;
+            // Time a new connection has to log in (MsgConnect). There's no idle limit
+            // after that; dead connections are found by TCP keepalive.
+            public int LoginTimeoutSeconds { get; set; } = 60;
         }
 
         /// <summary>

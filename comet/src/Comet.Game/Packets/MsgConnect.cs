@@ -122,6 +122,9 @@ namespace Comet.Game.Packets
                 return;
             }
 
+            // Logged in: no more login deadline for this connection
+            client.LoggedIn();
+
             // If another client has already connected using this account, take its
             // place, disconnect it, and wait for its logout save before loading the
             // character so this login can't read stale data.

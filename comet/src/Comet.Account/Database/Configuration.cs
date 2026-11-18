@@ -41,10 +41,10 @@ namespace Comet.Account.Database
             public int MaxConnPerIP { get; set; } = 10;
             public int MaxAttemptsPerMinute { get; set; } = 15;
 
-            // Time a new connection has to start talking (key exchange or first
-            // packet). There's no idle limit after that; dead connections are found
-            // by TCP keepalive.
-            public int HandshakeTimeoutSeconds { get; set; } = 30;
+            // Time a connection may stay open before logging in. The account server
+            // never marks a connection logged in (it redirects the client within
+            // seconds), so this caps its connections.
+            public int LoginTimeoutSeconds { get; set; } = 60;
         }
 
         /// <summary>

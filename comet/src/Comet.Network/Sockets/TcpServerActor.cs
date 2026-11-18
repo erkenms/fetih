@@ -66,6 +66,25 @@ namespace Comet.Network.Sockets
             this.ConnectedAt = DateTime.UtcNow;
         }
 
+        /// <summary>
+        /// Cancelled when the connection has taken too long to log in. The listener
+        /// starts it when the connection is accepted, and every receive waits on it until
+        /// <see cref="LoggedIn"/> is called. A server that never calls it (the account
+        /// server) caps the whole connection at the login timeout.
+        /// </summary>
+        public CancellationTokenSource LoginDeadline { get; } = new CancellationTokenSource();
+
+        /// <summary>
+        /// Ends the login deadline: the connection has logged in, and from now on it stays
+        /// open however long the player is idle (dead connections are found by TCP
+        /// keepalive).
+        /// </summary>
+        public void LoggedIn()
+        {
+            try { this.LoginDeadline.CancelAfter(Timeout.InfiniteTimeSpan); }
+            catch (ObjectDisposedException) { }
+        }
+
         /// <summary>Records why the connection ended, unless a reason was already set.</summary>
         public void SetDisconnectReason(string reason) =>
             Interlocked.CompareExchange(ref this.disconnectReason, reason, null);

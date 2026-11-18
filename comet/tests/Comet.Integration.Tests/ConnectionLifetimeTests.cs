@@ -8,34 +8,39 @@ namespace Comet.Integration.Tests
     using Xunit;
 
     /// <summary>
-    /// When the servers close a connection: a new connection that never starts talking is
-    /// dropped after the handshake timeout, but players are never dropped for being idle,
-    /// and a newer login for the same account takes over at every step.
+    /// When the servers close a connection: one that doesn't log in within the login
+    /// timeout is dropped, but logged-in players are never dropped for being idle, and a
+    /// newer login for the same account takes over at every step.
     /// </summary>
     public class ConnectionLifetimeTests : IntegrationTest
     {
         public ConnectionLifetimeTests(ServerFixture servers) : base(servers) { }
 
-        // Longer than the handshake timeout, so an idle limit would have closed the client
-        private static readonly TimeSpan Idle =
-            TimeSpan.FromSeconds(ServerFixture.HandshakeTimeoutSeconds * 2 + 1);
+        private static readonly TimeSpan LoginTimeout =
+            TimeSpan.FromSeconds(ServerFixture.LoginTimeoutSeconds);
 
-        /// <summary>Opens a connection, sends nothing, and times how long it stays open.</summary>
-        private static async Task<TimeSpan> SilentConnectionLifetimeAsync(int port)
+        /// <summary>
+        /// Opens a connection, optionally sends some bytes, then waits until the server
+        /// closes it, and returns how long it stayed open.
+        /// </summary>
+        private static async Task<TimeSpan> LifetimeAsync(int port, byte[] send = null)
         {
             using var tcp = new TcpClient();
             await tcp.ConnectAsync(ServerFixture.Host, port);
             var watch = Stopwatch.StartNew();
             var stream = tcp.GetStream();
+            if (send != null)
+                await stream.WriteAsync(send);
+
             var buffer = new byte[4096];
-            var deadline = Task.Delay(TimeSpan.FromSeconds(15));
+            var deadline = Task.Delay(LoginTimeout + TimeSpan.FromSeconds(10));
             try
             {
                 while (true)
                 {
                     var read = stream.ReadAsync(buffer).AsTask();
                     if (await Task.WhenAny(read, deadline) == deadline)
-                        throw new Xunit.Sdk.XunitException("The server kept a silent connection open");
+                        throw new Xunit.Sdk.XunitException("The server kept the connection open");
                     if (await read == 0)
                         break;
                 }
@@ -44,46 +49,47 @@ namespace Comet.Integration.Tests
             return watch.Elapsed;
         }
 
-        [Fact]
-        public async Task SilentGameConnectionIsDroppedAfterTheHandshakeTimeout()
+        /// <summary>Completes the game server's key exchange, then never logs in.</summary>
+        private async Task<TimeSpan> ExchangedLifetimeAsync()
         {
-            var lifetime = await SilentConnectionLifetimeAsync(this.Servers.GamePort);
-            Assert.True(lifetime >= TimeSpan.FromSeconds(ServerFixture.HandshakeTimeoutSeconds - 0.5),
-                $"Dropped after {lifetime}, before the handshake timeout");
+            var watch = Stopwatch.StartNew();
+            await using var game = await this.Servers.ConnectGameAsync();
+            Assert.True(await game.WaitClosedAsync(LoginTimeout + TimeSpan.FromSeconds(10)),
+                "The server kept a connection open that never logged in");
+            return watch.Elapsed;
         }
 
         [Fact]
-        public async Task SilentAccountConnectionIsDroppedAfterTheHandshakeTimeout()
+        public async Task ConnectionsThatDontLogInAreDropped()
         {
-            var lifetime = await SilentConnectionLifetimeAsync(this.Servers.AccountPort);
-            Assert.True(lifetime >= TimeSpan.FromSeconds(ServerFixture.HandshakeTimeoutSeconds - 0.5),
-                $"Dropped after {lifetime}, before the handshake timeout");
+            var lifetimes = await Task.WhenAll(
+                LifetimeAsync(this.Servers.GamePort),                       // silent
+                this.ExchangedLifetimeAsync(),                              // key exchange only
+                LifetimeAsync(this.Servers.AccountPort),                    // silent
+                LifetimeAsync(this.Servers.AccountPort, new byte[] { 1 })); // one byte
+
+            foreach (var lifetime in lifetimes)
+                Assert.True(lifetime >= LoginTimeout - TimeSpan.FromSeconds(0.5),
+                    $"Dropped after {lifetime}, before the login timeout");
         }
 
         [Fact]
-        public async Task IdlePlayerOnCharacterCreationStaysConnected()
+        public async Task LoggedInPlayersAreNeverDroppedForIdling()
         {
-            var (game, token, _) = await this.AtCharacterCreationAsync();
-            await using (game)
-            {
-                await Task.Delay(Idle);
-                Assert.False(game.Closed);
-                var name = this.Servers.NewCharacterName();
-                Assert.Equal(AnswerOk, await game.CreateCharacterAsync(name, 1003, 10, (uint)token));
-            }
-        }
+            var (creating, token, _) = await this.AtCharacterCreationAsync();
+            await using var creatingGuard = creating;
+            var (playing, _) = await this.PlayingAsync();
+            await using var playingGuard = playing;
 
-        [Fact]
-        public async Task IdlePlayerInTheGameStaysConnected()
-        {
-            var (player, _) = await this.PlayingAsync();
-            await using (player)
-            {
-                await Task.Delay(Idle);
-                Assert.False(player.Game.Closed);
-                var spawn = await player.Game.EnterMapAsync(player.User.Id);
-                Assert.Equal(1010u, spawn.Command);
-            }
+            // Both connections opened more than the login timeout ago by the end of this
+            await Task.Delay(LoginTimeout + TimeSpan.FromSeconds(1));
+            Assert.False(creating.Closed);
+            Assert.False(playing.Game.Closed);
+
+            var name = this.Servers.NewCharacterName();
+            Assert.Equal(AnswerOk, await creating.CreateCharacterAsync(name, 1003, 10, (uint)token));
+            var spawn = await playing.Game.EnterMapAsync(playing.User.Id);
+            Assert.Equal(1010u, spawn.Command);
         }
 
         [Fact]

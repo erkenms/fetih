@@ -32,7 +32,7 @@ namespace Comet.Account
             : base(maxConn: config.Network.MaxConn,
                 maxConnPerIP: config.Network.MaxConnPerIP,
                 maxAttemptsPerMinute: config.Network.MaxAttemptsPerMinute,
-                handshakeTimeoutSeconds: config.Network.HandshakeTimeoutSeconds)
+                loginTimeoutSeconds: config.Network.LoginTimeoutSeconds)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);

@@ -35,7 +35,7 @@ namespace Comet.Game
             : base(maxConn: config.GameNetwork.MaxConn, exchange: true, footerLength: 8,
                 maxConnPerIP: config.GameNetwork.MaxConnPerIP,
                 maxAttemptsPerMinute: config.GameNetwork.MaxAttemptsPerMinute,
-                handshakeTimeoutSeconds: config.GameNetwork.HandshakeTimeoutSeconds)
+                loginTimeoutSeconds: config.GameNetwork.LoginTimeoutSeconds)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);

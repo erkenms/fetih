@@ -26,7 +26,7 @@ namespace Comet.Network.Sockets
         private const int KeepAliveProbes = 5;
 
         // Fields and properties
-        private readonly TimeSpan HandshakeTimeout;
+        private readonly TimeSpan LoginTimeout;
         private readonly Semaphore AcceptanceSemaphore;
         private readonly ConcurrentStack<Memory<byte>> BufferPool;
         private readonly bool EnableKeyExchange;
@@ -47,9 +47,9 @@ namespace Comet.Network.Sockets
         /// <param name="delay">Use Nagel's algorithm to delay sending smaller packets</param>
         /// <param name="exchange">Use a key exchange before receiving packets</param>
         /// <param name="footerLength">Length of the packet footer</param>
-        /// <param name="handshakeTimeoutSeconds">
-        /// Time a new connection has to send its key exchange (or, without one, its first
-        /// bytes). After that there is no time limit: idle clients stay connected.
+        /// <param name="loginTimeoutSeconds">
+        /// Time a new connection has to log in (see <see cref="TcpServerActor.LoggedIn"/>).
+        /// After that there is no time limit: idle clients stay connected.
         /// </param>
         public TcpServerListener(
             int maxConn = 1000,
@@ -59,9 +59,9 @@ namespace Comet.Network.Sockets
             int footerLength = 0,
             int maxConnPerIP = 10,
             int maxAttemptsPerMinute = 15,
-            int handshakeTimeoutSeconds = 30)
+            int loginTimeoutSeconds = 60)
         {
-            this.HandshakeTimeout = TimeSpan.FromSeconds(handshakeTimeoutSeconds);
+            this.LoginTimeout = TimeSpan.FromSeconds(loginTimeoutSeconds);
             // Initialize and configure server socket
             this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.Socket.LingerState = new LingerOption(false, 0);
@@ -133,6 +133,7 @@ namespace Comet.Network.Sockets
                     EnableKeepAlive(socket);
                     this.BufferPool.TryPop(out var buffer);
                     var actor = await this.AcceptedAsync(socket, buffer);
+                    actor.LoginDeadline.CancelAfter(this.LoginTimeout);
                     LogEvents.For(this.GetType(), LogEvents.NetConnect).Information(
                         "Connection {ConnId} opened from {IP}", actor.ConnId, actor.IPAddress);
 
@@ -188,7 +189,6 @@ namespace Comet.Network.Sockets
         {
             // Initialize multiple receive variables
             var actor = state as TActor;
-            var timeout = new CancellationTokenSource();
             int consumed = 0, examined = 0, remaining = 0;
             bool firstPacketPending = true;
 
@@ -196,16 +196,13 @@ namespace Comet.Network.Sockets
             {
                 try
                 {
-                    // Receive data from the client socket
+                    // Receive data from the client socket, within the login deadline
                     using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
-                        timeout.Token, this.ShutdownToken.Token);
-                    var receiveOperation = actor.Socket.ReceiveAsync(
+                        actor.LoginDeadline.Token, this.ShutdownToken.Token);
+                    examined = await actor.Socket.ReceiveAsync(
                         actor.Buffer[..],
                         SocketFlags.None,
                         cancellation.Token);
-                        
-                    timeout.CancelAfter(this.HandshakeTimeout);
-                    examined = await receiveOperation;
                     if (examined == 0)
                     {
                         actor.Disconnect(DisconnectReasons.ClientClosed);
@@ -301,7 +298,7 @@ namespace Comet.Network.Sockets
         /// <returns>Returns task details for fault tolerance processing.</returns>
         private Task ReceivingAsync(object state)
         {
-            return this.ReceivingAsync(state, 0, false, firstReceiveDeadline: true);
+            return this.ReceivingAsync(state, 0, false);
         }
 
         /// <summary>
@@ -314,35 +311,25 @@ namespace Comet.Network.Sockets
         /// <param name="firstPacketPending">
         /// True if a key exchange just finished and no packet has been read since
         /// </param>
-        /// <param name="firstReceiveDeadline">
-        /// True if the first bytes must arrive within the handshake timeout (servers
-        /// without a key exchange). Later receives have no time limit.
-        /// </param>
         /// <returns>Returns task details for fault tolerance processing.</returns>
-        private async Task ReceivingAsync(
-            object state, int remaining, bool firstPacketPending, bool firstReceiveDeadline = false)
+        private async Task ReceivingAsync(object state, int remaining, bool firstPacketPending)
         {
             // Initialize multiple receive variables
             var actor = state as TActor;
-            using var timeout = new CancellationTokenSource();
             int examined = 0, consumed = 0;
-            if (firstReceiveDeadline)
-                timeout.CancelAfter(this.HandshakeTimeout);
 
             while (actor.Socket.Connected && !this.ShutdownToken.IsCancellationRequested)
             {
                 try
                 {
-                    // Receive data from the client socket
+                    // Receive data from the client socket. Until the client logs in, the
+                    // login deadline can cancel the wait; after that it never fires.
                     using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
-                        timeout.Token, this.ShutdownToken.Token);
+                        actor.LoginDeadline.Token, this.ShutdownToken.Token);
                     examined = await actor.Socket.ReceiveAsync(
                         actor.Buffer[remaining..],
                         SocketFlags.None,
                         cancellation.Token);
-
-                    // Only the first receive has a deadline
-                    timeout.CancelAfter(Timeout.InfiniteTimeSpan);
                     if (examined == 0)
                     {
                         actor.SetDisconnectReason(DisconnectReasons.ClientClosed);

@@ -98,7 +98,7 @@ to pair `net.connect` with `net.disconnect` and other events of the same connect
 |--------|---------|
 | `client_closed` | The client closed the connection cleanly (quit the game) |
 | `reset` | The connection was reset or aborted (client crashed or was killed) |
-| `timeout` | The client's machine or network stopped answering TCP keepalive probes (about 110 s after the last traffic), or a new connection didn't start its handshake within `HandshakeTimeoutSeconds`. Idle players are never dropped. |
+| `timeout` | The client's machine or network stopped answering TCP keepalive probes (about 110 s after the last traffic), or a connection didn't log in within `LoginTimeoutSeconds` (on the account server, which never marks a connection logged in, this caps the whole connection). Idle players are never dropped. |
 | `socket_error` | Any other socket failure (logged with details at warn) |
 | `protocol_error` | The client sent bytes that couldn't be split into packets |
 | `handshake_failed` | The key exchange failed, or the first packet after it couldn't be read (usually mismatched cipher keys) |

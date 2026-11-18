@@ -29,8 +29,9 @@ namespace Comet.Integration.Tests
         public const string Realm = "Storm";
         public const string Host = "127.0.0.1";
 
-        // Short, so tests can idle longer than it without being slow
-        public const int HandshakeTimeoutSeconds = 2;
+        // Short, so tests can idle longer than it without being slow, but long enough
+        // for a login on a busy machine
+        public const int LoginTimeoutSeconds = 5;
 
         // The one cell of the test Twin City (1002) that can't be walked on
         public static readonly (int X, int Y) BlockedCell = (100, 100);
@@ -133,13 +134,13 @@ namespace Comet.Integration.Tests
                 "--Maps:ClientDirectory=" + this.MapDirectory,
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
-                "--GameNetwork:HandshakeTimeoutSeconds=" + HandshakeTimeoutSeconds,
+                "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
                 "--Network:IPAddress=" + Host, "--Network:Port=" + this.AccountPort,
                 "--Network:MaxConnPerIP=1000", "--Network:MaxAttemptsPerMinute=100000",
-                "--Network:HandshakeTimeoutSeconds=" + HandshakeTimeoutSeconds);
+                "--Network:LoginTimeoutSeconds=" + LoginTimeoutSeconds);
             await this.WaitForEventAsync("account", "server.start", _ => true, StartTimeout);
             await this.WaitForEventAsync("game", "rpc.connected", _ => true, StartTimeout);
         }
