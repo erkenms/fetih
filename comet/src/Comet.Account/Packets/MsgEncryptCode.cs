@@ -9,6 +9,10 @@ namespace Comet.Account.Packets
     /// keys in the RC5 password cipher. This message is only used in patches after and
     /// relative to 5174.
     /// </summary>
+    /// <remarks>
+    /// 5619: from reference (still sent on connect; the SRP6 login doesn't use the seed,
+    /// but the client still has a handler for it).
+    /// </remarks>
     public sealed class MsgEncryptCode : MsgBase<Client>
     {
         // Packet Properties

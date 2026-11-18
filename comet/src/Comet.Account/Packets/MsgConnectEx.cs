@@ -48,6 +48,13 @@ namespace Comet.Account.Packets
         /// that can be sent to the client. Invoked automatically by the client's send 
         /// method. Encodes using byte ordering rules interoperable with the game client.
         /// </summary>
+        /// <remarks>
+        /// 5619: from client binary. Accept (88 bytes): the token's low half at 4 (the
+        /// client treats zero as a rejection) and high half at 8, which the client returns
+        /// in MsgConnect; then two game server addresses, each a port at 12 or 52 and an
+        /// IP address text at 20 or 56. The client pings both and connects to the faster,
+        /// so both hold the same server. Reject: zero at 4 and the code at 8.
+        /// </remarks>
         /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
@@ -62,10 +69,12 @@ namespace Comet.Account.Packets
             else
             {
                 // Successful login
-                writer.Write(this.Token);
-                writer.Write(this.IPAddress, 16);
-                writer.Write(this.Port);
-                writer.Write((ushort)0);
+                writer.Write(this.Token);               // 4
+                writer.Write(this.Port);                // 12
+                writer.Write((uint)0);                  // 16
+                writer.Write(this.IPAddress, 32);       // 20
+                writer.Write(this.Port);                // 52
+                writer.Write(this.IPAddress, 32);       // 56
             }
             
             return writer.ToArray();

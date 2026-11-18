@@ -113,7 +113,11 @@ to pair `net.connect` with `net.disconnect` and other events of the same connect
 | Event | Level | Fields |
 |-------|-------|--------|
 | `account.login` | info | `username`, `accountId`, `ip`, `realm` |
-| `account.login_failed` | warn | `username`, `ip`, `reason` (`unknown_account`, `bad_password`, `realm_offline`), `realm` (only for `realm_offline`) |
+| `account.login_failed` | warn | `username`, `ip`, `reason` (`unknown_account`, `bad_password`, `realm_offline`, `password_not_set`), `realm` (only for `realm_offline`) |
+
+`bad_password` means the client's SRP6 proof didn't match (patch 5619 never sends the
+password). `password_not_set` means the account has no SRP6 verifier yet: set one with
+`dotnet Comet.Account.dll set-password <username> <password>`.
 
 ### Game server sessions
 

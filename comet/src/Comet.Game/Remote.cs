@@ -35,11 +35,11 @@ namespace Comet.Game
         /// <returns>Returns an access token for the game server.</returns>
         public ulong TransferAuth(TransferAuthArgs args)
         {
-            // Generate the access token
-            var bytes = new byte[8];
-            var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(bytes);
-            var token = BitConverter.ToUInt64(bytes);
+            // Generate the access token. The client receives it as two halves and reads a
+            // zero low half as a rejection (5619: from client binary), so avoid that.
+            ulong token;
+            do token = BitConverter.ToUInt64(RandomNumberGenerator.GetBytes(8));
+            while ((uint)token == 0);
 
             // Store in the login cache with an absolute timeout
             var timeoutPolicy = new CacheItemPolicy();

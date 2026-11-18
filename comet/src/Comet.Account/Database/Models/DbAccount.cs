@@ -25,6 +25,8 @@
         public string Username { get; set; }
         public string Password { get; set; }
         public string Salt { get; set; }
+        public string SrpSalt { get; set; }
+        public string SrpVerifier { get; set; }
         public ushort AuthorityID { get; set; }
         public ushort StatusID { get; set; }
         public string Name { get; set; }

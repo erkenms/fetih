@@ -17,6 +17,11 @@ namespace Comet.Account.States
         public DbAccount Account;
         public uint Seed;
 
+        // SRP6 login in progress (set by MsgAccountSRP6, checked by MsgLoginProofC)
+        public Srp6 Srp;
+        public byte[] UsernameBytes;
+        public string Realm;
+
         /// <summary>
         /// Instantiates a new instance of <see cref="Client"/> using the Accepted event's
         /// resulting socket and preallocated buffer. Initializes all account server

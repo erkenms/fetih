@@ -87,7 +87,8 @@ namespace Comet.Account
                 MsgBase<Client> msg = null;
                 switch (type)
                 {
-                    case PacketType.MsgAccount: msg = new MsgAccount(); break;
+                    case PacketType.MsgAccountSRP6: msg = new MsgAccountSRP6(); break;
+                    case PacketType.MsgLoginProofC: msg = new MsgLoginProofC(); break;
 
                     default:
                         LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(

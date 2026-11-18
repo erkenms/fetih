@@ -29,6 +29,8 @@ CREATE TABLE `account` (
   `Username` varchar(16) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `Password` varchar(70) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `Salt` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `SrpSalt` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `SrpVerifier` varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
   `AuthorityID` smallint(6) unsigned NOT NULL DEFAULT '1',
   `StatusID` smallint(6) unsigned NOT NULL DEFAULT '1',
   `Name` varchar(70) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
@@ -51,7 +53,7 @@ CREATE TABLE `account` (
 
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'Spirited','9ef5afd9eb73933ffc8ecd558014d94d8fb4b8ae','83d6f3dec10a59b07b16a330c9e5522c',1,1,NULL,NULL,NULL,'2018-09-26 00:17:40');
+INSERT INTO `account` VALUES (1,'Spirited','9ef5afd9eb73933ffc8ecd558014d94d8fb4b8ae','83d6f3dec10a59b07b16a330c9e5522c',NULL,NULL,1,1,NULL,NULL,NULL,'2018-09-26 00:17:40');
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
