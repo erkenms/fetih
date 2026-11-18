@@ -71,8 +71,11 @@ namespace Comet.Game.Packets
         public override async Task ProcessAsync(Client client)
         {
             // Validate that the player has access to character creation
+            // A newer login for the same account replaces this connection; only the
+            // connection that currently holds the account may create its character.
             if (client.Creation == null || this.Token != client.Creation.Token ||
-                !Kernel.Registration.ContainsKey(client.Creation.Token))
+                !Kernel.Registration.ContainsKey(client.Creation.Token) ||
+                !Kernel.Clients.TryGet(client.AccountID, out var current) || current != client)
             {
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Warning(
                     "Character creation rejected for connection {ConnId} from {IP}: {Reason}",
