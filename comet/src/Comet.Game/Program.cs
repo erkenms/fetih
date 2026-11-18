@@ -29,7 +29,7 @@
             Console.WriteLine();
             Console.WriteLine("  Comet: Game Server");
             Console.WriteLine("  Spirited (C) All Rights Reserved");
-            Console.WriteLine("  Patch 5187");
+            Console.WriteLine("  Patch 5619");
             Console.WriteLine();
 
             // Read configuration file and command-line arguments
