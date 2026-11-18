@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Comet.sln"
+                "${workspaceFolder}/Comet.slnx"
             ],
             "problemMatcher": "$msCompile"
         }

@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Comet.Account/Comet.Account.csproj" />
+    <Project Path="src/Comet.Core/Comet.Core.csproj" />
+    <Project Path="src/Comet.Game/Comet.Game.csproj" />
+    <Project Path="src/Comet.Network/Comet.Network.csproj" />
+    <Project Path="src/Comet.Shared/Comet.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Comet.Account.Tests/Comet.Account.Tests.csproj" />
+    <Project Path="tests/Comet.Core.Tests/Comet.Core.Tests.csproj" />
+    <Project Path="tests/Comet.Game.Tests/Comet.Game.Tests.csproj" />
+    <Project Path="tests/Comet.Network.Tests/Comet.Network.Tests.csproj" />
+  </Folder>
+</Solution>
