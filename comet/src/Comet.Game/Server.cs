@@ -172,8 +172,9 @@ namespace Comet.Game
             if (actor.Creation != null)
                 Kernel.Registration.TryRemove(actor.Creation.Token, out _);
 
-            if (actor.Character != null)
-                actor.Character.SaveAsync(true).GetAwaiter();
+            actor.LogoutAsync().ContinueWith(
+                t => Console.WriteLine(t.Exception),
+                TaskContinuationOptions.OnlyOnFaulted);
         }
     }
 }

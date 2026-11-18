@@ -2,6 +2,7 @@ namespace Comet.Game.States
 {
     using System;
     using System.Net.Sockets;
+    using System.Threading.Tasks;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
 
@@ -24,6 +25,10 @@ namespace Comet.Game.States
         // Client unique identifier
         public uint ID => Character?.CharacterID ?? 0;
 
+        // Logout state: the logout save runs at most once per client
+        private readonly object LogoutLock = new object();
+        private Task LogoutTask;
+
         /// <summary>
         /// Instantiates a new instance of <see cref="Client"/> using the Accepted event's
         /// resulting socket and preallocated buffer. Initializes all account server
@@ -36,6 +41,23 @@ namespace Comet.Game.States
             : base(socket, buffer, new BlowfishCipher(BlowfishCipher.Default), partition, "TQServer")
         {
             this.DiffieHellman = new DiffieHellman();
+        }
+
+        /// <summary>
+        /// Saves the character for logout. Idempotent: every caller awaits the same save,
+        /// so a replacing login can wait for the save to finish before it loads the
+        /// character, and the disconnect handler cannot start a second, later save.
+        /// </summary>
+        public Task LogoutAsync()
+        {
+            lock (this.LogoutLock)
+                return this.LogoutTask ??= this.SaveForLogoutAsync();
+        }
+
+        private async Task SaveForLogoutAsync()
+        {
+            if (this.Character != null)
+                await this.Character.SaveAsync(true);
         }
     }
 }

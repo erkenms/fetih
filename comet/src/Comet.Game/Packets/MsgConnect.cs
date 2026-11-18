@@ -86,13 +86,15 @@ namespace Comet.Game.Packets
             }
 
             // If another client has already connected using this account, take its
-            // place and disconnect it.
+            // place, disconnect it, and wait for its logout save before loading the
+            // character so this login can't read stale data.
             client.AccountID = auth.AccountID;
             var previous = Kernel.Clients.Replace(auth.AccountID, client);
             if (previous != null)
             {
                 try { previous.Disconnect(); }
                 catch (Exception e) { Console.WriteLine(e); }
+                await previous.LogoutAsync();
             }
 
             // Check for an existing character
