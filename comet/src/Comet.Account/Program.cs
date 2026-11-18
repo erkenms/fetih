@@ -30,8 +30,16 @@
             Console.WriteLine("  Patch 5619");
             Console.WriteLine();
 
+            // "set-password <username> <password>" sets a password and exits
+            bool setPassword = args.Length > 0 && args[0] == "set-password";
+            if (setPassword && args.Length < 3)
+            {
+                Console.WriteLine("  Usage: Comet.Account set-password <username> <password>");
+                return;
+            }
+
             // Read configuration file and command-line arguments
-            var config = new ServerConfiguration(args);
+            var config = new ServerConfiguration(setPassword ? args[3..] : args);
             LogSetup.Configure("account", config.Logging);
             if (!config.Valid) 
             {
@@ -46,6 +54,13 @@
             if (!ServerDbContext.Ping())
             {
                 Log.Error("Invalid database configuration");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            if (setPassword)
+            {
+                await Program.SetPasswordAsync(args[1], args[2]);
                 Log.CloseAndFlush();
                 return;
             }
@@ -71,6 +86,20 @@
                 config.Network.IPAddress, config.Network.Port);
             
             await serverTask;
+        }
+
+        /// <summary>
+        /// Sets an account's password for the SRP6 login used from patch 5619. Accounts
+        /// from older patches need this once: their password hashes can't be converted.
+        /// </summary>
+        /// <param name="username">Username of the account</param>
+        /// <param name="password">New password</param>
+        private static async Task SetPasswordAsync(string username, string password)
+        {
+            if (await AccountsRepository.SetPasswordAsync(username, password))
+                Log.Information("Password set for {Username}", username);
+            else
+                Log.Error("No account named {Username}", username);
         }
     }
 }

@@ -49,11 +49,12 @@ CREATE TABLE `account` (
 -- Dumping data for table `account`
 --
 
--- The seed account's password is "test". Passwords are stored as an SRP6 salt and
--- verifier (see Srp6.cs in Comet.Network), which can't be computed in SQL.
+-- The seed account "test" has the password "test". Passwords are stored as an SRP6
+-- salt and verifier, which can't be computed in SQL: set them with
+--   dotnet Comet.Account.dll set-password <username> <password>
 LOCK TABLES `account` WRITE;
 /*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'Spirited','95D528FECD46DEDEBD2683A15E4503C4B33A5F0064EA69FD09D15B55F7C4965A','8A10E1743D5AD977D2358E1F3A587BE77E736A0E401B776D9D6DAD9D805A9E0A',1,1,NULL,NULL,NULL,'2018-09-26 00:17:40');
+INSERT INTO `account` VALUES (1,'test','E662B6D5DDED2A085435284DA8C0269EBF6AA7AF669FDF2A757DC60D6394BB84','F01F1DFA5DD3BF010969829BE832E5B4F0CA392CF477888CED5F1A28E1368330',1,1,NULL,NULL,NULL,'2026-11-18 11:47:00');
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
