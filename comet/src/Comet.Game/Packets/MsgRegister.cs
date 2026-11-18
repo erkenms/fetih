@@ -166,6 +166,16 @@ namespace Comet.Game.Packets
                     client.Creation.AccountID, "name_taken", this.CharacterName);
                 await client.SendAsync(MsgTalk.RegisterNameTaken);
             }
+            catch (DbUpdateException e) when (CharactersRepository.IsDuplicateAccount(e))
+            {
+                // Another connection created this account's character since this one
+                // opened character creation
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Warning(
+                    "Character creation for account {AccountId} failed: {Reason} ({Name})",
+                    client.Creation.AccountID, "account_has_character", this.CharacterName);
+                await client.SendAsync(MsgTalk.RegisterInvalid);
+                client.Disconnect(DisconnectReasons.AuthFailed);
+            }
             catch (Exception e)
             { 
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Error(e,

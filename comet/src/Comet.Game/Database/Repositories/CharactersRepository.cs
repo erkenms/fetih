@@ -1,5 +1,6 @@
 namespace Comet.Game.Database.Repositories
 {
+    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Game.Database.Models;
@@ -85,10 +86,18 @@ namespace Comet.Game.Database.Repositories
         }
 
         /// <summary>True if saving failed because the character name is already taken.</summary>
-        public static bool IsDuplicateName(DbUpdateException e) =>
+        public static bool IsDuplicateName(DbUpdateException e) => IsDuplicateKey(e, "Name_UNIQUE");
+
+        /// <summary>
+        /// True if saving failed because the account already has a character (one
+        /// character per account, enforced by the AccountID_UNIQUE key).
+        /// </summary>
+        public static bool IsDuplicateAccount(DbUpdateException e) => IsDuplicateKey(e, "AccountID_UNIQUE");
+
+        private static bool IsDuplicateKey(DbUpdateException e, string key) =>
             e.InnerException is MySqlConnector.MySqlException
             {
                 ErrorCode: MySqlConnector.MySqlErrorCode.DuplicateKeyEntry
-            };
+            } inner && inner.Message.Contains($"'{key}'", StringComparison.OrdinalIgnoreCase);
     } 
 }

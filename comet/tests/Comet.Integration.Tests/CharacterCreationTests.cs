@@ -179,6 +179,26 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task DatabaseRefusesASecondCharacterForAnAccount()
+        {
+            var (game, token, email) = await this.AtCharacterCreationAsync();
+            await using (game)
+            {
+                // Another connection creates this account's character first
+                var other = this.Servers.NewCharacterName();
+                await this.Servers.ExecuteGameSqlAsync(
+                    $"INSERT INTO `character` (AccountID, Name) SELECT AccountID, @name " +
+                    $"FROM `{this.Servers.AccountSchema}`.`account` WHERE Username = @email",
+                    ("@name", other), ("@email", email));
+
+                Assert.Equal(InvalidCharacter, await game.CreateCharacterAsync(
+                    this.Servers.NewCharacterName(), 1003, 10, (uint)token));
+                Assert.True(await game.WaitClosedAsync());
+                await CreateFailedAsync("account_has_character");
+            }
+        }
+
+        [Fact]
         public async Task AccountWithACharacterCantCreateAnother()
         {
             var (player, _) = await this.PlayingAsync();

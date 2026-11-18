@@ -57,7 +57,8 @@ CREATE TABLE `character` (
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),
-  UNIQUE KEY `Name_UNIQUE` (`Name`)
+  UNIQUE KEY `Name_UNIQUE` (`Name`),
+  UNIQUE KEY `AccountID_UNIQUE` (`AccountID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1000000 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
