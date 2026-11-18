@@ -4,9 +4,11 @@ namespace Comet.Network.Sockets
     using System.Net;
     using System.Net.Sockets;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using Comet.Network.Packets;
     using Comet.Network.Security;
+    using Serilog;
 
     /// <summary>
     /// Actors are assigned to accepted client sockets to give connected clients a state
@@ -23,6 +25,19 @@ namespace Comet.Network.Sockets
         public readonly byte[] PacketFooter;
         public readonly uint Partition;
         private readonly object SendLock;
+
+        // Connection identity and lifetime, used to correlate log events
+        private static long NextConnId;
+        public readonly long ConnId;
+        public readonly DateTime ConnectedAt;
+        private string disconnectReason;
+
+        /// <summary>
+        /// Why the connection ended (see <see cref="DisconnectReasons"/>), or null while
+        /// connected. The first reason set wins, so a server-side reason such as
+        /// "replaced" isn't overwritten by the socket error it causes.
+        /// </summary>
+        public string DisconnectReason => this.disconnectReason;
 
         /// <summary>
         /// Instantiates a new instance of <see cref="TcpServerActor"/> using an accepted
@@ -47,7 +62,13 @@ namespace Comet.Network.Sockets
             this.PacketFooter = Encoding.ASCII.GetBytes(packetFooter);
             this.Partition = partition;
             this.SendLock = new object();
+            this.ConnId = Interlocked.Increment(ref NextConnId);
+            this.ConnectedAt = DateTime.UtcNow;
         }
+
+        /// <summary>Records why the connection ended, unless a reason was already set.</summary>
+        public void SetDisconnectReason(string reason) =>
+            Interlocked.CompareExchange(ref this.disconnectReason, reason, null);
 
         /// <summary>
         /// Sends a packet to the game client after encrypting bytes. This may be called
@@ -76,7 +97,8 @@ namespace Comet.Network.Sockets
                 {
                     if (e.SocketErrorCode < SocketError.ConnectionAborted ||
                         e.SocketErrorCode > SocketError.Shutdown)
-                        Console.WriteLine(e);
+                        Log.ForContext<TcpServerActor>().Error(e,
+                            "Send failed for connection {ConnId}", this.ConnId);
                     return Task.FromException(e);
                 }
             }
@@ -95,11 +117,15 @@ namespace Comet.Network.Sockets
         }
 
         /// <summary>
-        /// Force closes the client connection.
+        /// Force closes the client connection, recording the reason for the logs.
         /// </summary>
-        public virtual void Disconnect()
+        /// <param name="reason">One of <see cref="DisconnectReasons"/></param>
+        public virtual void Disconnect(string reason = DisconnectReasons.Server)
         {
-            this.Socket?.Disconnect(false);
+            this.SetDisconnectReason(reason);
+            try { this.Socket?.Disconnect(false); }
+            catch (SocketException) { }
+            catch (ObjectDisposedException) { }
         }
     }    
 }

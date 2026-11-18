@@ -46,7 +46,7 @@ namespace Comet.Network.RPC
                 }
                 catch (IOException) { }
                 catch (SocketException) { }
-                catch (Exception e) { Console.WriteLine(e); }
+                catch (Exception e) { Serilog.Log.ForContext<RpcClient>().Error(e, "RPC connection to {Address}:{Port} failed", address, port); }
                 Thread.Sleep(1000);
             }
         }

@@ -6,6 +6,7 @@ namespace Comet.Network.Sockets
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
 
     /// <summary>
     /// TcpServerListener implements an asynchronous TCP streaming socket server for high
@@ -106,6 +107,9 @@ namespace Comet.Network.Sockets
                     var ip = (socket.RemoteEndPoint as IPEndPoint).Address.MapToIPv4().ToString();
                     if (!this.Registry.AddActiveClient(ip))
                     {
+                        LogEvents.For(this.GetType(), LogEvents.NetRejected).Warning(
+                            "Rejected connection from {IP}: too many connections from this address",
+                            ip);
                         socket.Disconnect(false);
                         this.AcceptanceSemaphore.Release();
                         continue;
@@ -114,6 +118,8 @@ namespace Comet.Network.Sockets
                     // Construct the client before receiving data
                     this.BufferPool.TryPop(out var buffer);
                     var actor = await this.AcceptedAsync(socket, buffer);
+                    LogEvents.For(this.GetType(), LogEvents.NetConnect).Information(
+                        "Connection {ConnId} opened from {IP}", actor.ConnId, actor.IPAddress);
 
                     // Start receiving data from the client connection
                     if (this.EnableKeyExchange)
@@ -162,23 +168,20 @@ namespace Comet.Network.Sockets
                     examined = await receiveOperation;
                     if (examined == 0) 
                     {
-                        actor.Disconnect();
+                        actor.Disconnect(DisconnectReasons.ClientClosed);
                         this.Disconnecting(actor);
                         return; 
                     }
-                    if (examined < 9) throw new Exception("Invalid length");
+                    if (examined < 9)
+                    {
+                        actor.Disconnect(DisconnectReasons.HandshakeFailed);
+                        this.Disconnecting(actor);
+                        return;
+                    }
                 }
                 catch (Exception e)
                 {
-                    if (e is SocketException)
-                    {
-                        SocketException socketEx = e as SocketException;
-                        if (socketEx.SocketErrorCode < SocketError.ConnectionAborted ||
-                            socketEx.SocketErrorCode > SocketError.Shutdown)
-                            Console.WriteLine(e);
-                    }
-
-                    actor.Disconnect();
+                    actor.Disconnect(this.ReasonFor(e));
                     this.Disconnecting(actor);
                     return;
                 }
@@ -192,7 +195,7 @@ namespace Comet.Network.Sockets
                 consumed = BitConverter.ToUInt16(actor.Buffer.Span.Slice(7, 2)) + 7;
                 if (consumed > examined)
                 {
-                    actor.Disconnect();
+                    actor.Disconnect(DisconnectReasons.HandshakeFailed);
                     this.Disconnecting(actor);
                     return;
                 }
@@ -204,7 +207,7 @@ namespace Comet.Network.Sockets
                 // Process the exchange now that bytes are decrypted
                 if (!this.Exchanged(actor, actor.Buffer[..consumed].Span))
                 {
-                    actor.Disconnect();
+                    actor.Disconnect(DisconnectReasons.HandshakeFailed);
                     this.Disconnecting(actor);
                     return;
                 }
@@ -219,7 +222,7 @@ namespace Comet.Network.Sockets
 
                     if (!this.Splitting(actor, examined, ref consumed))
                     {
-                        actor.Disconnect();
+                        actor.Disconnect(DisconnectReasons.ProtocolError);
                         this.Disconnecting(actor);
                         return;
                     }
@@ -274,19 +277,16 @@ namespace Comet.Network.Sockets
 
                     timeout.CancelAfter(TimeSpan.FromSeconds(ReceiveTimeoutSeconds));
                     examined = await receiveOperation;
-                    if (examined == 0) break;
-                }
-                catch (OperationCanceledException) { break; }
-                catch (SocketException e)
-                {
-                    if (e.SocketErrorCode < SocketError.ConnectionAborted ||
-                        e.SocketErrorCode > SocketError.Shutdown)
-                        Console.WriteLine(e);
-                    break;
+                    if (examined == 0)
+                    {
+                        actor.SetDisconnectReason(DisconnectReasons.ClientClosed);
+                        break;
+                    }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    actor.SetDisconnectReason(this.ReasonFor(e));
+                    break;
                 }
 
                 // Decrypt traffic
@@ -298,7 +298,7 @@ namespace Comet.Network.Sockets
                 consumed = 0;
                 if (!this.Splitting(actor, examined + remaining, ref consumed))
                 {
-                    actor.Disconnect();
+                    actor.Disconnect(DisconnectReasons.ProtocolError);
                     break;
                 }
                 
@@ -307,7 +307,50 @@ namespace Comet.Network.Sockets
             }
 
             // Disconnect the client
+            if (this.ShutdownToken.IsCancellationRequested)
+                actor.SetDisconnectReason(DisconnectReasons.Shutdown);
             this.Disconnecting(actor);
+        }
+
+        /// <summary>
+        /// Maps a receive exception to a disconnect reason. Unexpected exceptions are
+        /// logged as errors; expected network failures are only recorded as the reason.
+        /// </summary>
+        private string ReasonFor(Exception e)
+        {
+            switch (e)
+            {
+                case OperationCanceledException:
+                    return this.ShutdownToken.IsCancellationRequested
+                        ? DisconnectReasons.Shutdown
+                        : DisconnectReasons.Timeout;
+
+                case SocketException socketEx:
+                    switch (socketEx.SocketErrorCode)
+                    {
+                        case SocketError.ConnectionReset:
+                        case SocketError.ConnectionAborted:
+                            return DisconnectReasons.Reset;
+                        case SocketError.TimedOut:
+                            return DisconnectReasons.Timeout;
+                        case SocketError.Shutdown:
+                        case SocketError.NotConnected:
+                        case SocketError.OperationAborted:
+                            // Socket closed locally, e.g. by a server-side Disconnect
+                            return DisconnectReasons.Server;
+                        default:
+                            LogEvents.For(this.GetType(), LogEvents.NetDisconnect).Warning(socketEx,
+                                "Unexpected socket error {SocketError}", socketEx.SocketErrorCode);
+                            return DisconnectReasons.SocketError;
+                    }
+
+                case ObjectDisposedException:
+                    return DisconnectReasons.Server;
+
+                default:
+                    Serilog.Log.ForContext(this.GetType()).Error(e, "Unexpected receive failure");
+                    return DisconnectReasons.SocketError;
+            }
         }
 
         /// <summary>
@@ -352,6 +395,12 @@ namespace Comet.Network.Sockets
             this.BufferPool.Push(actor.Buffer);
             this.AcceptanceSemaphore.Release();
             this.Registry.RemoveActiveClient(actor.IPAddress);
+
+            var duration = DateTime.UtcNow - actor.ConnectedAt;
+            LogEvents.For(this.GetType(), LogEvents.NetDisconnect).Information(
+                "Connection {ConnId} from {IP} closed: {Reason} after {DurationSec}s",
+                actor.ConnId, actor.IPAddress, actor.DisconnectReason ?? DisconnectReasons.Server,
+                Math.Round(duration.TotalSeconds, 3));
 
             // Complete processing for disconnect
             this.Disconnected(actor);

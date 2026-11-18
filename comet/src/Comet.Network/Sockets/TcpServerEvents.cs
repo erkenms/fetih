@@ -48,8 +48,8 @@ namespace Comet.Network.Sockets
         /// <param name="packet">Packet bytes to be processed</param>
         protected virtual void Received(TActor actor, ReadOnlySpan<byte> packet)
         {
-            Console.WriteLine("Received {0} bytes", packet.Length);
-            Console.WriteLine(PacketDump.Hex(packet));
+            Serilog.Log.ForContext(this.GetType()).Verbose(
+                "Received {Length} bytes: {Hex}", packet.Length, Convert.ToHexString(packet));
         }
 
         /// <summary>
