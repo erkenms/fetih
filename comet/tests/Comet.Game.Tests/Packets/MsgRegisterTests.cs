@@ -35,5 +35,25 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(206152920u, msg.Token);
             Assert.Equal("00.1C.42.AA.BB.CC", msg.MacAddress);
         }
+
+        [Fact]
+        public void KeepsBytesOutsideAsciiSoTheyCanBeRejected()
+        {
+            var bytes = ClientPacket(1);
+            new byte[] { 0xC7, 0x61, 0xF0, 0x72, 0xFD, 0 }.CopyTo(bytes, 24);
+            var msg = new MsgRegister();
+            msg.Decode(bytes);
+            Assert.Equal("\u00C7a\u00F0r\u00FD", msg.CharacterName);
+        }
+
+        [Fact]
+        public void NameWithoutTerminatorIsSixteenCharacters()
+        {
+            var bytes = ClientPacket(1);
+            Encoding.ASCII.GetBytes("SixteenCharsLong").CopyTo(bytes, 24);
+            var msg = new MsgRegister();
+            msg.Decode(bytes);
+            Assert.Equal("SixteenCharsLong", msg.CharacterName);
+        }
     }
 }

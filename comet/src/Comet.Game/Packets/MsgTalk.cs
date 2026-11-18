@@ -161,6 +161,7 @@ namespace Comet.Game.Packets
         public readonly static MsgTalk LoginNewRole = new MsgTalk(0, TalkChannel.Login, "NEW_ROLE");
         public readonly static MsgTalk RegisterOk = new MsgTalk(0, TalkChannel.Register, "ANSWER_OK");
         public readonly static MsgTalk RegisterInvalid = new MsgTalk(0, TalkChannel.Register, "Invalid character");
+        public readonly static MsgTalk RegisterInvalidName = new MsgTalk(0, TalkChannel.Register, "Invalid character name");
         public readonly static MsgTalk RegisterNameTaken = new MsgTalk(0, TalkChannel.Register, "Character name taken");
         public readonly static MsgTalk RegisterTryAgain = new MsgTalk(0, TalkChannel.Register, "Error, please try later");
         

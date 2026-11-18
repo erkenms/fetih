@@ -83,5 +83,12 @@ namespace Comet.Game.Database.Repositories
             db.Characters.Update(character);
             await db.SaveChangesAsync();
         }
+
+        /// <summary>True if saving failed because the character name is already taken.</summary>
+        public static bool IsDuplicateName(DbUpdateException e) =>
+            e.InnerException is MySqlConnector.MySqlException
+            {
+                ErrorCode: MySqlConnector.MySqlErrorCode.DuplicateKeyEntry
+            };
     } 
 }

@@ -9,6 +9,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
     using Comet.Network.Sockets;
+    using Microsoft.EntityFrameworkCore;
     using static Comet.Game.Packets.MsgTalk;
 
     /// <remarks>Packet Type 1001</remarks>
@@ -47,7 +48,12 @@ namespace Comet.Game.Packets
             this.Length = reader.ReadUInt16();
             this.Type = (PacketType)reader.ReadUInt16();
             reader.BaseStream.Seek(24, SeekOrigin.Begin);
-            this.CharacterName = reader.ReadString(16);
+            var name = reader.ReadBytes(16);
+            int end = Array.IndexOf(name, (byte)0);
+
+            // One character per byte, so CharacterRules sees bytes outside ASCII
+            this.CharacterName = System.Text.Encoding.Latin1.GetString(
+                name, 0, end < 0 ? name.Length : end);
             reader.BaseStream.Seek(72, SeekOrigin.Begin);
             this.Mesh = reader.ReadUInt16();
             this.Class = reader.ReadUInt16();
@@ -76,7 +82,16 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Check character name availability
+            // Check the name's characters, then whether it's free
+            if (CharacterRules.CheckName(this.CharacterName) is string nameError)
+            {
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
+                    "Character creation for account {AccountId} failed: {Reason} ({Name})",
+                    client.Creation.AccountID, nameError, this.CharacterName);
+                await client.SendAsync(MsgTalk.RegisterInvalidName);
+                return;
+            }
+
             if (await CharactersRepository.ExistsAsync(this.CharacterName))
             {
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
@@ -138,6 +153,14 @@ namespace Comet.Game.Packets
                     character.Name, character.AccountID, character.CharacterID,
                     this.Class, this.Mesh);
                 await client.SendAsync(MsgTalk.RegisterOk);
+            }
+            catch (DbUpdateException e) when (CharactersRepository.IsDuplicateName(e))
+            {
+                // Another player took the name since the check above
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
+                    "Character creation for account {AccountId} failed: {Reason} ({Name})",
+                    client.Creation.AccountID, "name_taken", this.CharacterName);
+                await client.SendAsync(MsgTalk.RegisterNameTaken);
             }
             catch (Exception e)
             { 

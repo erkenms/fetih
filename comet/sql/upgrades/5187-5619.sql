@@ -64,3 +64,8 @@ ALTER TABLE `account` MODIFY COLUMN `Username` VARCHAR(127) CHARACTER SET utf8
 
 CALL `upgrade_5187_5619`();
 DROP PROCEDURE `upgrade_5187_5619`;
+
+-- Character names are unique regardless of case, so "Hero" can't pose as "hero".
+USE `comet.game`;
+ALTER TABLE `character` MODIFY COLUMN `Name` VARCHAR(15) CHARACTER SET utf8
+  COLLATE utf8_general_ci NOT NULL;
