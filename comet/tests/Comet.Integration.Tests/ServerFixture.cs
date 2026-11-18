@@ -28,6 +28,9 @@ namespace Comet.Integration.Tests
         // Constants
         public const string Realm = "Storm";
         public const string Host = "127.0.0.1";
+
+        // Short, so tests can idle longer than it without being slow
+        public const int HandshakeTimeoutSeconds = 2;
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -121,11 +124,13 @@ namespace Comet.Integration.Tests
             this.StartServer("Comet.Game", this.GameSchema, "game",
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
+                "--GameNetwork:HandshakeTimeoutSeconds=" + HandshakeTimeoutSeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
                 "--Network:IPAddress=" + Host, "--Network:Port=" + this.AccountPort,
-                "--Network:MaxConnPerIP=1000", "--Network:MaxAttemptsPerMinute=100000");
+                "--Network:MaxConnPerIP=1000", "--Network:MaxAttemptsPerMinute=100000",
+                "--Network:HandshakeTimeoutSeconds=" + HandshakeTimeoutSeconds);
             await this.WaitForEventAsync("account", "server.start", _ => true, StartTimeout);
             await this.WaitForEventAsync("game", "rpc.connected", _ => true, StartTimeout);
         }

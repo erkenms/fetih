@@ -31,7 +31,8 @@ namespace Comet.Account
         public Server(ServerConfiguration config)
             : base(maxConn: config.Network.MaxConn,
                 maxConnPerIP: config.Network.MaxConnPerIP,
-                maxAttemptsPerMinute: config.Network.MaxAttemptsPerMinute)
+                maxAttemptsPerMinute: config.Network.MaxAttemptsPerMinute,
+                handshakeTimeoutSeconds: config.Network.HandshakeTimeoutSeconds)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);

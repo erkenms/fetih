@@ -18,10 +18,15 @@ namespace Comet.Network.Sockets
     public abstract class TcpServerListener<TActor> : TcpServerEvents<TActor>
         where TActor : TcpServerActor
     {
-        // Constants
-        private const int ReceiveTimeoutSeconds = 30;
+        // TCP keepalive: after 60 s without traffic the OS probes the client every 10 s,
+        // and closes the connection after 5 unanswered probes (about 110 s in all). This
+        // only drops clients whose machine or network is gone, never idle players.
+        private const int KeepAliveIdleSeconds = 60;
+        private const int KeepAliveIntervalSeconds = 10;
+        private const int KeepAliveProbes = 5;
 
         // Fields and properties
+        private readonly TimeSpan HandshakeTimeout;
         private readonly Semaphore AcceptanceSemaphore;
         private readonly ConcurrentStack<Memory<byte>> BufferPool;
         private readonly bool EnableKeyExchange;
@@ -42,15 +47,21 @@ namespace Comet.Network.Sockets
         /// <param name="delay">Use Nagel's algorithm to delay sending smaller packets</param>
         /// <param name="exchange">Use a key exchange before receiving packets</param>
         /// <param name="footerLength">Length of the packet footer</param>
+        /// <param name="handshakeTimeoutSeconds">
+        /// Time a new connection has to send its key exchange (or, without one, its first
+        /// bytes). After that there is no time limit: idle clients stay connected.
+        /// </param>
         public TcpServerListener(
-            int maxConn = 1000, 
-            int bufferSize = 4096, 
+            int maxConn = 1000,
+            int bufferSize = 4096,
             bool delay = false,
             bool exchange = false,
             int footerLength = 0,
             int maxConnPerIP = 10,
-            int maxAttemptsPerMinute = 15)
+            int maxAttemptsPerMinute = 15,
+            int handshakeTimeoutSeconds = 30)
         {
+            this.HandshakeTimeout = TimeSpan.FromSeconds(handshakeTimeoutSeconds);
             // Initialize and configure server socket
             this.Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             this.Socket.LingerState = new LingerOption(false, 0);
@@ -119,6 +130,7 @@ namespace Comet.Network.Sockets
                     }
                     
                     // Construct the client before receiving data
+                    EnableKeepAlive(socket);
                     this.BufferPool.TryPop(out var buffer);
                     var actor = await this.AcceptedAsync(socket, buffer);
                     LogEvents.For(this.GetType(), LogEvents.NetConnect).Information(
@@ -131,13 +143,37 @@ namespace Comet.Network.Sockets
                             .StartNew(this.ExchangingAsync, actor, this.ShutdownToken.Token)
                             .ConfigureAwait(false);
                     }
-                    else 
+                    else
                     {
                         var task = this.ReceiveTasks
                             .StartNew(this.ReceivingAsync, actor, this.ShutdownToken.Token)
                             .ConfigureAwait(false);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Turns on TCP keepalive for an accepted client, so a client whose machine or
+        /// network disappeared is noticed even if it never sends anything again.
+        /// </summary>
+        /// <param name="socket">Accepted client socket</param>
+        private static void EnableKeepAlive(Socket socket)
+        {
+            try
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                socket.SetSocketOption(SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveTime, KeepAliveIdleSeconds);
+                socket.SetSocketOption(SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveInterval, KeepAliveIntervalSeconds);
+                socket.SetSocketOption(SocketOptionLevel.Tcp,
+                    SocketOptionName.TcpKeepAliveRetryCount, KeepAliveProbes);
+            }
+            catch (SocketException e)
+            {
+                Serilog.Log.ForContext<TcpServerListener<TActor>>().Warning(e,
+                    "Couldn't set TCP keepalive on an accepted connection");
             }
         }
 
@@ -168,9 +204,9 @@ namespace Comet.Network.Sockets
                         SocketFlags.None,
                         cancellation.Token);
                         
-                    timeout.CancelAfter(TimeSpan.FromSeconds(ReceiveTimeoutSeconds));
+                    timeout.CancelAfter(this.HandshakeTimeout);
                     examined = await receiveOperation;
-                    if (examined == 0) 
+                    if (examined == 0)
                     {
                         actor.Disconnect(DisconnectReasons.ClientClosed);
                         this.Disconnecting(actor);
@@ -265,7 +301,7 @@ namespace Comet.Network.Sockets
         /// <returns>Returns task details for fault tolerance processing.</returns>
         private Task ReceivingAsync(object state)
         {
-            return this.ReceivingAsync(state, 0, false);
+            return this.ReceivingAsync(state, 0, false, firstReceiveDeadline: true);
         }
 
         /// <summary>
@@ -278,28 +314,35 @@ namespace Comet.Network.Sockets
         /// <param name="firstPacketPending">
         /// True if a key exchange just finished and no packet has been read since
         /// </param>
+        /// <param name="firstReceiveDeadline">
+        /// True if the first bytes must arrive within the handshake timeout (servers
+        /// without a key exchange). Later receives have no time limit.
+        /// </param>
         /// <returns>Returns task details for fault tolerance processing.</returns>
-        private async Task ReceivingAsync(object state, int remaining, bool firstPacketPending)
+        private async Task ReceivingAsync(
+            object state, int remaining, bool firstPacketPending, bool firstReceiveDeadline = false)
         {
             // Initialize multiple receive variables
             var actor = state as TActor;
-            var timeout = new CancellationTokenSource();
+            using var timeout = new CancellationTokenSource();
             int examined = 0, consumed = 0;
+            if (firstReceiveDeadline)
+                timeout.CancelAfter(this.HandshakeTimeout);
 
             while (actor.Socket.Connected && !this.ShutdownToken.IsCancellationRequested)
             {
                 try
-                {                        
+                {
                     // Receive data from the client socket
                     using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
                         timeout.Token, this.ShutdownToken.Token);
-                    var receiveOperation = actor.Socket.ReceiveAsync(
+                    examined = await actor.Socket.ReceiveAsync(
                         actor.Buffer[remaining..],
                         SocketFlags.None,
                         cancellation.Token);
 
-                    timeout.CancelAfter(TimeSpan.FromSeconds(ReceiveTimeoutSeconds));
-                    examined = await receiveOperation;
+                    // Only the first receive has a deadline
+                    timeout.CancelAfter(Timeout.InfiniteTimeSpan);
                     if (examined == 0)
                     {
                         actor.SetDisconnectReason(DisconnectReasons.ClientClosed);

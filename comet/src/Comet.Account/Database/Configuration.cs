@@ -40,6 +40,11 @@ namespace Comet.Account.Database
             // minute, blocks the address for 15 minutes
             public int MaxConnPerIP { get; set; } = 10;
             public int MaxAttemptsPerMinute { get; set; } = 15;
+
+            // Time a new connection has to start talking (key exchange or first
+            // packet). There's no idle limit after that; dead connections are found
+            // by TCP keepalive.
+            public int HandshakeTimeoutSeconds { get; set; } = 30;
         }
 
         /// <summary>

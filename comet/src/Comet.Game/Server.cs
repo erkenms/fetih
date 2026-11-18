@@ -33,7 +33,8 @@ namespace Comet.Game
         public Server(ServerConfiguration config) 
             : base(maxConn: config.GameNetwork.MaxConn, exchange: true, footerLength: 8,
                 maxConnPerIP: config.GameNetwork.MaxConnPerIP,
-                maxAttemptsPerMinute: config.GameNetwork.MaxAttemptsPerMinute)
+                maxAttemptsPerMinute: config.GameNetwork.MaxAttemptsPerMinute,
+                handshakeTimeoutSeconds: config.GameNetwork.HandshakeTimeoutSeconds)
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);
