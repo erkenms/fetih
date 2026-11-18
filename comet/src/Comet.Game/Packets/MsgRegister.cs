@@ -3,10 +3,12 @@ namespace Comet.Game.Packets
     using System;
     using System.IO;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
     using Comet.Game.States;
     using Comet.Network.Packets;
+    using Comet.Network.Sockets;
     using static Comet.Game.Packets.MsgTalk;
 
     /// <remarks>Packet Type 1001</remarks>
@@ -61,14 +63,20 @@ namespace Comet.Game.Packets
             if (client.Creation == null || this.Token != client.Creation.Token || 
                 !Kernel.Registration.ContainsKey(this.Token))
             {
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Warning(
+                    "Character creation rejected for connection {ConnId} from {IP}: {Reason}",
+                    client.ConnId, client.IPAddress, "invalid_token");
                 await client.SendAsync(MsgTalk.RegisterInvalid);
-                client.Disconnect();
+                client.Disconnect(DisconnectReasons.AuthFailed);
                 return;
             }
 
             // Check character name availability
             if (await CharactersRepository.ExistsAsync(this.CharacterName))
             {
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
+                    "Character creation for account {AccountId} failed: {Reason} ({Name})",
+                    client.Creation.AccountID, "name_taken", this.CharacterName);
                 await client.SendAsync(MsgTalk.RegisterNameTaken);
                 return;
             }
@@ -77,6 +85,10 @@ namespace Comet.Game.Packets
             if (!Enum.IsDefined(typeof(BodyType), this.Mesh) ||
                 !Enum.IsDefined(typeof(BaseClassType), this.Class))
             {
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Warning(
+                    "Character creation for account {AccountId} failed: {Reason} " +
+                    "(mesh {Mesh}, class {Class})",
+                    client.Creation.AccountID, "invalid_input", this.Mesh, this.Class);
                 await client.SendAsync(MsgTalk.RegisterInvalid);
                 return;
             }
@@ -115,10 +127,18 @@ namespace Comet.Game.Packets
                 // Save the character and continue with login
                 await CharactersRepository.CreateAsync(character); 
                 Kernel.Registration.TryRemove(client.Creation.Token, out _);
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreated).Information(
+                    "Character {Name} created (account {AccountId}, character {CharacterId}, " +
+                    "class {Class}, mesh {Mesh})",
+                    character.Name, character.AccountID, character.CharacterID,
+                    this.Class, this.Mesh);
                 await client.SendAsync(MsgTalk.RegisterOk);
             }
-            catch 
+            catch (Exception e)
             { 
+                LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Error(e,
+                    "Character creation for account {AccountId} failed: {Reason} ({Name})",
+                    client.Creation.AccountID, "db_error", this.CharacterName);
                 await client.SendAsync(MsgTalk.RegisterTryAgain); 
             }
         }

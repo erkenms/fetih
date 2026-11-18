@@ -3,9 +3,11 @@ namespace Comet.Game.Packets
     using System;
     using System.Linq;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
     using Comet.Game.States;
     using Comet.Network.Packets;
+    using Comet.Network.Sockets;
     using Comet.Shared.Models;
     using Org.BouncyCastle.Utilities.Encoders;
     using static Comet.Game.Packets.MsgTalk;
@@ -80,8 +82,12 @@ namespace Comet.Game.Packets
             var auth = Kernel.Logins.Remove(this.Token.ToString()) as TransferAuthArgs;
             if (!IsAuthorized(auth, client.IPAddress, StrictAuthentication))
             {
+                LogEvents.For<MsgConnect>(LogEvents.GameAuthFailed).Warning(
+                    "Game login rejected for connection {ConnId} from {IP}: {Reason}",
+                    client.ConnId, client.IPAddress,
+                    auth == null ? "invalid_token" : "ip_mismatch");
                 await client.SendAsync(MsgTalk.LoginInvalid);
-                client.Socket.Disconnect(false);
+                client.Disconnect(DisconnectReasons.AuthFailed);
                 return;
             }
 
@@ -92,8 +98,11 @@ namespace Comet.Game.Packets
             var previous = Kernel.Clients.Replace(auth.AccountID, client);
             if (previous != null)
             {
-                try { previous.Disconnect(); }
-                catch (Exception e) { Console.WriteLine(e); }
+                LogEvents.For<MsgConnect>(LogEvents.SessionReplaced).Information(
+                    "Account {AccountId} logged in again from {IP}; closing connection " +
+                    "{PreviousConnId} from {PreviousIP}",
+                    auth.AccountID, client.IPAddress, previous.ConnId, previous.IPAddress);
+                previous.Disconnect(DisconnectReasons.Replaced);
                 await previous.LogoutAsync();
             }
 
@@ -106,12 +115,21 @@ namespace Comet.Game.Packets
                 client.Creation.AccountID = auth.AccountID;
                 client.Creation.Token = (uint)this.Token;
                 Kernel.Registration.TryAdd(client.Creation.Token, 0);
+                Serilog.Log.ForContext<MsgConnect>().Debug(
+                    "Account {AccountId} has no character; opening character creation",
+                    auth.AccountID);
                 await client.SendAsync(MsgTalk.LoginNewRole);
             }
             else
             {
                 // Character already exists
                 client.Character = new Character(character);
+                client.LoggedInAt = DateTime.UtcNow;
+                LogEvents.For<MsgConnect>(LogEvents.SessionLogin).Information(
+                    "{Name} logged in (connection {ConnId}, account {AccountId}, " +
+                    "character {CharacterId}, level {Level}, from {IP}, map {MapId} at {X},{Y})",
+                    character.Name, client.ConnId, auth.AccountID, character.CharacterID,
+                    character.Level, client.IPAddress, character.MapID, character.X, character.Y);
                 await client.SendAsync(MsgTalk.LoginOk);
                 await client.SendAsync(new MsgUserInfo(client.Character));
             }            

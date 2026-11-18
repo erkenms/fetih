@@ -3,6 +3,7 @@ namespace Comet.Game
     using System;
     using System.Runtime.Caching;
     using System.Security.Cryptography;
+    using Comet.Core.Logging;
     using Comet.Network.RPC;
     using Comet.Shared.Models;
 
@@ -21,7 +22,8 @@ namespace Comet.Game
         /// <param name="agentName">Name of the client connecting</param>
         public void Connected(string agentName)
         {
-            Console.WriteLine("{0} has connected", agentName);
+            LogEvents.For<Remote>(LogEvents.RpcConnected).Information(
+                "RPC client {Agent} connected", agentName);
         }
 
         /// <summary>

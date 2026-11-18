@@ -2,6 +2,7 @@ namespace Comet.Game.Packets
 {
     using System;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -76,9 +77,9 @@ namespace Comet.Game.Packets
                     await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
                         String.Format("Missing packet {0}, Action {1}, Length {2}",
                         this.Type, this.Action, this.Length)));
-                    Console.WriteLine(
-                        "Missing packet {0}, action {1}, Length {2}\n{3}", 
-                        this.Type, this.Action, this.Length, PacketDump.Hex(this.Encode()));
+                    LogEvents.For(this.GetType(), LogEvents.PacketUnhandled).Warning(
+                        "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
+                        this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
                     break;
             }
         }

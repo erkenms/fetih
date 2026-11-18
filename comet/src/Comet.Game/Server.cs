@@ -5,12 +5,14 @@ namespace Comet.Game
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.Database;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Network.Packets;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
+    using Serilog.Context;
 
     /// <summary>
     /// Server inherits from a base server listener to provide the game server with
@@ -91,7 +93,11 @@ namespace Comet.Game
                 actor.DiffieHellman = null;
                 return true;
             }
-            catch (Exception e) { Console.WriteLine(e); }
+            catch (Exception e)
+            {
+                Serilog.Log.ForContext<Server>().Error(e,
+                    "Key exchange failed for connection {ConnId}", actor.ConnId);
+            }
             return false;
         }
 
@@ -124,6 +130,13 @@ namespace Comet.Game
             var length = BitConverter.ToUInt16(packet, 0);
             PacketType type = (PacketType)BitConverter.ToUInt16(packet, 2);
 
+            // Every log written while processing carries the connection and player
+            using var connScope = LogContext.PushProperty("ConnId", actor.ConnId);
+            using var accountScope = actor.AccountID != 0
+                ? LogContext.PushProperty("AccountId", actor.AccountID) : null;
+            using var characterScope = actor.ID != 0
+                ? LogContext.PushProperty("CharacterId", actor.ID) : null;
+
             try
             {
                 // Switch on the packet type
@@ -136,9 +149,9 @@ namespace Comet.Game
                     case PacketType.MsgConnect:  msg = new MsgConnect(); break;
 
                     default:
-                        Console.WriteLine(
-                            "Missing packet {0}, Length {1}\n{2}", 
-                            type, length, PacketDump.Hex(packet));
+                        LogEvents.For<Server>(LogEvents.PacketUnhandled).Warning(
+                            "Unhandled packet {PacketType} ({Length} bytes): {Hex}",
+                            type, length, Convert.ToHexString(packet));
                         await actor.SendAsync(new MsgTalk(actor.ID, MsgTalk.TalkChannel.Service,
                             String.Format("Missing packet {0}, Length {1}",
                             type, length)));
@@ -151,7 +164,8 @@ namespace Comet.Game
             }
             catch (Exception e) 
             { 
-                Console.WriteLine(e);
+                LogEvents.For<Server>(LogEvents.PacketError).Error(e,
+                    "Failed to process packet {PacketType}", type);
             }
         }
 
@@ -172,8 +186,22 @@ namespace Comet.Game
             if (actor.Creation != null)
                 Kernel.Registration.TryRemove(actor.Creation.Token, out _);
 
+            if (actor.Character != null && actor.LoggedInAt.HasValue)
+            {
+                var character = actor.Character;
+                LogEvents.For<Server>(LogEvents.SessionLogout).Information(
+                    "{Name} logged out: {Reason} after {DurationSec}s " +
+                    "(connection {ConnId}, account {AccountId}, character {CharacterId}, " +
+                    "from {IP}, map {MapId} at {X},{Y})",
+                    character.Name, actor.DisconnectReason ?? DisconnectReasons.Server,
+                    Math.Round((DateTime.UtcNow - actor.LoggedInAt.Value).TotalSeconds, 3),
+                    actor.ConnId, actor.AccountID, character.CharacterID, actor.IPAddress,
+                    character.MapID, character.X, character.Y);
+            }
+
             actor.LogoutAsync().ContinueWith(
-                t => Console.WriteLine(t.Exception),
+                t => LogEvents.For<Server>(LogEvents.SessionLogout).Error(t.Exception,
+                    "Logout save failed for character {CharacterId}", actor.ID),
                 TaskContinuationOptions.OnlyOnFaulted);
         }
     }

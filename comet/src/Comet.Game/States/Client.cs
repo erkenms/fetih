@@ -22,6 +22,9 @@ namespace Comet.Game.States
         // Account the client authenticated as (0 until MsgConnect succeeds)
         public uint AccountID { get; set; }
 
+        // When the character entered the game (set on session.login)
+        public DateTime? LoggedInAt { get; set; }
+
         // Client unique identifier
         public uint ID => Character?.CharacterID ?? 0;
 

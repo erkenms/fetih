@@ -1,5 +1,6 @@
 namespace Comet.Game.Database
 {
+    using Comet.Core.Logging;
     using Microsoft.Extensions.Configuration;
 
     /// <summary>
@@ -15,6 +16,7 @@ namespace Comet.Game.Database
         public GameNetworkConfiguration GameNetwork { get; set; }
         public RpcNetworkConfiguration RpcNetwork { get; set; }
         public AuthenticationConfiguration Authentication { get; set; }
+        public LoggingConfiguration Logging { get; set; }
 
         /// <summary>
         /// Encapsulates database configuration for Entity Framework.

@@ -4,10 +4,12 @@
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.Database;
     using Comet.Game.Packets;
     using Comet.Network.RPC;
     using Comet.Network.Security;
+    using Serilog;
 
     /// <summary>
     /// The game server listens for authentication players with a valid access token from
@@ -32,19 +34,22 @@
 
             // Read configuration file and command-line arguments
             var config = new ServerConfiguration(args);
+            LogSetup.Configure("game", config.Logging);
             if (!config.Valid) 
             {
-                Console.WriteLine("Invalid server configuration file");
+                Log.Error("Invalid server configuration file");
+                Log.CloseAndFlush();
                 return;
             }
 
             // Initialize the database
-            Console.WriteLine("Initializing server...");
+            Log.Information("Initializing server...");
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
             if (!ServerDbContext.Ping())
             {
-                Console.WriteLine("Invalid database configuration");
+                Log.Error("Invalid database configuration");
+                Log.CloseAndFlush();
                 return;
             }
 
@@ -55,7 +60,7 @@
             await Task.WhenAll(tasks.ToArray());
             
             // Start the RPC server listener
-            Console.WriteLine("Launching server listeners...");
+            Log.Information("Launching server listeners...");
             var rpcServer = new RpcServerListener(new Remote());
             var rpcServerTask = rpcServer.StartAsync(config.RpcNetwork.Port, config.RpcNetwork.IPAddress);
 
@@ -64,8 +69,9 @@
             var serverTask = server.StartAsync(config.GameNetwork.Port, config.GameNetwork.IPAddress);
 
             // Output all clear and wait for user input
-            Console.WriteLine("Listening for new connections");
-            Console.WriteLine();
+            LogEvents.For(typeof(Program), LogEvents.ServerStart).Information(
+                "Listening for new connections on {IPAddress}:{Port}",
+                config.GameNetwork.IPAddress, config.GameNetwork.Port);
             
             await rpcServerTask;
             await serverTask;
