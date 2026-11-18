@@ -1,0 +1,129 @@
+namespace Comet.Game.Packets
+{
+    using System.Collections.Generic;
+    using Comet.Game.States;
+    using Comet.Network.Packets;
+
+    /// <remarks>Packet Type 10014</remarks>
+    /// <summary>
+    /// Message that shows another player (and later NPCs and monsters) to the client:
+    /// their look, position and name. Sent when someone comes into view; taking them out
+    /// of view is a <see cref="MsgAction"/> with <see cref="MsgAction.ActionType.MapRemoveSpawn"/>.
+    /// </summary>
+    public sealed class MsgPlayer : MsgBase<Client>
+    {
+        // Packet Properties
+        public uint Mesh { get; set; }
+        public uint CharacterID { get; set; }
+        public ushort X { get; set; }
+        public ushort Y { get; set; }
+        public ushort Hairstyle { get; set; }
+        public byte Direction { get; set; }
+        public byte Rebirths { get; set; }
+        public ushort Level { get; set; }
+        public ushort CurrentClass { get; set; }
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Instantiates a new instance of <see cref="MsgPlayer"/> showing a character as
+        /// they stand now.
+        /// </summary>
+        /// <param name="character">Character to show</param>
+        public MsgPlayer(Character character)
+        {
+            base.Type = PacketType.MsgPlayer;
+            this.Mesh = (uint)(character.Mesh + (character.Avatar * 10000));
+            this.CharacterID = character.CharacterID;
+            this.X = character.X;
+            this.Y = character.Y;
+            this.Hairstyle = character.Hairstyle;
+            this.Direction = character.Direction;
+            this.Rebirths = character.Rebirths;
+            this.Level = character.Level;
+            this.CurrentClass = character.CurrentClass;
+            this.Name = character.Name;
+        }
+
+        /// <summary>
+        /// Encodes the packet structure defined by this message class into a byte packet
+        /// that can be sent to the client. Invoked automatically by the client's send
+        /// method. Encodes using byte ordering rules interoperable with the game client.
+        /// </summary>
+        /// <remarks>
+        /// 5619: from client binary (every offset below is one the client's MsgPlayer
+        /// handler reads; strings from 226), with field meanings from the reference.
+        /// The reference writes three fields the 5619 client doesn't have: a ushort before
+        /// X, a sixth uint before the colors, and a country code before the last uint.
+        /// Fields other than look, position, level and name are zero until the features
+        /// behind them exist (guilds, status effects, equipment, ...).
+        /// </remarks>
+        /// <returns>Returns a byte packet of the encoded packet.</returns>
+        public override byte[] Encode()
+        {
+            var writer = new PacketWriter();
+            writer.Write((ushort)base.Type);
+            writer.Write(this.Mesh);                // 4
+            writer.Write(this.CharacterID);         // 8
+            writer.Write(0u);                       // 12  guild ID
+            writer.Write(0u);                       // 16  guild rank
+            writer.Write((ushort)0);                // 20
+            writer.Write(new byte[20]);             // 22  status flags
+            writer.Write((ushort)0);                // 42  appearance type
+            writer.Write(new byte[36]);             // 44  helmet, garment, armor, right and
+                                                    //     left weapon, accessories, mount
+                                                    //     and mount armor item types
+            writer.Write((ushort)0);                // 80
+            writer.Write((ushort)0);                // 82
+            writer.Write(0u);                       // 84  monster health
+            writer.Write((ushort)0);                // 88
+            writer.Write((ushort)0);                // 90  monster level
+            writer.Write(this.X);                   // 92
+            writer.Write(this.Y);                   // 94
+            writer.Write(this.Hairstyle);           // 96
+            writer.Write(this.Direction);           // 98
+            writer.Write(0u);                       // 99  action (stand, sit, emotes)
+            writer.Write((ushort)0);                // 103
+            writer.Write((byte)0);                  // 105
+            writer.Write(this.Rebirths);            // 106
+            writer.Write(this.Level);               // 107
+            writer.Write((byte)0);                  // 109 equipment viewable
+            writer.Write((byte)0);                  // 110 away
+            writer.Write(new byte[20]);             // 111 flowers, nobility, ...
+            writer.Write(new byte[6]);              // 131 armor, shield, helmet colors
+            writer.Write(0u);                       // 137 quiz points
+            writer.Write((ushort)0);                // 141 mount plus
+            writer.Write(0u);                       // 143
+            writer.Write(0u);                       // 147
+            writer.Write((ushort)0);                // 151 enlighten points
+            writer.Write((ushort)0);                // 153 merit points
+            writer.Write((ushort)0);                // 155
+            writer.Write((ushort)0);                // 157
+            writer.Write(0u);                       // 159
+            writer.Write(0u);                       // 163 clan ID
+            writer.Write(0u);                       // 167 clan rank
+            writer.Write(0u);                       // 171
+            writer.Write((ushort)0);                // 175 title
+            writer.Write(0u);                       // 177
+            writer.Write((byte)0);                  // 181
+            writer.Write(0u);                       // 182
+            writer.Write(new byte[3]);              // 186
+            writer.Write((byte)0);                  // 189 boss
+            writer.Write(new byte[16]);             // 190 helmet, armor, weapon art
+            writer.Write((byte)0);                  // 206 sub-profession
+            writer.Write(0u);                       // 207 sub-profession levels
+            writer.Write(0u);                       // 211
+            writer.Write((ushort)0);                // 215 first class
+            writer.Write((ushort)0);                // 217 second class
+            writer.Write(this.CurrentClass);        // 219 class
+            writer.Write(0u);                       // 221
+            writer.Write((byte)0);                  // 225 must be 0 for the client to
+                                                    //     place the player at X, Y
+            writer.Write(new List<string> {         // 226
+                this.Name,
+                string.Empty,
+                string.Empty                        // clan name
+            });
+            return writer.ToArray();
+        }
+    }
+}

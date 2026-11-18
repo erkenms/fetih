@@ -1,6 +1,7 @@
 namespace Comet.Game.States
 {
     using System;
+    using System.ComponentModel.DataAnnotations.Schema;
     using System.Threading.Tasks;
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
@@ -14,6 +15,10 @@ namespace Comet.Game.States
     {
         // Fields and properties
         private DateTime LastSaveTimestamp { get; set; }
+
+        // Direction the character faces (0 to 7), kept in memory only
+        [NotMapped]
+        public byte Direction { get; set; }
 
         /// <summary>
         /// Instantiates a new instance of <see cref="Character"/> using a database fetched

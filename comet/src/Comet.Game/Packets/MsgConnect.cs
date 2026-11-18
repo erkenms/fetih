@@ -155,9 +155,10 @@ namespace Comet.Game.Packets
             }
             else
             {
-                // Character already exists: put it on its map, then in the world
+                // Character already exists: check where it stands, then add it to the
+                // world (it appears on the map when the client finishes logging in)
                 client.Character = new Character(character);
-                if (!PlaceOnMap(client))
+                if (!ResolveMap(client))
                 {
                     await client.SendAsync(MsgTalk.LoginInvalid);
                     client.Disconnect(DisconnectReasons.Server);
@@ -180,12 +181,13 @@ namespace Comet.Game.Packets
         }
 
         /// <summary>
-        /// Puts the client's character on its saved map and cell. If that map can't be
-        /// loaded or the cell is blocked (a removed map, or a position saved by a bug),
-        /// the character is moved to the start position instead.
+        /// Finds the map the client's character was saved on and checks they can stand
+        /// at their saved cell. If that map can't be loaded or the cell is blocked (a
+        /// removed map, or a position saved by a bug), the character is moved to the
+        /// start position instead. The character isn't put on the map yet.
         /// </summary>
         /// <returns>False if not even the start map could be loaded.</returns>
-        private static bool PlaceOnMap(Client client)
+        private static bool ResolveMap(Client client)
         {
             var character = client.Character;
             if (!Kernel.World.TryGet(character.MapID, out var map) ||
@@ -208,7 +210,6 @@ namespace Comet.Game.Packets
                 }
             }
 
-            map.Add(client, character.X, character.Y);
             client.Map = map;
             return true;
         }

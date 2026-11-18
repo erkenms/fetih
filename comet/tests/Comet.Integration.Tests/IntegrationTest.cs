@@ -46,6 +46,24 @@ namespace Comet.Integration.Tests
             return (game, login.Token, email);
         }
 
+        /// <summary>
+        /// Creates an account with a character, saves it at a position, and logs in
+        /// again so the character enters there.
+        /// </summary>
+        protected async Task<(Player Player, string Email)> PlayingAtAsync(uint mapID, int x, int y)
+        {
+            var (first, email) = await this.PlayingAsync();
+            var name = first.User.Name;
+            await first.DisposeAsync();
+
+            // Wait for the logout save, or it could overwrite the position set below
+            await this.Servers.WaitForEventAsync("game", "character.saved", "name", name);
+            await this.Servers.ExecuteGameSqlAsync(
+                "UPDATE `character` SET MapID = @map, X = @x, Y = @y WHERE Name = @name",
+                ("@map", mapID), ("@x", x), ("@y", y), ("@name", name));
+            return (await this.Servers.PlayAsync(email, Password), email);
+        }
+
         /// <summary>Creates an account with a character standing on the map.</summary>
         protected async Task<(Player Player, string Email)> PlayingAsync(
             ushort mesh = 1003, ushort profession = 10)

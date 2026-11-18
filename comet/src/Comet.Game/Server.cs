@@ -8,6 +8,7 @@ namespace Comet.Game
     using Comet.Game.Database;
     using Comet.Game.Packets;
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Packets;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
@@ -180,7 +181,7 @@ namespace Comet.Game
             if (actor.Character != null && actor.LoggedInAt.HasValue)
             {
                 var character = actor.Character;
-                actor.Map?.Remove(actor);
+                Visibility.Leave(actor);
                 Kernel.Players.Remove(character.CharacterID, character.Name, actor);
                 LogEvents.For<Server>(LogEvents.SessionLogout).Information(
                     "{Name} logged out: {Reason} after {DurationSec}s " +

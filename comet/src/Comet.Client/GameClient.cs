@@ -164,6 +164,52 @@ namespace Comet.Client
             return spawn;
         }
 
+        /// <summary>
+        /// Waits for another player to come into view, skipping other packets. Returns
+        /// null if they don't appear in time.
+        /// </summary>
+        public async Task<PlayerSpawn> WaitForSpawnAsync(uint playerId, TimeSpan? timeout = null)
+        {
+            var deadline = DateTime.UtcNow + (timeout ?? DefaultTimeout);
+            while (true)
+            {
+                var left = deadline - DateTime.UtcNow;
+                if (left <= TimeSpan.Zero)
+                    return null;
+                byte[] packet;
+                try { packet = await this.ReceiveAsync(PacketTypes.MsgPlayer, left); }
+                catch (TimeoutException) { return null; }
+                if (packet == null)
+                    return null;
+                var spawn = PlayerSpawn.Parse(packet);
+                if (spawn.Id == playerId)
+                    return spawn;
+            }
+        }
+
+        /// <summary>
+        /// Waits for an entity to be taken off the screen, skipping other packets.
+        /// Returns false if that doesn't happen in time.
+        /// </summary>
+        public async Task<bool> WaitForRemovalAsync(uint entityId, TimeSpan? timeout = null)
+        {
+            var deadline = DateTime.UtcNow + (timeout ?? DefaultTimeout);
+            while (true)
+            {
+                var left = deadline - DateTime.UtcNow;
+                if (left <= TimeSpan.Zero)
+                    return false;
+                byte[] packet;
+                try { packet = await this.ReceiveAsync(PacketTypes.MsgAction, left); }
+                catch (TimeoutException) { return false; }
+                if (packet == null)
+                    return false;
+                var action = ActionMessage.Parse(packet);
+                if (action.Action == ActionMessage.RemoveEntity && action.CharacterId == entityId)
+                    return true;
+            }
+        }
+
         private async Task<ActionMessage> ReceiveActionAsync(ushort action)
         {
             while (true)

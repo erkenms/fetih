@@ -11,20 +11,8 @@ namespace Comet.Integration.Tests
     {
         public MapPlacementTests(ServerFixture servers) : base(servers) { }
 
-        /// <summary>Creates a character, saves it at a position, and logs in again.</summary>
-        private async Task<Comet.Client.Player> ReturnAtAsync(uint mapID, int x, int y)
-        {
-            var (first, email) = await this.PlayingAsync();
-            var name = first.User.Name;
-            await first.DisposeAsync();
-            // Wait for the logout save, or it could overwrite the position set below
-            await this.Servers.WaitForEventAsync("game", "character.saved", "name", name);
-
-            await this.Servers.ExecuteGameSqlAsync(
-                "UPDATE `character` SET MapID = @map, X = @x, Y = @y WHERE Name = @name",
-                ("@map", mapID), ("@x", x), ("@y", y), ("@name", name));
-            return await this.Servers.PlayAsync(email, Password);
-        }
+        private async Task<Comet.Client.Player> ReturnAtAsync(uint mapID, int x, int y) =>
+            (await this.PlayingAtAsync(mapID, x, y)).Player;
 
         [Fact]
         public async Task CharacterAppearsWhereTheyWereSaved()

@@ -19,6 +19,7 @@ namespace Comet.Client
         public const ushort MsgLoginChallengeS = 1213;
         public const ushort MsgLoginProofC = 1214;
         public const ushort MsgAction = 10010;
+        public const ushort MsgPlayer = 10014;
     }
 
     /// <summary>Talk channels used during login and character creation.</summary>
@@ -53,12 +54,26 @@ namespace Comet.Client
             Packet.ReadStrings(packet, 110)[0]);
     }
 
+    /// <summary>Another player coming into view (MsgPlayer), as the 5619 client reads it.</summary>
+    public sealed record PlayerSpawn(
+        uint Id, uint Mesh, ushort X, ushort Y, ushort Hairstyle, byte Direction,
+        ushort Level, ushort Class, string Name)
+    {
+        public static PlayerSpawn Parse(byte[] packet) => new PlayerSpawn(
+            BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 4),
+            BitConverter.ToUInt16(packet, 92), BitConverter.ToUInt16(packet, 94),
+            BitConverter.ToUInt16(packet, 96), packet[98],
+            BitConverter.ToUInt16(packet, 107), BitConverter.ToUInt16(packet, 219),
+            Packet.ReadStrings(packet, 226)[0]);
+    }
+
     /// <summary>A general action (MsgAction), 38 bytes in 5619.</summary>
     public sealed record ActionMessage(
         uint CharacterId, uint Command, ushort Action, ushort X, ushort Y)
     {
         public const ushort LoginSpawn = 74;
         public const ushort LoginComplete = 132;
+        public const ushort RemoveEntity = 135;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),

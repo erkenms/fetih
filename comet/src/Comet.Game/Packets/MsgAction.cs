@@ -4,6 +4,7 @@ namespace Comet.Game.Packets
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Packets;
 
     /// <remarks>Packet Type 1010</remarks>
@@ -26,6 +27,20 @@ namespace Comet.Game.Packets
         public uint Map { get; set; }
         public uint Color { get; set; }
         public ushort Extra { get; set; }
+
+        /// <summary>
+        /// Builds the action that takes an entity off the client's screen.
+        /// </summary>
+        /// <remarks>5619: from reference (action 135 with the entity's ID at 4).</remarks>
+        /// <param name="identity">ID of the player (or other entity) to remove</param>
+        public static MsgAction RemoveEntity(uint identity) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.MapRemoveSpawn
+        };
 
         /// <summary>
         /// Decodes a byte packet into the packet structure defined by this message class. 
@@ -105,6 +120,7 @@ namespace Comet.Game.Packets
 
                 case ActionType.LoginComplete:
                     await client.SendAsync(this);
+                    await Visibility.EnterAsync(client);
                     break;
 
                 default:
