@@ -46,6 +46,14 @@ namespace Comet.Game.Packets
         }
 
         /// <summary>
+        /// Returns true if the transferred authentication may be used by a client
+        /// connecting from the given IP address. With strict authentication, the game
+        /// login must come from the same IP address that passed the account server.
+        /// </summary>
+        public static bool IsAuthorized(TransferAuthArgs auth, string ipAddress, bool strict) =>
+            auth != null && (!strict || auth.IPAddress == ipAddress);
+
+        /// <summary>
         /// Process can be invoked by a packet after decode has been called to structure
         /// packet fields and properties. For the server implementations, this is called
         /// in the packet handler after the message has been dequeued from the server's
@@ -56,7 +64,7 @@ namespace Comet.Game.Packets
         {
             // Validate access token
             var auth = Kernel.Logins.Get(this.Token.ToString()) as TransferAuthArgs;
-            if (auth == null || (StrictAuthentication && auth.IPAddress == client.IPAddress))
+            if (!IsAuthorized(auth, client.IPAddress, StrictAuthentication))
             {
                 await client.SendAsync(MsgTalk.LoginInvalid);
                 client.Socket.Disconnect(false);
