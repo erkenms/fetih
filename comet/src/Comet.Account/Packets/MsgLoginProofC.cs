@@ -2,6 +2,7 @@ namespace Comet.Account.Packets
 {
     using System;
     using System.Threading.Tasks;
+    using Comet.Account.Database.Models;
     using Comet.Account.States;
     using Comet.Core.Logging;
     using Comet.Network.Packets;
@@ -83,6 +84,21 @@ namespace Comet.Account.Packets
                     "Login failed for {Username} from {IP}: {Reason}",
                     username, client.IPAddress, "bad_password");
                 await client.SendAsync(new MsgConnectEx(RejectionCode.InvalidPassword));
+                client.Disconnect(DisconnectReasons.AuthFailed);
+                return;
+            }
+
+            // Refuse banned and locked accounts. This is checked after the proof, so the
+            // account's standing is only revealed to someone who knows the password.
+            var status = (AccountStatus)client.Account.StatusID;
+            if (status == AccountStatus.Banned || status == AccountStatus.Locked)
+            {
+                bool banned = status == AccountStatus.Banned;
+                LogEvents.For<MsgLoginProofC>(LogEvents.AccountLoginFailed).Warning(
+                    "Login failed for {Username} from {IP}: {Reason}",
+                    username, client.IPAddress, banned ? "account_banned" : "account_locked");
+                await client.SendAsync(new MsgConnectEx(
+                    banned ? RejectionCode.AccountBanned : RejectionCode.AccountLocked));
                 client.Disconnect(DisconnectReasons.AuthFailed);
                 return;
             }

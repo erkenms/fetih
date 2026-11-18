@@ -113,7 +113,7 @@ to pair `net.connect` with `net.disconnect` and other events of the same connect
 | Event | Level | Fields |
 |-------|-------|--------|
 | `account.login` | info | `username`, `accountId`, `ip`, `realm` |
-| `account.login_failed` | warn | `username`, `ip`, `reason` (`unknown_account`, `bad_password`, `realm_offline`, `password_not_set`), `realm` (only for `realm_offline`) |
+| `account.login_failed` | warn | `username`, `ip`, `reason` (`unknown_account`, `bad_password`, `realm_offline`, `password_not_set`, `account_banned`, `account_locked`), `realm` (only for `realm_offline`) |
 | `account.created` | info | `username`, `accountId` |
 | `account.create_failed` | warn | `username`, `reason` (`invalid_username`, `invalid_password`, `username_taken`) |
 
@@ -121,6 +121,10 @@ to pair `net.connect` with `net.disconnect` and other events of the same connect
 password). `password_not_set` means the account has no SRP6 salt and verifier (`SrpSalt` and
 `SrpVerifier` are empty): set one with
 `dotnet Comet.Account.dll set-password <username> <password>`.
+
+`account_banned` and `account_locked` come from the account's `StatusID` (5 and 4 in
+`account_status`). They are only logged after a correct password, and the client is sent
+its own banned (12) or locked (22) message.
 
 `account.created` and `account.create_failed` come from `create-account` (and anything
 else that creates accounts through `AccountsRepository.CreateAsync`). Account names are

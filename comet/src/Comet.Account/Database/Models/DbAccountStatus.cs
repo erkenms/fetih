@@ -27,4 +27,14 @@
         // Navigational Properties
         public virtual ICollection<DbAccount> Account { get; set; }
     }
+
+    /// <summary>Account status IDs from the account_status table.</summary>
+    public enum AccountStatus : ushort
+    {
+        Registered = 1,
+        Activated = 2,
+        Limited = 3,
+        Locked = 4,
+        Banned = 5
+    }
 }
