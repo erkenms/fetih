@@ -69,6 +69,27 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task PlayersDropSilverWithACommand()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 640, 600)).Player;
+            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop 300");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 700));
+            var pile = await player.Game.WaitForGroundItemAsync(g => g.Action == GroundItemMessage.Create);
+            Assert.Equal(1090020u, pile?.TypeId);
+            var logged = await this.Servers.WaitForEventAsync("game", "chat.command", "name", player.User.Name);
+            Assert.Equal(("drop", "ok"), (logged.GetProperty("command").GetString(), logged.GetProperty("result").GetString()));
+
+            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop 5000");
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("only 700 silver")));
+            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop lots");
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("/drop <silver>")));
+
+            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/help");
+            var help = await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Commands:"));
+            Assert.Equal("Commands: /help, /drop <silver>", help?.Text);
+        }
+
+        [Fact]
         public async Task EachCellHoldsOneItemAndFarItemsCantBePickedUp()
         {
             await using var player = (await this.PlayingAtAsync(1002, 660, 580)).Player;

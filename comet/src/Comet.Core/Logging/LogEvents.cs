@@ -60,6 +60,7 @@ namespace Comet.Core.Logging
         public const string ChatMessage = "chat.message";
         public const string ChatRejected = "chat.rejected";
         public const string GmCommand = "gm.command";
+        public const string ChatCommand = "chat.command";
 
         public const string PacketUnhandled = "packet.unhandled";
         public const string PacketError = "packet.error";

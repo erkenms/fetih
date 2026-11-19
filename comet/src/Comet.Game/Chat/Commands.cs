@@ -12,7 +12,8 @@ namespace Comet.Game.Chat
     using Comet.Game.World;
     using Comet.Network.Sockets;
 
-    // Chat lines starting with '/' from staff accounts. From players they stay ordinary chat.
+    // Chat lines starting with '/'. Staff lines are all commands; a player's line is a command
+    // only if it names one open to players, and otherwise stays ordinary chat.
     public static class Commands
     {
         public const char Prefix = '/';
@@ -26,7 +27,8 @@ namespace Comet.Game.Chat
 
         private static readonly Command[] All =
         {
-            new Command(new[] { "help" }, Authority.Moderator, "/help", HelpAsync),
+            new Command(new[] { "help" }, Authority.Player, "/help", HelpAsync),
+            new Command(new[] { "drop" }, Authority.Player, "/drop <silver>", DropAsync),
             new Command(new[] { "online" }, Authority.Moderator, "/online", OnlineAsync),
             new Command(new[] { "where" }, Authority.Moderator, "/where [name]", WhereAsync),
             new Command(new[] { "kick" }, Authority.Moderator, "/kick <name>", KickAsync),
@@ -40,7 +42,8 @@ namespace Comet.Game.Chat
         };
 
         public static bool IsCommand(Client client, string text) =>
-            client.Authority >= Authority.Moderator && text.Length > 1 && text[0] == Prefix;
+            text.Length > 1 && text[0] == Prefix &&
+            (client.Authority >= Authority.Moderator || Find(client.Authority, Parse(text).Name) != null);
 
         public static (string Name, string[] Args, string Text) Parse(string text)
         {
@@ -67,7 +70,8 @@ namespace Comet.Game.Chat
                 result = await command.Run(client, args, rest) ? "ok" : "failed";
             }
 
-            LogEvents.For(typeof(Commands), LogEvents.GmCommand).Information(
+            var eventName = command?.Minimum == Authority.Player ? LogEvents.ChatCommand : LogEvents.GmCommand;
+            LogEvents.For(typeof(Commands), eventName).Information(
                 "{Name} ran /{Command} {Arguments}: {Result}",
                 client.Character.Name, name, rest, result);
         }
@@ -222,6 +226,21 @@ namespace Comet.Game.Chat
                 }
             }
             return true;
+        }
+
+        private static async Task<bool> DropAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !uint.TryParse(args[0], out var amount) || amount == 0)
+                return await UsageAsync(client, "/drop <silver>");
+            if (amount > client.Character.Silver)
+            {
+                await Talk.NoticeAsync(client, $"You have only {client.Character.Silver} silver.");
+                return false;
+            }
+            if (await Ground.DropSilverAsync(client, amount))
+                return true;
+            await Talk.NoticeAsync(client, "There's no room to drop it here.");
+            return false;
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)
