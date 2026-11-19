@@ -191,6 +191,12 @@ namespace Comet.Integration.Tests
             var spawn = await newcomer.Game.WaitForSpawnAsync(actor.User.Id);
             Assert.Equal(5, spawn.Direction);
             Assert.Equal(250u, spawn.Stance);
+
+            // Moving ends the emote
+            await actor.Game.WalkAsync(actor.User.Id, East);
+            Assert.NotNull(await actor.Game.WaitForWalkAsync(actor.User.Id));
+            await using var later = (await this.PlayingAtAsync(1002, 806, 806)).Player;
+            Assert.Equal(0u, (await later.Game.WaitForSpawnAsync(actor.User.Id)).Stance);
         }
     }
 }

@@ -117,6 +117,7 @@ namespace Comet.Game.World
             map.Move(client, toX, toY);
             client.Character.X = toX;
             client.Character.Y = toY;
+            client.Character.Stance = 0; // moving ends sitting or an emote
             var after = map.InView(toX, toY, except: client);
 
             await client.SendAsync(move);
