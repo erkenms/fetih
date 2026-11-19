@@ -162,6 +162,7 @@ namespace Comet.Game.World
                 await other.SendAsync(me);
                 await client.SendAsync(new MsgPlayer(other));
             }
+            await Items.Ground.ShowAroundAsync(client, toX, toY, fromX, fromY);
         }
 
         private static async Task RejectAsync(Client client, GameMap<Client> map,

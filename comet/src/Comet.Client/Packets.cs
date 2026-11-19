@@ -13,6 +13,7 @@ namespace Comet.Client
         public const ushort MsgItemInfo = 1008;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
+        public const ushort MsgMapItem = 1101;
         public const ushort MsgAllot = 1024;
         public const ushort MsgConnect = 1052;
         public const ushort MsgConnectEx = 1055;
@@ -197,7 +198,8 @@ namespace Comet.Client
     // DisplayGears carries the item IDs worn in slots 1 to 9 from offset 32
     public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
     {
-        public const uint Equip = 4, Equipped = 5, Unequip = 6, Ping = 27, DisplayGears = 46;
+        public const uint Remove = 3, Equip = 4, Equipped = 5, Unequip = 6, Ping = 27, Drop = 37,
+            DropSilver = 38, DisplayGears = 46;
 
         public static ItemMessage Parse(byte[] packet) => new ItemMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -211,6 +213,27 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(8), data);
             BitConverter.TryWriteBytes(packet.AsSpan(12), action);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
+            return packet;
+        }
+    }
+
+    // A ground item's ID, its item type, cell, color and the action (1 shown, 2 gone, 3 picked up)
+    public sealed record GroundItemMessage(uint Id, uint TypeId, ushort X, ushort Y, ushort Action)
+    {
+        public const ushort Create = 1, Delete = 2, Pick = 3;
+
+        public static GroundItemMessage Parse(byte[] packet) => new GroundItemMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt16(packet, 12), BitConverter.ToUInt16(packet, 14),
+            BitConverter.ToUInt16(packet, 18));
+
+        public static byte[] BuildPick(uint id, int x, int y)
+        {
+            var packet = Packet.Create(PacketTypes.MsgMapItem, 24);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), id);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), (ushort)x);
+            BitConverter.TryWriteBytes(packet.AsSpan(14), (ushort)y);
+            BitConverter.TryWriteBytes(packet.AsSpan(18), Pick);
             return packet;
         }
     }

@@ -22,6 +22,7 @@ namespace Comet.Game.World
                 await other.SendAsync(spawn);
                 await client.SendAsync(new MsgPlayer(other));
             }
+            await Items.Ground.ShowAroundAsync(client, character.X, character.Y);
         }
 
         public static void Leave(Client client)

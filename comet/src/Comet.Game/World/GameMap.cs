@@ -2,6 +2,7 @@ namespace Comet.Game.World
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     public interface IMapObject
     {
@@ -128,6 +129,26 @@ namespace Comet.Game.World
             }
 
             return found;
+        }
+
+        public List<T> All()
+        {
+            lock (this.Lock)
+                return this.Objects.Values.Select(o => o.Object).ToList();
+        }
+
+        public bool AnyAt(ushort x, ushort y)
+        {
+            lock (this.Lock)
+            {
+                foreach (var obj in this.SectorAt(x, y))
+                {
+                    var position = this.Objects[obj.Identity];
+                    if (position.X == x && position.Y == y)
+                        return true;
+                }
+                return false;
+            }
         }
 
         public static bool InView(int x1, int y1, int x2, int y2) =>

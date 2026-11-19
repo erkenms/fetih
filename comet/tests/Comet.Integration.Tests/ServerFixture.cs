@@ -41,6 +41,9 @@ namespace Comet.Integration.Tests
         // Short, so a test can see a periodic save happen
         public const int SaveIntervalSeconds = 2;
 
+        // Short, so a test can see a dropped item disappear
+        public const int GroundExpireSeconds = 4;
+
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -143,6 +146,7 @@ namespace Comet.Integration.Tests
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
                 "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,
                 "--Saving:IntervalSeconds=" + SaveIntervalSeconds,
+                "--Ground:ExpireSeconds=" + GroundExpireSeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",

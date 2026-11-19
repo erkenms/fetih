@@ -163,6 +163,23 @@ namespace Comet.Client
             return packet == null ? null : ItemMessage.Parse(packet);
         }
 
+        public Task DropAsync(uint itemId) =>
+            this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Drop));
+
+        public Task DropSilverAsync(uint amount) =>
+            this.SendAsync(ItemMessage.Build(amount, 0, ItemMessage.DropSilver));
+
+        public Task PickUpAsync(uint groundId, int x, int y) =>
+            this.SendAsync(GroundItemMessage.BuildPick(groundId, x, y));
+
+        public async Task<GroundItemMessage> WaitForGroundItemAsync(
+            Func<GroundItemMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMapItem && match(GroundItemMessage.Parse(p)), timeout);
+            return packet == null ? null : GroundItemMessage.Parse(packet);
+        }
+
         public async Task<ItemInfo> WaitForItemAsync(Func<ItemInfo, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

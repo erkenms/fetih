@@ -21,6 +21,9 @@ namespace Comet.Game
 
         public static WorldMaps<Client> World;
 
+        // Items lying on each map, kept apart from the players
+        public static WorldMaps<GroundItem> Ground;
+
         // Where portal cells lead, read from the database at startup
         public static PortalTable Portals = new PortalTable(new Database.Models.DbPortal[0]);
 

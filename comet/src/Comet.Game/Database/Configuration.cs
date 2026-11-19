@@ -12,6 +12,7 @@ namespace Comet.Game.Database
         public LoggingConfiguration Logging { get; set; }
         public MapsConfiguration Maps { get; set; }
         public SavingConfiguration Saving { get; set; } = new SavingConfiguration();
+        public GroundConfiguration Ground { get; set; } = new GroundConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -61,6 +62,12 @@ namespace Comet.Game.Database
         public class SavingConfiguration
         {
             public int IntervalSeconds { get; set; } = 300;
+        }
+
+        // How long a dropped item stays on the ground
+        public class GroundConfiguration
+        {
+            public int ExpireSeconds { get; set; } = 60;
         }
 
         public ServerConfiguration(string[] args)

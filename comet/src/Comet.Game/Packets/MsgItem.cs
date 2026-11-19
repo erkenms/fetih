@@ -26,6 +26,9 @@ namespace Comet.Game.Packets
         public static MsgItem Equipped(uint itemID, ItemPosition position) =>
             Create(itemID, (uint)position, ItemActionType.EquipmentWear);
 
+        public static MsgItem Removed(uint itemID) =>
+            Create(itemID, 0, ItemActionType.InventoryRemove);
+
         public static MsgItem Unequipped(uint itemID, ItemPosition position) =>
             Create(itemID, (uint)position, ItemActionType.EquipmentRemove);
 
@@ -105,6 +108,10 @@ namespace Comet.Game.Packets
                     Equipping.EquipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
                 [ItemActionType.EquipmentRemove] = (msg, client) =>
                     Equipping.UnequipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
+
+                // The item ID, or the amount of silver, in the ID field
+                [ItemActionType.InventoryDrop] = (msg, client) => Ground.DropItemAsync(client, msg.CharacterID),
+                [ItemActionType.DropSilver] = (msg, client) => Ground.DropSilverAsync(client, msg.CharacterID),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);
@@ -136,6 +143,7 @@ namespace Comet.Game.Packets
             EquipmentEnchant,
             BoothSellPoints,
             InventoryDrop = 37,
+            DropSilver = 38,
             DisplayGears = 46,
         }
     }

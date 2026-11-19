@@ -51,6 +51,7 @@
             {
                 Kernel.Maps = new MapStore(config.Maps.ResolveClientDirectory());
                 Kernel.World = new WorldMaps<Client>(Kernel.Maps);
+                Kernel.Ground = new WorldMaps<GroundItem>(Kernel.Maps);
             }
             catch (Exception e)
             {
@@ -117,6 +118,12 @@
                 "Listening for new connections on {IPAddress}:{Port}",
                 config.GameNetwork.IPAddress, config.GameNetwork.Port);
             
+            Ground.Lifetime = TimeSpan.FromSeconds(Math.Max(1, config.Ground.ExpireSeconds));
+            int lost = await ItemsRepository.DeleteGroundAsync((byte)ItemPosition.Ground);
+            if (lost > 0)
+                Log.Information("Deleted {Count} items left on the ground by the last run", lost);
+            _ = Ground.RunExpiryAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);
 

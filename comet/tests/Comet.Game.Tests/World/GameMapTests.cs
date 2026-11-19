@@ -20,6 +20,21 @@ namespace Comet.Game.Tests.World
             new GameMap<Thing>(1002, MapGrid.Parse(MapFiles.DMap(width, height)));
 
         [Fact]
+        public void KnowsWhichCellsAreTaken()
+        {
+            var map = Map();
+            var thing = new Thing(1);
+            map.Add(thing, 17, 18);
+            Assert.True(map.AnyAt(17, 18));
+            Assert.False(map.AnyAt(18, 18));
+            Assert.False(map.AnyAt(17, 17));
+            map.Move(thing, 18, 18);
+            Assert.False(map.AnyAt(17, 18));
+            Assert.True(map.AnyAt(18, 18));
+            Assert.Equal(new[] { thing }, map.All());
+        }
+
+        [Fact]
         public void SeesEveryoneWithin18CellsOnBothAxes()
         {
             var map = Map();

@@ -38,6 +38,10 @@ namespace Comet.Core.Logging
         public const string ItemEquipped = "item.equipped";
         public const string ItemUnequipped = "item.unequipped";
         public const string ItemEquipRejected = "item.equip_rejected";
+        public const string ItemDropped = "item.dropped";
+        public const string ItemPickedUp = "item.picked_up";
+        public const string ItemExpired = "item.expired";
+        public const string ItemGroundRejected = "item.ground_rejected";
 
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
