@@ -24,6 +24,9 @@ namespace Comet.Game.States
             return (ushort)Math.Min(health, ushort.MaxValue);
         }
 
+        // Only the level until equipment and nobility count
+        public static uint BattlePower(DbCharacter character) => character.Level;
+
         public static ushort MaxMana(DbCharacter character)
         {
             int mana = character.Spirit * 5;

@@ -271,6 +271,22 @@ namespace Comet.Client
             return packet == null ? null : UserAttribMessage.Parse(packet);
         }
 
+        public Task TradeAsync(uint action, uint data) => this.SendAsync(TradeMessage.Build(action, data));
+
+        public async Task<TradeMessage> WaitForTradeAsync(Func<TradeMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTrade && match(TradeMessage.Parse(p)), timeout);
+            return packet == null ? null : TradeMessage.Parse(packet);
+        }
+
+        public async Task<RelationMessage> WaitForRelationAsync(Func<RelationMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgRelation && match(RelationMessage.Parse(p)), timeout);
+            return packet == null ? null : RelationMessage.Parse(packet);
+        }
+
         public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>
             this.SendAsync(AllotMessage.Build(strength, agility, vitality, spirit));
 

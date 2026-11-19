@@ -69,6 +69,28 @@ namespace Comet.Game.States
             return true;
         }
 
+        // Conquer points, which the database calls jewels
+        public static async Task<bool> ChangeConquerPointsAsync(Client client, long amount, string reason)
+        {
+            var character = client.Character;
+            if (character == null)
+                return false;
+            uint points;
+            lock (character)
+            {
+                long balance = character.Jewels + amount;
+                if (balance < 0 || balance > uint.MaxValue)
+                    return false;
+                points = character.Jewels = (uint)balance;
+            }
+
+            await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Jewels, points));
+            LogEvents.For(typeof(Progress), LogEvents.CharacterConquerPoints).Information(
+                "{Name} conquer points {Amount:+#;-#;0} to {Balance} ({Reason})",
+                character.Name, amount, points, reason);
+            return true;
+        }
+
         public static async Task AllotAsync(Client client, byte strength, byte agility, byte vitality, byte spirit)
         {
             var character = client.Character;

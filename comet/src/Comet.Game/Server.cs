@@ -109,6 +109,20 @@ namespace Comet.Game
             }
         }
 
+        // A trade partner learns the player is gone
+        private static async Task LeaveOthersAsync(Client actor)
+        {
+            try
+            {
+                await Social.Trading.CancelAsync(actor, "logout");
+            }
+            catch (Exception e)
+            {
+                LogEvents.For<Server>(LogEvents.SessionLogout).Error(e,
+                    "Telling others that character {CharacterId} left failed", actor.ID);
+            }
+        }
+
         protected override void Disconnected(Client actor) 
         {
             if (actor == null) return;
@@ -125,6 +139,7 @@ namespace Comet.Game
                 var character = actor.Character;
                 Visibility.Leave(actor);
                 Kernel.Players.Remove(character.CharacterID, character.Name, actor);
+                _ = LeaveOthersAsync(actor);
                 LogEvents.For<Server>(LogEvents.SessionLogout).Information(
                     "{Name} logged out: {Reason} after {DurationSec}s " +
                     "(connection {ConnId}, account {AccountId}, character {CharacterId}, " +

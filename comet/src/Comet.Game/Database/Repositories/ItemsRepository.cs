@@ -35,6 +35,18 @@ namespace Comet.Game.Database.Repositories
                 .SetProperty(x => x.Position, position));
         }
 
+        // New owners for several items at once, into their inventories; all or none
+        public static async Task TransferAsync(IReadOnlyCollection<(uint ItemID, uint CharacterID)> transfers)
+        {
+            using var db = new ServerDbContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
+            foreach (var (itemID, characterID) in transfers)
+                await db.Items.Where(x => x.ItemID == itemID).ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.CharacterID, characterID)
+                    .SetProperty(x => x.Position, (byte)0));
+            await transaction.CommitAsync();
+        }
+
         public static async Task DeleteAsync(uint itemID)
         {
             using var db = new ServerDbContext();

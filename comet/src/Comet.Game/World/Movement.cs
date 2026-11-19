@@ -83,6 +83,8 @@ namespace Comet.Game.World
                 !Kernel.World.TryGet(mapID, out var to) || !to.Grid.Contains(x, y))
                 return false;
 
+            if (from != to)
+                await Social.Trading.CancelAsync(client, "teleport");
             var before = from.InView(fromX, fromY, except: client);
             Visibility.Leave(client);
             foreach (var other in before)

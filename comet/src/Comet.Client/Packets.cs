@@ -13,7 +13,9 @@ namespace Comet.Client
         public const ushort MsgItemInfo = 1008;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
+        public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
+        public const ushort MsgRelation = 2071;
         public const ushort MsgNpcInfo = 2030;
         public const ushort MsgNpc = 2031;
         public const ushort MsgTaskDialog = 2032;
@@ -290,6 +292,34 @@ namespace Comet.Client
             packet[7] = spirit;
             return packet;
         }
+    }
+
+    // A player ID, item ID or amount at 4, the action at 8
+    public sealed record TradeMessage(uint Data, uint Action)
+    {
+        public const uint Request = 1, Close = 2, ShowTable = 3, HideTable = 5, AddItem = 6,
+            SetSilver = 7, ShowSilver = 8, Accept = 10, AddItemFailed = 11, ShowConquerPoints = 12,
+            SetConquerPoints = 13;
+
+        public static TradeMessage Parse(byte[] packet) => new TradeMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8));
+
+        public static byte[] Build(uint action, uint data)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTrade, 12);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), data);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), action);
+            return packet;
+        }
+    }
+
+    // Who asks, before a trade, team or friend request: asker and target IDs, the asker's
+    // level and battle power
+    public sealed record RelationMessage(uint AskerId, uint TargetId, uint Level, uint BattlePower)
+    {
+        public static RelationMessage Parse(byte[] packet) => new RelationMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16));
     }
 
     public sealed record WalkMessage(uint Direction, uint CharacterId, uint Mode)

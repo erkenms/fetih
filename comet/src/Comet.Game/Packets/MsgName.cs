@@ -53,7 +53,7 @@ namespace Comet.Game.Packets
         // Asked by both sides of a whisper about the other one. The reply is the name and the details shown
         // in the whisper window: "ID level battle-power #guild #family spouse nobility male".
         public static string WhisperDetails(Character character) =>
-            $"{character.CharacterID} {character.Level} {character.Level} # # None 0 " +
+            $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} # # None 0 " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =

@@ -66,6 +66,7 @@ namespace Comet.Network.Packets
         MsgGuideInfo,
         MsgContribute,
         MsgQuiz,
+        MsgRelation = 2071,
         MsgTotemPoleInfo = 2201,
         MsgWeaponsInfo,
         MsgTotemPole,

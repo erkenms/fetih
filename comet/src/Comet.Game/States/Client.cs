@@ -18,6 +18,12 @@ namespace Comet.Game.States
         public Inventory Inventory = null;
         public Equipment Equipment = null;
 
+        // A trade is changed by the other player's packets too
+        public Social.Trade Trade { get; set; }
+
+        // The player this one asked to trade with (0 if none)
+        public uint TradeRequest { get; set; }
+
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }
         public DiffieHellman DiffieHellman = null;
