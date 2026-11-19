@@ -21,16 +21,10 @@ namespace Comet.Account.Packets
         public byte[] ClientPublicKey { get; private set; }
         public byte[] ClientProof { get; private set; }
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
         /// <remarks>
         /// 5619: confirmed in VM (262 bytes: A as a length byte at 4 and 128 byte slot
         /// at 5, M1 as a length byte at 133 and slot at 134; both little-endian).
         /// </remarks>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -50,13 +44,6 @@ namespace Comet.Account.Packets
             return slot[..length];
         }
 
-        /// <summary>
-        /// Process can be invoked by a packet after decode has been called to structure
-        /// packet fields and properties. For the server implementations, this is called
-        /// in the packet handler after the message has been dequeued from the server's
-        /// <see cref="PacketProcessor"/>.
-        /// </summary>
-        /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
             // A proof is only expected after a challenge
@@ -102,7 +89,6 @@ namespace Comet.Account.Packets
                 return;
             }
 
-            // Connect to the game server
             Database.Models.DbRealm server;
             if (!Kernel.Realms.TryGetValue(client.Realm, out server) || !server.Rpc.Online)
             {
@@ -114,7 +100,6 @@ namespace Comet.Account.Packets
                 return;
             }
 
-            // Get an access token from the server
             var args = new TransferAuthArgs();
             args.AccountID = client.Account.AccountID;
             args.AuthorityID = client.Account.AuthorityID;

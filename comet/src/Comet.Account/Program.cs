@@ -64,7 +64,6 @@
                 return exitCode;
             }
 
-            // Recover caches from the database
             var tasks = new List<Task>();
             tasks.Add(RealmsRepository.LoadAsync());
             await Task.WhenAll(tasks.ToArray());
@@ -73,7 +72,6 @@
             tasks.Add(Kernel.Services.Randomness.StartAsync(CancellationToken.None));
             await Task.WhenAll(tasks.ToArray());
             
-            // Start the server listener
             Log.Information("Launching server listener...");
             var server = new Server(config);
             var serverTask = server.StartAsync(config.Network.Port, config.Network.IPAddress);

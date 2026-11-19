@@ -21,7 +21,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgConnect : MsgBase<Client>
     {
-        // Static properties from server initialization
         public static bool StrictAuthentication { get; set; }
 
         public ulong Token { get; set; }
@@ -30,12 +29,6 @@ namespace Comet.Game.Packets
         public string MacAddress { get; set; }
         public int Version { get; set; }
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
         /// <remarks>
         /// 5619: confirmed in VM (28 bytes, same offsets as 5187: the two IDs from
         /// MsgConnectEx at 4 and 8 read as one token, patch at 12, language at 14, MAC

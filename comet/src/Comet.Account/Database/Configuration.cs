@@ -3,22 +3,12 @@ namespace Comet.Account.Database
     using Comet.Core.Logging;
     using Microsoft.Extensions.Configuration;
 
-    /// <summary>
-    /// Defines the configuration file structure for the Account Server. App Configuration 
-    /// files are copied to the build output directory on successful build, containing all
-    /// default configuration settings for the server, only if the file is newer than the
-    /// file bring replaced.
-    /// </summary>
     public class ServerConfiguration 
     {
-        // Properties and fields
         public DatabaseConfiguration Database { get; set; }
         public NetworkConfiguration Network { get; set; }
         public LoggingConfiguration Logging { get; set; }
 
-        /// <summary>
-        /// Encapsulates database configuration for Entity Framework.
-        /// </summary>
         public class DatabaseConfiguration
         {
             public string Hostname { get; set; }
@@ -27,9 +17,6 @@ namespace Comet.Account.Database
             public string Password { get; set; }
         }
 
-        /// <summary>
-        /// Encapsulates network configuration for the server listener.
-        /// </summary>
         public class NetworkConfiguration
         {
             public string IPAddress { get; set; }
@@ -47,12 +34,6 @@ namespace Comet.Account.Database
             public int LoginTimeoutSeconds { get; set; } = 60;
         }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="ServerConfiguration"/> with command-line
-        /// arguments from the user and a configuration file for the application. Builds the
-        /// configuration file and binds to this instance of the ServerConfiguration class.
-        /// </summary>
-        /// <param name="args">Command-line arguments from the user</param>
         public ServerConfiguration(string[] args)
         {
             new ConfigurationBuilder()
@@ -62,9 +43,6 @@ namespace Comet.Account.Database
                 .Bind(this);
         }
 
-        /// <summary>
-        /// Returns true if the server configuration is valid after reading.
-        /// </summary>
         public bool Valid => 
             this.Database != null && 
             this.Network != null;

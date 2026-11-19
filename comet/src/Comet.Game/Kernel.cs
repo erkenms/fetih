@@ -8,15 +8,9 @@ namespace Comet.Game
     using System.Runtime.Caching;
     using System.Threading.Tasks;
 
-    /// <summary>
-    /// Kernel for the server, acting as a central core for pools of models and states
-    /// initialized by the server. Used in database repositories to load data into memory
-    /// from essential tables or tables which require heavy post-processing. Used in the
-    /// server packet process methods for tracking client and world states.
-    /// </summary>
     public static class Kernel
     {
-        // State caches. Clients holds every authenticated connection by account,
+        // Clients holds every authenticated connection by account,
         // including ones still creating a character.
         public static SessionRegistry<Client> Clients = new SessionRegistry<Client>();
 
@@ -32,7 +26,6 @@ namespace Comet.Game
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 
-        // Background services
         public static class Services
         {
             public static RandomnessService Randomness = new RandomnessService();
@@ -45,7 +38,6 @@ namespace Comet.Game
             Services.Randomness.NextAsync(minValue, maxValue);
 
         /// <summary>Writes random numbers from the generator to a buffer.</summary>
-        /// <param name="buffer">Buffer to write bytes to.</param>
         public static Task NextBytesAsync(byte[] buffer) =>
             Services.Randomness.NextBytesAsync(buffer);
     }

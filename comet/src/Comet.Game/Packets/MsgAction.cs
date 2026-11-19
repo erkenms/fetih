@@ -54,7 +54,6 @@ namespace Comet.Game.Packets
         /// Builds the action that takes an entity off the client's screen.
         /// </summary>
         /// <remarks>5619: from reference (action 135 with the entity's ID at 4).</remarks>
-        /// <param name="identity">ID of the player (or other entity) to remove</param>
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -64,12 +63,6 @@ namespace Comet.Game.Packets
             Action = ActionType.MapRemoveSpawn
         };
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
         /// <remarks>
         /// 5619: confirmed in VM (38 bytes: the 5187 layout plus a ushort at 36). While
         /// logging in, the client sends actions 74 to 78, 96 and 97, each after the
@@ -98,12 +91,6 @@ namespace Comet.Game.Packets
                 this.Extra = reader.ReadUInt16();
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
@@ -123,13 +110,6 @@ namespace Comet.Game.Packets
             return writer.ToArray();
         }
 
-        /// <summary>
-        /// Process can be invoked by a packet after decode has been called to structure
-        /// packet fields and properties. For the server implementations, this is called
-        /// in the packet handler after the message has been dequeued from the server's
-        /// <see cref="PacketProcessor"/>.
-        /// </summary>
-        /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
             if (Handlers.TryGetValue(this.Action, out var handler))
@@ -192,11 +172,6 @@ namespace Comet.Game.Packets
         /// <summary>True if the server handles this action (others are only echoed).</summary>
         public static bool Handles(ActionType action) => Handlers.ContainsKey(action);
 
-        /// <summary>
-        /// Defines actions that may be requested by the user, or given to by the server.
-        /// Allows for action handling as a packet subtype. Enums should be named by the 
-        /// action they provide to a system in the context of the player actor.
-        /// </summary>
         public enum ActionType
         {
             LoginSpawn = 74,

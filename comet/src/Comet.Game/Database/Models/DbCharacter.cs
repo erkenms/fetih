@@ -3,31 +3,15 @@ namespace Comet.Game.Database.Models
     using System;
     using System.ComponentModel.DataAnnotations.Schema;
 
-    /// <summary>
-    /// Character information associated with a player. Every player account is permitted
-    /// a single character on the server. Contains the character's defining look and features,
-    /// level and attribute information, location, etc.
-    /// </summary>
     [Table("character")]
     public partial class DbCharacter
     {
-        /// <summary>
-        /// Instantiates a new instance of DbCharacter with readonly properties.
-        /// </summary>
-        /// <param name="accountID">The owning player's account ID</param>
-        /// <param name="name">The name of the character</param>
         public DbCharacter(uint accountID, string name)
         {
             this.AccountID = accountID;
             this.Name = name;
         }
 
-        /// <summary>
-        /// Instantiates a new instance of DbCharacter with readonly properties.
-        /// </summary>
-        /// <param name="accountID">The owning player's account ID</param>
-        /// <param name="characterID">The generated character ID</param>
-        /// <param name="name">The name of the character</param>
         public DbCharacter(uint accountID, uint characterID, string name)
         {
             this.AccountID = accountID;
@@ -35,7 +19,6 @@ namespace Comet.Game.Database.Models
             this.Name = name;
         }
 
-        // Column Properties
         public virtual uint CharacterID { get; private set; }
         public virtual uint AccountID { get; private set; }
         public virtual string Name { get; private set; }

@@ -16,25 +16,11 @@ namespace Comet.Account.Packets
         public string IPAddress { get; set; }
         public uint Port { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgConnectEx"/> for rejecting a
-        /// client connection using a rejection code. The rejection code spawns an error
-        /// dialog in the client with a respective error message.
-        /// </summary>
-        /// <param name="rejectionCode">Rejection code / error message ID</param>
         public MsgConnectEx(RejectionCode rejectionCode)
         {
             this.Code = rejectionCode;
         }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgConnectEx"/> for accepting a
-        /// client connection. Provides the client with redirect information for the game
-        /// server of their choice, accompanied by an access token for that server.
-        /// </summary>
-        /// <param name="ipAddress">IP address of the game server</param>
-        /// <param name="port">Port the game server is listening on</param>
-        /// <param name="token">Access token for the game server</param>
         public MsgConnectEx(string ipAddress, uint port, ulong token)
         {
             this.Token = token;
@@ -42,11 +28,6 @@ namespace Comet.Account.Packets
             this.Port = port;
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
         /// <remarks>
         /// 5619: confirmed in VM. Accept (88 bytes): the token's low half at 4 (the
         /// client treats zero as a rejection) and high half at 8, which the client returns
@@ -54,20 +35,17 @@ namespace Comet.Account.Packets
         /// IP address text at 20 or 56. The client pings both and connects to the faster,
         /// so both hold the same server. Reject: zero at 4 and the code at 8.
         /// </remarks>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
             writer.Write((ushort)PacketType.MsgConnectEx);
             if (this.Code != RejectionCode.Clear)
             {
-                // Failed login
                 writer.Write((uint)0);
                 writer.Write((uint)this.Code);
             }
             else
             {
-                // Successful login
                 writer.Write(this.Token);               // 4
                 writer.Write(this.Port);                // 12
                 writer.Write((uint)0);                  // 16

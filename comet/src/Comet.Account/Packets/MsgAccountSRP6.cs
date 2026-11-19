@@ -24,16 +24,10 @@ namespace Comet.Account.Packets
         public string Username { get; private set; }
         public string Realm { get; private set; }
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
         /// <remarks>
         /// 5619: confirmed in VM (240 bytes: zero at 4, account name at 8 in 128
         /// bytes, realm at 136 in 16 bytes, the rest zero or unused).
         /// </remarks>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -47,16 +41,8 @@ namespace Comet.Account.Packets
             this.Realm = reader.ReadString(16);
         }
 
-        /// <summary>
-        /// Process can be invoked by a packet after decode has been called to structure
-        /// packet fields and properties. For the server implementations, this is called
-        /// in the packet handler after the message has been dequeued from the server's
-        /// <see cref="PacketProcessor"/>.
-        /// </summary>
-        /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
-            // Fetch account info from the database
             client.Account = await AccountsRepository.FindAsync(this.Username).ConfigureAwait(false);
             client.AccountID = client.Account?.AccountID ?? 0;
             client.Srp = client.Account != null
@@ -72,7 +58,6 @@ namespace Comet.Account.Packets
                 return;
             }
 
-            // Challenge the client to prove it knows the password
             client.UsernameBytes = this.UsernameBytes;
             client.Realm = this.Realm;
             Serilog.Log.ForContext<MsgAccountSRP6>().Debug(

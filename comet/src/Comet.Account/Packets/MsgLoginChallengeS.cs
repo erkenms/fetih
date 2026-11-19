@@ -21,11 +21,6 @@ namespace Comet.Account.Packets
         public byte[] Modulus { get; set; }
         public byte[] Salt { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgLoginChallengeS"/> for the login
-        /// attempt in progress.
-        /// </summary>
-        /// <param name="srp">SRP6 session for the login attempt</param>
         public MsgLoginChallengeS(Srp6 srp)
         {
             this.ServerPublicKey = srp.ServerPublicKeyBytes;
@@ -34,17 +29,11 @@ namespace Comet.Account.Packets
             this.Salt = srp.SaltBytes;
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
         /// <remarks>
         /// 5619: confirmed in VM (the client reads B from 4 and the salt from 391, each
         /// a length byte and little-endian bytes; g and N fill the slots between, in the
         /// order the WoW-style SRP6 challenge uses).
         /// </remarks>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();

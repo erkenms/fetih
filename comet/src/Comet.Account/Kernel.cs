@@ -5,18 +5,10 @@ namespace Comet.Account
     using Comet.Account.Database.Models;
     using Comet.Network.Services;
 
-    /// <summary>
-    /// Kernel for the server, acting as a central core for pools of models and states
-    /// initialized by the server. Used in database repositories to load data into memory
-    /// from essential tables or tables which require heavy post-processing. Used in the
-    /// server packet process methods for tracking client and world states.
-    /// </summary>
     public static class Kernel
     {
-        // State caches
         public static Dictionary<string, DbRealm> Realms;
 
-        // Background services
         public static class Services
         {
             public static RandomnessService Randomness = new RandomnessService();
