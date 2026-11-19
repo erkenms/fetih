@@ -49,14 +49,15 @@ namespace Comet.Game.Items
             if (removed.Count - 1 > client.Inventory.FreeSlots)
                 return Reject(client, itemID, position, "inventory_full");
 
-            client.Inventory.Remove(item);
+            if (!client.Inventory.Remove(item))
+                return Reject(client, itemID, position, "not_in_inventory");
             var moves = new List<(DbItem Item, ItemPosition From)>();
             foreach (var old in removed)
             {
                 moves.Add((old, (ItemPosition)old.Position));
                 equipment.Clear((ItemPosition)old.Position);
                 old.Position = (byte)ItemPosition.Inventory;
-                client.Inventory.TryAdd(old);
+                client.Inventory.Add(old);
             }
             item.Position = (byte)position;
             equipment.Set(position, item);
@@ -85,7 +86,7 @@ namespace Comet.Game.Items
 
             client.Equipment.Clear(position);
             item.Position = (byte)ItemPosition.Inventory;
-            client.Inventory.TryAdd(item);
+            client.Inventory.Add(item);
 
             await ItemsRepository.SetPositionsAsync(new[] { (item.ItemID, item.Position) });
             await client.SendAsync(MsgItem.Unequipped(item.ItemID, position));

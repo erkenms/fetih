@@ -4,6 +4,8 @@ namespace Comet.Game.Items
     using System.Linq;
     using Comet.Game.Database.Models;
 
+    // A trade changes both players' inventories from one player's packet queue, so every
+    // access takes the lock.
     public sealed class Inventory
     {
         public const int Capacity = 40;
@@ -15,23 +17,47 @@ namespace Comet.Game.Items
             this.Contents = items.ToList();
         }
 
-        public IReadOnlyList<DbItem> Items => this.Contents;
+        public IReadOnlyList<DbItem> Items
+        {
+            get { lock (this.Contents) return this.Contents.ToList(); }
+        }
 
-        public int Count => this.Contents.Count;
+        public int Count
+        {
+            get { lock (this.Contents) return this.Contents.Count; }
+        }
 
-        public int FreeSlots => Capacity - this.Contents.Count;
+        public int FreeSlots => Capacity - this.Count;
 
         public bool TryAdd(DbItem item)
         {
-            if (this.Contents.Count >= Capacity)
-                return false;
-            this.Contents.Add(item);
-            return true;
+            lock (this.Contents)
+            {
+                if (this.Contents.Count >= Capacity)
+                    return false;
+                this.Contents.Add(item);
+                return true;
+            }
         }
 
-        public bool Remove(DbItem item) => this.Contents.Remove(item);
+        // Past the capacity too: for items that already belong to the player and must not be lost
+        public void Add(DbItem item)
+        {
+            lock (this.Contents)
+                this.Contents.Add(item);
+        }
 
-        public DbItem Find(uint itemID) => this.Contents.FirstOrDefault(i => i.ItemID == itemID);
+        public bool Remove(DbItem item)
+        {
+            lock (this.Contents)
+                return this.Contents.Remove(item);
+        }
+
+        public DbItem Find(uint itemID)
+        {
+            lock (this.Contents)
+                return this.Contents.FirstOrDefault(i => i.ItemID == itemID);
+        }
     }
 
     public enum ItemPosition : byte

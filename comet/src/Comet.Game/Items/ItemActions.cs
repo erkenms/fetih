@@ -19,7 +19,7 @@ namespace Comet.Game.Items
 
             var item = New(character.CharacterID, type);
             await ItemsRepository.CreateAsync(item);
-            client.Inventory.TryAdd(item);
+            client.Inventory.Add(item);
             await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
             LogEvents.For(typeof(ItemActions), LogEvents.ItemCreated).Information(
                 "{Name} got {ItemName} (item {ItemId}, type {TypeId}; {Reason})",

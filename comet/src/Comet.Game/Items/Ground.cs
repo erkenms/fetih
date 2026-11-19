@@ -31,6 +31,9 @@ namespace Comet.Game.Items
             if (!Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "drop", itemID, "no_map");
 
+            // Taken out first, so an item that just left in a trade can't land on the ground too
+            if (!client.Inventory.Remove(item))
+                return Reject(client, "drop", itemID, "not_in_inventory");
             var placed = Place(client, ground, new GroundItem
             {
                 MapID = character.MapID,
@@ -39,9 +42,11 @@ namespace Comet.Game.Items
                 ExpiresAt = DateTime.UtcNow + Lifetime,
             });
             if (placed == null)
+            {
+                client.Inventory.Add(item);
                 return Reject(client, "drop", itemID, "no_room");
+            }
 
-            client.Inventory.Remove(item);
             item.CharacterID = 0;
             item.Position = (byte)ItemPosition.Ground;
             await ItemsRepository.SetOwnerAsync(item.ItemID, 0, item.Position);
@@ -108,7 +113,7 @@ namespace Comet.Game.Items
                 item.CharacterID = character.CharacterID;
                 item.Position = (byte)ItemPosition.Inventory;
                 await ItemsRepository.SetOwnerAsync(item.ItemID, item.CharacterID, item.Position);
-                client.Inventory.TryAdd(item);
+                client.Inventory.Add(item);
                 await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
             }
             else

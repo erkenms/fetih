@@ -46,20 +46,26 @@ namespace Comet.Game.States
             return true;
         }
 
+        // A trade changes both players' silver from one player's packet queue, so the
+        // balance only changes under the character's lock
         public static async Task<bool> ChangeSilverAsync(Client client, long amount, string reason)
         {
             var character = client.Character;
             if (character == null)
                 return false;
-            long balance = character.Silver + amount;
-            if (balance < 0 || balance > uint.MaxValue)
-                return false;
+            uint silver;
+            lock (character)
+            {
+                long balance = character.Silver + amount;
+                if (balance < 0 || balance > uint.MaxValue)
+                    return false;
+                silver = character.Silver = (uint)balance;
+            }
 
-            character.Silver = (uint)balance;
-            await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Silver, character.Silver));
+            await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Silver, silver));
             LogEvents.For(typeof(Progress), LogEvents.CharacterSilver).Information(
                 "{Name} silver {Amount:+#;-#;0} to {Balance} ({Reason})",
-                character.Name, amount, character.Silver, reason);
+                character.Name, amount, silver, reason);
             return true;
         }
 
