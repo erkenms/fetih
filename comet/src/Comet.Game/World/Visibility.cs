@@ -14,13 +14,13 @@ namespace Comet.Game.World
                 return;
 
             map.Add(client, character.X, character.Y);
-            var spawn = new MsgPlayer(character);
+            var spawn = new MsgPlayer(client);
             foreach (var other in map.InView(character.X, character.Y, except: client))
             {
                 if (other.Character == null)
                     continue;
                 await other.SendAsync(spawn);
-                await client.SendAsync(new MsgPlayer(other.Character));
+                await client.SendAsync(new MsgPlayer(other));
             }
         }
 

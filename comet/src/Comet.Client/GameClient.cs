@@ -149,6 +149,20 @@ namespace Comet.Client
             return (spawn, inventory);
         }
 
+        public Task EquipAsync(uint itemId, uint position) =>
+            this.SendAsync(ItemMessage.Build(itemId, position, ItemMessage.Equip));
+
+        public Task UnequipAsync(uint itemId, uint position) =>
+            this.SendAsync(ItemMessage.Build(itemId, position, ItemMessage.Unequip));
+
+        public async Task<ItemMessage> WaitForItemActionAsync(uint action, uint itemId, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItem &&
+                ItemMessage.Parse(p) is var m && m.Action == action && m.Id == itemId, timeout);
+            return packet == null ? null : ItemMessage.Parse(packet);
+        }
+
         public async Task<ItemInfo> WaitForItemAsync(Func<ItemInfo, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
@@ -156,11 +170,15 @@ namespace Comet.Client
             return packet == null ? null : ItemInfo.Parse(packet);
         }
 
-        public async Task<PlayerSpawn> WaitForSpawnAsync(uint playerId, TimeSpan? timeout = null)
+        public Task<PlayerSpawn> WaitForSpawnAsync(uint playerId, TimeSpan? timeout = null) =>
+            this.WaitForSpawnAsync(playerId, _ => true, timeout);
+
+        public async Task<PlayerSpawn> WaitForSpawnAsync(
+            uint playerId, Func<PlayerSpawn, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPlayer &&
-                PlayerSpawn.Parse(p).Id == playerId, timeout);
+                PlayerSpawn.Parse(p) is var s && s.Id == playerId && match(s), timeout);
             return packet == null ? null : PlayerSpawn.Parse(packet);
         }
 

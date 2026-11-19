@@ -104,14 +104,17 @@ namespace Comet.Client
 
     public sealed record PlayerSpawn(
         uint Id, uint Mesh, ushort X, ushort Y, ushort Hairstyle, byte Direction,
-        uint Stance, ushort Level, ushort Class, string Name)
+        uint Stance, ushort Level, ushort Class, string Name,
+        uint Helmet, uint Armor, uint RightHand, uint LeftHand)
     {
         public static PlayerSpawn Parse(byte[] packet) => new PlayerSpawn(
             BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 4),
             BitConverter.ToUInt16(packet, 92), BitConverter.ToUInt16(packet, 94),
             BitConverter.ToUInt16(packet, 96), packet[98], BitConverter.ToUInt32(packet, 99),
             BitConverter.ToUInt16(packet, 107), BitConverter.ToUInt16(packet, 219),
-            Packet.ReadStrings(packet, 226)[0]);
+            Packet.ReadStrings(packet, 226)[0],
+            BitConverter.ToUInt32(packet, 44), BitConverter.ToUInt32(packet, 52),
+            BitConverter.ToUInt32(packet, 56), BitConverter.ToUInt32(packet, 60));
     }
 
     public sealed record ActionMessage(
@@ -187,6 +190,28 @@ namespace Comet.Client
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt16(packet, 12), BitConverter.ToUInt16(packet, 14),
             BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
+    }
+
+    // An item or character ID, a value (a slot when equipping), the action and a timestamp
+    // DisplayGears carries the item IDs worn in slots 1 to 9 from offset 32
+    public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
+    {
+        public const uint Equip = 4, Equipped = 5, Unequip = 6, Ping = 27, DisplayGears = 46;
+
+        public static ItemMessage Parse(byte[] packet) => new ItemMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12),
+            Enumerable.Range(0, 9).Select(i => BitConverter.ToUInt32(packet, 32 + 4 * i)).ToArray());
+
+        public static byte[] Build(uint id, uint data, uint action)
+        {
+            var packet = Packet.Create(PacketTypes.MsgItem, 88);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), id);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
+            return packet;
+        }
     }
 
     // Points to add to strength, agility, vitality and spirit, a byte each

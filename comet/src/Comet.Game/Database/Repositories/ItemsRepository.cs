@@ -17,6 +17,16 @@ namespace Comet.Game.Database.Repositories
                 .ToListAsync();
         }
 
+        public static async Task SetPositionsAsync(IReadOnlyCollection<(uint ItemID, byte Position)> moves)
+        {
+            using var db = new ServerDbContext();
+            using var transaction = await db.Database.BeginTransactionAsync();
+            foreach (var (itemID, position) in moves)
+                await db.Items.Where(x => x.ItemID == itemID)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Position, position));
+            await transaction.CommitAsync();
+        }
+
         // Sets the item's ItemID
         public static async Task CreateAsync(DbItem item)
         {

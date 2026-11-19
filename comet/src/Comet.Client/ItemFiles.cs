@@ -7,15 +7,16 @@ namespace Comet.Client
     public static class ItemFiles
     {
         // An encrypted itemtype.dat: per item one line of 61 fields, each ending in "@@".
-        // Each item sets ID, name, durability and its limit; other fields are 0.
-        public static byte[] ItemTypeDat(params (uint Id, string Name, ushort Amount)[] items)
+        // Each item sets ID, name, required level, durability and its limit; other fields are 0.
+        public static byte[] ItemTypeDat(params (uint Id, string Name, ushort Amount, byte Level)[] items)
         {
             var text = new StringBuilder();
-            foreach (var (id, name, amount) in items)
+            foreach (var (id, name, amount, level) in items)
             {
                 var fields = Enumerable.Repeat("0", 61).ToArray();
                 fields[0] = id.ToString();
                 fields[1] = name.Replace(' ', '~');
+                fields[4] = level.ToString();
                 fields[21] = fields[22] = amount.ToString();
                 fields[53] = fields[54] = "None";
                 text.Append(string.Join("@@", fields)).Append("@@\r\n");

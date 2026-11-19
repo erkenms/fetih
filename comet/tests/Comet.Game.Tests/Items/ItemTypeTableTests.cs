@@ -54,11 +54,11 @@ namespace Comet.Game.Tests.Items
         [Fact]
         public void DecryptsWhatTheTestClientEncrypts()
         {
-            var data = ItemFiles.ItemTypeDat((111003, "Iron Helmet", 3899), (1000000, "Stancher", 1));
+            var data = ItemFiles.ItemTypeDat((111003, "Iron Helmet", 3899, 15), (1000000, "Stancher", 1, 0));
             TqFileCipher.Decrypt(data);
             var table = ItemTypeTable.Parse(data);
             Assert.True(table.TryGet(111003, out var helmet));
-            Assert.Equal(("Iron Helmet", (ushort)3899), (helmet.Name, helmet.AmountLimit));
+            Assert.Equal(("Iron Helmet", (ushort)3899, (byte)15), (helmet.Name, helmet.AmountLimit, helmet.RequiredLevel));
             Assert.True(table.TryGet(1000000, out _));
         }
 

@@ -1,6 +1,7 @@
 namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
+    using Comet.Game.Items;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -17,6 +18,24 @@ namespace Comet.Game.Packets
         public ushort Level { get; set; }
         public ushort CurrentClass { get; set; }
         public string Name { get; set; }
+        public uint Helmet, Garment, Armor, RightHand, LeftHand;
+        public ushort ArmorColor, ShieldColor, HelmetColor;
+
+        public MsgPlayer(Client client) : this(client.Character, client.Equipment) { }
+
+        public MsgPlayer(Character character, Equipment equipment) : this(character)
+        {
+            if (equipment == null)
+                return;
+            this.Helmet = equipment.TypeAt(ItemPosition.Headwear);
+            this.Garment = equipment.TypeAt(ItemPosition.Garment);
+            this.Armor = equipment.TypeAt(ItemPosition.Armor);
+            this.RightHand = equipment.TypeAt(ItemPosition.RightHand);
+            this.LeftHand = equipment.TypeAt(ItemPosition.LeftHand);
+            this.ArmorColor = equipment.ColorAt(ItemPosition.Armor);
+            this.ShieldColor = equipment.ColorAt(ItemPosition.LeftHand);
+            this.HelmetColor = equipment.ColorAt(ItemPosition.Headwear);
+        }
 
         public MsgPlayer(Character character)
         {
@@ -46,9 +65,12 @@ namespace Comet.Game.Packets
             writer.Write((ushort)0);                // 20
             writer.Write(new byte[20]);             // 22  status flags
             writer.Write((ushort)0);                // 42  appearance type
-            writer.Write(new byte[36]);             // 44  helmet, garment, armor, right and
-                                                    //     left weapon, accessories, mount
-                                                    //     and mount armor item types
+            writer.Write(this.Helmet);              // 44  item types worn
+            writer.Write(this.Garment);             // 48
+            writer.Write(this.Armor);               // 52
+            writer.Write(this.RightHand);           // 56
+            writer.Write(this.LeftHand);            // 60
+            writer.Write(new byte[16]);             // 64  accessories, mount and mount armor
             writer.Write((ushort)0);                // 80
             writer.Write((ushort)0);                // 82
             writer.Write(0u);                       // 84  monster health
@@ -66,7 +88,9 @@ namespace Comet.Game.Packets
             writer.Write((byte)0);                  // 109 equipment viewable
             writer.Write((byte)0);                  // 110 away
             writer.Write(new byte[20]);             // 111 flowers, nobility, ...
-            writer.Write(new byte[6]);              // 131 armor, shield, helmet colors
+            writer.Write(this.ArmorColor);          // 131
+            writer.Write(this.ShieldColor);         // 133
+            writer.Write(this.HelmetColor);         // 135
             writer.Write(0u);                       // 137 quiz points
             writer.Write((ushort)0);                // 141 mount plus
             writer.Write(0u);                       // 143

@@ -29,6 +29,8 @@ namespace Comet.Game.Items
             return true;
         }
 
+        public bool Remove(DbItem item) => this.Contents.Remove(item);
+
         public DbItem Find(uint itemID) => this.Contents.FirstOrDefault(i => i.ItemID == itemID);
     }
 

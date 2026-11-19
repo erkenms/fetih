@@ -2,6 +2,7 @@ namespace Comet.Game.Packets
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.States;
@@ -129,9 +130,12 @@ namespace Comet.Game.Packets
 
                 [ActionType.LoginInventory] = async (msg, client) =>
                 {
-                    foreach (var item in client.Inventory?.Items ?? Array.Empty<Database.Models.DbItem>())
+                    var items = (client.Inventory?.Items ?? Enumerable.Empty<Database.Models.DbItem>())
+                        .Concat(client.Equipment?.Items ?? Enumerable.Empty<Database.Models.DbItem>());
+                    foreach (var item in items)
                         await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
                     await client.SendAsync(msg);
+                    await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
                 },
 
                 // The last login step: the client has loaded the map. Not echoed.

@@ -2,8 +2,10 @@ namespace Comet.Game.Packets
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
+    using Comet.Game.Items;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -16,6 +18,36 @@ namespace Comet.Game.Packets
         public uint Timestamp { get; set; }
         public uint Argument { get; set; }
         public ItemActionType Action { get; set; }
+
+        // Item IDs worn in slots 1 to 9, for DisplayGears
+        public uint[] Gears { get; set; }
+
+        // The server's answers to equipping: the item now in a slot, or back in the inventory
+        public static MsgItem Equipped(uint itemID, ItemPosition position) =>
+            Create(itemID, (uint)position, ItemActionType.EquipmentWear);
+
+        public static MsgItem Unequipped(uint itemID, ItemPosition position) =>
+            Create(itemID, (uint)position, ItemActionType.EquipmentRemove);
+
+        // What the player wears, by item ID. The client draws its own character from this,
+        // not from MsgPlayer or the equip replies.
+        public static MsgItem DisplayGears(uint characterID, Equipment equipment)
+        {
+            var msg = Create(characterID, 255, ItemActionType.DisplayGears);
+            msg.Gears = new uint[9];
+            foreach (var item in equipment?.Items ?? Enumerable.Empty<Database.Models.DbItem>())
+                msg.Gears[item.Position - 1] = item.ItemID;
+            return msg;
+        }
+
+        private static MsgItem Create(uint id, uint command, ItemActionType action) => new MsgItem
+        {
+            Type = PacketType.MsgItem,
+            CharacterID = id,
+            Command = command,
+            Action = action,
+            Timestamp = (uint)Environment.TickCount,
+        };
 
         public override void Decode(byte[] bytes)
         {
@@ -38,7 +70,10 @@ namespace Comet.Game.Packets
             writer.Write((uint)this.Action);
             writer.Write(this.Timestamp);
             writer.Write(this.Argument);
-            writer.Write(new byte[MsgItem.Size - 24]);
+            writer.Write(new byte[8]);                      // 24
+            for (int i = 0; i < 9; i++)                     // 32 item IDs in slots 1 to 9
+                writer.Write(this.Gears?[i] ?? 0u);
+            writer.Write(new byte[MsgItem.Size - 68]);
             return writer.ToArray();
         }
 
@@ -64,6 +99,12 @@ namespace Comet.Game.Packets
             {
                 // The client checks the connection with pings; the reply is the echo
                 [ItemActionType.ClientPing] = (msg, client) => client.SendAsync(msg),
+
+                // The item ID, and the slot in Command
+                [ItemActionType.InventoryEquip] = (msg, client) =>
+                    Equipping.EquipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
+                [ItemActionType.EquipmentRemove] = (msg, client) =>
+                    Equipping.UnequipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);
@@ -93,7 +134,9 @@ namespace Comet.Game.Packets
             EquipmentAmount,
             ClientPing = 27,
             EquipmentEnchant,
-            BoothSellPoints
+            BoothSellPoints,
+            InventoryDrop = 37,
+            DisplayGears = 46,
         }
     }
 }

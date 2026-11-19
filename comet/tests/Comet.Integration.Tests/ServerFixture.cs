@@ -33,8 +33,10 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y, uint Index) StablePortal = (382, 387, 3);
         public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
         // Item types in the test itemtype.dat
-        public static readonly (uint Id, string Name, ushort Amount) Blade = (410301, "LuckyBlade", 1099);
-        public static readonly (uint Id, string Name, ushort Amount) Potion = (1000000, "Stancher", 1);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Blade = (410301, "LuckyBlade", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Potion = (1000000, "Stancher", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
 
         // Short, so a test can see a periodic save happen
         public const int SaveIntervalSeconds = 2;
@@ -163,7 +165,7 @@ namespace Comet.Integration.Tests
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(Blade, Potion));
+                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet));
         }
 
         public async Task DisposeAsync()

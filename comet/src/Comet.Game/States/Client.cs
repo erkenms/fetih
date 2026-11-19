@@ -16,6 +16,7 @@ namespace Comet.Game.States
         public Character Character = null;
         public Creation Creation = null;
         public Inventory Inventory = null;
+        public Equipment Equipment = null;
         public DiffieHellman DiffieHellman = null;
 
         // Login token this connection authenticated with, and what it was issued for.

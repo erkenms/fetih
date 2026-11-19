@@ -146,7 +146,7 @@ namespace Comet.Game.World
 
             var stillInView = new HashSet<Client>(after);
             var wasInView = new HashSet<Client>(before);
-            var me = new MsgPlayer(client.Character);
+            var me = new MsgPlayer(client);
             foreach (var other in before)
             {
                 if (stillInView.Contains(other))
@@ -160,7 +160,7 @@ namespace Comet.Game.World
                 if (wasInView.Contains(other) || other.Character == null)
                     continue;
                 await other.SendAsync(me);
-                await client.SendAsync(new MsgPlayer(other.Character));
+                await client.SendAsync(new MsgPlayer(other));
             }
         }
 
