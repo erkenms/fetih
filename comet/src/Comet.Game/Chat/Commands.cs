@@ -6,6 +6,7 @@ namespace Comet.Game.Chat
     using System.Text;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
+    using Comet.Game.Items;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -35,6 +36,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "exp" }, Authority.GameMaster, "/exp <amount>", ExperienceAsync),
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
+            new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -197,6 +199,29 @@ namespace Comet.Game.Chat
                 return true;
             await Talk.NoticeAsync(client, $"Silver must stay between 0 and {uint.MaxValue}.");
             return false;
+        }
+
+        private static async Task<bool> ItemAsync(Client client, string[] args, string rest)
+        {
+            int count = 1;
+            if (args.Length < 1 || args.Length > 2 || !uint.TryParse(args[0], out var typeID) ||
+                (args.Length == 2 && (!int.TryParse(args[1], out count) || count < 1 || count > Inventory.Capacity)))
+                return await UsageAsync(client, "/item <type> [count]");
+            if (!Kernel.ItemTypes.TryGet(typeID, out var type))
+            {
+                await Talk.NoticeAsync(client, $"There's no item type {typeID}.");
+                return false;
+            }
+
+            for (int i = 0; i < count; i++)
+            {
+                if (await ItemActions.GiveAsync(client, type, "gm") == null)
+                {
+                    await Talk.NoticeAsync(client, "Your inventory is full.");
+                    return i > 0;
+                }
+            }
+            return true;
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)

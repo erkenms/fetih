@@ -41,5 +41,14 @@ namespace Comet.Game.Tests.Items
             Assert.Equal((12, 7, 200), (bytes[33], bytes[34], bytes[36]));
             Assert.Equal(3u, BitConverter.ToUInt32(bytes, 48));
         }
+
+        [Fact]
+        public void NewItemsTakeTheirTypesDurability()
+        {
+            var type = new ItemType { ID = 410301, Amount = 1099, AmountLimit = 1099, Gem1 = 255 };
+            var item = ItemActions.New(1000001, type);
+            Assert.Equal((1000001u, 410301u, (byte)0), (item.CharacterID, item.TypeID, item.Position));
+            Assert.Equal((1099, 1099, 255), (item.Amount, item.AmountLimit, item.Gem1));
+        }
     }
 }
