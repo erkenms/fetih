@@ -57,6 +57,11 @@ namespace Comet.Core.Logging
         public const string TeamDismissed = "team.dismissed";
         public const string TeamRejected = "team.rejected";
 
+        public const string FriendAdded = "friend.added";
+        public const string FriendRemoved = "friend.removed";
+        public const string FriendRejected = "friend.rejected";
+        public const string EnemyRemoved = "enemy.removed";
+
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";

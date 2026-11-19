@@ -109,13 +109,14 @@ namespace Comet.Game
             }
         }
 
-        // Trade partners and team mates learn the player is gone
+        // Trade partners, team mates and friends learn the player is gone
         private static async Task LeaveOthersAsync(Client actor)
         {
             try
             {
                 await Social.Trading.CancelAsync(actor, "logout");
                 await Social.Teams.LeaveAsync(actor, "logout");
+                await Social.Relationships.LogoutAsync(actor);
             }
             catch (Exception e)
             {

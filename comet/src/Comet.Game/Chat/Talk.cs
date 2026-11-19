@@ -61,6 +61,13 @@ namespace Comet.Game.Chat
                         await member.SendAsync(msg);
                     break;
 
+                case TalkChannel.Friend:
+                    Log(client, msg, null);
+                    foreach (var id in client.Friends.Keys)
+                        if (Kernel.Players.TryGet(id, out var friend) && friend.Character != null)
+                            await friend.SendAsync(msg);
+                    break;
+
                 case TalkChannel.World:
                     // The client stops this itself and tells the player
                     if (character.Level < WorldMinimumLevel)

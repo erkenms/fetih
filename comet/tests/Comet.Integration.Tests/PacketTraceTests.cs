@@ -51,8 +51,9 @@ namespace Comet.Integration.Tests
                     "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
                     "in MsgAction 75", "out MsgAction 75",      // LoginInventory, still empty
                     "out MsgItem 46",                           // DisplayGears
+                    "in MsgAction 76", "out MsgAction 76",      // LoginRelationships, no friends yet
                     "in MsgAction 251"                          // LoginComplete
-                }, trace.Skip(2).Take(13));
+                }, trace.Skip(2).Take(15));
             }
         }
 

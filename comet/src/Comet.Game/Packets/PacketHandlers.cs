@@ -23,6 +23,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgTaskDialog] = () => new MsgTaskDialog(),
                 [PacketType.MsgTrade] = () => new MsgTrade(),
                 [PacketType.MsgTeam] = () => new MsgTeam(),
+                [PacketType.MsgFriend] = () => new MsgFriend(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

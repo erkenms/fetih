@@ -1,6 +1,7 @@
 namespace Comet.Game.States
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Net.Sockets;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
@@ -18,12 +19,17 @@ namespace Comet.Game.States
         public Inventory Inventory = null;
         public Equipment Equipment = null;
 
-        // Trades and teams are changed by other players' packets too
+        // Trades, teams and friends are changed by other players' packets too
         public Social.Trade Trade { get; set; }
         public Social.Team Team { get; set; }
 
-        // The player this one asked to trade with (0 if none)
+        // The player this one asked to trade with, or to be friends with (0 if none)
         public uint TradeRequest { get; set; }
+        public uint FriendRequest { get; set; }
+
+        // Names by character ID, loaded at login
+        public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
+        public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();
 
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }

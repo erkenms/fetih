@@ -20,6 +20,9 @@ namespace Comet.Client
     {
         private volatile bool HandshakeReceived;
 
+        // Friends and enemies the server listed while entering the map
+        public List<FriendMessage> Relationships { get; } = new List<FriendMessage>();
+
         private GameClient(System.Net.Sockets.TcpClient tcp)
             : base(tcp, new Cast5Cipher(), footer: "TQClient")
         {
@@ -143,6 +146,20 @@ namespace Comet.Client
                 if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
                     break;
                 inventory.Add(ItemInfo.Parse(packet));
+            }
+
+            // Friends and enemies come before the reply to the relationships step
+            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginRelationships));
+            while (true)
+            {
+                var packet = await this.ReceiveAsync(p =>
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFriend ||
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAction &&
+                    ActionMessage.Parse(p).Action == ActionMessage.LoginRelationships)
+                    ?? throw new InvalidOperationException("Game server closed the connection");
+                if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
+                    break;
+                this.Relationships.Add(FriendMessage.Parse(packet));
             }
 
             await this.SendAsync(ActionMessage.BuildLoginComplete());
@@ -302,6 +319,16 @@ namespace Comet.Client
             var packet = await this.TryReceiveAsync(p =>
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTeamMember && match(TeamMemberMessage.Parse(p)), timeout);
             return packet == null ? null : TeamMemberMessage.Parse(packet);
+        }
+
+        public Task FriendAsync(byte action, uint id, string name = "") =>
+            this.SendAsync(FriendMessage.Build(action, id, name));
+
+        public async Task<FriendMessage> WaitForFriendAsync(Func<FriendMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFriend && match(FriendMessage.Parse(p)), timeout);
+            return packet == null ? null : FriendMessage.Parse(packet);
         }
 
         public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>

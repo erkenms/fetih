@@ -97,6 +97,28 @@ CREATE TABLE `item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
+-- Table structure for tables `friend` and `enemy`
+--
+-- A friendship is a row for each of the two characters. An enemy is someone who killed
+-- the character, one way only.
+--
+
+DROP TABLE IF EXISTS `friend`;
+CREATE TABLE `friend` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `FriendID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`CharacterID`,`FriendID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS `enemy`;
+CREATE TABLE `enemy` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `EnemyID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`CharacterID`,`EnemyID`),
+  KEY `EnemyID` (`EnemyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Dumping events for database 'comet.game'
 --
 

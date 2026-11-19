@@ -13,6 +13,7 @@ namespace Comet.Client
         public const ushort MsgItemInfo = 1008;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
+        public const ushort MsgFriend = 1019;
         public const ushort MsgTeam = 1023;
         public const ushort MsgTeamMember = 1026;
         public const ushort MsgTrade = 1056;
@@ -39,6 +40,7 @@ namespace Comet.Client
         public const ushort Talk = 2000;
         public const ushort Whisper = 2001;
         public const ushort Team = 2003;
+        public const ushort Friend = 2009;
         public const ushort Center = 2011;
         public const ushort Service = 2014;
         public const ushort World = 2021;
@@ -131,6 +133,7 @@ namespace Comet.Client
     {
         public const ushort LoginSpawn = 74;
         public const ushort LoginInventory = 75;
+        public const ushort LoginRelationships = 76;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
@@ -342,6 +345,25 @@ namespace Comet.Client
             packet[4], Packet.ReadText(packet, 8, 16), BitConverter.ToUInt32(packet, 24),
             BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt16(packet, 32),
             BitConverter.ToUInt16(packet, 34));
+    }
+
+    // The other player's ID at 4, action at 8, online at 9, name (16 bytes) at 20
+    public sealed record FriendMessage(uint Id, byte Action, bool IsOnline, string Name)
+    {
+        public const byte Apply = 10, Accept = 11, Online = 12, Offline = 13, Break = 14,
+            GetInfo = 15, EnemyOnline = 16, EnemyOffline = 17, EnemyDelete = 18, EnemyAdd = 19;
+
+        public static FriendMessage Parse(byte[] packet) => new FriendMessage(
+            BitConverter.ToUInt32(packet, 4), packet[8], packet[9] != 0, Packet.ReadText(packet, 20, 16));
+
+        public static byte[] Build(byte action, uint id, string name = "")
+        {
+            var packet = Packet.Create(PacketTypes.MsgFriend, 40);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), id);
+            packet[8] = action;
+            Packet.WriteText(packet, 20, Encoding.Latin1.GetBytes(name), 16);
+            return packet;
+        }
     }
 
     // Who asks, before a trade, team or friend request: asker and target IDs, the asker's

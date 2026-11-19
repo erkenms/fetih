@@ -138,6 +138,12 @@ namespace Comet.Game.Packets
                     await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
                 },
 
+                [ActionType.LoginRelationships] = async (msg, client) =>
+                {
+                    await Social.Relationships.SendListsAsync(client);
+                    await client.SendAsync(msg);
+                },
+
                 // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
 

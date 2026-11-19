@@ -125,6 +125,7 @@ namespace Comet.Game.Packets
                 var items = await ItemsRepository.LoadAsync(character.CharacterID);
                 client.Inventory = new Inventory(items.Where(i => i.Position == (byte)ItemPosition.Inventory));
                 client.Equipment = new Equipment(items.Where(i => Equipment.IsEquipped(i.Position)));
+                await Social.Relationships.LoadAsync(client);
                 if (!ResolveMap(client))
                 {
                     await client.SendAsync(MsgTalk.LoginInvalid);

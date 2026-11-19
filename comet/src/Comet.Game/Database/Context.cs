@@ -9,6 +9,8 @@ namespace Comet.Game.Database
 
         public virtual DbSet<DbCharacter> Characters { get; set; }
         public virtual DbSet<DbItem> Items { get; set; }
+        public virtual DbSet<DbFriend> Friends { get; set; }
+        public virtual DbSet<DbEnemy> Enemies { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -25,6 +27,8 @@ namespace Comet.Game.Database
         {
             builder.Entity<DbCharacter>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbItem>(e => e.HasKey(x => x.ItemID));
+            builder.Entity<DbFriend>(e => e.HasKey(x => new { x.CharacterID, x.FriendID }));
+            builder.Entity<DbEnemy>(e => e.HasKey(x => new { x.CharacterID, x.EnemyID }));
         }
 
         public static bool Ping()

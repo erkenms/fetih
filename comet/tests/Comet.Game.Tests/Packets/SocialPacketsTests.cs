@@ -63,5 +63,21 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(Attributes.MaxHealth(character), BitConverter.ToUInt16(bytes, 32));
             Assert.Equal(50, BitConverter.ToUInt16(bytes, 34));
         }
+
+        [Fact]
+        public void FriendHasIdActionOnlineAndName()
+        {
+            var bytes = new MsgFriend(MsgFriend.FriendAction.GetInfo, 1000002, "Bora", true).Encode();
+            Assert.Equal(MsgFriend.Size, bytes.Length);
+            Assert.Equal(1019, BitConverter.ToUInt16(bytes, 2));
+            Assert.Equal(1000002u, BitConverter.ToUInt32(bytes, 4));
+            Assert.Equal((15, 1), (bytes[8], bytes[9]));
+            Assert.Equal("Bora", Encoding.ASCII.GetString(bytes, 20, 4));
+            Assert.Equal(0, bytes[24]);
+
+            var msg = new MsgFriend();
+            msg.Decode(bytes);
+            Assert.Equal((MsgFriend.FriendAction.GetInfo, 1000002u, true, "Bora"), (msg.Action, msg.ID, msg.Online, msg.Name));
+        }
     }
 }
