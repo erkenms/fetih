@@ -2,7 +2,7 @@ namespace Comet.Game.Npcs
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
-    using Comet.Game.Database.Models;
+    using Comet.Game.World;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using static Comet.Game.Packets.MsgTaskDialog;
@@ -12,14 +12,14 @@ namespace Comet.Game.Npcs
     public sealed class NpcTalk
     {
         public Client Client { get; }
-        public DbNpc Npc { get; }
+        public Npc Npc { get; }
         public byte Option { get; }
         public string Input { get; }
 
         private readonly List<MsgTaskDialog> Page = new List<MsgTaskDialog>();
         private byte FaceID;
 
-        public NpcTalk(Client client, DbNpc npc, byte option, string input = null)
+        public NpcTalk(Client client, Npc npc, byte option, string input = null)
         {
             this.Client = client;
             this.Npc = npc;

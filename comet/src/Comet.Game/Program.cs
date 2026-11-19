@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -92,7 +93,7 @@
 
             try
             {
-                var npcs = await NpcsRepository.LoadAllAsync();
+                var npcs = NpcTable.Load(Path.Combine(AppContext.BaseDirectory, "Data", "npcs.json"));
                 var placed = npcs.Where(n => Kernel.Maps.Exists(n.MapID)).ToList();
                 Kernel.Npcs = new NpcTable(placed);
                 LogEvents.For(typeof(Program), LogEvents.NpcsLoaded).Information(
@@ -101,7 +102,7 @@
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read the npc table; create it from sql/comet.game.sql");
+                Log.Error(e, "Can't read Data/npcs.json");
                 Log.CloseAndFlush();
                 return;
             }

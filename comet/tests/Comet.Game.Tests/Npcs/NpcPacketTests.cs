@@ -2,7 +2,6 @@ namespace Comet.Game.Tests.Npcs
 {
     using System;
     using System.Linq;
-    using Comet.Game.Database.Models;
     using Comet.Game.Packets;
     using Comet.Game.World;
     using Xunit;
@@ -13,7 +12,7 @@ namespace Comet.Game.Tests.Npcs
         [Fact]
         public void NpcInfoLayout()
         {
-            var bytes = new MsgNpcInfo(new DbNpc { NpcID = 10050, X = 435, Y = 440, Lookface = 280, Role = 29 }).Encode();
+            var bytes = new MsgNpcInfo(new Npc { NpcID = 10050, X = 435, Y = 440, Lookface = 280, Role = 29 }).Encode();
             Assert.Equal(2030, BitConverter.ToUInt16(bytes, 2));
             Assert.Equal((10050u, 10050u), (BitConverter.ToUInt32(bytes, 4), BitConverter.ToUInt32(bytes, 8)));
             Assert.Equal((435, 440, 280, 29), (BitConverter.ToUInt16(bytes, 12), BitConverter.ToUInt16(bytes, 14),
@@ -37,13 +36,40 @@ namespace Comet.Game.Tests.Npcs
         }
 
         [Fact]
+        public void TheShippedNpcFileLoads()
+        {
+            var npcs = NpcTable.Load(System.IO.Path.Combine(AppContext.BaseDirectory, "Data", "npcs.json"));
+            Assert.True(npcs.Count > 300);
+            var conductress = npcs.Single(n => n.NpcID == 10050);
+            Assert.Equal((280, 29, 1002u, 435, 440), (conductress.Lookface, conductress.Role, conductress.MapID,
+                conductress.X, conductress.Y));
+        }
+
+        [Fact]
+        public void AnNpcIDListedTwiceIsRefused()
+        {
+            var path = System.IO.Path.GetTempFileName();
+            try
+            {
+                System.IO.File.WriteAllText(path, @"// two of the same
+{ ""npcs"": [
+  { ""id"": 7, ""lookface"": 10, ""role"": 2, ""map"": 1002, ""x"": 1, ""y"": 1 },
+  { ""id"": 7, ""lookface"": 20, ""role"": 2, ""map"": 1006, ""x"": 2, ""y"": 2 },
+] }");
+                var e = Assert.Throws<System.IO.InvalidDataException>(() => NpcTable.Load(path));
+                Assert.Contains("7", e.Message);
+            }
+            finally { System.IO.File.Delete(path); }
+        }
+
+        [Fact]
         public void NpcTableFindsNpcsInView()
         {
             var table = new NpcTable(new[]
             {
-                new DbNpc { NpcID = 1, MapID = 1002, X = 100, Y = 100 },
-                new DbNpc { NpcID = 2, MapID = 1002, X = 200, Y = 200 },
-                new DbNpc { NpcID = 3, MapID = 1006, X = 100, Y = 100 },
+                new Npc { NpcID = 1, MapID = 1002, X = 100, Y = 100 },
+                new Npc { NpcID = 2, MapID = 1002, X = 200, Y = 200 },
+                new Npc { NpcID = 3, MapID = 1006, X = 100, Y = 100 },
             });
             Assert.Equal(3, table.Count);
             Assert.Equal(new uint[] { 1 }, table.InView(1002, 110, 90).Select(n => n.NpcID));

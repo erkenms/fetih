@@ -1,16 +1,16 @@
 namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
-    using Comet.Game.Database.Models;
+    using Comet.Game.World;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
     // An NPC standing on the map
     public sealed class MsgNpcInfo : MsgBase<Client>
     {
-        public DbNpc Npc { get; }
+        public Npc Npc { get; }
 
-        public MsgNpcInfo(DbNpc npc)
+        public MsgNpcInfo(Npc npc)
         {
             base.Type = PacketType.MsgNpcInfo;
             this.Npc = npc;
