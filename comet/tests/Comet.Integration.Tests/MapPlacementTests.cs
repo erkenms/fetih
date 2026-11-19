@@ -22,8 +22,8 @@ namespace Comet.Integration.Tests
         public async Task CharacterOnAnUnknownMapIsMovedToTheStart()
         {
             await using var player = await this.ReturnAtAsync(9999, 50, 50);
-            Assert.Equal(1010u, player.Spawn.Command);
-            Assert.Equal((61, 109), (player.Spawn.X, player.Spawn.Y));
+            Assert.Equal(1002u, player.Spawn.Command);
+            Assert.Equal((428, 378), (player.Spawn.X, player.Spawn.Y));
             var relocated = await this.Servers.WaitForEventAsync(
                 "game", "character.relocated", "name", player.User.Name);
             Assert.Equal("unknown_map", relocated.GetProperty("reason").GetString());
@@ -35,7 +35,7 @@ namespace Comet.Integration.Tests
         {
             var (x, y) = ServerFixture.BlockedCell;
             await using var player = await this.ReturnAtAsync(1002, x, y);
-            Assert.Equal(1010u, player.Spawn.Command);
+            Assert.Equal(1002u, player.Spawn.Command);
             var relocated = await this.Servers.WaitForEventAsync(
                 "game", "character.relocated", "name", player.User.Name);
             Assert.Equal("blocked_cell", relocated.GetProperty("reason").GetString());
@@ -45,7 +45,7 @@ namespace Comet.Integration.Tests
         public async Task CharacterOutsideTheMapIsMovedToTheStart()
         {
             await using var player = await this.ReturnAtAsync(1002, 5000, 10);
-            Assert.Equal(1010u, player.Spawn.Command);
+            Assert.Equal(1002u, player.Spawn.Command);
         }
     }
 }

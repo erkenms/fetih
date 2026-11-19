@@ -52,7 +52,7 @@ namespace Comet.Integration.Tests
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.Equal(id, again.User.Id);
             Assert.Equal(name, again.User.Name);
-            Assert.Equal(1010u, again.Spawn.Command);
+            Assert.Equal(1002u, again.Spawn.Command);
         }
 
         [Fact]
@@ -100,7 +100,7 @@ namespace Comet.Integration.Tests
 
                 // The connection still works
                 var spawn = await player.Game.EnterMapAsync(player.User.Id);
-                Assert.Equal(1010u, spawn.Command);
+                Assert.Equal(1002u, spawn.Command);
             }
         }
 
@@ -111,7 +111,7 @@ namespace Comet.Integration.Tests
             try
             {
                 Assert.Equal(20, players.Select(p => p.Player.User.Id).Distinct().Count());
-                Assert.All(players, p => Assert.Equal(1010u, p.Player.Spawn.Command));
+                Assert.All(players, p => Assert.Equal(1002u, p.Player.Spawn.Command));
             }
             finally
             {

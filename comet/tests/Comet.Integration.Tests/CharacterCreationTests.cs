@@ -40,8 +40,8 @@ namespace Comet.Integration.Tests
                 Assert.Equal(1000u, result.User.Silver);
 
                 var spawn = await game.EnterMapAsync(result.User.Id);
-                Assert.Equal(1010u, spawn.Command);
-                Assert.Equal((61, 109), (spawn.X, spawn.Y));
+                Assert.Equal(1002u, spawn.Command);
+                Assert.Equal((428, 378), (spawn.X, spawn.Y));
 
                 var created = await this.Servers.WaitForEventAsync("game", "character.created", "name", name);
                 Assert.Equal(profession, created.GetProperty("class").GetUInt16());

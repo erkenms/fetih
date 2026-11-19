@@ -2,9 +2,9 @@ namespace Comet.Game.World
 {
     public static class StartPosition
     {
-        // The newbie village
-        public const uint MapID = 1010;
-        public const ushort X = 61;
-        public const ushort Y = 109;
+        // Twin City
+        public const uint MapID = 1002;
+        public const ushort X = 428;
+        public const ushort Y = 378;
     }
 }

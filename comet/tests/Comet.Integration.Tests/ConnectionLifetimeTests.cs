@@ -79,7 +79,7 @@ namespace Comet.Integration.Tests
             var name = this.Servers.NewCharacterName();
             Assert.Equal(AnswerOk, await creating.CreateCharacterAsync(name, 1003, 10, (uint)token));
             var spawn = await playing.Game.EnterMapAsync(playing.User.Id);
-            Assert.Equal(1010u, spawn.Command);
+            Assert.Equal(1002u, spawn.Command);
         }
 
         [Fact]
