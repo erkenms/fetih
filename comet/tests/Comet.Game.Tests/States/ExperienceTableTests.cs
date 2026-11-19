@@ -1,7 +1,6 @@
 namespace Comet.Game.Tests.States
 {
     using System.Linq;
-    using Comet.Game.Database.Models;
     using Comet.Game.States;
     using Xunit;
 
@@ -9,16 +8,16 @@ namespace Comet.Game.Tests.States
     {
         // Levels 1 to 3 need 10, 20 and 30: the cap is level 4
         private static readonly ExperienceTable Table = new ExperienceTable(
-            new ulong[] { 10, 20, 30 }.Select((e, i) => new DbLevelExp { Level = (byte)(i + 1), Experience = e }));
+            new ulong[] { 10, 20, 30 }.Select((e, i) => new LevelExp { Level = (byte)(i + 1), Experience = e }));
 
         [Fact]
         public void TheCapIsTheFirstLevelWithoutARow()
         {
             Assert.Equal(4, Table.MaxLevel);
             var gap = new ExperienceTable(new[] {
-                new DbLevelExp { Level = 1, Experience = 5 }, new DbLevelExp { Level = 3, Experience = 5 } });
+                new LevelExp { Level = 1, Experience = 5 }, new LevelExp { Level = 3, Experience = 5 } });
             Assert.Equal(2, gap.MaxLevel);
-            Assert.Equal(1, new ExperienceTable(new DbLevelExp[0]).MaxLevel);
+            Assert.Equal(1, new ExperienceTable(new LevelExp[0]).MaxLevel);
         }
 
         [Theory]
@@ -38,7 +37,7 @@ namespace Comet.Game.Tests.States
         [Fact]
         public void GainDoesNotOverflow()
         {
-            var big = new ExperienceTable(new[] { new DbLevelExp { Level = 1, Experience = ulong.MaxValue } });
+            var big = new ExperienceTable(new[] { new LevelExp { Level = 1, Experience = ulong.MaxValue } });
             Assert.Equal((2, 0UL), big.Gain(1, ulong.MaxValue - 1, 10));
         }
     }

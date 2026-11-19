@@ -1,7 +1,8 @@
 namespace Comet.Game.World
 {
     using System.Collections.Generic;
-    using Comet.Game.Database.Models;
+    using System.IO;
+    using System.Linq;
 
     public readonly record struct PortalTarget(uint MapID, ushort X, ushort Y);
 
@@ -10,7 +11,20 @@ namespace Comet.Game.World
         private readonly Dictionary<(uint MapID, uint Index), PortalTarget> Targets =
             new Dictionary<(uint, uint), PortalTarget>();
 
-        public PortalTable(IEnumerable<DbPortal> portals)
+        private sealed record PortalFile(List<Portal> Portals);
+
+        // Data/portals.json; a map and portal pair listed twice is an error
+        public static List<Portal> Load(string path)
+        {
+            var portals = DataFiles.Read<PortalFile>(path).Portals ?? new List<Portal>();
+            var repeated = portals.GroupBy(p => (p.MapID, p.PortalIndex)).Where(g => g.Count() > 1)
+                .Select(g => $"{g.Key.MapID}/{g.Key.PortalIndex}").ToList();
+            if (repeated.Count > 0)
+                throw new InvalidDataException($"{path} lists these map/portal pairs more than once: {string.Join(", ", repeated)}");
+            return portals;
+        }
+
+        public PortalTable(IEnumerable<Portal> portals)
         {
             foreach (var portal in portals)
                 this.Targets[(portal.MapID, portal.PortalIndex)] =

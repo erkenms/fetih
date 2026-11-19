@@ -8,8 +8,6 @@ namespace Comet.Game.Database
         public static ServerConfiguration.DatabaseConfiguration Configuration;
 
         public virtual DbSet<DbCharacter> Characters { get; set; }
-        public virtual DbSet<DbPortal> Portals { get; set; }
-        public virtual DbSet<DbLevelExp> LevelExp { get; set; }
         public virtual DbSet<DbItem> Items { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -26,8 +24,6 @@ namespace Comet.Game.Database
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<DbCharacter>(e => e.HasKey(x => x.CharacterID));
-            builder.Entity<DbPortal>(e => e.HasKey(x => new { x.MapID, x.PortalIndex }));
-            builder.Entity<DbLevelExp>(e => e.HasKey(x => x.Level));
             builder.Entity<DbItem>(e => e.HasKey(x => x.ItemID));
         }
 

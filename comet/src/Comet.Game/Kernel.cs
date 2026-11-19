@@ -24,11 +24,11 @@ namespace Comet.Game
         // Items lying on each map, kept apart from the players
         public static WorldMaps<GroundItem> Ground;
 
-        // Where portal cells lead, read from the database at startup
-        public static PortalTable Portals = new PortalTable(new Database.Models.DbPortal[0]);
+        // Where portal cells lead, read from Data/portals.json at startup
+        public static PortalTable Portals = new PortalTable(new Portal[0]);
 
-        // Experience to reach each next level, read from the database at startup
-        public static ExperienceTable Experience = new ExperienceTable(new Database.Models.DbLevelExp[0]);
+        // Experience to reach each next level, read from Data/levels.json at startup
+        public static ExperienceTable Experience = new ExperienceTable(new LevelExp[0]);
 
         // Item types read from the client's itemtype.dat at startup
         public static ItemTypeTable ItemTypes = new ItemTypeTable(new ItemType[0]);

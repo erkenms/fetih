@@ -1,14 +1,26 @@
 namespace Comet.Game.States
 {
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
-    using Comet.Game.Database.Models;
 
     public sealed class ExperienceTable
     {
         private readonly Dictionary<byte, ulong> Required;
 
-        public ExperienceTable(IEnumerable<DbLevelExp> rows)
+        private sealed record LevelFile(List<LevelExp> Levels);
+
+        // Data/levels.json; a level listed twice is an error
+        public static List<LevelExp> Load(string path)
+        {
+            var levels = DataFiles.Read<LevelFile>(path).Levels ?? new List<LevelExp>();
+            var repeated = levels.GroupBy(l => l.Level).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (repeated.Count > 0)
+                throw new InvalidDataException($"{path} lists these levels more than once: {string.Join(", ", repeated)}");
+            return levels;
+        }
+
+        public ExperienceTable(IEnumerable<LevelExp> rows)
         {
             this.Required = rows.Where(r => r.Experience > 0).ToDictionary(r => r.Level, r => r.Experience);
             byte level = 1;

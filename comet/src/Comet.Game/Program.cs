@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -80,20 +79,20 @@
 
             try
             {
-                Kernel.Portals = new PortalTable(await PortalsRepository.LoadAllAsync());
+                Kernel.Portals = new PortalTable(PortalTable.Load(DataFiles.PathOf("portals.json")));
                 LogEvents.For(typeof(Program), LogEvents.PortalsLoaded).Information(
                     "Loaded {PortalCount} portals", Kernel.Portals.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read the portal table; create it from sql/comet.game.sql");
+                Log.Error(e, "Can't read Data/portals.json");
                 Log.CloseAndFlush();
                 return;
             }
 
             try
             {
-                var npcs = NpcTable.Load(Path.Combine(AppContext.BaseDirectory, "Data", "npcs.json"));
+                var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json"));
                 var placed = npcs.Where(n => Kernel.Maps.Exists(n.MapID)).ToList();
                 Kernel.Npcs = new NpcTable(placed);
                 LogEvents.For(typeof(Program), LogEvents.NpcsLoaded).Information(
@@ -109,13 +108,13 @@
 
             try
             {
-                Kernel.Experience = new ExperienceTable(await LevelExpRepository.LoadAllAsync());
+                Kernel.Experience = new ExperienceTable(ExperienceTable.Load(DataFiles.PathOf("levels.json")));
                 Log.Information("Loaded experience for {LevelCount} levels; the level cap is {MaxLevel}",
                     Kernel.Experience.Count, Kernel.Experience.MaxLevel);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read the level_exp table; create it from sql/comet.game.sql");
+                Log.Error(e, "Can't read Data/levels.json");
                 Log.CloseAndFlush();
                 return;
             }

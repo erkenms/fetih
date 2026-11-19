@@ -3,7 +3,6 @@ namespace Comet.Game.World
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Text.Json;
 
     // NPCs by map. They don't move, and a map has a few dozen at most, so a view query
     // looks at each NPC of the map.
@@ -13,18 +12,10 @@ namespace Comet.Game.World
 
         private sealed record NpcFile(List<Npc> Npcs);
 
-        private static readonly JsonSerializerOptions FileOptions = new JsonSerializerOptions
-        {
-            ReadCommentHandling = JsonCommentHandling.Skip,
-            AllowTrailingCommas = true,
-            PropertyNameCaseInsensitive = true,
-        };
-
         // Data/npcs.json; an NPC ID listed twice is an error
         public static List<Npc> Load(string path)
         {
-            var file = JsonSerializer.Deserialize<NpcFile>(File.ReadAllText(path), FileOptions);
-            var npcs = file?.Npcs ?? new List<Npc>();
+            var npcs = DataFiles.Read<NpcFile>(path).Npcs ?? new List<Npc>();
             var repeated = npcs.GroupBy(n => n.NpcID).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (repeated.Count > 0)
                 throw new InvalidDataException($"{path} lists these NPC IDs more than once: {string.Join(", ", repeated)}");
