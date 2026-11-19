@@ -112,6 +112,11 @@ namespace Comet.Game.Packets
                 // The item ID, or the amount of silver, in the ID field
                 [ItemActionType.InventoryDrop] = (msg, client) => Ground.DropItemAsync(client, msg.CharacterID),
                 [ItemActionType.DropSilver] = (msg, client) => Ground.DropSilverAsync(client, msg.CharacterID),
+
+                // The shopkeeper's NPC ID, then the item type and amount to buy, or the item to sell
+                [ItemActionType.ShopPurchase] = (msg, client) =>
+                    Shopping.BuyAsync(client, msg.CharacterID, msg.Command, msg.Argument),
+                [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);

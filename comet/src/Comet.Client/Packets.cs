@@ -131,6 +131,11 @@ namespace Comet.Client
     public sealed record ActionMessage(
         uint CharacterId, uint Command, ushort Action, ushort Direction, ushort X, ushort Y)
     {
+        // Arguments at 12 and 14 and the timestamp field at 16; windows and shops use them
+        public ushort Argument1 { get; init; }
+        public ushort Argument2 { get; init; }
+        public uint Timestamp { get; init; }
+
         public const ushort LoginSpawn = 74;
         public const ushort LoginInventory = 75;
         public const ushort LoginRelationships = 76;
@@ -143,11 +148,17 @@ namespace Comet.Client
         public const ushort Jump = 137;
         public const ushort LoginComplete = 251;
         public const ushort QueryStatInfo = 408;
+        public const ushort OpenShop = 160;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
-            BitConverter.ToUInt16(packet, 24), BitConverter.ToUInt16(packet, 26));
+            BitConverter.ToUInt16(packet, 24), BitConverter.ToUInt16(packet, 26))
+        {
+            Argument1 = BitConverter.ToUInt16(packet, 12),
+            Argument2 = BitConverter.ToUInt16(packet, 14),
+            Timestamp = BitConverter.ToUInt32(packet, 16),
+        };
 
         public static byte[] Build(uint characterId, ushort action, uint command = 0,
             int direction = 0, int x = 0, int y = 0)
@@ -205,25 +216,27 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
     }
 
-    // An item or character ID, a value (a slot when equipping), the action and a timestamp
+    // An item or character ID, a value (a slot when equipping), the action, a timestamp and
+    // an argument at 20 (the amount when buying; shops put their NPC ID in the first field).
     // DisplayGears carries the item IDs worn in slots 1 to 9 from offset 32
     public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
     {
-        public const uint Remove = 3, Equip = 4, Equipped = 5, Unequip = 6, Ping = 27, Drop = 37,
-            DropSilver = 38, DisplayGears = 46;
+        public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
+            Ping = 27, Drop = 37, DropSilver = 38, DisplayGears = 46;
 
         public static ItemMessage Parse(byte[] packet) => new ItemMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12),
             Enumerable.Range(0, 9).Select(i => BitConverter.ToUInt32(packet, 32 + 4 * i)).ToArray());
 
-        public static byte[] Build(uint id, uint data, uint action)
+        public static byte[] Build(uint id, uint data, uint action, uint argument = 0)
         {
             var packet = Packet.Create(PacketTypes.MsgItem, 88);
             BitConverter.TryWriteBytes(packet.AsSpan(4), id);
             BitConverter.TryWriteBytes(packet.AsSpan(8), data);
             BitConverter.TryWriteBytes(packet.AsSpan(12), action);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), argument);
             return packet;
         }
     }

@@ -9,8 +9,8 @@ namespace Comet.Game.Npcs
     using Comet.Game.World;
 
     // Finds the NPC a player talks to and runs its dialog. Each NPC's dialog is a method
-    // taking the step of the conversation. NPCs without one teleport or give a short
-    // default answer.
+    // taking the step of the conversation. NPCs without one teleport, open their shop,
+    // or give a short default answer.
     public static class Dialogs
     {
         private static readonly Dictionary<uint, Func<NpcTalk, Task>> Scripts =
@@ -67,6 +67,8 @@ namespace Comet.Game.Npcs
                 await script(talk);
             else if (Kernel.Teleporters.Find(npcID) is Teleporter teleporter)
                 await Teleporters.TalkAsync(talk, teleporter);
+            else if (Kernel.Shops.Find(npcID) != null)
+                await talk.OpenShopAsync();
             else
                 await DefaultAsync(talk);
         }

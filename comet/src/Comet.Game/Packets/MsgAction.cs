@@ -46,6 +46,20 @@ namespace Comet.Game.Packets
             Action = ActionType.CharacterLevelUp
         };
 
+        // Albetros (5517): action 160 with 32 in Command opens a shop; the shop's NPC goes in
+        // the timestamp field and the player's position in X and Y
+        public static MsgAction OpenShop(uint identity, uint npcID, ushort x, ushort y) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = 32,
+            Arguments = new ushort[2],
+            Timestamp = npcID,
+            Action = ActionType.ClientCustomDialog,
+            X = x,
+            Y = y,
+        };
+
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -221,6 +235,7 @@ namespace Comet.Game.Packets
             RelationshipsFriend = 148,
             CharacterAvatar = 151,
             CharacterPartnerInfo,
+            ClientCustomDialog = 160,
             CharacterAway = 161,
             MapPathfinding,
             LoginComplete = 251,

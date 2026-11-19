@@ -40,6 +40,9 @@ namespace Comet.Game
         // NPCs that teleport for a fare, read from Data/teleporters.json at startup
         public static Teleporters Teleporters = new Teleporters(new Teleporter[0]);
 
+        // What shopkeepers sell, read from the client's Shop.dat at startup
+        public static ShopTable Shops = new ShopTable(new Shop[0]);
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

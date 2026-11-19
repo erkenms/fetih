@@ -60,5 +60,13 @@ namespace Comet.Game.Npcs
             await this.Client.SendAsync(new MsgTaskDialog(DialogAction.Show, NoOption));
             this.Page.Clear();
         }
+
+        // Ends the conversation and opens the NPC's shop window, drawn from the client's Shop.dat
+        public Task OpenShopAsync()
+        {
+            this.Client.ActiveNpc = 0;
+            var character = this.Client.Character;
+            return this.Client.SendAsync(MsgAction.OpenShop(this.Client.ID, this.Npc.NpcID, character.X, character.Y));
+        }
     }
 }

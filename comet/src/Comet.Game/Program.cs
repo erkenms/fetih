@@ -128,6 +128,19 @@
 
             try
             {
+                Kernel.Shops = ShopTable.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.ShopsLoaded).Information(
+                    "Loaded {ShopCount} shops", Kernel.Shops.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/Shop.dat from {Directory}", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.Experience = new ExperienceTable(ExperienceTable.Load(DataFiles.PathOf("levels.json")));
                 Log.Information("Loaded experience for {LevelCount} levels; the level cap is {MaxLevel}",
                     Kernel.Experience.Count, Kernel.Experience.MaxLevel);

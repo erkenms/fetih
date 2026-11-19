@@ -186,6 +186,12 @@ namespace Comet.Client
         public Task DropSilverAsync(uint amount) =>
             this.SendAsync(ItemMessage.Build(amount, 0, ItemMessage.DropSilver));
 
+        public Task BuyAsync(uint npcId, uint typeId, uint amount = 1) =>
+            this.SendAsync(ItemMessage.Build(npcId, typeId, ItemMessage.Buy, amount));
+
+        public Task SellAsync(uint npcId, uint itemId) =>
+            this.SendAsync(ItemMessage.Build(npcId, itemId, ItemMessage.Sell));
+
         public Task PickUpAsync(uint groundId, int x, int y) =>
             this.SendAsync(GroundItemMessage.BuildPick(groundId, x, y));
 
