@@ -13,6 +13,8 @@ namespace Comet.Client
         public const ushort MsgItemInfo = 1008;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
+        public const ushort MsgTeam = 1023;
+        public const ushort MsgTeamMember = 1026;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
         public const ushort MsgRelation = 2071;
@@ -36,6 +38,7 @@ namespace Comet.Client
     {
         public const ushort Talk = 2000;
         public const ushort Whisper = 2001;
+        public const ushort Team = 2003;
         public const ushort Center = 2011;
         public const ushort Service = 2014;
         public const ushort World = 2021;
@@ -311,6 +314,34 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(8), action);
             return packet;
         }
+    }
+
+    // The action at 4, a player ID at 8
+    public sealed record TeamMessage(uint Action, uint Data)
+    {
+        public const uint Create = 0, ApplyJoin = 1, Leave = 2, AcceptInvite = 3, Invite = 4,
+            AcceptJoin = 5, Dismiss = 6, Kick = 7;
+
+        public static TeamMessage Parse(byte[] packet) => new TeamMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8));
+
+        public static byte[] Build(uint action, uint data)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTeam, 12);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            return packet;
+        }
+    }
+
+    // Action byte at 4 (0 add), then from 8 the first member: name (16 bytes), ID, look,
+    // max health and health
+    public sealed record TeamMemberMessage(byte Action, string Name, uint Id, uint Look, ushort MaxHealth, ushort Health)
+    {
+        public static TeamMemberMessage Parse(byte[] packet) => new TeamMemberMessage(
+            packet[4], Packet.ReadText(packet, 8, 16), BitConverter.ToUInt32(packet, 24),
+            BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt16(packet, 32),
+            BitConverter.ToUInt16(packet, 34));
     }
 
     // Who asks, before a trade, team or friend request: asker and target IDs, the asker's

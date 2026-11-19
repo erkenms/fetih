@@ -49,6 +49,18 @@ namespace Comet.Game.Chat
                     await target.SendAsync(msg);
                     break;
 
+                case TalkChannel.Team:
+                    var members = Social.Teams.OthersOf(client);
+                    if (members.Count == 0)
+                    {
+                        await RejectAsync(client, msg, "no_team", "You are not in a team.");
+                        return;
+                    }
+                    Log(client, msg, null);
+                    foreach (var member in members)
+                        await member.SendAsync(msg);
+                    break;
+
                 case TalkChannel.World:
                     // The client stops this itself and tells the player
                     if (character.Level < WorldMinimumLevel)

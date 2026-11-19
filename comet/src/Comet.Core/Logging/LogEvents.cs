@@ -51,6 +51,12 @@ namespace Comet.Core.Logging
         public const string TradeCancelled = "trade.cancelled";
         public const string TradeRejected = "trade.rejected";
 
+        public const string TeamCreated = "team.created";
+        public const string TeamJoined = "team.joined";
+        public const string TeamLeft = "team.left";
+        public const string TeamDismissed = "team.dismissed";
+        public const string TeamRejected = "team.rejected";
+
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";

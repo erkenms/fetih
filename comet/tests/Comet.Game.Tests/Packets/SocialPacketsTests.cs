@@ -35,5 +35,33 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(42u, BitConverter.ToUInt32(bytes, 12));
             Assert.Equal(42u, BitConverter.ToUInt32(bytes, 16));
         }
+
+        [Fact]
+        public void TeamHasActionThenData()
+        {
+            var bytes = new MsgTeam(MsgTeam.TeamAction.Invite, 1000001).Encode();
+            Assert.Equal(12, bytes.Length);
+            Assert.Equal(1023, BitConverter.ToUInt16(bytes, 2));
+            Assert.Equal(4u, BitConverter.ToUInt32(bytes, 4));
+            Assert.Equal(1000001u, BitConverter.ToUInt32(bytes, 8));
+        }
+
+        [Fact]
+        public void TeamMemberCarriesNameIdLookAndHealth()
+        {
+            var character = new Character(new DbCharacter(1, 1000001, "Altay")
+            {
+                Mesh = 1003, Avatar = 2, HealthPoints = 50, Vitality = 12, Level = 1
+            });
+            var bytes = new MsgTeamMember(character).Encode();
+            Assert.Equal(MsgTeamMember.Size, bytes.Length);
+            Assert.Equal(1026, BitConverter.ToUInt16(bytes, 2));
+            Assert.Equal((0, 1), (bytes[4], bytes[5]));
+            Assert.Equal("Altay", Encoding.ASCII.GetString(bytes, 8, 5));
+            Assert.Equal(1000001u, BitConverter.ToUInt32(bytes, 24));
+            Assert.Equal(21003u, BitConverter.ToUInt32(bytes, 28));
+            Assert.Equal(Attributes.MaxHealth(character), BitConverter.ToUInt16(bytes, 32));
+            Assert.Equal(50, BitConverter.ToUInt16(bytes, 34));
+        }
     }
 }
