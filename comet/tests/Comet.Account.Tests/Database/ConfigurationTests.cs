@@ -23,8 +23,8 @@ namespace Comet.Account.Database.Tests
         }
 
         [Theory]
-        [InlineData("info")]
-        [InlineData("trace", "--Logging:Level=trace")]
+        [InlineData("trace")]
+        [InlineData("warn", "--Logging:Level=warn")]
         public void LoggingConfiguration(string expectedLevel, params string[] args)
         {
             var config = new ServerConfiguration(args);
