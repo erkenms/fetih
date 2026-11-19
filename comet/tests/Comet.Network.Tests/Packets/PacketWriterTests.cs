@@ -25,5 +25,18 @@ namespace Comet.Network.Security.Tests
             packet.Write(new List<string> { "hello", "world" });
             Assert.Equal(ExpectedOutput, Hex.ToHexString(packet.ToArray()));
         }
+
+        [Fact]
+        public void StringListLengthsAreOneByteAndTextKeepsItsBytes()
+        {
+            var packet = new PacketWriter();
+            packet.Write(new List<string> { new string('\u00E7', 200), new string('a', 300) });
+            var bytes = packet.ToArray();
+            Assert.Equal(2, bytes[2]);
+            Assert.Equal(200, bytes[3]);
+            Assert.Equal(0xE7, bytes[4]);
+            Assert.Equal(255, bytes[4 + 200]);
+            Assert.Equal(2 + 1 + 201 + 256, bytes.Length);
+        }
     }
 }

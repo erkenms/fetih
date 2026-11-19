@@ -23,6 +23,10 @@ namespace Comet.Game.States
         // When the character entered the game (set on session.login)
         public DateTime? LoggedInAt { get; set; }
 
+        public Authority Authority => (Authority)(this.Authentication?.AuthorityID ?? 1);
+
+        public DateTime LastWorldTalk { get; set; }
+
         public uint ID => Character?.CharacterID ?? 0;
         public uint Identity => this.ID;
 

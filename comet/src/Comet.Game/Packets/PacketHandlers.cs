@@ -11,7 +11,9 @@ namespace Comet.Game.Packets
             new Dictionary<PacketType, Func<MsgBase<Client>>>
             {
                 [PacketType.MsgRegister] = () => new MsgRegister(),
+                [PacketType.MsgTalk] = () => new MsgTalk(),
                 [PacketType.MsgItem] = () => new MsgItem(),
+                [PacketType.MsgName] = () => new MsgName(),
                 [PacketType.MsgAction] = () => new MsgAction(),
                 [PacketType.MsgConnect] = () => new MsgConnect(),
                 [PacketType.MsgWalk] = () => new MsgWalk(),
@@ -26,6 +28,7 @@ namespace Comet.Game.Packets
         {
             PacketType.MsgAction => MsgAction.Handles((MsgAction.ActionType)action),
             PacketType.MsgItem => MsgItem.Handles((MsgItem.ItemActionType)action),
+            PacketType.MsgName => MsgName.Handles((MsgName.NameAction)action),
             _ => Handles(type)
         };
     }

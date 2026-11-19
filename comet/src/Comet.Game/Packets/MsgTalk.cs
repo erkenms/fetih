@@ -3,6 +3,8 @@ namespace Comet.Game.Packets
     using System;
     using System.Collections.Generic;
     using System.Drawing;
+    using System.Threading.Tasks;
+    using Comet.Game.Chat;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -100,6 +102,12 @@ namespace Comet.Game.Packets
             });
             return writer.ToArray();
         }
+
+        public MsgTalk()
+        {
+        }
+
+        public override Task ProcessAsync(Client client) => Talk.ReceiveAsync(client, this);
 
         public const string SYSTEM = "SYSTEM";
         public const string ALLUSERS = "ALLUSERS";

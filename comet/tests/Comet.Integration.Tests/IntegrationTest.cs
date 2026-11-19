@@ -38,7 +38,9 @@ namespace Comet.Integration.Tests
             return (game, login.Token, email);
         }
 
-        protected async Task<(Player Player, string Email)> PlayingAtAsync(uint mapID, int x, int y)
+        // Authority as in the account_authority table: 1 player, 2 moderator, 3 game master
+        protected async Task<(Player Player, string Email)> PlayingAtAsync(
+            uint mapID, int x, int y, ushort authority = 1, byte level = 1)
         {
             var (first, email) = await this.PlayingAsync();
             var name = first.User.Name;
@@ -47,8 +49,11 @@ namespace Comet.Integration.Tests
             // Wait for the logout save, or it could overwrite the position set below
             await this.Servers.WaitForEventAsync("game", "character.saved", "name", name);
             await this.Servers.ExecuteGameSqlAsync(
-                "UPDATE `character` SET MapID = @map, X = @x, Y = @y WHERE Name = @name",
-                ("@map", mapID), ("@x", x), ("@y", y), ("@name", name));
+                "UPDATE `character` SET MapID = @map, X = @x, Y = @y, Level = @level WHERE Name = @name",
+                ("@map", mapID), ("@x", x), ("@y", y), ("@level", level), ("@name", name));
+            await this.Servers.ExecuteAccountSqlAsync(
+                "UPDATE account SET AuthorityID = @authority WHERE Username = @email",
+                ("@authority", authority), ("@email", email));
             return (await this.Servers.PlayAsync(email, Password), email);
         }
 

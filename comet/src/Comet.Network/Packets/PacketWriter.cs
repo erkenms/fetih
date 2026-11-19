@@ -23,7 +23,12 @@ namespace Comet.Network.Packets
         {
             base.Write((byte)strings.Count);
             for (int i = 0; i < strings.Count; i++)
-                base.Write(strings[i]);
+            {
+                var bytes = Encoding.Latin1.GetBytes(strings[i] ?? string.Empty);
+                int length = Math.Min(bytes.Length, byte.MaxValue);
+                base.Write((byte)length);
+                base.Write(bytes, 0, length);
+            }
         }
 
         public byte[] ToArray()

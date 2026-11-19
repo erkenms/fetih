@@ -159,6 +159,24 @@ namespace Comet.Client
             return packet == null ? null : WalkMessage.Parse(packet);
         }
 
+        public Task SayAsync(ushort channel, string sender, string recipient, string text) =>
+            this.SendAsync(TalkMessage.Build(channel, sender, recipient, text));
+
+        public async Task<TalkMessage> WaitForTalkAsync(Func<TalkMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTalk && match(TalkMessage.Parse(p)), timeout);
+            return packet == null ? null : TalkMessage.Parse(packet);
+        }
+
+        public async Task<NameMessage> AskWhisperDetailsAsync(string name, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(NameMessage.Build(NameMessage.WhisperDetails, name));
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgName && p[8] == NameMessage.WhisperDetails, timeout);
+            return packet == null ? null : NameMessage.Parse(packet);
+        }
+
         public Task WalkAsync(uint characterId, int direction) =>
             this.SendAsync(WalkMessage.Build(characterId, direction));
 

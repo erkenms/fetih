@@ -37,6 +37,10 @@ namespace Comet.Core.Logging
         public const string MoveTeleport = "move.teleport";
         public const string MoveRejected = "move.rejected";
 
+        public const string ChatMessage = "chat.message";
+        public const string ChatRejected = "chat.rejected";
+        public const string GmCommand = "gm.command";
+
         public const string PacketUnhandled = "packet.unhandled";
         public const string PacketError = "packet.error";
         public const string PacketIn = "packet.in";

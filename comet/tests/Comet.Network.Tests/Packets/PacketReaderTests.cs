@@ -2,6 +2,7 @@ namespace Comet.Network.Security.Tests
 {
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using Comet.Network.Packets;
     using Org.BouncyCastle.Utilities.Encoders;
     using Xunit;
@@ -27,6 +28,14 @@ namespace Comet.Network.Security.Tests
             Assert.Equal("test", packet.ReadString());
             Assert.Equal("comet", packet.ReadString(12));
             Assert.Equal(new List<string>{ "hello", "world" }, packet.ReadStrings());
+        }
+
+        [Fact]
+        public void StringListLengthsAreOneByte()
+        {
+            var bytes = new byte[] { 1, 200 }.Concat(Enumerable.Repeat((byte)0xE7, 200)).ToArray();
+            var strings = new PacketReader(bytes).ReadStrings();
+            Assert.Equal(new string('\u00E7', 200), strings[0]);
         }
     }
 }

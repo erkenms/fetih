@@ -2,6 +2,7 @@ namespace Comet.Client
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Text;
 
     public static class PacketTypes
@@ -10,6 +11,7 @@ namespace Comet.Client
         public const ushort MsgTalk = 1004;
         public const ushort MsgUserInfo = 1006;
         public const ushort MsgItem = 1009;
+        public const ushort MsgName = 1015;
         public const ushort MsgConnect = 1052;
         public const ushort MsgConnectEx = 1055;
         public const ushort MsgEncryptCode = 1059;
@@ -23,6 +25,11 @@ namespace Comet.Client
 
     public static class TalkChannels
     {
+        public const ushort Talk = 2000;
+        public const ushort Whisper = 2001;
+        public const ushort Center = 2011;
+        public const ushort Service = 2014;
+        public const ushort World = 2021;
         public const ushort Register = 2100;
         public const ushort Login = 2101;
     }
@@ -34,6 +41,46 @@ namespace Comet.Client
             var strings = Packet.ReadStrings(packet, 24);
             string At(int i) => i < strings.Count ? strings[i] : "";
             return new TalkMessage(BitConverter.ToUInt16(packet, 8), At(0), At(1), At(3));
+        }
+
+        // Color, channel, style, an ID, the recipient's and sender's mesh, then the strings
+        // sender, recipient, suffix and text
+        public static byte[] Build(ushort channel, string sender, string recipient, string text)
+        {
+            var strings = new[] { sender, recipient, "", text }
+                .Select(s => Encoding.Latin1.GetBytes(s)).ToArray();
+            var packet = Packet.Create(PacketTypes.MsgTalk, 25 + strings.Sum(s => 1 + s.Length));
+            BitConverter.TryWriteBytes(packet.AsSpan(4), 0x00FFFFFF);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), channel);
+            int offset = 24;
+            packet[offset++] = (byte)strings.Length;
+            foreach (var s in strings)
+            {
+                packet[offset++] = (byte)s.Length;
+                s.CopyTo(packet, offset);
+                offset += s.Length;
+            }
+            return packet;
+        }
+    }
+
+    // A number, the action as one byte, then the strings
+    public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
+    {
+        public const byte WhisperDetails = 26;
+
+        public static NameMessage Parse(byte[] packet) => new NameMessage(
+            BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));
+
+        public static byte[] Build(byte action, string text)
+        {
+            var bytes = Encoding.Latin1.GetBytes(text);
+            var packet = Packet.Create(PacketTypes.MsgName, 11 + bytes.Length);
+            packet[8] = action;
+            packet[9] = 1;
+            packet[10] = (byte)bytes.Length;
+            bytes.CopyTo(packet, 11);
+            return packet;
         }
     }
 

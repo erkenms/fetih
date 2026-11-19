@@ -21,12 +21,17 @@ namespace Comet.Network.Packets
             return Encoding.ASCII.GetString(base.ReadBytes(fixedLength)).TrimEnd('\0');
         }
 
+        // A count, then each string as a one-byte length and that many bytes in the client's
+        // code page. Latin1 maps every byte to one char and back, so relayed text keeps its bytes.
         public List<string> ReadStrings()
         {
             var strings = new List<string>();
             var amount = base.ReadByte();
             for (int i = 0; i < amount; i++)
-                strings.Add(this.ReadString());
+            {
+                int length = base.ReadByte();
+                strings.Add(Encoding.Latin1.GetString(base.ReadBytes(length)).TrimEnd('\0'));
+            }
             return strings;
         }
 
