@@ -42,8 +42,8 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task PlayersOnDifferentMapsDontSeeEachOther()
         {
-            await using var first = (await this.PlayingAtAsync(1002, 428, 378)).Player;
-            await using var second = (await this.PlayingAtAsync(1010, 428, 378)).Player;
+            await using var first = (await this.PlayingAtAsync(1002, 520, 600)).Player;
+            await using var second = (await this.PlayingAtAsync(1006, 20, 20)).Player;
             Assert.Null(await first.Game.WaitForSpawnAsync(second.User.Id, Quiet));
         }
 

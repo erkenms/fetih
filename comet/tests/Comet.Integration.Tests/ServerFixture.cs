@@ -149,9 +149,7 @@ namespace Comet.Integration.Tests
             Directory.CreateDirectory(maps);
             Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
-                MapFiles.GameMapDat((1010, "map/map/newbie.7z"), (1002, "map/map/newplain.7z"),
-                    (1006, "map/map/horse.7z")));
-            File.WriteAllBytes(Path.Combine(maps, "newbie.DMap"), MapFiles.DMap(132, 132));
+                MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
