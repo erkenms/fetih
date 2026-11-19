@@ -11,7 +11,7 @@ namespace Comet.Integration.Tests
     public class NpcTests : IntegrationTest
     {
         private const ushort GameMaster = 3;
-        private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, ArenaKeeper = 10021;
+        private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021;
 
         public NpcTests(ServerFixture servers) : base(servers) { }
 
@@ -67,8 +67,8 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task NpcsWithoutADialogGiveTheDefaultAnswer()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 410, 355)).Player;
-            await player.Game.TalkToNpcAsync(Warehouseman);
+            await using var player = (await this.PlayingAtAsync(1002, 412, 380)).Player;
+            await player.Game.TalkToNpcAsync(Unscripted);
             var page = await player.Game.ReadDialogAsync();
             Assert.Contains("nothing to say", page?[0].Text);
 

@@ -33,6 +33,7 @@ namespace Comet.Core.Logging
         public const string CharacterAllotRejected = "character.allot_rejected";
         public const string CharacterSilver = "character.silver";
         public const string CharacterConquerPoints = "character.conquer_points";
+        public const string CharacterStoredSilver = "character.stored_silver";
 
         public const string ItemTypesLoaded = "item.types_loaded";
         public const string ItemCreated = "item.created";
@@ -46,6 +47,9 @@ namespace Comet.Core.Logging
         public const string ItemBought = "item.bought";
         public const string ItemSold = "item.sold";
         public const string ItemShopRejected = "item.shop_rejected";
+        public const string ItemStored = "item.stored";
+        public const string ItemTakenOut = "item.taken_out";
+        public const string ItemWarehouseRejected = "item.warehouse_rejected";
         public const string ShopsLoaded = "item.shops_loaded";
 
         public const string TradeRequested = "trade.requested";

@@ -33,6 +33,7 @@ CREATE TABLE `character` (
   `Hairstyle` smallint(5) unsigned NOT NULL DEFAULT '535',
   `Silver` int(10) unsigned NOT NULL DEFAULT '1000',
   `Jewels` int(10) unsigned NOT NULL DEFAULT '0',
+  `StoredSilver` int(10) unsigned NOT NULL DEFAULT '0',
   `CurrentClass` tinyint(3) unsigned NOT NULL DEFAULT '10',
   `PreviousClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `AncestorClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
@@ -92,6 +93,7 @@ CREATE TABLE `item` (
   `Bless` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Enchant` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Color` tinyint(3) unsigned NOT NULL DEFAULT '3',
+  `Package` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`ItemID`),
   KEY `CharacterID` (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

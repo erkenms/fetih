@@ -50,6 +50,7 @@ namespace Comet.Game.States
             to.Registered = from.Registered;
             to.Silver = from.Silver;
             to.Spirit = from.Spirit;
+            to.StoredSilver = from.StoredSilver;
             to.Strength = from.Strength;
             to.VIPLevel = from.VIPLevel;
             to.Virtue = from.Virtue;

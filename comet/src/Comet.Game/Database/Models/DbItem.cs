@@ -17,5 +17,8 @@ namespace Comet.Game.Database.Models
         public byte Bless { get; set; }
         public byte Enchant { get; set; }
         public byte Color { get; set; }
+
+        // The warehouse NPC holding the item, when its position is Warehouse
+        public uint Package { get; set; }
     }
 }

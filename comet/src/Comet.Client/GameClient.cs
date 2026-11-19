@@ -192,6 +192,32 @@ namespace Comet.Client
         public Task SellAsync(uint npcId, uint itemId) =>
             this.SendAsync(ItemMessage.Build(npcId, itemId, ItemMessage.Sell));
 
+        public Task StoreSilverAsync(uint npcId, uint amount) =>
+            this.SendAsync(ItemMessage.Build(npcId, amount, ItemMessage.StoreSilver));
+
+        public Task TakeSilverAsync(uint npcId, uint amount) =>
+            this.SendAsync(ItemMessage.Build(npcId, amount, ItemMessage.TakeSilver));
+
+        // The silver kept in the warehouses, or null if no answer comes
+        public async Task<uint?> AskStoredSilverAsync(uint npcId, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(ItemMessage.Build(npcId, 0, ItemMessage.StoredSilver));
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItem &&
+                ItemMessage.Parse(p).Action == ItemMessage.StoredSilver, timeout);
+            return packet == null ? null : ItemMessage.Parse(packet).Data;
+        }
+
+        public Task SendPackageAsync(uint npcId, byte action, uint itemId = 0) =>
+            this.SendAsync(PackageMessage.Build(npcId, action, itemId));
+
+        public async Task<PackageMessage> WaitForPackageAsync(Func<PackageMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPackage && match(PackageMessage.Parse(p)), timeout);
+            return packet == null ? null : PackageMessage.Parse(packet);
+        }
+
         public Task PickUpAsync(uint groundId, int x, int y) =>
             this.SendAsync(GroundItemMessage.BuildPick(groundId, x, y));
 

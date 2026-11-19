@@ -41,12 +41,38 @@ namespace Comet.Game.Tests.Npcs
             Assert.Equal(expected, Shopping.SellPrice(price, (ushort)durability, (ushort)max));
 
         [Fact]
-        public void OpenShopLayout()
+        public void PackageLayout()
+        {
+            var items = Enumerable.Range(0, 2).Select(i => new DbItem
+            {
+                ItemID = 7 + (uint)i, TypeID = 410301, Gem1 = 1, Gem2 = 2, Plus = 3, Bless = 4, Enchant = 5, Color = 6,
+            }).ToList();
+            var bytes = new MsgPackage(8, MsgPackage.PackageAction.Query) { Items = items }.Encode();
+            Assert.Equal((1102, 24 + 2 * 52), (BitConverter.ToUInt16(bytes, 2), bytes.Length));
+            Assert.Equal((8u, 0, 10, 60u, 2), (BitConverter.ToUInt32(bytes, 4), bytes[8], bytes[9],
+                BitConverter.ToUInt32(bytes, 12), bytes[20]));
+            var second = 24 + 52;
+            Assert.Equal((8u, 410301u), (BitConverter.ToUInt32(bytes, second), BitConverter.ToUInt32(bytes, second + 4)));
+            Assert.Equal((1, 2, 3, 4, 5, 6), (bytes[second + 9], bytes[second + 10], bytes[second + 17],
+                bytes[second + 18], bytes[second + 20], bytes[second + 27]));
+
+            var parsed = Client.PackageMessage.Parse(bytes);
+            Assert.Equal(new[] { (7u, 410301u), (8u, 410301u) }, parsed.Items);
+            var request = new MsgPackage();
+            request.Decode(Client.PackageMessage.Build(8, Client.PackageMessage.Withdraw, 9));
+            Assert.Equal((8u, MsgPackage.PackageAction.Withdraw, 9u), (request.NpcID, request.Action, request.ItemID));
+        }
+
+        [Fact]
+        public void OpenShopAndWindowLayouts()
         {
             var shop = MsgAction.OpenShop(1000001, 5, 452, 336).Encode();
             Assert.Equal((32u, 5u, (ushort)160, (ushort)452, (ushort)336), (BitConverter.ToUInt32(shop, 8),
                 BitConverter.ToUInt32(shop, 16), BitConverter.ToUInt16(shop, 20), BitConverter.ToUInt16(shop, 24),
                 BitConverter.ToUInt16(shop, 26)));
+            var window = MsgAction.OpenWindow(1000001, MsgAction.Window.Warehouse, 410, 355).Encode();
+            Assert.Equal((4u, (ushort)410, (ushort)355, (ushort)126), (BitConverter.ToUInt32(window, 8),
+                BitConverter.ToUInt16(window, 12), BitConverter.ToUInt16(window, 14), BitConverter.ToUInt16(window, 20)));
         }
 
         [Fact]

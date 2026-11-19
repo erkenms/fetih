@@ -18,6 +18,7 @@ namespace Comet.Game.States
         public Creation Creation = null;
         public Inventory Inventory = null;
         public Equipment Equipment = null;
+        public Warehouses Warehouses = null;
 
         // Trades, teams and friends are changed by other players' packets too
         public Social.Trade Trade { get; set; }

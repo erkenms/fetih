@@ -27,6 +27,9 @@ namespace Comet.Game.Database.Models
         public virtual ushort Hairstyle { get; set; }
         public virtual uint Silver { get; set; }
         public virtual uint Jewels { get; set; }
+
+        // Silver kept in the warehouses (one purse for all of them)
+        public virtual uint StoredSilver { get; set; }
         public virtual byte CurrentClass { get; set; }
         public virtual byte PreviousClass { get; set; }
         public virtual byte AncestorClass { get; set; }

@@ -117,6 +117,11 @@ namespace Comet.Game.Packets
                 [ItemActionType.ShopPurchase] = (msg, client) =>
                     Shopping.BuyAsync(client, msg.CharacterID, msg.Command, msg.Argument),
                 [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
+
+                // Warehouse silver; the amount in Command
+                [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
+                [ItemActionType.BankDeposit] = (msg, client) => Storing.MoveSilverAsync(client, msg.Command),
+                [ItemActionType.BankWithdraw] = (msg, client) => Storing.MoveSilverAsync(client, -(long)msg.Command),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);

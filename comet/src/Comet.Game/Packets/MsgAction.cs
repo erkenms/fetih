@@ -46,6 +46,17 @@ namespace Comet.Game.Packets
             Action = ActionType.CharacterLevelUp
         };
 
+        // Albetros (5517): the window in Command and the player's position in the arguments
+        public static MsgAction OpenWindow(uint identity, Window window, ushort x, ushort y) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = (uint)window,
+            Arguments = new ushort[] { x, y },
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.ClientDialog,
+        };
+
         // Albetros (5517): action 160 with 32 in Command opens a shop; the shop's NPC goes in
         // the timestamp field and the player's position in X and Y
         public static MsgAction OpenShop(uint identity, uint npcID, ushort x, ushort y) => new MsgAction
@@ -240,6 +251,12 @@ namespace Comet.Game.Packets
             MapPathfinding,
             LoginComplete = 251,
             QueryStatInfo = 408
+        }
+
+        // Windows opened with ClientDialog
+        public enum Window : uint
+        {
+            Warehouse = 4,
         }
     }
 }

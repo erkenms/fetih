@@ -19,6 +19,7 @@ namespace Comet.Client
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgPackage = 1102;
         public const ushort MsgNpcInfo = 2030;
         public const ushort MsgNpc = 2031;
         public const ushort MsgTaskDialog = 2032;
@@ -148,7 +149,8 @@ namespace Comet.Client
         public const ushort Jump = 137;
         public const ushort LoginComplete = 251;
         public const ushort QueryStatInfo = 408;
-        public const ushort OpenShop = 160;
+        public const ushort OpenWindow = 126, OpenShop = 160;
+        public const uint WarehouseWindow = 4;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -222,7 +224,8 @@ namespace Comet.Client
     public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
     {
         public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
-            Ping = 27, Drop = 37, DropSilver = 38, DisplayGears = 46;
+            StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Ping = 27, Drop = 37,
+            DropSilver = 38, DisplayGears = 46;
 
         public static ItemMessage Parse(byte[] packet) => new ItemMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -237,6 +240,31 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(12), action);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
             BitConverter.TryWriteBytes(packet.AsSpan(20), argument);
+            return packet;
+        }
+    }
+
+    // Warehouse contents: the NPC at 4, the action at 8, an item ID at 16, the item count at
+    // 20, then 52 bytes per item with its ID and type first
+    public sealed record PackageMessage(uint NpcId, byte Action, uint ItemId, List<(uint Id, uint TypeId)> Items)
+    {
+        public const byte Query = 0, Deposit = 1, Withdraw = 2;
+
+        public static PackageMessage Parse(byte[] packet)
+        {
+            var items = new List<(uint, uint)>();
+            for (int i = 0, offset = 24; i < packet[20] && offset + 8 <= packet.Length; i++, offset += 52)
+                items.Add((BitConverter.ToUInt32(packet, offset), BitConverter.ToUInt32(packet, offset + 4)));
+            return new PackageMessage(BitConverter.ToUInt32(packet, 4), packet[8], BitConverter.ToUInt32(packet, 16), items);
+        }
+
+        public static byte[] Build(uint npcId, byte action, uint itemId = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgPackage, 24);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), npcId);
+            packet[8] = action;
+            packet[9] = 10;
+            BitConverter.TryWriteBytes(packet.AsSpan(16), itemId);
             return packet;
         }
     }

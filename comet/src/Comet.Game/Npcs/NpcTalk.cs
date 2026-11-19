@@ -68,5 +68,13 @@ namespace Comet.Game.Npcs
             var character = this.Client.Character;
             return this.Client.SendAsync(MsgAction.OpenShop(this.Client.ID, this.Npc.NpcID, character.X, character.Y));
         }
+
+        // Ends the conversation and opens a client window, like the warehouse
+        public Task OpenWindowAsync(MsgAction.Window window)
+        {
+            this.Client.ActiveNpc = 0;
+            var character = this.Client.Character;
+            return this.Client.SendAsync(MsgAction.OpenWindow(this.Client.ID, window, character.X, character.Y));
+        }
     }
 }

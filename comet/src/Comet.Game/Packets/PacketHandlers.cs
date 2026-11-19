@@ -19,6 +19,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgConnect] = () => new MsgConnect(),
                 [PacketType.MsgWalk] = () => new MsgWalk(),
                 [PacketType.MsgMapItem] = () => new MsgMapItem(),
+                [PacketType.MsgPackage] = () => new MsgPackage(),
                 [PacketType.MsgNpc] = () => new MsgNpc(),
                 [PacketType.MsgTaskDialog] = () => new MsgTaskDialog(),
                 [PacketType.MsgTrade] = () => new MsgTrade(),
