@@ -5,6 +5,7 @@ namespace Comet.Game.Packets
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.Packets;
@@ -121,6 +122,8 @@ namespace Comet.Game.Packets
                 // Character already exists: check where it stands, then add it to the
                 // world (it appears on the map when the client finishes logging in)
                 client.Character = new Character(character);
+                client.Inventory = new Inventory((await ItemsRepository.LoadAsync(character.CharacterID))
+                    .Where(i => i.Position == (byte)ItemPosition.Inventory));
                 if (!ResolveMap(client))
                 {
                     await client.SendAsync(MsgTalk.LoginInvalid);

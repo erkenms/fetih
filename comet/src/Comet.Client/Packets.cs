@@ -10,6 +10,7 @@ namespace Comet.Client
         public const ushort MsgRegister = 1001;
         public const ushort MsgTalk = 1004;
         public const ushort MsgUserInfo = 1006;
+        public const ushort MsgItemInfo = 1008;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
         public const ushort MsgAllot = 1024;
@@ -117,6 +118,7 @@ namespace Comet.Client
         uint CharacterId, uint Command, ushort Action, ushort Direction, ushort X, ushort Y)
     {
         public const ushort LoginSpawn = 74;
+        public const ushort LoginInventory = 75;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
@@ -176,6 +178,15 @@ namespace Comet.Client
                 values[BitConverter.ToUInt32(packet, offset)] = BitConverter.ToUInt64(packet, offset + 4);
             return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values);
         }
+    }
+
+    // Item ID, type, amount and its limit, then the action and position as ushorts
+    public sealed record ItemInfo(uint Id, uint TypeId, ushort Amount, ushort AmountLimit, ushort Action, ushort Position)
+    {
+        public static ItemInfo Parse(byte[] packet) => new ItemInfo(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt16(packet, 12), BitConverter.ToUInt16(packet, 14),
+            BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
     }
 
     // Points to add to strength, agility, vitality and spirit, a byte each

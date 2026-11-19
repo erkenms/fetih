@@ -49,8 +49,9 @@ namespace Comet.Integration.Tests
                     "in MsgRegister", "out MsgTalk",            // ANSWER_OK
                     "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
                     "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
+                    "in MsgAction 75", "out MsgAction 75",      // LoginInventory, still empty
                     "in MsgAction 251"                          // LoginComplete
-                }, trace.Skip(2).Take(10));
+                }, trace.Skip(2).Take(12));
             }
         }
 

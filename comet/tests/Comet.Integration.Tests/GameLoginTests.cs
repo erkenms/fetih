@@ -99,7 +99,7 @@ namespace Comet.Integration.Tests
                     player.Game.ReceiveAsync(PacketTypes.MsgTalk, TimeSpan.FromSeconds(1)));
 
                 // The connection still works
-                var spawn = await player.Game.EnterMapAsync(player.User.Id);
+                var (spawn, _) = await player.Game.EnterMapAsync(player.User.Id);
                 Assert.Equal(1002u, spawn.Command);
             }
         }

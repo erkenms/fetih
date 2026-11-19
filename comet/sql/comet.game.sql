@@ -297,6 +297,31 @@ INSERT INTO `portal` VALUES
 (2060,7,2060,112,107);
 
 --
+-- Table structure for table `item`
+--
+-- Items characters own. Position is where the item is: 0 the inventory, 1 to 9 an
+-- equipment slot. Amount is the durability, or the count of a stackable item.
+--
+
+DROP TABLE IF EXISTS `item`;
+CREATE TABLE `item` (
+  `ItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `CharacterID` int(10) unsigned NOT NULL,
+  `TypeID` int(10) unsigned NOT NULL,
+  `Position` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Amount` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `AmountLimit` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Gem1` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Gem2` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Plus` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Bless` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Enchant` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Color` tinyint(3) unsigned NOT NULL DEFAULT '3',
+  PRIMARY KEY (`ItemID`),
+  KEY `CharacterID` (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Table structure for table `level_exp`
 --
 -- Experience needed to go from Level to the next. The highest Level with a row is one

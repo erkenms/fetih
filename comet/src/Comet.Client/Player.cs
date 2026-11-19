@@ -1,6 +1,7 @@
 namespace Comet.Client
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
 
     public sealed record NewCharacter(string Name, ushort Mesh, ushort Profession);
@@ -10,9 +11,11 @@ namespace Comet.Client
         public GameClient Game { get; }
         public UserInfo User { get; }
         public ActionMessage Spawn { get; }
+        public List<ItemInfo> Inventory { get; }
 
-        private Player(GameClient game, UserInfo user, ActionMessage spawn)
+        private Player(GameClient game, UserInfo user, ActionMessage spawn, List<ItemInfo> inventory)
         {
+            this.Inventory = inventory;
             this.Game = game;
             this.User = user;
             this.Spawn = spawn;
@@ -46,8 +49,8 @@ namespace Comet.Client
 
                 if (!result.InGame)
                     throw new InvalidOperationException($"Game server refused: {result.Message}");
-                var spawn = await game.EnterMapAsync(result.User.Id);
-                return new Player(game, result.User, spawn);
+                var (spawn, inventory) = await game.EnterMapAsync(result.User.Id);
+                return new Player(game, result.User, spawn, inventory);
             }
             catch
             {

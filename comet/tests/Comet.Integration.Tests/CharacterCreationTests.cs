@@ -39,7 +39,7 @@ namespace Comet.Integration.Tests
                 Assert.Equal(318, result.User.HealthPoints);
                 Assert.Equal(1000u, result.User.Silver);
 
-                var spawn = await game.EnterMapAsync(result.User.Id);
+                var (spawn, _) = await game.EnterMapAsync(result.User.Id);
                 Assert.Equal(1002u, spawn.Command);
                 Assert.Equal((428, 378), (spawn.X, spawn.Y));
 

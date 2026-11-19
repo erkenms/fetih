@@ -1,6 +1,7 @@
 namespace Comet.Client
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Security.Cryptography;
     using System.Text;
@@ -124,12 +125,35 @@ namespace Comet.Client
             return talk == null ? null : TalkMessage.Parse(talk).Text;
         }
 
-        public async Task<ActionMessage> EnterMapAsync(uint characterId)
+        public async Task<(ActionMessage Spawn, List<ItemInfo> Inventory)> EnterMapAsync(uint characterId)
         {
             await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginSpawn));
             var spawn = await this.ReceiveActionAsync(ActionMessage.LoginSpawn);
+
+            // Items come before the reply to the inventory step
+            var inventory = new List<ItemInfo>();
+            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginInventory));
+            while (true)
+            {
+                var packet = await this.ReceiveAsync(p =>
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItemInfo ||
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAction &&
+                    ActionMessage.Parse(p).Action == ActionMessage.LoginInventory)
+                    ?? throw new InvalidOperationException("Game server closed the connection");
+                if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
+                    break;
+                inventory.Add(ItemInfo.Parse(packet));
+            }
+
             await this.SendAsync(ActionMessage.BuildLoginComplete());
-            return spawn;
+            return (spawn, inventory);
+        }
+
+        public async Task<ItemInfo> WaitForItemAsync(Func<ItemInfo, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItemInfo && match(ItemInfo.Parse(p)), timeout);
+            return packet == null ? null : ItemInfo.Parse(packet);
         }
 
         public async Task<PlayerSpawn> WaitForSpawnAsync(uint playerId, TimeSpan? timeout = null)

@@ -127,6 +127,13 @@ namespace Comet.Game.Packets
                     await client.SendAsync(msg);
                 },
 
+                [ActionType.LoginInventory] = async (msg, client) =>
+                {
+                    foreach (var item in client.Inventory?.Items ?? Array.Empty<Database.Models.DbItem>())
+                        await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
+                    await client.SendAsync(msg);
+                },
+
                 // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
 

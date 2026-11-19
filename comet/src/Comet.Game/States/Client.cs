@@ -5,6 +5,7 @@ namespace Comet.Game.States
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.World;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
@@ -14,6 +15,7 @@ namespace Comet.Game.States
     {
         public Character Character = null;
         public Creation Creation = null;
+        public Inventory Inventory = null;
         public DiffieHellman DiffieHellman = null;
 
         // Login token this connection authenticated with, and what it was issued for.
