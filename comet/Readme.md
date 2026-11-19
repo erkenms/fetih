@@ -32,4 +32,4 @@ in each server's folder.
 
 - [Protocol](doc/Protocol.md): the login flow and how 5619 facts were established
 - [Logging](doc/Logging.md): log format and event catalog
-- [Testing](doc/Testing.md): running tests and recording client captures
+- [Testing](doc/Testing.md): running tests

@@ -45,12 +45,9 @@ comet/
     Comet.Shared/     RPC message types shared by both servers
     Comet.Client/     headless 5619 client for tests and bots, written from the
                       protocol notes (not from server classes); also test map files
-                      and capture loading
   tests/
     Comet.*.Tests           unit tests per project
     Comet.Integration.Tests real servers + throwaway databases + Comet.Client
-    Captures/5619/          packet traces of the real client, replayed by
-                            Replay/CaptureReplayTests
   sql/                schema files (also seed the compose container)
   doc/                Protocol.md, Logging.md, Testing.md
 ```
@@ -58,10 +55,10 @@ comet/
 ## Things that bite
 
 - Packet layouts live in the packet classes' comments, not in docs. When the client
-  disagrees with the code, the client wins: check a capture or the binary.
+  disagrees with the code, the client wins: check a packet trace or the binary.
 - Comet.Client shares our assumptions, so integration tests can't catch a wrong
-  protocol guess. Captures can; record one in the VM when something is new
-  (doc/Testing.md).
+  protocol guess. To check against the real client, turn on `Logging:PacketTrace` for
+  the VM's IP and read the server log (doc/Logging.md).
 - Unhandled MsgActions are echoed back on purpose: the client waits for replies to its
   login steps.
 - Log event names and fields are a contract for external tools (doc/Logging.md): add,
