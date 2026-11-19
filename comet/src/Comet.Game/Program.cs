@@ -8,6 +8,7 @@
     using Comet.Network.Sockets;
     using Comet.Game.Database;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -55,6 +56,21 @@
             {
                 Log.Error(e, "Can't read map data from {Directory}; set Maps:ClientDirectory " +
                     "to a copy of the 5619 client", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
+                Kernel.ItemTypes = ItemTypeTable.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.ItemTypesLoaded).Information(
+                    "Loaded {ItemTypeCount} item types ({SkippedCount} records skipped)",
+                    Kernel.ItemTypes.Count, Kernel.ItemTypes.Skipped);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/itemtype.dat from {Directory}",
+                    config.Maps.ResolveClientDirectory());
                 Log.CloseAndFlush();
                 return;
             }

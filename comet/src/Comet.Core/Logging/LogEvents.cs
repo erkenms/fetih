@@ -33,6 +33,8 @@ namespace Comet.Core.Logging
         public const string CharacterAllotRejected = "character.allot_rejected";
         public const string CharacterSilver = "character.silver";
 
+        public const string ItemTypesLoaded = "item.types_loaded";
+
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";

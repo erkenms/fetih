@@ -32,6 +32,10 @@ namespace Comet.Integration.Tests
         // portal the table has no row for
         public static readonly (ushort X, ushort Y, uint Index) StablePortal = (382, 387, 3);
         public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
+        // Item types in the test itemtype.dat
+        public static readonly (uint Id, string Name, ushort Amount) Blade = (410301, "LuckyBlade", 1099);
+        public static readonly (uint Id, string Name, ushort Amount) Potion = (1000000, "Stancher", 1);
+
         // Short, so a test can see a periodic save happen
         public const int SaveIntervalSeconds = 2;
 
@@ -158,6 +162,8 @@ namespace Comet.Integration.Tests
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
+                ItemFiles.ItemTypeDat(Blade, Potion));
         }
 
         public async Task DisposeAsync()
