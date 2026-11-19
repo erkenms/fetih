@@ -24,10 +24,6 @@
     {
         private static async Task Main(string[] args)
         {
-            // Copyright notice may not be commented out. If adding your own copyright or
-            // claim of ownership, you may include a second copyright above the existing
-            // copyright. Do not remove completely to comply with software license. The
-            // project name and version may be removed or changed.
             Console.Title = "Comet, Game Server";
             Console.WriteLine();
             Console.WriteLine("  Comet: Game Server");
@@ -35,7 +31,6 @@
             Console.WriteLine("  Patch 5619");
             Console.WriteLine();
 
-            // Read configuration file and command-line arguments
             var config = new ServerConfiguration(args);
             LogSetup.Configure("game", config.Logging);
             PacketTrace.Configure(config.Logging?.PacketTrace);
@@ -46,7 +41,6 @@
                 return;
             }
 
-            // Initialize the database
             Log.Information("Initializing server...");
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
@@ -57,7 +51,6 @@
                 return;
             }
 
-            // Read the map list (grids are loaded when a map is first used)
             try
             {
                 Kernel.Maps = new MapStore(config.Maps.ResolveClientDirectory());
@@ -71,22 +64,18 @@
                 return;
             }
 
-            // Start background services
             var tasks = new List<Task>();
             tasks.Add(Kernel.Services.Randomness.StartAsync(CancellationToken.None));
             tasks.Add(DiffieHellman.ProbablePrimes.StartAsync(CancellationToken.None));
             await Task.WhenAll(tasks.ToArray());
             
-            // Start the RPC server listener
             Log.Information("Launching server listeners...");
             var rpcServer = new RpcServerListener(new Remote());
             var rpcServerTask = rpcServer.StartAsync(config.RpcNetwork.Port, config.RpcNetwork.IPAddress);
 
-            // Start the game server listener
             var server = new Server(config);
             var serverTask = server.StartAsync(config.GameNetwork.Port, config.GameNetwork.IPAddress);
 
-            // Output all clear and wait for user input
             LogEvents.For(typeof(Program), LogEvents.ServerStart).Information(
                 "Listening for new connections on {IPAddress}:{Port}",
                 config.GameNetwork.IPAddress, config.GameNetwork.Port);

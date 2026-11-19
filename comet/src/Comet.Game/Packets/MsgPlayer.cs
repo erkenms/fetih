@@ -12,7 +12,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgPlayer : MsgBase<Client>
     {
-        // Packet Properties
         public uint Mesh { get; set; }
         public uint CharacterID { get; set; }
         public ushort X { get; set; }

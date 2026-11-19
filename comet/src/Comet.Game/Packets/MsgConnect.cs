@@ -24,7 +24,6 @@ namespace Comet.Game.Packets
         // Static properties from server initialization
         public static bool StrictAuthentication { get; set; }
 
-        // Packet Properties
         public ulong Token { get; set; }
         public ushort Patch { get; set; }
         public string Language { get; set; }

@@ -14,7 +14,6 @@ namespace Comet.Account.Packets
     /// </remarks>
     public sealed class MsgEncryptCode : MsgBase<Client>
     {
-        // Packet Properties
         public uint Seed { get; set; }
 
         /// <summary>

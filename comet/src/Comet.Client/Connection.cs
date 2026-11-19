@@ -18,7 +18,6 @@ namespace Comet.Client
         // Constants
         public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(10);
 
-        // Fields and properties
         private readonly TcpClient Tcp;
         private readonly NetworkStream Stream;
         private readonly Channel<byte[]> Packets = Channel.CreateUnbounded<byte[]>();

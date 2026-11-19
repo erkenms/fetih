@@ -18,7 +18,6 @@ namespace Comet.Account.Packets
     /// </summary>
     public sealed class MsgLoginProofC : MsgBase<Client>
     {
-        // Packet Properties
         public byte[] ClientPublicKey { get; private set; }
         public byte[] ClientProof { get; private set; }
 

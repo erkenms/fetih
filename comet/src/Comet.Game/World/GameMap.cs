@@ -31,7 +31,6 @@ namespace Comet.Game.World
         public const int ViewRange = 18;
         private const int SectorSize = ViewRange;
 
-        // Fields and properties
         private readonly object Lock = new object();
         private readonly Dictionary<uint, (T Object, ushort X, ushort Y)> Objects =
             new Dictionary<uint, (T, ushort, ushort)>();

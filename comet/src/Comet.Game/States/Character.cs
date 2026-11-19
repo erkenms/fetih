@@ -13,7 +13,6 @@ namespace Comet.Game.States
     /// </summary>
     public sealed class Character : DbCharacter
     {
-        // Fields and properties
         private DateTime LastSaveTimestamp { get; set; }
 
         // Direction the character faces (0 to 7), kept in memory only

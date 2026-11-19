@@ -14,7 +14,6 @@ namespace Comet.Network.Sockets
     /// /// </summary>
     public sealed class TcpServerRegistry : IHostedService, IDisposable
     {
-        // Fields and properties
         private Dictionary<string, int> Active;
         private Dictionary<string, int> Attempts;
         private ConcurrentDictionary<string, DateTime> Blocks;

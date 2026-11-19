@@ -17,7 +17,6 @@ namespace Comet.Game.World
     /// </summary>
     public sealed class MapStore
     {
-        // Fields and properties
         private readonly string ClientDirectory;
         private readonly Dictionary<uint, GameMapEntry> Entries;
         private readonly ConcurrentDictionary<uint, Lazy<MapGrid>> Grids =

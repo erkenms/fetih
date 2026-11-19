@@ -16,7 +16,6 @@ namespace Comet.Network.Sockets
     /// </summary>
     public static class PacketTrace
     {
-        // Fields and properties
         private static volatile bool all;
         private static ImmutableHashSet<uint> accounts = ImmutableHashSet<uint>.Empty;
         private static ImmutableHashSet<string> addresses = ImmutableHashSet<string>.Empty;

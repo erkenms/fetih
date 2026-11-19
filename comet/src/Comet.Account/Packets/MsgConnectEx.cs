@@ -11,7 +11,6 @@ namespace Comet.Account.Packets
     /// </summary>
     public sealed class MsgConnectEx : MsgBase<Client>
     {
-        // Packet Properties
         public ulong Token { get; set; }
         public RejectionCode Code { get; set; }
         public string IPAddress { get; set; }

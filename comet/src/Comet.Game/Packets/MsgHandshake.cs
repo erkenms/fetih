@@ -16,7 +16,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgHandshake : MsgBase<Client>
     {
-        // Packet Properties
         public byte[] DecryptionIV { get; private set; }
         public byte[] EncryptionIV { get; private set; }
         public string PrimeRoot { get; private set; }

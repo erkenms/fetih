@@ -25,7 +25,6 @@ namespace Comet.Network.Sockets
         private const int KeepAliveIntervalSeconds = 10;
         private const int KeepAliveProbes = 5;
 
-        // Fields and properties
         private readonly TimeSpan LoginTimeout;
         private readonly Semaphore AcceptanceSemaphore;
         private readonly ConcurrentStack<Memory<byte>> BufferPool;

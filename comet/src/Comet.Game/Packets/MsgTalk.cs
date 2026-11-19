@@ -15,7 +15,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgTalk : MsgBase<Client>
     {
-        // Packet Properties
         public Color Color { get; set; }
         public TalkChannel Channel { get; set; }
         public TalkStyle Style { get; set; }
@@ -153,7 +152,6 @@ namespace Comet.Game.Packets
             return writer.ToArray();
         }
 
-        // Static messages
         public const string SYSTEM = "SYSTEM";
         public const string ALLUSERS = "ALLUSERS";
         public readonly static MsgTalk LoginOk = new MsgTalk(0, TalkChannel.Login, "ANSWER_OK");

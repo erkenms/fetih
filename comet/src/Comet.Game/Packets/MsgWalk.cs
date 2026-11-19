@@ -12,7 +12,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgWalk : MsgBase<Client>
     {
-        // Packet Properties
         public uint Direction { get; set; }
         public uint CharacterID { get; set; }
         public uint Mode { get; set; }

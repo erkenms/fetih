@@ -16,7 +16,6 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgAction : MsgBase<Client>
     {
-        // Packet Properties
         public uint CharacterID { get; set; }
         public uint Command { get; set; }
         public ushort[] Arguments { get; set; }

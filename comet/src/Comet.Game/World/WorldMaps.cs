@@ -11,7 +11,6 @@ namespace Comet.Game.World
     /// <typeparam name="T">Object type (the game server's client)</typeparam>
     public sealed class WorldMaps<T> where T : class, IMapObject
     {
-        // Fields and properties
         private readonly MapStore Store;
         private readonly ConcurrentDictionary<uint, Lazy<GameMap<T>>> Maps =
             new ConcurrentDictionary<uint, Lazy<GameMap<T>>>();

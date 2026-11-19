@@ -8,8 +8,6 @@ what isn't obvious from any one file.
 Every layout in code says how it was established:
 
 - **from client binary**: read from the 5619 `Conquer.exe` by disassembly.
-- **from reference**: from CSV3, an older 5619 server later patched for newer clients,
-  so treat it as a hint.
 - **seen / confirmed in VM**: observed with the real client.
 
 ## Login
@@ -36,8 +34,6 @@ Game server (CAST5 CFB64):
 
 ## Traps
 
-- LoginComplete is action 251. 5187's 132 is never sent; an early note claimed it was,
-  and the test client copied the mistake, so the bug only showed in the VM.
 - The SRP6 password step is TQ's own: x = SHA1(salt ‖ 0000 ‖ MD5(password ‖ fixed
   suffix)); numbers are little-endian. The client hashes 32 bytes of S even when S is
   shorter, so about 1 real login in 256 fails with the right password.
@@ -48,4 +44,3 @@ Game server (CAST5 CFB64):
   cell. Without them a quarter of cells real players jump to look blocked.
 - GameMap.dat lists map 1067 twice; the first entry wins.
 - MsgPlayer: a byte at 225 must be 0 or the client ignores the position.
-- New classes in the client data: Monk (60) and Pirate (70).

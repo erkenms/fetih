@@ -1,8 +1,8 @@
 # fetih
 
-A Conquer Online server for client patch 5619, built on the Comet emulator (`comet/`,
-.NET 11, MariaDB). One developer, a long-time player of the game. The real client is in
-`_CLIENT/5619` (not committed) and is tested in a VM at 172.16.60.128.
+A Conquer Online server for client patch 5619, built on the Comet emulator.
+
+The real client is in `_CLIENT/5619` and is tested in a VM at 172.16.60.128.
 
 ## Working rules
 
@@ -11,8 +11,6 @@ A Conquer Online server for client patch 5619, built on the Comet emulator (`com
   choice. Add database tables when a feature needs them, not before.
 - Every protocol fact in code carries its source: `5619: from client binary`,
   `from reference`, `seen in VM` / `confirmed in VM`. Don't mark a guess as confirmed.
-- `ROADMAP.md` is a scratch file for agents: never commit it, never cite it from code
-  or docs.
 - Commits: one short line, no trailers. Never push.
 
 ## Map
@@ -58,15 +56,11 @@ comet/
   disagrees with the code, the client wins: check a packet trace or the binary.
 - Comet.Client shares our assumptions, so integration tests can't catch a wrong
   protocol guess. To check against the real client, turn on `Logging:PacketTrace` for
-  the VM's IP and read the server log (doc/Logging.md).
+  the VM's IP and read the server log.
 - Unhandled MsgActions are echoed back on purpose: the client waits for replies to its
   login steps.
-- Log event names and fields are a contract for external tools (doc/Logging.md): add,
-  don't rename.
 - Packets from different clients are processed in parallel (PacketProcessor
   partitions); one client's packets are processed in order.
-- Reference server for 5619 behaviour: `~/Developer/CSV3` (later patched for newer
-  clients, so verify its layouts).
 
 ## Commands
 

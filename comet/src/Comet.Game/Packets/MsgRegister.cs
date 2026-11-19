@@ -21,14 +21,12 @@ namespace Comet.Game.Packets
     /// </summary>
     public sealed class MsgRegister : MsgBase<Client>
     {
-        // Packet Properties
         public string CharacterName { get; set; }
         public ushort Mesh { get; set; }
         public ushort Class { get; set; }
         public uint Token { get; set; }
         public string MacAddress { get; set; }
 
-        // Registration constants
         private static readonly byte[] Hairstyles = new byte[] {
             10, 11, 13, 14, 15, 24, 30, 35, 37, 38, 39, 40
         };

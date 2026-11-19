@@ -49,7 +49,6 @@ namespace Comet.Game.World
         private const int CellSize = 6;
         private const int MaxSide = 4096;
 
-        // Fields and properties
         private readonly bool[] Walkable;
         private readonly short[] Elevations;
         public int Width { get; }

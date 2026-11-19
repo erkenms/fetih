@@ -20,7 +20,6 @@ namespace Comet.Account.Packets
     /// </summary>
     public sealed class MsgAccountSRP6 : MsgBase<Client>
     {
-        // Packet Properties
         public byte[] UsernameBytes { get; private set; }
         public string Username { get; private set; }
         public string Realm { get; private set; }

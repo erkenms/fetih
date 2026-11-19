@@ -16,7 +16,6 @@ namespace Comet.Account.Packets
         public const int FieldSize = 128;
         public const int Size = 4 + 4 * (1 + MsgLoginChallengeS.FieldSize);
 
-        // Packet Properties
         public byte[] ServerPublicKey { get; set; }
         public byte[] Generator { get; set; }
         public byte[] Modulus { get; set; }

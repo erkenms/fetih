@@ -18,7 +18,6 @@ namespace Comet.Game.Packets
         // 5619: from client binary (the client builds MsgItem with 88 bytes)
         public const int Size = 88;
 
-        // Packet Properties
         public uint CharacterID { get; set; }
         public uint Command { get; set; }
         public uint Timestamp { get; set; }
