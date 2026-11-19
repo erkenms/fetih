@@ -68,6 +68,7 @@ namespace Comet.Client
         public const ushort LoginSpawn = 74;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
+        public const ushort Portal = 85;
         public const ushort Teleport = 86;
         public const ushort RemoveEntity = 135;
         public const ushort Jump = 137;

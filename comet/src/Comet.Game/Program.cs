@@ -7,6 +7,7 @@
     using Comet.Core.Logging;
     using Comet.Network.Sockets;
     using Comet.Game.Database;
+    using Comet.Game.Database.Repositories;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -54,6 +55,19 @@
             {
                 Log.Error(e, "Can't read map data from {Directory}; set Maps:ClientDirectory " +
                     "to a copy of the 5619 client", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
+                Kernel.Portals = new PortalTable(await PortalsRepository.LoadAllAsync());
+                LogEvents.For(typeof(Program), LogEvents.PortalsLoaded).Information(
+                    "Loaded {PortalCount} portals", Kernel.Portals.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read the portal table; create it from sql/comet.game.sql");
                 Log.CloseAndFlush();
                 return;
             }

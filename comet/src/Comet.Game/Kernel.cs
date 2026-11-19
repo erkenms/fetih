@@ -20,6 +20,9 @@ namespace Comet.Game
 
         public static WorldMaps<Client> World;
 
+        // Where portal cells lead, read from the database at startup
+        public static PortalTable Portals = new PortalTable(new Database.Models.DbPortal[0]);
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

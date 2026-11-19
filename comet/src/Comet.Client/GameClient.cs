@@ -165,6 +165,9 @@ namespace Comet.Client
         public Task JumpAsync(uint characterId, int fromX, int fromY, int toX, int toY) =>
             this.SendAsync(ActionMessage.BuildJump(characterId, fromX, fromY, toX, toY));
 
+        public Task UsePortalAsync(uint characterId, int x, int y) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Portal, x: x, y: y));
+
         public Task TurnAsync(uint characterId, int direction) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Turn, direction: direction));
 

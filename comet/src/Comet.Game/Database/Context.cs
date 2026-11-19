@@ -8,6 +8,7 @@ namespace Comet.Game.Database
         public static ServerConfiguration.DatabaseConfiguration Configuration;
 
         public virtual DbSet<DbCharacter> Characters { get; set; }
+        public virtual DbSet<DbPortal> Portals { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -23,6 +24,7 @@ namespace Comet.Game.Database
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<DbCharacter>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbPortal>(e => e.HasKey(x => new { x.MapID, x.PortalIndex }));
         }
 
         public static bool Ping()

@@ -27,6 +27,11 @@ namespace Comet.Integration.Tests
 
         // The one cell of the test Twin City (1002) that can't be walked on
         public static readonly (int X, int Y) BlockedCell = (100, 100);
+
+        // Map 1002's portal to the stable (1006), as in the seeded portal table, and a
+        // portal the table has no row for
+        public static readonly (ushort X, ushort Y, uint Index) StablePortal = (382, 387, 3);
+        public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -144,10 +149,13 @@ namespace Comet.Integration.Tests
             Directory.CreateDirectory(maps);
             Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
-                MapFiles.GameMapDat((1010, "map/map/newbie.7z"), (1002, "map/map/newplain.7z")));
+                MapFiles.GameMapDat((1010, "map/map/newbie.7z"), (1002, "map/map/newplain.7z"),
+                    (1006, "map/map/horse.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newbie.DMap"), MapFiles.DMap(132, 132));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
-                walkable: (x, y) => (x, y) != BlockedCell));
+                walkable: (x, y) => (x, y) != BlockedCell,
+                portals: new[] { StablePortal, UnlinkedPortal }));
+            File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
         }
 
         public async Task DisposeAsync()

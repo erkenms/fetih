@@ -57,6 +57,15 @@ namespace Comet.Game.World
             this.Contains(x, y) ? this.Elevations[y * this.Width + x]
                 : throw new ArgumentOutOfRangeException(nameof(x), $"({x},{y}) is outside the map");
 
+        // A portal is used from its cell or any cell next to it; the first in DMap order wins
+        public MapPortal? PortalNear(int x, int y)
+        {
+            foreach (var portal in this.Portals)
+                if (Math.Abs(portal.X - x) <= 1 && Math.Abs(portal.Y - y) <= 1)
+                    return portal;
+            return null;
+        }
+
         public static MapGrid Parse(ReadOnlySpan<byte> data) => Parse(data, null);
 
         public static MapGrid Parse(ReadOnlySpan<byte> data, Func<string, IReadOnlyList<ScenePart>> scenes)

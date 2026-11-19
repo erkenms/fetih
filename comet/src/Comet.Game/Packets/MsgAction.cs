@@ -122,6 +122,7 @@ namespace Comet.Game.Packets
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
+                [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
 
                 // Turning and emotes go to everyone in view, not back to the player
                 [ActionType.CharacterDirection] = (msg, client) =>

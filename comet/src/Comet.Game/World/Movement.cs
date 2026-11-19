@@ -56,6 +56,52 @@ namespace Comet.Game.World
                 "{Name} jumped to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
         }
 
+        // The client sends this when it steps on a portal cell and then waits for a
+        // teleport. The portal is found from the server's position, not the packet's.
+        public static async Task PortalAsync(Client client, MsgAction request)
+        {
+            if (!TryGetPosition(client, out var map, out var x, out var y))
+                return;
+            var portal = map.Grid.PortalNear(x, y);
+            PortalTarget target = default;
+            string reason =
+                request.CharacterID != client.ID ? "wrong_id" :
+                portal == null ? "no_portal" :
+                !Kernel.Portals.TryGet(map.Id, portal.Value.Index, out target) ? "no_destination" :
+                null;
+            if (reason == null && !await TeleportAsync(client, target.MapID, target.X, target.Y))
+                reason = "bad_destination";
+            if (reason != null)
+                await RejectAsync(client, map, x, y, x, y, "portal", reason);
+        }
+
+        // Moves the character to a cell on any map. Players around the old cell lose them;
+        // players around the new one see them.
+        public static async Task<bool> TeleportAsync(Client client, uint mapID, ushort x, ushort y)
+        {
+            if (!TryGetPosition(client, out var from, out var fromX, out var fromY) ||
+                !Kernel.World.TryGet(mapID, out var to) || !to.Grid.Contains(x, y))
+                return false;
+
+            var before = from.InView(fromX, fromY, except: client);
+            Visibility.Leave(client);
+            foreach (var other in before)
+                await client.SendAsync(MsgAction.RemoveEntity(other.ID));
+
+            var character = client.Character;
+            client.Map = to;
+            character.MapID = mapID;
+            character.X = x;
+            character.Y = y;
+            character.Stance = 0;
+            await client.SendAsync(MsgAction.Teleport(client.ID, mapID, x, y, character.Direction));
+            await Visibility.EnterAsync(client);
+            LogEvents.For(typeof(Movement), LogEvents.MoveTeleport).Information(
+                "{Name} teleported from map {FromMapId} at {FromX},{FromY} to map {MapId} at {X},{Y}",
+                character.Name, from.Id, fromX, fromY, mapID, x, y);
+            return true;
+        }
+
         public static byte DirectionTo(int x, int y, int toX, int toY, byte current)
         {
             int dx = Math.Sign(toX - x), dy = Math.Sign(toY - y);

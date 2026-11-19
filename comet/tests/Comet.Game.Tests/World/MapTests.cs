@@ -75,6 +75,31 @@ namespace Comet.Game.Tests.World
             Assert.Equal(new MapPortal(3, 5, 7), Assert.Single(Grid().Portals));
         }
 
+        [Theory]
+        [InlineData(3, 5)]
+        [InlineData(2, 4)]
+        [InlineData(4, 4)]
+        public void FindsAPortalFromItsCellOrOneStepAway(int x, int y)
+        {
+            Assert.Equal(new MapPortal(3, 5, 7), Grid().PortalNear(x, y));
+        }
+
+        [Theory]
+        [InlineData(1, 5)]
+        [InlineData(3, 3)]
+        public void FindsNoPortalFartherAway(int x, int y)
+        {
+            Assert.Null(Grid().PortalNear(x, y));
+        }
+
+        [Fact]
+        public void FirstPortalInTheFileWinsWhenTwoAreNear()
+        {
+            var grid = MapGrid.Parse(MapFiles.DMap(10, 10,
+                portals: new (ushort, ushort, uint)[] { (5, 5, 2), (6, 5, 1) }));
+            Assert.Equal(2u, grid.PortalNear(6, 6)?.Index);
+        }
+
         [Fact]
         public void RejectsTruncatedCells()
         {
