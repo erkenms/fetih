@@ -28,32 +28,31 @@ namespace Comet.Game.Tests.Replay
     public class CaptureReplayTests
     {
         /// <summary>
-        /// Packets the client sends that the server doesn't handle yet, and when it
-        /// will. An action of null means the whole packet type. Unhandled MsgActions
+        /// Packets the client sends that the server doesn't handle yet, and why. An action of null means the whole packet type. Unhandled MsgActions
         /// are echoed, which is what the client waits for during login.
         /// </summary>
         public static readonly Dictionary<(ushort Type, uint? Action), string> NotHandledYet =
             new Dictionary<(ushort, uint?), string>
             {
-                [(10010, 161)] = "MsgAction CharacterAway: to do with emotes",
+                [(10010, 161)] = "MsgAction CharacterAway: away status",
                 [(10010, 166)] = "MsgAction 166 (unknown, sent in game): to identify",
-                [(10010, 75)] = "MsgAction LoginInventory: echoed; P3 items",
-                [(10010, 76)] = "MsgAction LoginRelationships: echoed; P5 friends",
-                [(10010, 77)] = "MsgAction LoginProficiencies: echoed; P7 magic",
-                [(10010, 78)] = "MsgAction LoginSpells: echoed; P7 magic",
-                [(10010, 96)] = "MsgAction CharacterPkMode: echoed; P8 PK",
-                [(10010, 97)] = "MsgAction LoginGuild: echoed; P8 guilds",
+                [(10010, 75)] = "MsgAction LoginInventory: echoed until items exist",
+                [(10010, 76)] = "MsgAction LoginRelationships: echoed until friends exist",
+                [(10010, 77)] = "MsgAction LoginProficiencies: echoed until skills exist",
+                [(10010, 78)] = "MsgAction LoginSpells: echoed until skills exist",
+                [(10010, 96)] = "MsgAction CharacterPkMode: echoed until PK modes exist",
+                [(10010, 97)] = "MsgAction LoginGuild: echoed until guilds exist",
                 [(10010, 114)] = "MsgAction 114 (sent while logging in): to identify",
-                [(1004, null)] = "MsgTalk: 1.7 chat",
+                [(1004, null)] = "MsgTalk: chat",
                 [(1037, null)] = "MsgPing: to identify",
                 [(1040, null)] = "1040 (unknown): to identify",
-                [(1130, null)] = "MsgTitle: P8",
-                [(1134, null)] = "MsgTaskStatus (sent while logging in): P4 quests",
-                [(1135, null)] = "MsgTaskDetailInfo: P4 quests",
+                [(1130, null)] = "MsgTitle: titles",
+                [(1134, null)] = "MsgTaskStatus (sent while logging in): quests",
+                [(1135, null)] = "MsgTaskDetailInfo: quests",
                 [(1151, null)] = "1151 (unknown, sent while logging in): to identify",
-                [(2206, null)] = "MsgQualifyingFightersList: P8 arena",
-                [(2208, null)] = "MsgQualifyingSeasonRankList: P8 arena",
-                [(2209, null)] = "MsgQualifyingDetailInfo: P8 arena",
+                [(2206, null)] = "MsgQualifyingFightersList: arena",
+                [(2208, null)] = "MsgQualifyingSeasonRankList: arena",
+                [(2209, null)] = "MsgQualifyingDetailInfo: arena",
             };
 
         private static List<CapturedPacket> ClientPackets() =>

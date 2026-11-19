@@ -210,37 +210,3 @@ wrong.
 
 The first `packet.in` of a game connection is the client's key exchange reply and the
 first `packet.out` is the server's handshake; neither has a real packet type.
-
-## Using the logs
-
-### jq
-
-```sh
-# Logins and logouts today
-jq -c 'select(.event=="session.login" or .event=="session.logout")
-       | {ts, event, name, reason, durationSec}' logs/game-20261118.jsonl
-
-# Why do sessions end?
-jq -r 'select(.event=="session.logout") | .reason' logs/game-*.jsonl | sort | uniq -c
-
-# Average session length per character
-jq -s 'map(select(.event=="session.logout")) | group_by(.name)
-       | map({name: .[0].name, avgSec: (map(.durationSec) | add / length)})' logs/game-*.jsonl
-```
-
-### Grafana with Loki
-
-Ship `logs/*.jsonl` with Promtail or Grafana Alloy, labeled e.g. `job="comet"`.
-Keep labels low-cardinality (`server`, `event`, `level`). Leave names and IDs in the line.
-
-```logql
-# Logins per hour
-sum by (server) (count_over_time({job="comet"} | json | event="session.login" [1h]))
-
-# Drops vs clean quits
-sum by (reason) (count_over_time({job="comet"} | json | event="session.logout" [1h]))
-
-# Players online, approximately: logins minus logouts over a window
-sum(count_over_time({job="comet"} | json | event="session.login" [24h]))
-  - sum(count_over_time({job="comet"} | json | event="session.logout" [24h]))
-```

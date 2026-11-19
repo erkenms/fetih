@@ -1,46 +1,35 @@
 # Comet
 
-You can find setup instructions in the [main branch's readme](https://gitlab.com/spirited/comet/-/blob/main/Readme.md).
+A Conquer Online server for client patch 5619: an account server that logs players in
+with SRP6, and a game server that hosts the world.
 
-This document outlines key features of the project and gives an overview of the solution.
+## Running
 
-## Solution Overview
+```bash
+podman compose up -d                     # MariaDB (comet-db), seeded from sql/
+cd src/Comet.Account
+dotnet run -- create-account me@example.com secret12
+dotnet run                               # account server, port 9960
+cd ../Comet.Game && dotnet run           # game server, in another terminal
+```
 
-Comet is made up of multiple server, library, and test projects.
+The game server reads maps from a copy of the 5619 client, set by `Maps:ClientDirectory`
+in `Comet.Game.config` (default: `_CLIENT/5619` next to `comet/`). Logs go to `logs/`
+in each server's folder.
 
-Server projects:
+## Layout
 
-* [Comet.Account](src/Comet.Account/): Authenticates and redirects players to a game server.
-* [Comet.Game](src/Comet.Game/): Serves authenticated players in a game world (multiple can be set up).
+| Project | What it is |
+|---|---|
+| Comet.Account | Account server |
+| Comet.Game | Game server: packets, characters, maps, movement |
+| Comet.Network | Sockets, ciphers, packet processing, RPC between the servers |
+| Comet.Core | Logging |
+| Comet.Shared | RPC message types |
+| Comet.Client | Headless 5619 client used by tests (and later bots) |
 
-Library projects:
+## Docs
 
-* [Comet.Client](src/Comet.Client/): A headless 5619 game client for integration tests and bots.
-* [Comet.Core](src/Comet.Core/): Contains language or system additions that are not game centric.
-* [Comet.Network](src/Comet.Network/): Contains base networking classes for creating networked actors.
-* [Comet.Shared](src/Comet.Shared/): Contains shared message classes for RPC between the servers.
-
-Test projects:
-
-* [Comet.Account.Tests](tests/Comet.Account.Tests/): Unit tests for validating basic account server functionality.
-* [Comet.Core.Tests](tests/Comet.Core.Tests/): Unit tests for validating core functionality.
-* [Comet.Game.Tests](tests/Comet.Game.Tests/): Unit tests for game server packets and rules.
-* [Comet.Integration.Tests](tests/Comet.Integration.Tests/): Runs both servers against throwaway databases and plays through them with Comet.Client (see [doc/Testing.md](doc/Testing.md)).
-* [Comet.Network.Tests](tests/Comet.Network.Tests/): Unit tests for validating network and base server functionality.
-
-## Container Files
-
-In the top directory, you can find files for containers:
-
-* [compose.yaml](compose.yaml): Runs local MariaDB container.
-
-## Map Data
-
-The game server reads map data from a copy of the 5619 client: `ini/GameMap.dat` for
-the list of maps, and the `.7z` (or `.DMap`) files under `map/map` for each map's cells.
-Set `Maps:ClientDirectory` in `Comet.Game.config` to that folder. A relative path is
-relative to the server's build folder (`src/Comet.Game/bin/<Configuration>/net11.0`), so
-the default, `../../../../../../_CLIENT/5619`, is a `_CLIENT` folder next to the `comet`
-folder (it isn't committed). The server also reads `map/Scene` there: terrain scenes
-make bridges and platforms walkable. A map is loaded the first time it's used, then kept
-in memory.
+- [Protocol](doc/Protocol.md): the login flow and how 5619 facts were established
+- [Logging](doc/Logging.md): log format and event catalog
+- [Testing](doc/Testing.md): running tests and recording client captures
