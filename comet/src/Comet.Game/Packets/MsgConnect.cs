@@ -13,12 +13,6 @@ namespace Comet.Game.Packets
     using Org.BouncyCastle.Utilities.Encoders;
     using static Comet.Game.Packets.MsgTalk;
 
-    /// <remarks>Packet Type 1052</remarks>
-    /// <summary>
-    /// Message containing a connection request to the game server. Contains the player's
-    /// access token from the Account server, and the patch and language versions of the
-    /// game client.
-    /// </summary>
     public sealed class MsgConnect : MsgBase<Client>
     {
         public static bool StrictAuthentication { get; set; }
@@ -29,11 +23,6 @@ namespace Comet.Game.Packets
         public string MacAddress { get; set; }
         public int Version { get; set; }
 
-        /// <remarks>
-        /// 5619: confirmed in VM (28 bytes, same offsets as 5187: the two IDs from
-        /// MsgConnectEx at 4 and 8 read as one token, patch at 12, language at 14, MAC
-        /// address at 16, version at 24).
-        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -46,11 +35,7 @@ namespace Comet.Game.Packets
             this.Version = ParseVersion(reader.ReadInt32());
         }
 
-        /// <summary>
-        /// The client writes its version as a number whose decimal digits are binary
-        /// digits (e.g. 101 = 5). Falls back to the raw value when it isn't in that form,
-        /// instead of throwing and dropping the login.
-        /// </summary>
+        // The client writes its version as decimal digits that are binary digits (101 = 5).
         public static int ParseVersion(int raw)
         {
             var digits = raw.ToString();
@@ -59,21 +44,9 @@ namespace Comet.Game.Packets
             return Convert.ToInt32(digits, 2);
         }
 
-        /// <summary>
-        /// Returns true if the transferred authentication may be used by a client
-        /// connecting from the given IP address. With strict authentication, the game
-        /// login must come from the same IP address that passed the account server.
-        /// </summary>
         public static bool IsAuthorized(TransferAuthArgs auth, string ipAddress, bool strict) =>
             auth != null && (!strict || auth.IPAddress == ipAddress);
 
-        /// <summary>
-        /// Process can be invoked by a packet after decode has been called to structure
-        /// packet fields and properties. For the server implementations, this is called
-        /// in the packet handler after the message has been dequeued from the server's
-        /// <see cref="PacketProcessor"/>.
-        /// </summary>
-        /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
             // Once a character is in the game, a repeated login would reload it from the
@@ -86,10 +59,8 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Validate access token. Remove consumes the token so it can't be reused.
-            // 5619: confirmed in VM: after creating a character, the client sends
-            // MsgConnect again on the same connection, so a connection may repeat the
-            // token it already authenticated with.
+            // Remove consumes the token. After creating a character the client sends
+            // MsgConnect again on the same connection, repeating the token it used.
             TransferAuthArgs auth;
             if (client.Authentication != null && client.AuthenticationToken == this.Token)
             {
@@ -114,7 +85,6 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Logged in: no more login deadline for this connection
             client.LoggedIn();
 
             // If another client has already connected using this account, take its
@@ -134,11 +104,9 @@ namespace Comet.Game.Packets
                 await previous.LogoutAsync();
             }
 
-            // Check for an existing character
             var character = await CharactersRepository.FindAsync(auth.AccountID);
             if (character == null)
             {
-                // Create a new character
                 client.Creation = new Creation();
                 client.Creation.AccountID = auth.AccountID;
                 client.Creation.Token = (uint)this.Token;
@@ -175,13 +143,6 @@ namespace Comet.Game.Packets
             }            
         }
 
-        /// <summary>
-        /// Finds the map the client's character was saved on and checks they can stand
-        /// at their saved cell. If that map can't be loaded or the cell is blocked (a
-        /// removed map, or a position saved by a bug), the character is moved to the
-        /// start position instead. The character isn't put on the map yet.
-        /// </summary>
-        /// <returns>False if not even the start map could be loaded.</returns>
         private static bool ResolveMap(Client client)
         {
             var character = client.Character;

@@ -7,41 +7,22 @@ namespace Comet.Game
     using Comet.Network.RPC;
     using Comet.Shared.Models;
 
-    /// <summary>
-    /// Remote procedures that can be called from the account server to perform a game 
-    /// server action. Methods in this class are automatically registered with the RPC
-    /// server on server load.
-    /// </summary>
     public class Remote : IRpcServerTarget
     {
-        /// <summary>
-        /// Called to ensure that the connection to the RPC server has been successful,
-        /// and that any wire security placed on the connection has been initialized and
-        /// is working correctly.
-        /// </summary>
-        /// <param name="agentName">Name of the client connecting</param>
         public void Connected(string agentName)
         {
             LogEvents.For<Remote>(LogEvents.RpcConnected).Information(
                 "RPC client {Agent} connected", agentName);
         }
 
-        /// <summary>
-        /// Transfers authentication information directly from the account server on
-        /// successful client login. The game server will generate a new access token,
-        /// and return the token to the account server for client redirection. 
-        /// </summary>
-        /// <param name="args">Authentication details from the account server.</param>
-        /// <returns>Returns an access token for the game server.</returns>
         public ulong TransferAuth(TransferAuthArgs args)
         {
-            // Generate the access token. The client receives it as two halves and reads a
-            // zero low half as a rejection (5619: from client binary), so avoid that.
+            // The client receives the token as two halves and reads a zero low half as a
+            // rejection, so avoid that.
             ulong token;
             do token = BitConverter.ToUInt64(RandomNumberGenerator.GetBytes(8));
             while ((uint)token == 0);
 
-            // Store in the login cache with an absolute timeout
             var timeoutPolicy = new CacheItemPolicy();
             timeoutPolicy.AbsoluteExpiration = DateTimeOffset.Now.AddSeconds(10);
             Kernel.Logins.Set(token.ToString(), args, timeoutPolicy) ;

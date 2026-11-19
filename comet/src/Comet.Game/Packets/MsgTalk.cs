@@ -6,13 +6,6 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    /// <remarks>Packet Type 1004</remarks>
-    /// <summary>
-    /// Message defining a chat message from one player to the other, or from the system 
-    /// to a player. Used for all chat systems in the game, including messages outside of
-    /// the game world state, such as during character creation or to tell the client to
-    /// continue logging in after connect.
-    /// </summary>
     public sealed class MsgTalk : MsgBase<Client>
     {
         public Color Color { get; set; }
@@ -26,14 +19,6 @@ namespace Comet.Game.Packets
         public string Suffix { get; set; }
         public string Message { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgTalk"/> using the recipient's 
-        /// character ID, a destination channel, and text to display. By default, sends
-        /// from "SYSTEM" to "ALLUSERS".
-        /// </summary>
-        /// <param name="characterID">Character's identifier</param>
-        /// <param name="channel">Destination channel to send the text on</param>
-        /// <param name="text">Text to be displayed in the client</param>
         public MsgTalk(uint characterID, TalkChannel channel, string text)
         {
             this.Type = PacketType.MsgTalk;
@@ -47,15 +32,6 @@ namespace Comet.Game.Packets
             this.Message = text;
         }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgTalk"/> using the recipient's 
-        /// character ID, a destination channel, a text color, and text to display. By 
-        /// default, sends from "SYSTEM" to "ALLUSERS".
-        /// </summary>
-        /// <param name="characterID">Character's identifier</param>
-        /// <param name="channel">Destination channel to send the text on</param>
-        /// <param name="color">Color text is to be displayed in</param>
-        /// <param name="text">Text to be displayed in the client</param>
         public MsgTalk(uint characterID, TalkChannel channel, Color color, string text)
         {
             this.Type = PacketType.MsgTalk;
@@ -69,17 +45,6 @@ namespace Comet.Game.Packets
             this.Message = text;
         }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgTalk"/> using the recipient's 
-        /// character ID, a destination channel, a text color, sender and recipient's name,
-        /// and text to display.
-        /// </summary>
-        /// <param name="characterID">Character's identifier</param>
-        /// <param name="channel">Destination channel to send the text on</param>
-        /// <param name="color">Color text is to be displayed in</param>
-        /// <param name="recipient">Name the message displays it is to</param>
-        /// <param name="sender">Name the message displays it is from</param>
-        /// <param name="text">Text to be displayed in the client</param>
         public MsgTalk(uint characterID, TalkChannel channel, Color color, 
             string recipient, string sender, string text)
         {
@@ -94,16 +59,6 @@ namespace Comet.Game.Packets
             this.Message = text;
         }
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
-        /// <remarks>
-        /// 5619: from client binary (same layout as 5187: color at 4, channel at 8, style
-        /// at 10, three uints at 12, string list at 24) and the reference (channels).
-        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -126,12 +81,6 @@ namespace Comet.Game.Packets
             }
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
@@ -163,11 +112,6 @@ namespace Comet.Game.Packets
         public readonly static MsgTalk RegisterNameTaken = new MsgTalk(0, TalkChannel.Register, "Character name taken");
         public readonly static MsgTalk RegisterTryAgain = new MsgTalk(0, TalkChannel.Register, "Error, please try later");
         
-        /// <summary>
-        /// Enumeration for defining the channel text is printed to. Can also print to
-        /// separate states of the client such as character registration, and can be
-        /// used to change the state of the client or deny a login.
-        /// </summary>
         public enum TalkChannel : ushort
         {
             Talk = 2000,
@@ -203,11 +147,6 @@ namespace Comet.Game.Packets
             Monster = 2600
         }
 
-        /// <summary>
-        /// Enumeration type for controlling how text is stylized in the client's chat
-        /// area. By default, text appears and fades overtime. This can be overridden
-        /// with multiple styles, hard-coded into the client.
-        /// </summary>
         [Flags]
         public enum TalkStyle : ushort 
         {

@@ -4,27 +4,8 @@ namespace Comet.Network.Security
     using System.Numerics;
     using System.Security.Cryptography;
 
-    /// <summary>
-    /// Client side of the 5619 SRP-6 login, for test clients and bots. Computes the
-    /// client's public key A and proof M1 from the password and the server's challenge,
-    /// the same way the game client does (see <see cref="Srp6"/> for the formulas).
-    /// </summary>
     public static class Srp6Client
     {
-        /// <summary>
-        /// Computes the client's answer to a login challenge.
-        /// </summary>
-        /// <param name="username">Account name bytes as sent in MsgAccountSRP6</param>
-        /// <param name="password">Password bytes as typed in the client</param>
-        /// <param name="salt">Account salt from the challenge, little-endian</param>
-        /// <param name="serverPublicKey">B from the challenge, little-endian</param>
-        /// <param name="privateKey">Private key a (little-endian), random if null</param>
-        /// <returns>A and M1 for MsgLoginProofC, and the session key K.</returns>
-        /// <remarks>
-        /// The game client hashes 32 bytes of the shared secret even when it's shorter,
-        /// reading past its end, so about 1 real login in 256 fails. This pads with zeros
-        /// like the server, so test logins never fail that way.
-        /// </remarks>
         public static (byte[] PublicKey, byte[] Proof, byte[] SessionKey) ComputeProof(
             byte[] username, byte[] password, byte[] salt, byte[] serverPublicKey,
             byte[] privateKey = null)

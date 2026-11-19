@@ -8,15 +8,10 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Xunit;
 
-    /// <summary>
-    /// The test servers trace every connection, so a login can be followed packet by
-    /// packet in both servers' logs.
-    /// </summary>
     public class PacketTraceTests : IntegrationTest
     {
         public PacketTraceTests(ServerFixture servers) : base(servers) { }
 
-        /// <summary>The traced packets of one connection, in order.</summary>
         private List<string> Trace(string server, long connId) => this.Servers.Events(server)
             .Where(e => e.TryGetProperty("event", out var ev) && ev.GetString().StartsWith("packet.") &&
                         e.TryGetProperty("hex", out _) &&

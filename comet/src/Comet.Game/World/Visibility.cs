@@ -4,17 +4,8 @@ namespace Comet.Game.World
     using Comet.Game.Packets;
     using Comet.Game.States;
 
-    /// <summary>
-    /// Shows players to each other when one of them appears on or leaves a map: everyone
-    /// within <see cref="GameMap{T}.ViewRange"/> gets the other's <see cref="MsgPlayer"/>,
-    /// or a remove-entity action when they leave.
-    /// </summary>
     public static class Visibility
     {
-        /// <summary>
-        /// Puts the client's character on their map and shows them and the players
-        /// around them to each other. Does nothing if they are already on the map.
-        /// </summary>
         public static async Task EnterAsync(Client client)
         {
             var map = client.Map;
@@ -33,10 +24,6 @@ namespace Comet.Game.World
             }
         }
 
-        /// <summary>
-        /// Takes the client's character off their map and removes them from the screens
-        /// of the players around them.
-        /// </summary>
         public static void Leave(Client client)
         {
             var map = client.Map;

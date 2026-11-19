@@ -8,23 +8,13 @@ namespace Comet.Game.World
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    /// <summary>
-    /// Walking and jumping: checks each move against the map, passes it on to the
-    /// players who can see it, and updates who sees whom. A move the server refuses puts
-    /// the player back where the server has them.
-    /// </summary>
     public static class Movement
     {
-        /// <summary>Farthest jump, in cells on either axis (5619: from reference).</summary>
         public const int MaxJumpDistance = 16;
 
-        /// <summary>
-        /// The cell offset of one step in each direction, 0 to 7 (5619: from reference).
-        /// </summary>
         public static readonly int[] DeltaX = { 0, -1, -1, -1, 0, 1, 1, 1 };
         public static readonly int[] DeltaY = { 1, 1, 0, -1, -1, -1, 0, 1 };
 
-        /// <summary>Walks the client's character one cell in the step's direction.</summary>
         public static async Task WalkAsync(Client client, MsgWalk step)
         {
             if (!TryGetPosition(client, out var map, out var x, out var y))
@@ -44,11 +34,6 @@ namespace Comet.Game.World
                 "{Name} walked to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
         }
 
-        /// <summary>
-        /// Jumps the client's character to the cell in the action: X in the low half of
-        /// Command and Y in the high half (5619: seen in VM; the reference folds it the
-        /// same way).
-        /// </summary>
         public static async Task JumpAsync(Client client, MsgAction jump)
         {
             if (!TryGetPosition(client, out var map, out var x, out var y))
@@ -71,10 +56,6 @@ namespace Comet.Game.World
                 "{Name} jumped to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
         }
 
-        /// <summary>
-        /// The direction (0 to 7) from one cell toward another, or the given one if they
-        /// are the same cell.
-        /// </summary>
         public static byte DirectionTo(int x, int y, int toX, int toY, byte current)
         {
             int dx = Math.Sign(toX - x), dy = Math.Sign(toY - y);
@@ -84,7 +65,6 @@ namespace Comet.Game.World
             return current;
         }
 
-        /// <summary>Sends a packet to everyone who can see the client, but not the client.</summary>
         public static async Task SendToViewAsync(Client client, IPacket packet)
         {
             if (!TryGetPosition(client, out var map, out var x, out var y))
@@ -104,12 +84,6 @@ namespace Comet.Game.World
             !map.Grid.Contains(x, y) ? "outside_map" :
             !map.Grid.IsWalkable(x, y) ? "blocked_cell" : null;
 
-        /// <summary>
-        /// Moves the character and tells everyone who needs to know: the move goes to the
-        /// mover and to those who could see where it started; players who come into view
-        /// and the mover are shown to each other; players who drop out of view and the
-        /// mover are removed from each other's screens.
-        /// </summary>
         private static async Task MoveAsync(Client client, GameMap<Client> map,
             ushort fromX, ushort fromY, ushort toX, ushort toY, IPacket move)
         {
@@ -144,10 +118,6 @@ namespace Comet.Game.World
             }
         }
 
-        /// <summary>
-        /// Refuses a move: logs why and puts the player back at the cell the server has
-        /// for them, with a teleport to it (5619: from reference, which does the same).
-        /// </summary>
         private static async Task RejectAsync(Client client, GameMap<Client> map,
             ushort x, ushort y, int toX, int toY, string kind, string reason)
         {

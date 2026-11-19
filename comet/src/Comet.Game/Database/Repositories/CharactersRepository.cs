@@ -41,11 +41,6 @@ namespace Comet.Game.Database.Repositories
             await db.SaveChangesAsync();
         }
 
-        /// <remarks>
-        /// This method could be broken up into multiple stored procedures to save chunks of
-        /// character data with different throttles; however, Comet is an introductory server,
-        /// so it'll be kept to one method for simplicity. 
-        /// </remarks>
         public static async Task SaveAsync(DbCharacter character)
         {
             using var db = new ServerDbContext();
@@ -53,13 +48,8 @@ namespace Comet.Game.Database.Repositories
             await db.SaveChangesAsync();
         }
 
-        /// <summary>True if saving failed because the character name is already taken.</summary>
         public static bool IsDuplicateName(DbUpdateException e) => IsDuplicateKey(e, "Name_UNIQUE");
 
-        /// <summary>
-        /// True if saving failed because the account already has a character (one
-        /// character per account, enforced by the AccountID_UNIQUE key).
-        /// </summary>
         public static bool IsDuplicateAccount(DbUpdateException e) => IsDuplicateKey(e, "AccountID_UNIQUE");
 
         private static bool IsDuplicateKey(DbUpdateException e, string key) =>

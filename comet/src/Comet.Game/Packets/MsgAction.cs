@@ -8,12 +8,6 @@ namespace Comet.Game.Packets
     using Comet.Game.World;
     using Comet.Network.Packets;
 
-    /// <remarks>Packet Type 1010</remarks>
-    /// <summary>
-    /// Message containing a general action being performed by the client. Commonly used
-    /// as a request-response protocol for question and answer like exchanges. For example,
-    /// walk requests are responded to with an answer as to if the step is legal or not.
-    /// </summary>
     public sealed class MsgAction : MsgBase<Client>
     {
         public uint CharacterID { get; set; }
@@ -28,14 +22,6 @@ namespace Comet.Game.Packets
         public uint Color { get; set; }
         public ushort Extra { get; set; }
 
-        /// <summary>
-        /// Builds the action that puts a player at a cell, also used to put them back
-        /// when a move is refused.
-        /// </summary>
-        /// <remarks>
-        /// 5619: from reference (action 86 with the map in Command and the cell at X and
-        /// Y, the layout of the LoginSpawn reply, which is confirmed in VM).
-        /// </remarks>
         public static MsgAction Teleport(uint identity, uint mapID, ushort x, ushort y, byte direction) =>
             new MsgAction
             {
@@ -50,10 +36,6 @@ namespace Comet.Game.Packets
                 Y = y
             };
 
-        /// <summary>
-        /// Builds the action that takes an entity off the client's screen.
-        /// </summary>
-        /// <remarks>5619: from reference (action 135 with the entity's ID at 4).</remarks>
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -63,13 +45,8 @@ namespace Comet.Game.Packets
             Action = ActionType.MapRemoveSpawn
         };
 
-        /// <remarks>
-        /// 5619: confirmed in VM (38 bytes: the 5187 layout plus a ushort at 36). While
-        /// logging in, the client sends actions 74 to 78, 96 and 97, each after the
-        /// server's reply to the one before, then 251 (LoginComplete) with an ID of 0
-        /// (seen in VM; 251 is LoginComplete in the reference too). 5187's LoginComplete,
-        /// 132, isn't sent.
-        /// </remarks>
+        // While logging in, the client sends actions 74 to 78, 96 and 97, each after the reply to
+        // the one before, then 251 (LoginComplete) with ID 0, which isn't answered.
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -129,7 +106,6 @@ namespace Comet.Game.Packets
                 this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
         }
 
-        /// <summary>The actions the server handles, and how.</summary>
         private static readonly Dictionary<ActionType, Func<MsgAction, Client, Task>> Handlers =
             new Dictionary<ActionType, Func<MsgAction, Client, Task>>
             {
@@ -142,14 +118,12 @@ namespace Comet.Game.Packets
                     await client.SendAsync(msg);
                 },
 
-                // The last login step: the client has loaded the map. Not echoed
-                // (5619: from reference).
+                // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
                 // Turning and emotes go to everyone in view, not back to the player
-                // (5619: from reference)
                 [ActionType.CharacterDirection] = (msg, client) =>
                 {
                     if (client.Character == null)
@@ -169,7 +143,6 @@ namespace Comet.Game.Packets
                 },
             };
 
-        /// <summary>True if the server handles this action (others are only echoed).</summary>
         public static bool Handles(ActionType action) => Handlers.ContainsKey(action);
 
         public enum ActionType

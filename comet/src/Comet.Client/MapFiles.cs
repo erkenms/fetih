@@ -5,14 +5,8 @@ namespace Comet.Client
     using System.IO;
     using System.Text;
 
-    /// <summary>
-    /// Writes small client map files (GameMap.dat and DMap) for tests, in the 5619
-    /// client's layout, so the server can run without a copy of the real client.
-    /// </summary>
     public static class MapFiles
     {
-        /// <summary>Builds a GameMap.dat listing maps and their file paths.</summary>
-        /// <param name="maps">Map ID and path pairs, e.g. (1010, "map/map/newbie.7z")</param>
         public static byte[] GameMapDat(params (uint Id, string Path)[] maps)
         {
             using var stream = new MemoryStream();
@@ -30,14 +24,6 @@ namespace Comet.Client
             return stream.ToArray();
         }
 
-        /// <summary>Builds a DMap file.</summary>
-        /// <param name="width">Map width in cells</param>
-        /// <param name="height">Map height in cells</param>
-        /// <param name="walkable">Which cells can be walked on (all if null)</param>
-        /// <param name="elevation">Each cell's elevation (0 if null)</param>
-        /// <param name="portals">Portal cells and their numbers</param>
-        /// <param name="terrain">Terrain objects: a scene file path and the cell it's placed at</param>
-        /// <param name="covers">Number of decoration objects to put before the terrain objects</param>
         public static byte[] DMap(int width, int height,
             Func<int, int, bool> walkable = null,
             Func<int, int, short> elevation = null,
@@ -97,13 +83,6 @@ namespace Comet.Client
             return stream.ToArray();
         }
 
-        /// <summary>Builds a scene file with one part.</summary>
-        /// <param name="width">Part width in cells</param>
-        /// <param name="height">Part height in cells</param>
-        /// <param name="offsetX">Cell offset X of the part</param>
-        /// <param name="offsetY">Cell offset Y of the part</param>
-        /// <param name="walkable">Which of the part's cells can be walked on (all if null)</param>
-        /// <param name="altitude">Each cell's altitude (0 if null)</param>
         public static byte[] Scene(int width, int height, int offsetX = 0, int offsetY = 0,
             Func<int, int, bool> walkable = null, Func<int, int, int> altitude = null)
         {

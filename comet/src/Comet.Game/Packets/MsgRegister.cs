@@ -13,12 +13,6 @@ namespace Comet.Game.Packets
     using Microsoft.EntityFrameworkCore;
     using static Comet.Game.Packets.MsgTalk;
 
-    /// <remarks>Packet Type 1001</remarks>
-    /// <summary>
-    /// Message containing character creation details, such as the new character's name,
-    /// body size, and profession. The character name should be verified, and may be
-    /// rejected by the server if a character by that name already exists.
-    /// </summary>
     public sealed class MsgRegister : MsgBase<Client>
     {
         public string CharacterName { get; set; }
@@ -31,16 +25,6 @@ namespace Comet.Game.Packets
             10, 11, 13, 14, 15, 24, 30, 35, 37, 38, 39, 40
         };
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
-        /// <remarks>
-        /// 5619: confirmed in VM (124 bytes: zero at 4, name at 24, body at 72, class at
-        /// 74, the MsgConnect token at 76, MAC address text at 80).
-        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -60,16 +44,8 @@ namespace Comet.Game.Packets
             this.MacAddress = reader.ReadString(40);
         }
 
-        /// <summary>
-        /// Process can be invoked by a packet after decode has been called to structure
-        /// packet fields and properties. For the server implementations, this is called
-        /// in the packet handler after the message has been dequeued from the server's
-        /// <see cref="PacketProcessor"/>.
-        /// </summary>
-        /// <param name="client">Client requesting packet processing</param>
         public override async Task ProcessAsync(Client client)
         {
-            // Validate that the player has access to character creation
             // A newer login for the same account replaces this connection; only the
             // connection that currently holds the account may create its character.
             if (client.Creation == null || this.Token != client.Creation.Token ||
@@ -84,7 +60,6 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Check the name's characters, then whether it's free
             if (CharacterRules.CheckName(this.CharacterName) is string nameError)
             {
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
@@ -103,7 +78,6 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Validate character creation input
             if (!Enum.IsDefined(typeof(BodyType), this.Mesh) ||
                 !Enum.IsDefined(typeof(BaseClassType), this.Class))
             {
@@ -115,7 +89,6 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Create the character
             var character = new DbCharacter(client.Creation.AccountID, this.CharacterName);
             character.CurrentClass = (byte)this.Class;
             character.Mesh = this.Mesh;
@@ -136,7 +109,6 @@ namespace Comet.Game.Packets
             character.ManaPoints = (ushort)(character.Spirit * 5);
             character.Registered = DateTime.UtcNow;
 
-            // Generate a random look for the character
             character.Avatar = (ushort)(character.Mesh < 1005 
                 ? await Kernel.NextAsync(1, 49) 
                 : await Kernel.NextAsync(201, 249));
@@ -146,7 +118,6 @@ namespace Comet.Game.Packets
 
             try 
             { 
-                // Save the character and continue with login
                 await CharactersRepository.CreateAsync(character); 
                 Kernel.Registration.TryRemove(client.Creation.Token, out _);
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreated).Information(

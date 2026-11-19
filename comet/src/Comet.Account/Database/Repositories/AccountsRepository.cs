@@ -10,19 +10,8 @@ namespace Comet.Account.Database.Repositories
     using Microsoft.EntityFrameworkCore;
     using MySqlConnector;
 
-    /// <summary>
-    /// Repository for defining data access layer (DAL) logic for the account table. Allows
-    /// the server to fetch account details for player authentication. Accounts are fetched
-    /// on demand for each player authentication request.
-    /// </summary>
     public static class AccountsRepository
     {
-        /// <summary>
-        /// Fetches an account record from the database using the player's username as a
-        /// unique key for selecting a single record.
-        /// </summary>
-        /// <param name="username">Username to pull account info for</param>
-        /// <returns>Returns account details from the database.</returns>
         public static async Task<DbAccount> FindAsync(string username)
         {
             using var db = new ServerDbContext();
@@ -32,16 +21,6 @@ namespace Comet.Account.Database.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        /// <summary>
-        /// Creates an account with an email address as its name. The name is stored in
-        /// lower case; logins match it regardless of case.
-        /// </summary>
-        /// <param name="username">Email address used as the account name</param>
-        /// <param name="password">Password, as it will be typed in the client</param>
-        /// <returns>
-        /// The new account, or null and the reason it wasn't created
-        /// (<c>invalid_username</c>, <c>invalid_password</c>, <c>username_taken</c>).
-        /// </returns>
         public static async Task<(DbAccount Account, string Error)> CreateAsync(
             string username, string password)
         {
@@ -85,15 +64,6 @@ namespace Comet.Account.Database.Repositories
             return (null, error);
         }
 
-        /// <summary>
-        /// Sets an account's password for the SRP6 login: stores a new random salt and the
-        /// verifier computed from the password. The password itself isn't stored.
-        /// </summary>
-        /// <param name="username">Account name (email address)</param>
-        /// <param name="password">New password, as it will be typed in the client</param>
-        /// <returns>
-        /// Null on success, or <c>unknown_account</c> or <c>invalid_password</c>.
-        /// </returns>
         public static async Task<string> SetPasswordAsync(string username, string password)
         {
             if (AccountRules.CheckPassword(password) is string error)
@@ -109,9 +79,6 @@ namespace Comet.Account.Database.Repositories
             return null;
         }
 
-        /// <summary>Stores a new salt and verifier for a password on the account.</summary>
-        /// <param name="account">Account to update</param>
-        /// <param name="password">New password, as it will be typed in the client</param>
         public static void SetPassword(DbAccount account, string password)
         {
             var salt = Srp6.CreateSalt();
@@ -120,11 +87,6 @@ namespace Comet.Account.Database.Repositories
                 Srp6.ComputeVerifier(salt, Encoding.Latin1.GetBytes(password)));
         }
 
-        /// <summary>
-        /// Starts an SRP6 login for the account, or returns null if the account has no
-        /// password set (no SRP6 salt and verifier).
-        /// </summary>
-        /// <param name="account">Account logging in</param>
         public static Srp6 BeginLogin(DbAccount account)
         {
             if (string.IsNullOrEmpty(account.SrpSalt) || string.IsNullOrEmpty(account.SrpVerifier))
@@ -134,7 +96,6 @@ namespace Comet.Account.Database.Repositories
                 Convert.FromHexString(account.SrpVerifier));
         }
 
-        /// <summary>True if saving failed because a unique key already holds the value.</summary>
         internal static bool IsDuplicateKey(DbUpdateException e) =>
             e.InnerException is MySqlException { ErrorCode: MySqlErrorCode.DuplicateKeyEntry };
     } 

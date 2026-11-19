@@ -4,11 +4,6 @@ namespace Comet.Account.Database.Tests
     using Xunit;
     using Comet.Account.Database;
 
-    /// <summary>
-    /// Validates that the server is configurable using the default configuration file.
-    /// The configuration file can be in any format, but must be readable without 
-    /// errors and overrideable using command-line arguments. 
-    /// </summary>
     public class ConfigurationTests
     {
         [Theory]

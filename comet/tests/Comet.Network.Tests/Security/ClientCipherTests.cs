@@ -4,10 +4,6 @@ namespace Comet.Network.Security.Tests
     using System.Text;
     using Xunit;
 
-    /// <summary>
-    /// The test client's halves of the account cipher and SRP-6 login must match the
-    /// server's, which are checked against the real client elsewhere.
-    /// </summary>
     public class ClientCipherTests
     {
         [Fact]

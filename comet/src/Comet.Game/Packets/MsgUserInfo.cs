@@ -5,12 +5,6 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    /// <remarks>Packet Type 1006</remarks>
-    /// <summary>
-    /// Message defining character information, used to initialize the client interface
-    /// and game state. Character information is loaded from the game database on login
-    /// if a character exists.
-    /// </summary>
     public sealed class MsgUserInfo : MsgBase<Client>
     {
         public uint CharacterID { get; set; }
@@ -37,11 +31,6 @@ namespace Comet.Game.Packets
         public string CharacterName { get; set; }
         public string SpouseName { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgUserInfo"/> using data fetched
-        /// from the database and stored in <see cref="DbCharacter"/>.
-        /// </summary>
-        /// <param name="character">Character info from the database</param>
         public MsgUserInfo(DbCharacter character)
         {
             base.Type = PacketType.MsgUserInfo;
@@ -70,19 +59,7 @@ namespace Comet.Game.Packets
             this.SpouseName = "None";
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
-        /// <remarks>
-        /// 5619: confirmed in VM, except the fields marked "guess" (every offset below is
-        /// one the client reads, and the string list at 110; the reference gave what the
-        /// fields mean). Guessed fields are written where an older or newer layout
-        /// suggests; new characters have zero in all of them, so the VM test can't show
-        /// whether they're right.
-        /// </remarks>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
+        // Fields marked "guess" are unconfirmed: new characters have zero in all of them.
         public override byte[] Encode()
         {
             var writer = new PacketWriter();

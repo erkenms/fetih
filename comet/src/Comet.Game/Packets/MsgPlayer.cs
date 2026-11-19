@@ -4,12 +4,6 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    /// <remarks>Packet Type 10014</remarks>
-    /// <summary>
-    /// Message that shows another player (and later NPCs and monsters) to the client:
-    /// their look, position and name. Sent when someone comes into view; taking them out
-    /// of view is a <see cref="MsgAction"/> with <see cref="MsgAction.ActionType.MapRemoveSpawn"/>.
-    /// </summary>
     public sealed class MsgPlayer : MsgBase<Client>
     {
         public uint Mesh { get; set; }
@@ -24,11 +18,6 @@ namespace Comet.Game.Packets
         public ushort CurrentClass { get; set; }
         public string Name { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgPlayer"/> showing a character as
-        /// they stand now.
-        /// </summary>
-        /// <param name="character">Character to show</param>
         public MsgPlayer(Character character)
         {
             base.Type = PacketType.MsgPlayer;
@@ -45,20 +34,7 @@ namespace Comet.Game.Packets
             this.Name = character.Name;
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
-        /// <remarks>
-        /// 5619: from client binary (every offset below is one the client's MsgPlayer
-        /// handler reads; strings from 226), with field meanings from the reference.
-        /// The reference writes three fields the 5619 client doesn't have: a ushort before
-        /// X, a sixth uint before the colors, and a country code before the last uint.
-        /// Fields other than look, position, level and name are zero until the features
-        /// behind them exist (guilds, status effects, equipment, ...).
-        /// </remarks>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
+        // Fields other than look, position, level and name stay zero until their features exist.
         public override byte[] Encode()
         {
             var writer = new PacketWriter();

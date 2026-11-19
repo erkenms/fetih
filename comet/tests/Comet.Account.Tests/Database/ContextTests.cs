@@ -4,10 +4,6 @@ namespace Comet.Account.Database.Tests
     using Xunit;
     using Comet.Account.Database;
 
-    /// <summary>
-    /// Validates that the server can connect to a MySQL database using the EF Core MySQL
-    /// extension and connector. Validates context configuration and model building. 
-    /// </summary>
     public class ContextTests
     {
         [Theory]

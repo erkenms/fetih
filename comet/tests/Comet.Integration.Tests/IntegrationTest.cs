@@ -4,10 +4,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// Base class for integration tests: gives each test the shared servers and helpers
-    /// that take a player to a given step of the login.
-    /// </summary>
     [Collection(ServerCollection.Name)]
     public abstract class IntegrationTest
     {
@@ -30,10 +26,6 @@ namespace Comet.Integration.Tests
 
         protected IntegrationTest(ServerFixture servers) => this.Servers = servers;
 
-        /// <summary>
-        /// Creates an account and logs it in up to the character creation screen. The
-        /// game client is left connected, waiting for MsgRegister.
-        /// </summary>
         protected async Task<(GameClient Game, ulong Token, string Email)> AtCharacterCreationAsync()
         {
             var email = await this.Servers.CreateAccountAsync(Password);
@@ -46,10 +38,6 @@ namespace Comet.Integration.Tests
             return (game, login.Token, email);
         }
 
-        /// <summary>
-        /// Creates an account with a character, saves it at a position, and logs in
-        /// again so the character enters there.
-        /// </summary>
         protected async Task<(Player Player, string Email)> PlayingAtAsync(uint mapID, int x, int y)
         {
             var (first, email) = await this.PlayingAsync();
@@ -64,7 +52,6 @@ namespace Comet.Integration.Tests
             return (await this.Servers.PlayAsync(email, Password), email);
         }
 
-        /// <summary>Creates an account with a character standing on the map.</summary>
         protected async Task<(Player Player, string Email)> PlayingAsync(
             ushort mesh = 1003, ushort profession = 10)
         {

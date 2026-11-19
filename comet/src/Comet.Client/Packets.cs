@@ -4,9 +4,6 @@ namespace Comet.Client
     using System.Collections.Generic;
     using System.Text;
 
-    /// <summary>
-    /// Packet types the test client sends or reads (patch 5619).
-    /// </summary>
     public static class PacketTypes
     {
         public const ushort MsgRegister = 1001;
@@ -24,14 +21,12 @@ namespace Comet.Client
         public const ushort MsgPlayer = 10014;
     }
 
-    /// <summary>Talk channels used during login and character creation.</summary>
     public static class TalkChannels
     {
         public const ushort Register = 2100;
         public const ushort Login = 2101;
     }
 
-    /// <summary>A chat or system message (MsgTalk).</summary>
     public sealed record TalkMessage(ushort Channel, string Sender, string Recipient, string Text)
     {
         public static TalkMessage Parse(byte[] packet)
@@ -42,7 +37,6 @@ namespace Comet.Client
         }
     }
 
-    /// <summary>The player's own character (MsgUserInfo), as the client reads it.</summary>
     public sealed record UserInfo(
         uint Id, uint Mesh, ushort Hairstyle, uint Silver, ushort Strength, ushort Agility,
         ushort Vitality, ushort Spirit, ushort HealthPoints, byte Level, byte Class, string Name)
@@ -56,7 +50,6 @@ namespace Comet.Client
             Packet.ReadStrings(packet, 110)[0]);
     }
 
-    /// <summary>Another player coming into view (MsgPlayer), as the 5619 client reads it.</summary>
     public sealed record PlayerSpawn(
         uint Id, uint Mesh, ushort X, ushort Y, ushort Hairstyle, byte Direction,
         uint Stance, ushort Level, ushort Class, string Name)
@@ -69,7 +62,6 @@ namespace Comet.Client
             Packet.ReadStrings(packet, 226)[0]);
     }
 
-    /// <summary>A general action (MsgAction), 38 bytes in 5619.</summary>
     public sealed record ActionMessage(
         uint CharacterId, uint Command, ushort Action, ushort Direction, ushort X, ushort Y)
     {
@@ -100,10 +92,6 @@ namespace Comet.Client
             return packet;
         }
 
-        /// <summary>
-        /// Builds a jump the way the 5619 client does: the target folded into Command
-        /// (X low, Y high), the current cell at X and Y, and -1 at 32 (seen in VM).
-        /// </summary>
         public static byte[] BuildJump(uint characterId, int fromX, int fromY, int toX, int toY)
         {
             var packet = Build(characterId, Jump, (uint)(toX | (toY << 16)), x: fromX, y: fromY);
@@ -111,10 +99,6 @@ namespace Comet.Client
             return packet;
         }
 
-        /// <summary>
-        /// Builds LoginComplete the way the 5619 client sends it: ID 0, and 1 where the
-        /// timestamp usually is (seen in VM).
-        /// </summary>
         public static byte[] BuildLoginComplete()
         {
             var packet = Packet.Create(PacketTypes.MsgAction, 38);
@@ -124,17 +108,12 @@ namespace Comet.Client
         }
     }
 
-    /// <summary>One step (MsgWalk), 24 bytes in 5619.</summary>
     public sealed record WalkMessage(uint Direction, uint CharacterId, uint Mode)
     {
         public static WalkMessage Parse(byte[] packet) => new WalkMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12));
 
-        /// <summary>
-        /// Builds a step the way the 5619 client does: some number whose remainder by 8
-        /// is the direction, mode 1, map 0 (seen in VM).
-        /// </summary>
         public static byte[] Build(uint characterId, int direction)
         {
             var packet = Packet.Create(PacketTypes.MsgWalk, 24);
@@ -146,10 +125,8 @@ namespace Comet.Client
         }
     }
 
-    /// <summary>Helpers for building and reading packets.</summary>
     public static class Packet
     {
-        /// <summary>Creates a zeroed packet with its length and type set.</summary>
         public static byte[] Create(ushort type, int length)
         {
             var packet = new byte[length];
@@ -158,7 +135,6 @@ namespace Comet.Client
             return packet;
         }
 
-        /// <summary>Reads TQ's string list: a count, then length-prefixed strings.</summary>
         public static List<string> ReadStrings(byte[] packet, int offset)
         {
             var strings = new List<string>();
@@ -172,7 +148,6 @@ namespace Comet.Client
             return strings;
         }
 
-        /// <summary>Writes text into a fixed-size, zero-padded field.</summary>
         public static void WriteText(byte[] packet, int offset, byte[] text, int size)
         {
             if (text.Length > size)
@@ -180,7 +155,6 @@ namespace Comet.Client
             text.CopyTo(packet, offset);
         }
 
-        /// <summary>Reads a zero-terminated text field.</summary>
         public static string ReadText(byte[] packet, int offset, int size)
         {
             int end = Array.IndexOf(packet, (byte)0, offset, size);

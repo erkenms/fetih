@@ -6,11 +6,6 @@ namespace Comet.Network.Security.Tests
     using Org.BouncyCastle.Crypto.Parameters;
     using Xunit;
 
-    /// <summary>
-    /// The 5619 game client encrypts traffic with OpenSSL's CAST5 in CFB64 mode. The
-    /// expected ciphertexts below were produced by OpenSSL itself:
-    /// <c>openssl enc -provider legacy -cast5-cfb -K (key) -iv 0000000000000000</c>.
-    /// </summary>
     public class Cast5CipherTests
     {
         const string Plaintext = "Hello TQ client, this is 37 bytes...!";

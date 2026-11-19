@@ -5,43 +5,26 @@ namespace Comet.Game.World
     using System.Collections.Generic;
     using System.IO;
 
-    /// <summary>One cell of a scene part: whether it can be walked on, and its height.</summary>
     public readonly record struct SceneCell(bool Walkable, short Elevation);
 
-    /// <summary>
-    /// A rectangle of cells from a scene file. Its cell (i, j) lands on the map at
-    /// (objectX + OffsetX - i, objectY + OffsetY - j): scene parts are laid out backwards
-    /// from the terrain object's position.
-    /// </summary>
+    // Cell (i, j) lands at (objectX + OffsetX - i, objectY + OffsetY - j): scenes are laid out
+    // backwards from the terrain object's position.
     public sealed record ScenePart(int Width, int Height, int OffsetX, int OffsetY, SceneCell[] Cells)
     {
         public SceneCell this[int i, int j] => this.Cells[j * this.Width + i];
     }
 
-    /// <summary>
-    /// Reads the client's map/Scene/*.scene files. Terrain objects in a DMap place these
-    /// on the map; their cells replace the map's own cells there. Bridges, platforms and
-    /// stairs are scenes, so without them much of a map looks blocked.
-    /// </summary>
-    /// <remarks>
-    /// <para>5619: from client data (all 36 scene files used by the 5619 maps parse to
-    /// their exact size, and the placement makes every cell of 88 jumps seen in VM on map
-    /// 1010 walkable). Layout, little-endian:</para>
-    /// <code>
-    /// uint32 part count, then per part:
-    ///   char[256] animation, char[64] title,
-    ///   int32 pixel offset x, y, animation interval,
-    ///   int32 width, height, thickness, cell offset x, y, height,
-    ///   width * height cells of int32 access, terrain, altitude (row by row)
-    /// </code>
-    /// </remarks>
+    // map/Scene/*.scene, little-endian:
+    // uint32 part count, then per part:
+    //   char[256] animation, char[64] title,
+    //   int32 pixel offset x, y, animation interval,
+    //   int32 width, height, thickness, cell offset x, y, height,
+    //   width * height cells of int32 access, terrain, altitude (row by row)
     public static class SceneFile
     {
         private const int PartHeaderSize = 256 + 64 + 9 * 4;
         private const int CellSize = 12;
 
-        /// <summary>Parses a scene file.</summary>
-        /// <exception cref="InvalidDataException">The file is cut short or malformed.</exception>
         public static List<ScenePart> Parse(ReadOnlySpan<byte> data)
         {
             if (data.Length < 4)

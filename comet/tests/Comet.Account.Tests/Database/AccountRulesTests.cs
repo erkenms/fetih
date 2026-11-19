@@ -3,10 +3,6 @@ namespace Comet.Account.Database.Tests
     using Comet.Account.Database.Repositories;
     using Xunit;
 
-    /// <summary>
-    /// Account names are email addresses (the 5619 login box takes them) and passwords
-    /// are 6 to 16 printable characters (the client's password box limit).
-    /// </summary>
     public class AccountRulesTests
     {
         [Theory]

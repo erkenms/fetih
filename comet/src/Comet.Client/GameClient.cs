@@ -9,20 +9,12 @@ namespace Comet.Client
     using Org.BouncyCastle.Math;
     using Org.BouncyCastle.Utilities.Encoders;
 
-    /// <summary>The game server's answer to MsgConnect.</summary>
-    /// <param name="Message">MsgTalk text: ANSWER_OK, NEW_ROLE, or why it was refused</param>
-    /// <param name="User">The character, when the login went straight into the game</param>
     public sealed record GameLoginResult(string Message, UserInfo User)
     {
         public bool NeedsCharacter => this.Message == "NEW_ROLE";
         public bool InGame => this.User != null;
     }
 
-    /// <summary>
-    /// Test client for the game server: does the Diffie-Hellman key exchange and switches
-    /// to the agreed CAST5 key, then logs in, creates characters and enters the map the
-    /// way the 5619 client does.
-    /// </summary>
     public sealed class GameClient : Connection
     {
         private volatile bool HandshakeReceived;
@@ -32,10 +24,6 @@ namespace Comet.Client
         {
         }
 
-        /// <summary>
-        /// Connects and completes the key exchange. Afterwards both directions use the
-        /// key derived from the shared secret.
-        /// </summary>
         public static async Task<GameClient> ConnectAsync(string host, int port)
         {
             var client = new GameClient(await OpenAsync(host, port));
@@ -82,7 +70,7 @@ namespace Comet.Client
         private static string ReadHex(BinaryReader reader) =>
             Encoding.ASCII.GetString(reader.ReadBytes(reader.ReadInt32()));
 
-        /// <summary>The handshake isn't framed like other packets: its size is at 11.</summary>
+        // The handshake isn't framed like other packets: its size is at 11.
         protected override int FrameLength(byte[] buffer, int count)
         {
             if (this.HandshakeReceived)
@@ -90,7 +78,6 @@ namespace Comet.Client
             return count < 15 ? 0 : 11 + BitConverter.ToInt32(buffer, 11);
         }
 
-        /// <summary>Builds MsgConnect (28 bytes): the access token at 4.</summary>
         public static byte[] BuildConnect(ulong token)
         {
             var packet = Packet.Create(PacketTypes.MsgConnect, 28);
@@ -100,10 +87,6 @@ namespace Comet.Client
             return packet;
         }
 
-        /// <summary>
-        /// Builds MsgRegister (124 bytes): name at 24 (16 bytes), body at 72, class at 74,
-        /// the access token at 76, MAC address text at 80.
-        /// </summary>
         public static byte[] BuildRegister(byte[] name, ushort mesh, ushort profession, uint token)
         {
             var packet = Packet.Create(PacketTypes.MsgRegister, 124);
@@ -115,10 +98,6 @@ namespace Comet.Client
             return packet;
         }
 
-        /// <summary>
-        /// Sends MsgConnect and reads the answer. On ANSWER_OK the character follows in
-        /// MsgUserInfo. If the server closes the connection first, the message is null.
-        /// </summary>
         public async Task<GameLoginResult> LoginAsync(ulong token)
         {
             await this.SendAsync(BuildConnect(token));
@@ -133,15 +112,10 @@ namespace Comet.Client
             return new GameLoginResult(message, user == null ? null : UserInfo.Parse(user));
         }
 
-        /// <summary>
-        /// Sends MsgRegister and returns the server's MsgTalk answer (ANSWER_OK on
-        /// success), or null if it closed the connection.
-        /// </summary>
         public async Task<string> CreateCharacterAsync(
             string name, ushort mesh, ushort profession, uint token) =>
             await this.CreateCharacterAsync(Encoding.Latin1.GetBytes(name), mesh, profession, token);
 
-        /// <summary>Sends MsgRegister with raw name bytes.</summary>
         public async Task<string> CreateCharacterAsync(
             byte[] name, ushort mesh, ushort profession, uint token)
         {
@@ -150,12 +124,6 @@ namespace Comet.Client
             return talk == null ? null : TalkMessage.Parse(talk).Text;
         }
 
-        /// <summary>
-        /// Asks to be placed on the map (LoginSpawn) and finishes logging in
-        /// (LoginComplete, 251), as the 5619 client does after MsgUserInfo. The server
-        /// doesn't answer LoginComplete. Returns the spawn reply: the map in Command and
-        /// the position in X and Y.
-        /// </summary>
         public async Task<ActionMessage> EnterMapAsync(uint characterId)
         {
             await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginSpawn));
@@ -164,10 +132,6 @@ namespace Comet.Client
             return spawn;
         }
 
-        /// <summary>
-        /// Waits for another player to come into view. Returns null if they don't appear
-        /// in time.
-        /// </summary>
         public async Task<PlayerSpawn> WaitForSpawnAsync(uint playerId, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
@@ -176,17 +140,9 @@ namespace Comet.Client
             return packet == null ? null : PlayerSpawn.Parse(packet);
         }
 
-        /// <summary>
-        /// Waits for an entity to be taken off the screen. Returns false if that doesn't
-        /// happen in time.
-        /// </summary>
         public async Task<bool> WaitForRemovalAsync(uint entityId, TimeSpan? timeout = null) =>
             await this.WaitForActionAsync(ActionMessage.RemoveEntity, entityId, timeout) != null;
 
-        /// <summary>
-        /// Waits for an action about an entity (MsgAction with that action and ID).
-        /// Returns null if none arrives in time.
-        /// </summary>
         public async Task<ActionMessage> WaitForActionAsync(ushort action, uint entityId, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
@@ -195,7 +151,6 @@ namespace Comet.Client
             return packet == null ? null : ActionMessage.Parse(packet);
         }
 
-        /// <summary>Waits for a step by an entity. Returns null if none arrives in time.</summary>
         public async Task<WalkMessage> WaitForWalkAsync(uint entityId, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
@@ -204,19 +159,15 @@ namespace Comet.Client
             return packet == null ? null : WalkMessage.Parse(packet);
         }
 
-        /// <summary>Takes one step in a direction (0 to 7), as the client does.</summary>
         public Task WalkAsync(uint characterId, int direction) =>
             this.SendAsync(WalkMessage.Build(characterId, direction));
 
-        /// <summary>Jumps from one cell to another, as the client does.</summary>
         public Task JumpAsync(uint characterId, int fromX, int fromY, int toX, int toY) =>
             this.SendAsync(ActionMessage.BuildJump(characterId, fromX, fromY, toX, toY));
 
-        /// <summary>Turns to face a direction (0 to 7).</summary>
         public Task TurnAsync(uint characterId, int direction) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Turn, direction: direction));
 
-        /// <summary>Shows an emote (the stance number goes in Command).</summary>
         public Task EmoteAsync(uint characterId, uint stance, int direction) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Emote, command: stance, direction: direction));
 

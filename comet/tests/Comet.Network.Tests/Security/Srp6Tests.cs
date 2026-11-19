@@ -4,11 +4,6 @@ namespace Comet.Network.Security.Tests
     using System.Text;
     using Xunit;
 
-    /// <summary>
-    /// The account server's SRP-6 check must accept proofs from the 5619 client, which
-    /// can only be tried by hand. The expected values come from Vectors/srp6_client.py,
-    /// an independent Python model of the client written from its disassembly.
-    /// </summary>
     public class Srp6Tests
     {
         static readonly byte[] Username = Encoding.ASCII.GetBytes("tester");

@@ -3,10 +3,6 @@ namespace Comet.Game.Tests.States
     using Comet.Game.States;
     using Xunit;
 
-    /// <summary>
-    /// Character names are 4 to 15 printable ASCII characters without spaces, and can't
-    /// carry the staff tags.
-    /// </summary>
     public class CharacterRulesTests
     {
         [Theory]

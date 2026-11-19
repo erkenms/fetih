@@ -86,7 +86,6 @@ namespace Comet.Game.Tests.World
         }
     }
 
-    /// <summary>A fact that only runs when a copy of the 5619 client is next to the comet folder.</summary>
     public sealed class RealClientFactAttribute : FactAttribute
     {
         public static readonly string Directory = Find();
@@ -110,13 +109,12 @@ namespace Comet.Game.Tests.World
         }
     }
 
-    /// <summary>Checks map loading against the real 5619 client files.</summary>
     public class RealMapTests
     {
         [RealClientFact]
         public void EveryCellOfJumpsSeenInVmIsWalkable()
         {
-            // 88 jumps on the newbie village (1010) from the VM logs: kind fromX fromY toX toY
+            // 88 jumps real players made on the newbie village (1010): kind fromX fromY toX toY
             var grid = new MapStore(RealClientFactAttribute.Directory).Get(1010);
             var jumps = File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "World", "Fixtures", "jumps-1010.txt"))
                 .Where(line => line.Trim().Length > 0)

@@ -3,13 +3,8 @@ namespace Comet.Client
     using System;
     using System.Threading.Tasks;
 
-    /// <summary>A new character's name, body and class.</summary>
     public sealed record NewCharacter(string Name, ushort Mesh, ushort Profession);
 
-    /// <summary>
-    /// A logged-in player on the game server: the full login a real client goes through,
-    /// from the account server to standing on the map. Tests and bots start here.
-    /// </summary>
     public sealed class Player : IAsyncDisposable
     {
         public GameClient Game { get; }
@@ -23,11 +18,6 @@ namespace Comet.Client
             this.Spawn = spawn;
         }
 
-        /// <summary>
-        /// Logs in through the account server, connects to the game server, creates the
-        /// character if the account has none, and enters the map. Throws if any step is
-        /// refused.
-        /// </summary>
         public static async Task<Player> LoginAsync(
             string accountHost, int accountPort, string realm, string username,
             string password, NewCharacter character = null)

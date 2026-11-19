@@ -6,10 +6,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// Walking and jumping: moves are passed on to the players who can see them, refused
-    /// moves put the player back, and moving changes who sees whom.
-    /// </summary>
     public class MovementTests : IntegrationTest
     {
         public MovementTests(ServerFixture servers) : base(servers) { }
@@ -19,7 +15,6 @@ namespace Comet.Integration.Tests
         // Direction 6 is +X, 2 is -X, 0 is +Y, 4 is -Y
         private const int East = 6, West = 2, South = 0, North = 4;
 
-        /// <summary>Logs the player out and returns the cell the logout save stored.</summary>
         private async Task<(int X, int Y)> SavedPositionAsync(Player player)
         {
             var name = player.User.Name;

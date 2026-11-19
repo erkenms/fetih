@@ -7,20 +7,12 @@ namespace Comet.Network.Sockets
     using Comet.Core.Logging;
     using Comet.Network.Packets;
 
-    /// <summary>
-    /// Logs every packet of the traced connections: packet.in after decryption, and
-    /// packet.out before encryption, with the raw bytes in hex (without the footer).
-    /// Which connections are traced comes from Logging:PacketTrace (everyone, some
-    /// account IDs or some IP addresses). Events are trace level and go to the JSON
-    /// files only, whatever the configured level.
-    /// </summary>
     public static class PacketTrace
     {
         private static volatile bool all;
         private static ImmutableHashSet<uint> accounts = ImmutableHashSet<uint>.Empty;
         private static ImmutableHashSet<string> addresses = ImmutableHashSet<string>.Empty;
 
-        /// <summary>Sets which connections are traced.</summary>
         public static void Configure(PacketTraceConfiguration config)
         {
             config ??= new PacketTraceConfiguration();
@@ -29,17 +21,12 @@ namespace Comet.Network.Sockets
             all = config.All;
         }
 
-        /// <summary>True if a connection from this address and account is traced.</summary>
-        /// <param name="ipAddress">Client IP address</param>
-        /// <param name="accountID">Account ID, or 0 before the account is known</param>
         public static bool IsTraced(string ipAddress, uint accountID) =>
             all || addresses.Contains(ipAddress) || (accountID != 0 && accounts.Contains(accountID));
 
-        /// <summary>Logs a packet received from the client (decrypted, without footer).</summary>
         public static void In(TcpServerActor actor, ReadOnlySpan<byte> packet) =>
             Write(actor, LogEvents.PacketIn, packet);
 
-        /// <summary>Logs a packet about to be sent to the client (before encryption).</summary>
         public static void Out(TcpServerActor actor, ReadOnlySpan<byte> packet) =>
             Write(actor, LogEvents.PacketOut, packet);
 

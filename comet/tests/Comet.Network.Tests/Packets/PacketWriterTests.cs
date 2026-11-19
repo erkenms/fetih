@@ -5,10 +5,6 @@ namespace Comet.Network.Security.Tests
     using Org.BouncyCastle.Utilities.Encoders;
     using Xunit;
 
-    /// <summary>
-    /// Packets are written using a base byte stream, overloaded to support TQ's binary 
-    /// byte ordering rules and protocol.
-    /// </summary>
     public class PacketWriterTests
     {
         const string ExpectedOutput = 

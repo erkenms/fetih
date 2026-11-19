@@ -47,17 +47,11 @@ namespace Comet.Game.Database
             public bool StrictAuthPass { get; set; }
         }
 
-        /// <summary>
-        /// Where the server reads map data: a copy of the client folder (at least its
-        /// ini, map/map and map/Scene folders). A relative path is relative to the
-        /// server's own folder (where Comet.Game.dll is), so the server finds it however
-        /// it's started.
-        /// </summary>
+        // Relative to the server's own folder, so it's found however the server is started.
         public class MapsConfiguration
         {
             public string ClientDirectory { get; set; }
 
-            /// <summary>The client folder as a full path.</summary>
             public string ResolveClientDirectory() =>
                 System.IO.Path.GetFullPath(this.ClientDirectory, System.AppContext.BaseDirectory);
         }

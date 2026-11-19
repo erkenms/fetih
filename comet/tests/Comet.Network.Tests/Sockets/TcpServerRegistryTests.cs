@@ -2,10 +2,6 @@ namespace Comet.Network.Sockets.Tests
 {
     using Xunit;
 
-    /// <summary>
-    /// The registry limits connections per IP address: how many are open at once, and
-    /// how many are opened per minute. Going over either blocks the address.
-    /// </summary>
     public class TcpServerRegistryTests
     {
         [Fact]

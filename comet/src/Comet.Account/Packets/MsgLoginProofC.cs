@@ -10,21 +10,11 @@ namespace Comet.Account.Packets
     using Comet.Shared.Models;
     using static Comet.Account.Packets.MsgConnectEx;
 
-    /// <remarks>Packet Type 1214</remarks>
-    /// <summary>
-    /// Message containing the client's answer to <see cref="MsgLoginChallengeS"/>: its
-    /// SRP6 public key A and the proof M1. If the proof is valid, the server sends the
-    /// client to the game server with <see cref="MsgConnectEx"/>.
-    /// </summary>
     public sealed class MsgLoginProofC : MsgBase<Client>
     {
         public byte[] ClientPublicKey { get; private set; }
         public byte[] ClientProof { get; private set; }
 
-        /// <remarks>
-        /// 5619: confirmed in VM (262 bytes: A as a length byte at 4 and 128 byte slot
-        /// at 5, M1 as a length byte at 133 and slot at 134; both little-endian).
-        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -46,7 +36,6 @@ namespace Comet.Account.Packets
 
         public override async Task ProcessAsync(Client client)
         {
-            // A proof is only expected after a challenge
             var srp = client.Srp;
             client.Srp = null;
             if (srp == null)

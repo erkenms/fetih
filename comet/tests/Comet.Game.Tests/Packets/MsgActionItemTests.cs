@@ -4,10 +4,6 @@ namespace Comet.Game.Tests.Packets
     using Comet.Game.Packets;
     using Xunit;
 
-    /// <summary>
-    /// Checks the 5619 sizes of MsgAction (38 bytes) and MsgItem (88 bytes), which the
-    /// server echoes back to the client during login and for pings.
-    /// </summary>
     public class MsgActionItemTests
     {
         [Fact]
@@ -38,7 +34,7 @@ namespace Comet.Game.Tests.Packets
         [Fact]
         public void LoginCompleteFromTheRealClientIsAction251()
         {
-            // The last action the 5619 client sent while logging in (VM log, 18:55:20)
+            // The last action the real client sent while logging in
             var bytes = Convert.FromHexString(
                 "2600" + "1A27" + "00000000" + "00000000" + "00000000" + "01000000" +
                 "FB00" + "0000" + "0000" + "0000" + "00000000" + "00000000" + "0000" +

@@ -6,10 +6,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// Logging in on the account server: the SRP6 password check, the account's standing,
-    /// and the redirect to the game server.
-    /// </summary>
     public class AccountLoginTests : IntegrationTest
     {
         public AccountLoginTests(ServerFixture servers) : base(servers) { }

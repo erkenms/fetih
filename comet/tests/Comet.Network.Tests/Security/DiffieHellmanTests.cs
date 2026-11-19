@@ -8,11 +8,6 @@ namespace Comet.Network.Security.Tests
     using Org.BouncyCastle.Utilities.Encoders;
     using Xunit;
 
-    /// <summary>
-    /// The Diffie-Hellman key exchange implementation in Comet must be interoperable with
-    /// the Conquer Online game client. These tests ensure that the native implementation
-    /// matches the results of the client's expected OpenSSL library.
-    /// </summary>
     public class DiffieHellmanTests
     {
         const string ClientKey = 

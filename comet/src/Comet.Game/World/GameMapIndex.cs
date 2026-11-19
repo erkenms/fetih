@@ -6,32 +6,15 @@ namespace Comet.Game.World
     using System.IO;
     using System.Text;
 
-    /// <summary>A map listed in the client's GameMap.dat.</summary>
-    /// <param name="Id">Map ID used by the server and the client</param>
-    /// <param name="Path">Map file path relative to the client folder, e.g. map/map/newplain.7z</param>
-    /// <param name="PuzzleSize">Size of the map's puzzle (background) tiles</param>
     public sealed record GameMapEntry(uint Id, string Path, uint PuzzleSize);
 
-    /// <summary>
-    /// Reads the client's ini/GameMap.dat, which lists every map ID with the file that
-    /// holds its cell grid.
-    /// </summary>
-    /// <remarks>
-    /// 5619: from client data. A map count, then per map: ID, path length, path (no
-    /// terminator), puzzle size; all numbers are little-endian uint32.
-    /// </remarks>
+    // ini/GameMap.dat, little-endian: uint32 count, then per map uint32 ID, uint32 path
+    // length, path (no terminator), uint32 puzzle size.
     public static class GameMapIndex
     {
-        /// <summary>Parses GameMap.dat.</summary>
-        /// <exception cref="InvalidDataException">The file is cut short or malformed.</exception>
         public static Dictionary<uint, GameMapEntry> Parse(ReadOnlySpan<byte> data) =>
             Parse(data, out _);
 
-        /// <summary>
-        /// Parses GameMap.dat. If a map ID is listed more than once (5619 lists 1067
-        /// twice), the first entry is used and the others are returned as duplicates.
-        /// </summary>
-        /// <exception cref="InvalidDataException">The file is cut short or malformed.</exception>
         public static Dictionary<uint, GameMapEntry> Parse(
             ReadOnlySpan<byte> data, out List<GameMapEntry> duplicates)
         {

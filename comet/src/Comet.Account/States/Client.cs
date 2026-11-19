@@ -10,7 +10,6 @@ namespace Comet.Account.States
     {
         public DbAccount Account;
 
-        // SRP6 login in progress (set by MsgAccountSRP6, checked by MsgLoginProofC)
         public Srp6 Srp;
         public byte[] UsernameBytes;
         public string Realm;
@@ -18,7 +17,6 @@ namespace Comet.Account.States
         public Client(Socket socket, Memory<byte> buffer, uint partition) 
             : base(socket, buffer, new TQCipher(), partition)
         {
-            
         }
     }
 }

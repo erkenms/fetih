@@ -14,12 +14,6 @@
     using Comet.Network.Security;
     using Serilog;
 
-    /// <summary>
-    /// The game server listens for authentication players with a valid access token from
-    /// the account server, and hosts the game world. The game world in this project has 
-    /// been simplified into a single server executable. For an n-server distributed 
-    /// systems implementation of a Conquer Online server, see Chimera. 
-    /// </summary>
     internal static class Program
     {
         private static async Task Main(string[] args)

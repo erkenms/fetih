@@ -25,9 +25,6 @@ namespace Comet.Game.Database
             builder.Entity<DbCharacter>(e => e.HasKey(x => x.CharacterID));
         }
 
-        /// <summary>
-        /// Tests that the database connection is alive and configured.
-        /// </summary>
         public static bool Ping()
         {
             try 

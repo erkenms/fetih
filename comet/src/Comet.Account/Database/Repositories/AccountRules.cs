@@ -2,23 +2,13 @@ namespace Comet.Account.Database.Repositories
 {
     using System.Linq;
 
-    /// <summary>
-    /// Rules for new account names and passwords. Account names are email addresses: the
-    /// 5619 client sends up to 127 bytes of account name and accepts long addresses in
-    /// its login box (confirmed in VM).
-    /// </summary>
+    // The client's login box takes up to 127 bytes, so account names are email addresses.
     public static class AccountRules
     {
-        // Constants
         public const int MaxUsernameLength = 127;
         public const int MinPasswordLength = 6;
         public const int MaxPasswordLength = 16;
 
-        /// <summary>
-        /// Checks an account name. Returns null if it's allowed, or the reason it isn't
-        /// (<c>invalid_username</c>).
-        /// </summary>
-        /// <param name="username">Email address used as the account name</param>
         public static string CheckUsername(string username)
         {
             if (string.IsNullOrEmpty(username) || username.Length > MaxUsernameLength)
@@ -38,12 +28,7 @@ namespace Comet.Account.Database.Repositories
             return null;
         }
 
-        /// <summary>
-        /// Checks a password. Returns null if it's allowed, or the reason it isn't
-        /// (<c>invalid_password</c>).
-        /// </summary>
-        /// <param name="password">Password as it will be typed in the client</param>
-        /// <remarks>The client's password box takes at most 16 characters.</remarks>
+        // The client's password box takes at most 16 characters.
         public static string CheckPassword(string password)
         {
             if (password == null || password.Length < MinPasswordLength ||
@@ -54,11 +39,6 @@ namespace Comet.Account.Database.Repositories
             return null;
         }
 
-        /// <summary>
-        /// Explains a reason from account creation or a password change to a person, for
-        /// the command line or a sign-up page.
-        /// </summary>
-        /// <param name="reason">Reason code, as logged in account.create_failed</param>
         public static string Explain(string reason) => reason switch
         {
             "invalid_username" => "The account name must be an email address of at most " +

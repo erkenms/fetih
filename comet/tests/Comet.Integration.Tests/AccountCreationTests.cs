@@ -5,10 +5,6 @@ namespace Comet.Integration.Tests
     using Comet.Account.Database.Repositories;
     using Xunit;
 
-    /// <summary>
-    /// Creating accounts and setting passwords, through the account server's code and its
-    /// command line, against a real database.
-    /// </summary>
     public class AccountCreationTests : IntegrationTest
     {
         public AccountCreationTests(ServerFixture servers) : base(servers) { }

@@ -9,11 +9,6 @@ namespace Comet.Game.Packets
     using Comet.Network.Security;
     using Org.BouncyCastle.Utilities.Encoders;
 
-    /// <summary>
-    /// Message containing keys necessary for conducting the Diffie-Hellman key exchange.
-    /// The initial message to the client is sent on connect. The response message from the
-    /// client then contains the client's public key. 
-    /// </summary>
     public sealed class MsgHandshake : MsgBase<Client>
     {
         public byte[] DecryptionIV { get; private set; }
@@ -24,22 +19,11 @@ namespace Comet.Game.Packets
         public string ClientKey { get; private set; }
         private byte[] Padding { get; set; }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgHandshake"/>. This constructor
-        /// is called to accept the client response.
-        /// </summary>
         public MsgHandshake()
         {
         }
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="MsgHandshake"/>. This constructor
-        /// is called to construct the initial request to the client. The IV fields are
-        /// sent as zeroes: the 5619 cipher (<see cref="Cast5Cipher"/>) always starts from
-        /// a zero IV, so the client has no use for them.
-        /// </summary>
-        /// <remarks>5619: confirmed in VM (zero IVs; same layout as 5187).</remarks>
-        /// <param name="dh">Diffie-Hellman key exchange instance for the actor</param>
+        // IVs are sent as zeros: the client's CAST5 always starts from a zero IV.
         public MsgHandshake(DiffieHellman dh)
         {
             this.PrimeRoot = Hex.ToHexString(dh.PrimeRoot.ToByteArrayUnsigned()).ToUpper();
@@ -49,19 +33,12 @@ namespace Comet.Game.Packets
             this.DecryptionIV = new byte[Cast5Cipher.BlockSize];
         }
 
-        /// <summary>Randomizes padding for the message.</summary>
         public async Task RandomizeAsync()
         {
             this.Padding = new byte[23];
             await Kernel.NextBytesAsync(this.Padding);
         }
 
-        /// <summary>
-        /// Decodes a byte packet into the packet structure defined by this message class. 
-        /// Should be invoked to structure data from the client for processing. Decoding
-        /// follows TQ Digital's byte ordering rules for an all-binary protocol.
-        /// </summary>
-        /// <param name="bytes">Bytes from the packet processor or client socket</param>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
@@ -71,12 +48,6 @@ namespace Comet.Game.Packets
             this.ClientKey = Encoding.ASCII.GetString(reader.ReadBytes(reader.ReadInt32()));
         }
 
-        /// <summary>
-        /// Encodes the packet structure defined by this message class into a byte packet
-        /// that can be sent to the client. Invoked automatically by the client's send 
-        /// method. Encodes using byte ordering rules interoperable with the game client.
-        /// </summary>
-        /// <returns>Returns a byte packet of the encoded packet.</returns>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
@@ -84,10 +55,7 @@ namespace Comet.Game.Packets
                 + this.DecryptionIV.Length + this.PrimeRoot.Length + this.Generator.Length
                 + this.ServerKey.Length;
 
-            // The packet writer class reserves 2 bytes for the send method to fill in for
-            // the packet length. This message is an outlier to this pattern; however, 
-            // leaving the reserved bytes does not affect the body of the message, so it
-            // can be left in.
+            // Unframed, but PacketWriter's 2 reserved length bytes are harmless here.
 
             writer.Write(this.Padding.AsSpan(0, 9));
             writer.Write(messageLength - 11);

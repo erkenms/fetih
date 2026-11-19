@@ -9,15 +9,8 @@ namespace Comet.Core.Logging
     using Serilog.Formatting.Json;
     using Serilog.Parsing;
 
-    /// <summary>
-    /// Writes each log event as one JSON object per line (JSON Lines). This is Comet's
-    /// log file contract; see doc/Logging.md. Field order and names are stable:
-    /// <c>v, ts, level, server, event, msg, ...properties, src, exc</c>.
-    /// Property names are written in camelCase.
-    /// </summary>
     public sealed class JsonLogFormatter : ITextFormatter
     {
-        /// <summary>Schema version written to every line as "v".</summary>
         public const int SchemaVersion = 1;
 
         // Properties that map onto reserved top-level fields
@@ -91,10 +84,6 @@ namespace Comet.Core.Logging
             this.ValueFormatter.Format(value, output);
         }
 
-        /// <summary>
-        /// Renders the message template with string values unquoted, so "msg" reads as
-        /// plain text: <c>Bob logged in</c> rather than <c>"Bob" logged in</c>.
-        /// </summary>
         public static string RenderMessage(LogEvent logEvent)
         {
             using var writer = new StringWriter(CultureInfo.InvariantCulture);
@@ -115,7 +104,6 @@ namespace Comet.Core.Logging
             return writer.ToString();
         }
 
-        /// <summary>Converts a property name to camelCase (CharacterId → characterId).</summary>
         public static string CamelCase(string name)
         {
             if (string.IsNullOrEmpty(name) || char.IsLower(name[0]))

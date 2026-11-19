@@ -6,10 +6,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// Connecting to the game server with the account server's token, and what happens
-    /// when the same account logs in again.
-    /// </summary>
     public class GameLoginTests : IntegrationTest
     {
         public GameLoginTests(ServerFixture servers) : base(servers) { }

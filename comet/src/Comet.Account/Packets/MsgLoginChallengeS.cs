@@ -4,12 +4,6 @@ namespace Comet.Account.Packets
     using Comet.Network.Packets;
     using Comet.Network.Security;
 
-    /// <remarks>Packet Type 1213</remarks>
-    /// <summary>
-    /// Message containing the server's SRP6 challenge, sent in reply to
-    /// <see cref="MsgAccountSRP6"/>. It carries the server's public key B and the
-    /// account's salt (plus N and g, which the client has built in).
-    /// </summary>
     public sealed class MsgLoginChallengeS : MsgBase<Client>
     {
         // Each number has a length byte followed by a 128 byte slot
@@ -29,11 +23,6 @@ namespace Comet.Account.Packets
             this.Salt = srp.SaltBytes;
         }
 
-        /// <remarks>
-        /// 5619: confirmed in VM (the client reads B from 4 and the salt from 391, each
-        /// a length byte and little-endian bytes; g and N fill the slots between, in the
-        /// order the WoW-style SRP6 challenge uses).
-        /// </remarks>
         public override byte[] Encode()
         {
             var writer = new PacketWriter();

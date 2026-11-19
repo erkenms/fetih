@@ -3,10 +3,6 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Xunit;
 
-    /// <summary>
-    /// Where a character appears when entering the game: their saved map and cell, or
-    /// the start position if they can't stand there.
-    /// </summary>
     public class MapPlacementTests : IntegrationTest
     {
         public MapPlacementTests(ServerFixture servers) : base(servers) { }

@@ -6,11 +6,6 @@ namespace Comet.Account.Tests.Packets
     using Comet.Network.Security;
     using Xunit;
 
-    /// <summary>
-    /// Checks the 5619 account server packets against the layouts the client builds and
-    /// reads (from its binary). Values for the SRP6 exchange come from the client model in
-    /// tests/Comet.Network.Tests/Security/Vectors/srp6_client.py.
-    /// </summary>
     public class LoginPacketsTests
     {
         static readonly byte[] Salt = Convert.FromHexString(

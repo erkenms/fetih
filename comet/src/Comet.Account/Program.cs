@@ -10,12 +10,6 @@
     using Comet.Network.Sockets;
     using Serilog;
 
-    /// <summary>
-    /// The account server accepts clients and authenticates players from the client's 
-    /// login screen. If the player enters valid account credentials, then the server
-    /// will send login details to the game server and disconnect the client. The client
-    /// will reconnect to the game server with an access token from the account server.
-    /// </summary>
     internal static class Program
     {
         private static async Task<int> Main(string[] args)
@@ -84,14 +78,7 @@
             return 0;
         }
 
-        /// <summary>
-        /// Runs a command-line account command. These are the only ways to create an
-        /// account or set a password, since the SRP6 verifier can't be computed in SQL.
-        /// </summary>
-        /// <param name="command">create-account or set-password</param>
-        /// <param name="username">Account name (email address)</param>
-        /// <param name="password">Password, as it will be typed in the client</param>
-        /// <returns>Process exit code: 0 on success, 1 on failure.</returns>
+        // Accounts and passwords are only set here: the SRP6 verifier can't be computed in SQL.
         private static async Task<int> RunCommandAsync(
             string command, string username, string password)
         {
@@ -107,7 +94,6 @@
                     Log.Error("Password not set for {Username}: {Reason}", username, reason);
             }
 
-            // The log line has the reason code; say what it means
             if (reason != null)
                 Console.WriteLine("  " + AccountRules.Explain(reason));
             return reason == null ? 0 : 1;

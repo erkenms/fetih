@@ -10,24 +10,12 @@ namespace Comet.Account.Packets
     using Comet.Network.Sockets;
     using static Comet.Account.Packets.MsgConnectEx;
 
-    /// <remarks>Packet Type 1124</remarks>
-    /// <summary>
-    /// Message containing the account name and realm from the login screen. This is the
-    /// first packet sent to the account server from the client on login, and replaces
-    /// MsgAccount (1086) from patch 5532. It carries no password: the server answers with
-    /// an SRP6 challenge (<see cref="MsgLoginChallengeS"/>), and the client proves it
-    /// knows the password with <see cref="MsgLoginProofC"/>.
-    /// </summary>
     public sealed class MsgAccountSRP6 : MsgBase<Client>
     {
         public byte[] UsernameBytes { get; private set; }
         public string Username { get; private set; }
         public string Realm { get; private set; }
 
-        /// <remarks>
-        /// 5619: confirmed in VM (240 bytes: zero at 4, account name at 8 in 128
-        /// bytes, realm at 136 in 16 bytes, the rest zero or unused).
-        /// </remarks>
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);

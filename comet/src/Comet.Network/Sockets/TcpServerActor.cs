@@ -10,14 +10,8 @@ namespace Comet.Network.Sockets
     using Comet.Network.Security;
     using Serilog;
 
-    /// <summary>
-    /// Actors are assigned to accepted client sockets to give connected clients a state
-    /// across socket operations. This allows the server to handle multiple receive writes
-    /// across single processing reads, and keep a buffer alive for faster operations.
-    /// </summary>
     public abstract class TcpServerActor
     {
-        // Fields and Properties
         public readonly Memory<byte> Buffer;
         public readonly ICipher Cipher;
         public readonly Socket Socket;
@@ -35,22 +29,10 @@ namespace Comet.Network.Sockets
         public readonly DateTime ConnectedAt;
         private string disconnectReason;
 
-        /// <summary>
-        /// Why the connection ended (see <see cref="DisconnectReasons"/>), or null while
-        /// connected. The first reason set wins, so a server-side reason such as
-        /// "replaced" isn't overwritten by the socket error it causes.
-        /// </summary>
+        // The first reason set wins, so a reason like "replaced" isn't overwritten by the socket
+        // error it causes.
         public string DisconnectReason => this.disconnectReason;
 
-        /// <summary>
-        /// Instantiates a new instance of <see cref="TcpServerActor"/> using an accepted
-        /// client socket and preallocated buffer from the server listener.
-        /// </summary>
-        /// <param name="socket">Accepted client socket</param>
-        /// <param name="buffer">Preallocated buffer for socket receive operations</param>
-        /// <param name="cipher">Cipher for handling client encipher operations</param>
-        /// <param name="partition">Packet processing partition, default is disabled</param>
-        /// <param name="packetFooter">Length of the packet footer</param>
         public TcpServerActor(
             Socket socket, 
             Memory<byte> buffer, 
@@ -69,36 +51,17 @@ namespace Comet.Network.Sockets
             this.ConnectedAt = DateTime.UtcNow;
         }
 
-        /// <summary>
-        /// Cancelled when the connection has taken too long to log in. The listener
-        /// starts it when the connection is accepted, and every receive waits on it until
-        /// <see cref="LoggedIn"/> is called. A server that never calls it (the account
-        /// server) caps the whole connection at the login timeout.
-        /// </summary>
         public CancellationTokenSource LoginDeadline { get; } = new CancellationTokenSource();
 
-        /// <summary>
-        /// Ends the login deadline: the connection has logged in, and from now on it stays
-        /// open however long the player is idle (dead connections are found by TCP
-        /// keepalive).
-        /// </summary>
         public void LoggedIn()
         {
             try { this.LoginDeadline.CancelAfter(Timeout.InfiniteTimeSpan); }
             catch (ObjectDisposedException) { }
         }
 
-        /// <summary>Records why the connection ended, unless a reason was already set.</summary>
         public void SetDisconnectReason(string reason) =>
             Interlocked.CompareExchange(ref this.disconnectReason, reason, null);
 
-        /// <summary>
-        /// Sends a packet to the game client after encrypting bytes. This may be called
-        /// as-is, or overridden to provide channel functionality and thread-safety around
-        /// the accepted client socket. By default, this method locks around encryption
-        /// and sending data. 
-        /// </summary>
-        /// <param name="packet">Bytes to be encrypted and sent to the client</param>
         public virtual Task SendAsync(byte[] packet)
         {
             var encrypted = new byte[packet.Length + this.PacketFooter.Length];
@@ -135,22 +98,11 @@ namespace Comet.Network.Sockets
             }
         }
 
-        /// <summary>
-        /// Sends a packet to the game client after encrypting bytes. This may be called
-        /// as-is, or overridden to provide channel functionality and thread-safety around
-        /// the accepted client socket. By default, this method locks around encryption
-        /// and sending data. 
-        /// </summary>
-        /// <param name="packet">Packet to be encrypted and sent to the client</param>
         public virtual async Task SendAsync(IPacket packet)
         {
             await this.SendAsync(packet.Encode());
         }
 
-        /// <summary>
-        /// Force closes the client connection, recording the reason for the logs.
-        /// </summary>
-        /// <param name="reason">One of <see cref="DisconnectReasons"/></param>
         public virtual void Disconnect(string reason = DisconnectReasons.Server)
         {
             this.SetDisconnectReason(reason);

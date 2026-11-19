@@ -5,10 +5,6 @@ namespace Comet.Game.Tests.Packets
     using Comet.Game.Packets;
     using Xunit;
 
-    /// <summary>
-    /// Checks MsgRegister against the 124 byte layout the 5619 client sends (seen in VM:
-    /// zero at 4 and the MsgConnect token at 76).
-    /// </summary>
     public class MsgRegisterTests
     {
         private static byte[] ClientPacket(uint token)

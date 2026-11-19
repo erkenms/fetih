@@ -10,11 +10,6 @@ namespace Comet.Game.World
     using Comet.Core.Logging;
     using SharpCompress.Archives.SevenZip;
 
-    /// <summary>
-    /// The maps the server knows, read from a copy of the client's files: ini/GameMap.dat
-    /// for the list, and each map's .7z archive (or a plain .DMap next to it) for its cell
-    /// grid. Grids are loaded the first time a map is used and then kept in memory.
-    /// </summary>
     public sealed class MapStore
     {
         private readonly string ClientDirectory;
@@ -24,17 +19,10 @@ namespace Comet.Game.World
         private readonly ConcurrentDictionary<string, IReadOnlyList<ScenePart>> Scenes =
             new ConcurrentDictionary<string, IReadOnlyList<ScenePart>>(StringComparer.OrdinalIgnoreCase);
 
-        /// <summary>Number of maps listed in GameMap.dat.</summary>
         public int Count => this.Entries.Count;
 
-        /// <summary>IDs of all listed maps.</summary>
         public IEnumerable<uint> MapIDs => this.Entries.Keys;
 
-        /// <summary>
-        /// Reads the map list from a client folder.
-        /// </summary>
-        /// <param name="clientDirectory">Folder holding the client's ini and map folders</param>
-        /// <exception cref="FileNotFoundException">GameMap.dat isn't there.</exception>
         public MapStore(string clientDirectory)
         {
             this.ClientDirectory = Path.GetFullPath(clientDirectory);
@@ -50,14 +38,8 @@ namespace Comet.Game.World
                 "Found {MapCount} maps in {Directory}", this.Entries.Count, this.ClientDirectory);
         }
 
-        /// <summary>True if GameMap.dat lists the map.</summary>
         public bool Exists(uint mapID) => this.Entries.ContainsKey(mapID);
 
-        /// <summary>
-        /// Returns a map's grid, loading it on first use.
-        /// </summary>
-        /// <exception cref="KeyNotFoundException">GameMap.dat doesn't list the map.</exception>
-        /// <exception cref="InvalidDataException">The map file is missing or unreadable.</exception>
         public MapGrid Get(uint mapID)
         {
             if (!this.Entries.TryGetValue(mapID, out var entry))
@@ -86,11 +68,6 @@ namespace Comet.Game.World
             }
         }
 
-        /// <summary>
-        /// Reads a scene file named by a terrain object (paths like map\Scene\x.scene are
-        /// relative to the client folder). Each scene is read once and shared by every map.
-        /// </summary>
-        /// <exception cref="InvalidDataException">The scene file is missing or malformed.</exception>
         private IReadOnlyList<ScenePart> ReadScene(string path) =>
             this.Scenes.GetOrAdd(path.Replace('\\', '/'), p =>
             {
@@ -99,10 +76,6 @@ namespace Comet.Game.World
                 return SceneFile.Parse(File.ReadAllBytes(file));
             });
 
-        /// <summary>
-        /// Reads the DMap bytes for a map: from its .7z archive, or from a plain .DMap
-        /// file with the same name.
-        /// </summary>
         private byte[] ReadDMap(GameMapEntry entry)
         {
             if (entry.Path.EndsWith(".7z", StringComparison.OrdinalIgnoreCase))
@@ -126,11 +99,7 @@ namespace Comet.Game.World
             return File.ReadAllBytes(plainPath);
         }
 
-        /// <summary>
-        /// Finds a file below a folder, ignoring the case of each path part (the client's
-        /// lists don't always match the file names' case, which matters on Linux).
-        /// </summary>
-        /// <returns>The full path, or null if there's no such file.</returns>
+        // The client's lists don't always match file name case, which matters on Linux.
         private static string ResolveFile(string root, string relativePath)
         {
             string current = root;

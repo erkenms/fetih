@@ -7,10 +7,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// Creating a character on the game server: every class and body, the name rules,
-    /// and two players wanting the same name.
-    /// </summary>
     public class CharacterCreationTests : IntegrationTest
     {
         public CharacterCreationTests(ServerFixture servers) : base(servers) { }

@@ -4,10 +4,6 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Xunit;
 
-    /// <summary>
-    /// Players see each other (MsgPlayer) when they're on the same map within 18 cells,
-    /// and are taken off each other's screens when one leaves.
-    /// </summary>
     public class VisibilityTests : IntegrationTest
     {
         public VisibilityTests(ServerFixture servers) : base(servers) { }

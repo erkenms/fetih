@@ -7,10 +7,6 @@ namespace Comet.Game.Tests.Packets
     using Comet.Game.States;
     using Xunit;
 
-    /// <summary>
-    /// Checks MsgPlayer against the offsets the 5619 client's MsgPlayer handler reads.
-    /// The length header is filled in by the send method.
-    /// </summary>
     public class MsgPlayerTests
     {
         private static byte[] Encode()

@@ -16,16 +16,8 @@ namespace Comet.Integration.Tests
     using MySqlConnector;
     using Xunit;
 
-    /// <summary>
-    /// Runs the real account and game servers for the integration tests. Each test run
-    /// creates two new databases in the comet-db container from the default SQL files
-    /// (so your own comet.account and comet.game are never touched), starts both servers
-    /// as processes on free local ports, and drops the databases afterwards. Server logs
-    /// are kept in bin/.../integration-logs until the next run.
-    /// </summary>
     public sealed class ServerFixture : IAsyncLifetime
     {
-        // Constants
         public const string Realm = "Storm";
         public const string Host = "127.0.0.1";
 
@@ -146,11 +138,6 @@ namespace Comet.Integration.Tests
             await this.WaitForEventAsync("game", "rpc.connected", _ => true, StartTimeout);
         }
 
-        /// <summary>
-        /// Writes the maps the tests use: newbie village (1010), where new characters
-        /// start, and Twin City (1002), each as a plain DMap. Every cell is walkable
-        /// except <see cref="BlockedCell"/> in Twin City.
-        /// </summary>
         private void WriteMaps()
         {
             var maps = Path.Combine(this.MapDirectory, "map", "map");
@@ -238,10 +225,6 @@ namespace Comet.Integration.Tests
             return process;
         }
 
-        /// <summary>
-        /// Runs the account server's command-line mode (create-account, set-password)
-        /// against the test database and returns its exit code.
-        /// </summary>
         public async Task<int> RunAccountCommandAsync(params string[] args)
         {
             using var process = this.StartProcess("Comet.Account", "account-cli",
@@ -250,11 +233,9 @@ namespace Comet.Integration.Tests
             return process.ExitCode;
         }
 
-        /// <summary>Runs SQL against the test account database.</summary>
         public Task ExecuteAccountSqlAsync(string sql, params (string, object)[] parameters) =>
             this.ExecuteSqlAsync(this.AccountSchema, sql, parameters);
 
-        /// <summary>Runs SQL against the test game database.</summary>
         public Task ExecuteGameSqlAsync(string sql, params (string, object)[] parameters) =>
             this.ExecuteSqlAsync(this.GameSchema, sql, parameters);
 
@@ -268,15 +249,12 @@ namespace Comet.Integration.Tests
             await command.ExecuteNonQueryAsync();
         }
 
-        /// <summary>A new unique account name for this run.</summary>
         public string NewEmail(string prefix = "player") =>
             $"{prefix}{Interlocked.Increment(ref this.Counter)}@test{this.RunId}.example";
 
-        /// <summary>A new unique character name for this run (at most 15 characters).</summary>
         public string NewCharacterName(string prefix = "Hero") =>
             $"{prefix}{Interlocked.Increment(ref this.Counter)}";
 
-        /// <summary>Creates an account through the account server's code.</summary>
         public async Task<string> CreateAccountAsync(string password = "secret1")
         {
             var email = this.NewEmail();
@@ -285,26 +263,21 @@ namespace Comet.Integration.Tests
             return email;
         }
 
-        /// <summary>Connects to the account server.</summary>
         public Task<AccountClient> ConnectAccountAsync() =>
             AccountClient.ConnectAsync(Host, this.AccountPort);
 
-        /// <summary>Connects to the game server and completes the key exchange.</summary>
         public Task<GameClient> ConnectGameAsync() =>
             GameClient.ConnectAsync(Host, this.GamePort);
 
-        /// <summary>Logs in on the account server and returns its answer.</summary>
         public async Task<LoginResult> LoginAsync(string email, string password, string realm = Realm)
         {
             await using var account = await this.ConnectAccountAsync();
             return await account.LoginAsync(email, password, realm);
         }
 
-        /// <summary>Logs in all the way to the map, creating the character if needed.</summary>
         public Task<Player> PlayAsync(string email, string password, NewCharacter character = null) =>
             Player.LoginAsync(Host, this.AccountPort, Realm, email, password, character);
 
-        /// <summary>All log events a server has written so far.</summary>
         public List<JsonElement> Events(string server)
         {
             var dir = Path.Combine(this.LogDirectory, server);
@@ -349,10 +322,6 @@ namespace Comet.Integration.Tests
             }
         }
 
-        /// <summary>
-        /// Waits until a server logs an event that matches, and returns it. Fails the test
-        /// if it doesn't appear in time.
-        /// </summary>
         public async Task<JsonElement> WaitForEventAsync(
             string server, string eventName, Func<JsonElement, bool> match, TimeSpan? timeout = null)
         {
@@ -370,13 +339,11 @@ namespace Comet.Integration.Tests
             }
         }
 
-        /// <summary>Waits for an event whose string field has a value.</summary>
         public Task<JsonElement> WaitForEventAsync(string server, string eventName, string field, string value) =>
             this.WaitForEventAsync(server, eventName,
                 e => e.TryGetProperty(field, out var v) && v.ToString() == value);
     }
 
-    /// <summary>All integration tests share one pair of servers.</summary>
     [CollectionDefinition(Name)]
     public sealed class ServerCollection : ICollectionFixture<ServerFixture>
     {

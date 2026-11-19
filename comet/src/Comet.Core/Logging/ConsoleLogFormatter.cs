@@ -6,12 +6,6 @@ namespace Comet.Core.Logging
     using Serilog.Events;
     using Serilog.Formatting;
 
-    /// <summary>
-    /// Human-readable console output:
-    /// <c>14:02:11.304 INF session.login  Bob logged in from 10.0.0.5</c>.
-    /// The level tag is colored when the console is a terminal. The console is for
-    /// people; tools should read the JSON log files instead.
-    /// </summary>
     public sealed class ConsoleLogFormatter : ITextFormatter
     {
         private readonly bool Colors;
@@ -47,11 +41,11 @@ namespace Comet.Core.Logging
 
         private static string Color(LogEventLevel level) => level switch
         {
-            LogEventLevel.Verbose => "\u001b[90m",     // gray
-            LogEventLevel.Debug => "\u001b[37m",       // white
-            LogEventLevel.Information => "\u001b[32m", // green
-            LogEventLevel.Warning => "\u001b[33m",     // yellow
-            _ => "\u001b[31m"                          // red
+            LogEventLevel.Verbose => "\u001b[90m",
+            LogEventLevel.Debug => "\u001b[37m",
+            LogEventLevel.Information => "\u001b[32m",
+            LogEventLevel.Warning => "\u001b[33m",
+            _ => "\u001b[31m"
         };
     }
 }

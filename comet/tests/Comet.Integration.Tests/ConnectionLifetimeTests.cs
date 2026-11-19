@@ -7,11 +7,6 @@ namespace Comet.Integration.Tests
     using Comet.Client;
     using Xunit;
 
-    /// <summary>
-    /// When the servers close a connection: one that doesn't log in within the login
-    /// timeout is dropped, but logged-in players are never dropped for being idle, and a
-    /// newer login for the same account takes over at every step.
-    /// </summary>
     public class ConnectionLifetimeTests : IntegrationTest
     {
         public ConnectionLifetimeTests(ServerFixture servers) : base(servers) { }
@@ -19,10 +14,6 @@ namespace Comet.Integration.Tests
         private static readonly TimeSpan LoginTimeout =
             TimeSpan.FromSeconds(ServerFixture.LoginTimeoutSeconds);
 
-        /// <summary>
-        /// Opens a connection, optionally sends some bytes, then waits until the server
-        /// closes it, and returns how long it stayed open.
-        /// </summary>
         private static async Task<TimeSpan> LifetimeAsync(int port, byte[] send = null)
         {
             using var tcp = new TcpClient();
@@ -49,7 +40,6 @@ namespace Comet.Integration.Tests
             return watch.Elapsed;
         }
 
-        /// <summary>Completes the game server's key exchange, then never logs in.</summary>
         private async Task<TimeSpan> ExchangedLifetimeAsync()
         {
             var watch = Stopwatch.StartNew();

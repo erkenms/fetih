@@ -6,10 +6,6 @@ namespace Comet.Game.Tests.Packets
     using Comet.Game.Packets;
     using Xunit;
 
-    /// <summary>
-    /// Checks MsgUserInfo against the offsets the 5619 client reads (found in its
-    /// MsgUserInfo handler). The length header is filled in by the send method.
-    /// </summary>
     public class MsgUserInfoTests
     {
         private static byte[] Encode()
