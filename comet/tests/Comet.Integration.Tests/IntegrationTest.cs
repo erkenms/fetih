@@ -47,7 +47,7 @@ namespace Comet.Integration.Tests
             await first.DisposeAsync();
 
             // Wait for the logout save, or it could overwrite the position set below
-            await this.Servers.WaitForEventAsync("game", "character.saved", "name", name);
+            await this.Servers.WaitForLogoutSaveAsync(name);
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET MapID = @map, X = @x, Y = @y, Level = @level WHERE Name = @name",
                 ("@map", mapID), ("@x", x), ("@y", y), ("@level", level), ("@name", name));

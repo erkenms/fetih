@@ -16,7 +16,7 @@ namespace Comet.Integration.Tests
             var name = player.User.Name;
             bool IsSave(JsonElement e) =>
                 e.TryGetProperty("event", out var ev) && ev.GetString() == "character.saved" &&
-                e.GetProperty("name").GetString() == name;
+                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout";
 
             int before = this.Servers.Events("game").Count(IsSave);
             await player.DisposeAsync();

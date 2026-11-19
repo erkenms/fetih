@@ -11,6 +11,7 @@ namespace Comet.Game.Database
         public AuthenticationConfiguration Authentication { get; set; }
         public LoggingConfiguration Logging { get; set; }
         public MapsConfiguration Maps { get; set; }
+        public SavingConfiguration Saving { get; set; } = new SavingConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -54,6 +55,12 @@ namespace Comet.Game.Database
 
             public string ResolveClientDirectory() =>
                 System.IO.Path.GetFullPath(this.ClientDirectory, System.AppContext.BaseDirectory);
+        }
+
+        // Online characters are saved this often, besides on logout
+        public class SavingConfiguration
+        {
+            public int IntervalSeconds { get; set; } = 300;
         }
 
         public ServerConfiguration(string[] args)

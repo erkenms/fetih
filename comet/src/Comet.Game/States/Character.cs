@@ -1,15 +1,10 @@
 namespace Comet.Game.States
 {
-    using System;
     using System.ComponentModel.DataAnnotations.Schema;
-    using System.Threading.Tasks;
     using Comet.Game.Database.Models;
-    using Comet.Game.Database.Repositories;
 
     public sealed class Character : DbCharacter
     {
-        private DateTime LastSaveTimestamp { get; set; }
-
         // Direction the character faces (0 to 7), kept in memory only
         [NotMapped]
         public byte Direction { get; set; }
@@ -18,48 +13,49 @@ namespace Comet.Game.States
         [NotMapped]
         public uint Stance { get; set; }
 
-        public Character(DbCharacter character) 
+        public Character(DbCharacter character)
             : base(character.AccountID, character.CharacterID, character.Name)
         {
-            base.Agility = character.Agility;
-            base.AncestorClass = character.AncestorClass;
-            base.AttributePoints = character.AttributePoints;
-            base.Avatar = character.Avatar;
-            base.CurrentClass = character.CurrentClass;
-            base.EnlightenPoints = character.EnlightenPoints;
-            base.Experience = character.Experience;
-            base.Hairstyle = character.Hairstyle;
-            base.HealthPoints = character.HealthPoints;
-            base.Jewels = character.Jewels;
-            base.KillPoints = character.KillPoints;
-            base.Level = character.Level;
-            base.ManaPoints = character.ManaPoints;
-            base.MapID = character.MapID;
-            base.Mesh = character.Mesh;
-            base.PreviousClass = character.PreviousClass;
-            base.QuizPoints = character.QuizPoints;
-            base.Rebirths = character.Rebirths;
-            base.Registered = character.Registered;
-            base.Silver = character.Silver;
-            base.Spirit = character.Spirit;
-            base.Strength = character.Strength;
-            base.VIPLevel = character.VIPLevel;
-            base.Virtue = character.Virtue;
-            base.Vitality = character.Vitality;
-            base.X = character.X;
-            base.Y = character.Y;
-
-            this.LastSaveTimestamp = DateTime.UtcNow;
+            CopyStored(character, this);
         }
 
-        public async Task SaveAsync(bool force = false)
+        // A copy for the database, so a save never holds the live character
+        public DbCharacter Snapshot()
         {
-            DateTime now = DateTime.UtcNow;
-            if (force || this.LastSaveTimestamp.AddMilliseconds(CharactersRepository.ThrottleMilliseconds) < now)
-            {
-                this.LastSaveTimestamp = now;
-                await CharactersRepository.SaveAsync(this);
-            }
+            var copy = new DbCharacter(this.AccountID, this.CharacterID, this.Name);
+            CopyStored(this, copy);
+            return copy;
+        }
+
+        private static void CopyStored(DbCharacter from, DbCharacter to)
+        {
+            to.Agility = from.Agility;
+            to.AncestorClass = from.AncestorClass;
+            to.AttributePoints = from.AttributePoints;
+            to.Avatar = from.Avatar;
+            to.CurrentClass = from.CurrentClass;
+            to.EnlightenPoints = from.EnlightenPoints;
+            to.Experience = from.Experience;
+            to.Hairstyle = from.Hairstyle;
+            to.HealthPoints = from.HealthPoints;
+            to.Jewels = from.Jewels;
+            to.KillPoints = from.KillPoints;
+            to.Level = from.Level;
+            to.ManaPoints = from.ManaPoints;
+            to.MapID = from.MapID;
+            to.Mesh = from.Mesh;
+            to.PreviousClass = from.PreviousClass;
+            to.QuizPoints = from.QuizPoints;
+            to.Rebirths = from.Rebirths;
+            to.Registered = from.Registered;
+            to.Silver = from.Silver;
+            to.Spirit = from.Spirit;
+            to.Strength = from.Strength;
+            to.VIPLevel = from.VIPLevel;
+            to.Virtue = from.Virtue;
+            to.Vitality = from.Vitality;
+            to.X = from.X;
+            to.Y = from.Y;
         }
     }
 

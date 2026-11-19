@@ -8,8 +8,6 @@ namespace Comet.Game.Database.Repositories
 
     public static class CharactersRepository
     {
-        public const uint ThrottleMilliseconds = 500;
-
         public static async Task<DbCharacter> FindAsync(string name)
         {
             using var db = new ServerDbContext();

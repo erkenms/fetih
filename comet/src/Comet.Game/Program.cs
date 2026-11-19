@@ -88,6 +88,9 @@
                 "Listening for new connections on {IPAddress}:{Port}",
                 config.GameNetwork.IPAddress, config.GameNetwork.Port);
             
+            var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
+            _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);
+
             await rpcServerTask;
             await serverTask;
         }

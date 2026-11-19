@@ -32,6 +32,9 @@ namespace Comet.Integration.Tests
         // portal the table has no row for
         public static readonly (ushort X, ushort Y, uint Index) StablePortal = (382, 387, 3);
         public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
+        // Short, so a test can see a periodic save happen
+        public const int SaveIntervalSeconds = 2;
+
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -133,6 +136,7 @@ namespace Comet.Integration.Tests
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
                 "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,
+                "--Saving:IntervalSeconds=" + SaveIntervalSeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
@@ -344,6 +348,11 @@ namespace Comet.Integration.Tests
                 await Task.Delay(50);
             }
         }
+
+        // Periodic saves log the same event, so only a logout save says the player is gone
+        public Task<JsonElement> WaitForLogoutSaveAsync(string name) =>
+            this.WaitForEventAsync("game", "character.saved", e =>
+                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout");
 
         public Task<JsonElement> WaitForEventAsync(string server, string eventName, string field, string value) =>
             this.WaitForEventAsync(server, eventName,
