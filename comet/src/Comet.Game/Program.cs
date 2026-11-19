@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
@@ -85,6 +86,22 @@
             catch (Exception e)
             {
                 Log.Error(e, "Can't read the portal table; create it from sql/comet.game.sql");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
+                var npcs = await NpcsRepository.LoadAllAsync();
+                var placed = npcs.Where(n => Kernel.Maps.Exists(n.MapID)).ToList();
+                Kernel.Npcs = new NpcTable(placed);
+                LogEvents.For(typeof(Program), LogEvents.NpcsLoaded).Information(
+                    "Loaded {NpcCount} NPCs on {MapCount} maps ({SkippedCount} on maps the client doesn't have)",
+                    Kernel.Npcs.Count, Kernel.Npcs.MapIDs.Count(), npcs.Count - placed.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read the npc table; create it from sql/comet.game.sql");
                 Log.CloseAndFlush();
                 return;
             }

@@ -14,6 +14,9 @@ namespace Comet.Client
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
         public const ushort MsgMapItem = 1101;
+        public const ushort MsgNpcInfo = 2030;
+        public const ushort MsgNpc = 2031;
+        public const ushort MsgTaskDialog = 2032;
         public const ushort MsgAllot = 1024;
         public const ushort MsgConnect = 1052;
         public const ushort MsgConnectEx = 1055;
@@ -234,6 +237,43 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(12), (ushort)x);
             BitConverter.TryWriteBytes(packet.AsSpan(14), (ushort)y);
             BitConverter.TryWriteBytes(packet.AsSpan(18), Pick);
+            return packet;
+        }
+    }
+
+    // An NPC's ID, cell, look and role
+    public sealed record NpcSpawn(uint Id, ushort X, ushort Y, ushort Lookface, ushort Role)
+    {
+        public static NpcSpawn Parse(byte[] packet) => new NpcSpawn(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt16(packet, 12),
+            BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt16(packet, 16),
+            BitConverter.ToUInt16(packet, 18));
+
+        // A click on the NPC: its ID, then data and event 0
+        public static byte[] BuildClick(uint npcId)
+        {
+            var packet = Packet.Create(PacketTypes.MsgNpc, 16);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), npcId);
+            return packet;
+        }
+    }
+
+    // One part of an NPC dialog: an option index at 10, the action at 11, strings from 12
+    public sealed record DialogMessage(byte Option, byte Action, string Text)
+    {
+        public const byte Line = 1, Choice = 2, Face = 4, Show = 100, Answer = 101, NoOption = 255;
+
+        public static DialogMessage Parse(byte[] packet)
+        {
+            var strings = Packet.ReadStrings(packet, 12);
+            return new DialogMessage(packet[10], packet[11], strings.Count > 0 ? strings[0] : null);
+        }
+
+        public static byte[] BuildAnswer(byte option)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTaskDialog, 16);
+            packet[10] = option;
+            packet[11] = Answer;
             return packet;
         }
     }

@@ -163,6 +163,7 @@ namespace Comet.Game.World
                 await client.SendAsync(new MsgPlayer(other));
             }
             await Items.Ground.ShowAroundAsync(client, toX, toY, fromX, fromY);
+            await Visibility.ShowNpcsAsync(client, toX, toY, fromX, fromY);
         }
 
         private static async Task RejectAsync(Client client, GameMap<Client> map,

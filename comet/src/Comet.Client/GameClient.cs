@@ -180,6 +180,33 @@ namespace Comet.Client
             return packet == null ? null : GroundItemMessage.Parse(packet);
         }
 
+        public async Task<NpcSpawn> WaitForNpcAsync(uint npcId, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgNpcInfo && NpcSpawn.Parse(p).Id == npcId, timeout);
+            return packet == null ? null : NpcSpawn.Parse(packet);
+        }
+
+        public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
+
+        public Task AnswerNpcAsync(byte option) => this.SendAsync(DialogMessage.BuildAnswer(option));
+
+        // The parts of the next dialog page, up to and including Show; null if none comes
+        public async Task<List<DialogMessage>> ReadDialogAsync(TimeSpan? timeout = null)
+        {
+            var page = new List<DialogMessage>();
+            while (true)
+            {
+                var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTaskDialog, timeout);
+                if (packet == null)
+                    return page.Count == 0 ? null : page;
+                var part = DialogMessage.Parse(packet);
+                page.Add(part);
+                if (part.Action == DialogMessage.Show)
+                    return page;
+            }
+        }
+
         public async Task<ItemInfo> WaitForItemAsync(Func<ItemInfo, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

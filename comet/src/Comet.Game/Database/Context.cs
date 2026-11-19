@@ -11,6 +11,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbPortal> Portals { get; set; }
         public virtual DbSet<DbLevelExp> LevelExp { get; set; }
         public virtual DbSet<DbItem> Items { get; set; }
+        public virtual DbSet<DbNpc> Npcs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -29,6 +30,7 @@ namespace Comet.Game.Database
             builder.Entity<DbPortal>(e => e.HasKey(x => new { x.MapID, x.PortalIndex }));
             builder.Entity<DbLevelExp>(e => e.HasKey(x => x.Level));
             builder.Entity<DbItem>(e => e.HasKey(x => x.ItemID));
+            builder.Entity<DbNpc>(e => e.HasKey(x => x.NpcID));
         }
 
         public static bool Ping()

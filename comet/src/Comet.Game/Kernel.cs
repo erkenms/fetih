@@ -33,6 +33,9 @@ namespace Comet.Game
         // Item types read from the client's itemtype.dat at startup
         public static ItemTypeTable ItemTypes = new ItemTypeTable(new ItemType[0]);
 
+        // NPCs on each map, read from the database at startup
+        public static NpcTable Npcs = new NpcTable(new Database.Models.DbNpc[0]);
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

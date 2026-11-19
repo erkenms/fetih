@@ -17,6 +17,9 @@ namespace Comet.Game.States
         public Creation Creation = null;
         public Inventory Inventory = null;
         public Equipment Equipment = null;
+
+        // The NPC the player is talking to, so dialog answers reach it
+        public uint ActiveNpc { get; set; }
         public DiffieHellman DiffieHellman = null;
 
         // Login token this connection authenticated with, and what it was issued for.
