@@ -14,6 +14,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgTalk] = () => new MsgTalk(),
                 [PacketType.MsgItem] = () => new MsgItem(),
                 [PacketType.MsgName] = () => new MsgName(),
+                [PacketType.MsgAllot] = () => new MsgAllot(),
                 [PacketType.MsgAction] = () => new MsgAction(),
                 [PacketType.MsgConnect] = () => new MsgConnect(),
                 [PacketType.MsgWalk] = () => new MsgWalk(),

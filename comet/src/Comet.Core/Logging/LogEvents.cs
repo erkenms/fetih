@@ -28,6 +28,10 @@ namespace Comet.Core.Logging
         public const string CharacterSaved = "character.saved";
         public const string CharacterSaveFailed = "character.save_failed";
         public const string CharacterSaveRound = "character.save_round";
+        public const string CharacterLevel = "character.level";
+        public const string CharacterAllotted = "character.allotted";
+        public const string CharacterAllotRejected = "character.allot_rejected";
+        public const string CharacterSilver = "character.silver";
 
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";

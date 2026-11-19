@@ -23,6 +23,9 @@ namespace Comet.Game
         // Where portal cells lead, read from the database at startup
         public static PortalTable Portals = new PortalTable(new Database.Models.DbPortal[0]);
 
+        // Experience to reach each next level, read from the database at startup
+        public static ExperienceTable Experience = new ExperienceTable(new Database.Models.DbLevelExp[0]);
+
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();
 

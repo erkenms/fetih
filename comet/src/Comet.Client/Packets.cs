@@ -12,6 +12,7 @@ namespace Comet.Client
         public const ushort MsgUserInfo = 1006;
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
+        public const ushort MsgAllot = 1024;
         public const ushort MsgConnect = 1052;
         public const ushort MsgConnectEx = 1055;
         public const ushort MsgEncryptCode = 1059;
@@ -21,6 +22,7 @@ namespace Comet.Client
         public const ushort MsgAction = 10010;
         public const ushort MsgWalk = 10005;
         public const ushort MsgPlayer = 10014;
+        public const ushort MsgUserAttrib = 10017;
     }
 
     public static class TalkChannels
@@ -86,7 +88,8 @@ namespace Comet.Client
 
     public sealed record UserInfo(
         uint Id, uint Mesh, ushort Hairstyle, uint Silver, ushort Strength, ushort Agility,
-        ushort Vitality, ushort Spirit, ushort HealthPoints, byte Level, byte Class, string Name)
+        ushort Vitality, ushort Spirit, ushort HealthPoints, byte Level, byte Class, string Name,
+        ulong Experience, ushort AttributePoints, ushort ManaPoints)
     {
         public static UserInfo Parse(byte[] packet) => new UserInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 10),
@@ -94,7 +97,8 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 52), BitConverter.ToUInt16(packet, 54),
             BitConverter.ToUInt16(packet, 56), BitConverter.ToUInt16(packet, 58),
             BitConverter.ToUInt16(packet, 62), packet[68], packet[69],
-            Packet.ReadStrings(packet, 110)[0]);
+            Packet.ReadStrings(packet, 110)[0], BitConverter.ToUInt64(packet, 24),
+            BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64));
     }
 
     public sealed record PlayerSpawn(
@@ -115,6 +119,7 @@ namespace Comet.Client
         public const ushort LoginSpawn = 74;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
+        public const ushort LevelUp = 92;
         public const ushort Portal = 85;
         public const ushort Teleport = 86;
         public const ushort RemoveEntity = 135;
@@ -152,6 +157,37 @@ namespace Comet.Client
             var packet = Packet.Create(PacketTypes.MsgAction, 38);
             BitConverter.TryWriteBytes(packet.AsSpan(16), 1u);
             BitConverter.TryWriteBytes(packet.AsSpan(20), LoginComplete);
+            return packet;
+        }
+    }
+
+    // An identity, a count, then per attribute a type (uint) and value (ulong) in 20 bytes
+    public sealed record UserAttribMessage(uint Id, Dictionary<uint, ulong> Values)
+    {
+        public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
+            Experience = 5, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
+            Strength = 15, Agility = 16;
+
+        public static UserAttribMessage Parse(byte[] packet)
+        {
+            var values = new Dictionary<uint, ulong>();
+            uint count = BitConverter.ToUInt32(packet, 8);
+            for (int i = 0, offset = 12; i < count && offset + 12 <= packet.Length; i++, offset += 20)
+                values[BitConverter.ToUInt32(packet, offset)] = BitConverter.ToUInt64(packet, offset + 4);
+            return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values);
+        }
+    }
+
+    // Points to add to strength, agility, vitality and spirit, a byte each
+    public static class AllotMessage
+    {
+        public static byte[] Build(byte strength, byte agility, byte vitality, byte spirit)
+        {
+            var packet = Packet.Create(PacketTypes.MsgAllot, 8);
+            packet[4] = strength;
+            packet[5] = agility;
+            packet[6] = vitality;
+            packet[7] = spirit;
             return packet;
         }
     }

@@ -249,6 +249,16 @@ namespace Comet.Integration.Tests
         public Task ExecuteGameSqlAsync(string sql, params (string, object)[] parameters) =>
             this.ExecuteSqlAsync(this.GameSchema, sql, parameters);
 
+        public async Task<object> QueryGameScalarAsync(string sql, params (string, object)[] parameters)
+        {
+            await using var db = new MySqlConnection(this.ConnectionString(this.GameSchema));
+            await db.OpenAsync();
+            var command = new MySqlCommand(sql, db);
+            foreach (var (name, value) in parameters)
+                command.Parameters.AddWithValue(name, value);
+            return await command.ExecuteScalarAsync();
+        }
+
         private async Task ExecuteSqlAsync(string schema, string sql, (string, object)[] parameters)
         {
             await using var db = new MySqlConnection(this.ConnectionString(schema));

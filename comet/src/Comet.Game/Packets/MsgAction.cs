@@ -36,6 +36,15 @@ namespace Comet.Game.Packets
                 Y = y
             };
 
+        public static MsgAction LevelUp(uint identity) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.CharacterLevelUp
+        };
+
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,

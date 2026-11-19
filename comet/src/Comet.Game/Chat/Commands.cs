@@ -32,6 +32,9 @@ namespace Comet.Game.Chat
             new Command(new[] { "teleport", "tp" }, Authority.GameMaster, "/tp <map> <x> <y>", TeleportAsync),
             new Command(new[] { "goto" }, Authority.GameMaster, "/goto <name>", GotoAsync),
             new Command(new[] { "broadcast", "bc" }, Authority.GameMaster, "/bc <text>", BroadcastAsync),
+            new Command(new[] { "exp" }, Authority.GameMaster, "/exp <amount>", ExperienceAsync),
+            new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
+            new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -166,6 +169,34 @@ namespace Comet.Game.Chat
             foreach (var player in Kernel.Players.Values)
                 await player.SendAsync(message);
             return true;
+        }
+
+        private static async Task<bool> ExperienceAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !ulong.TryParse(args[0], out var amount) || amount == 0)
+                return await UsageAsync(client, "/exp <amount>");
+            await Progress.AwardExperienceAsync(client, amount, "gm");
+            return true;
+        }
+
+        private static async Task<bool> LevelAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !byte.TryParse(args[0], out var level))
+                return await UsageAsync(client, "/level <level>");
+            if (await Progress.SetLevelAsync(client, level, "gm"))
+                return true;
+            await Talk.NoticeAsync(client, $"Levels go from 1 to {Kernel.Experience.MaxLevel}.");
+            return false;
+        }
+
+        private static async Task<bool> SilverAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !long.TryParse(args[0], out var amount) || amount == 0)
+                return await UsageAsync(client, "/silver <+/-amount>");
+            if (await Progress.ChangeSilverAsync(client, amount, "gm"))
+                return true;
+            await Talk.NoticeAsync(client, $"Silver must stay between 0 and {uint.MaxValue}.");
+            return false;
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)

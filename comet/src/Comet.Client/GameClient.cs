@@ -177,6 +177,17 @@ namespace Comet.Client
             return packet == null ? null : NameMessage.Parse(packet);
         }
 
+        public async Task<UserAttribMessage> WaitForAttribAsync(
+            Func<UserAttribMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgUserAttrib && match(UserAttribMessage.Parse(p)), timeout);
+            return packet == null ? null : UserAttribMessage.Parse(packet);
+        }
+
+        public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>
+            this.SendAsync(AllotMessage.Build(strength, agility, vitality, spirit));
+
         public Task WalkAsync(uint characterId, int direction) =>
             this.SendAsync(WalkMessage.Build(characterId, direction));
 

@@ -72,6 +72,19 @@
                 return;
             }
 
+            try
+            {
+                Kernel.Experience = new ExperienceTable(await LevelExpRepository.LoadAllAsync());
+                Log.Information("Loaded experience for {LevelCount} levels; the level cap is {MaxLevel}",
+                    Kernel.Experience.Count, Kernel.Experience.MaxLevel);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read the level_exp table; create it from sql/comet.game.sql");
+                Log.CloseAndFlush();
+                return;
+            }
+
             var tasks = new List<Task>();
             tasks.Add(Kernel.Services.Randomness.StartAsync(CancellationToken.None));
             tasks.Add(DiffieHellman.ProbablePrimes.StartAsync(CancellationToken.None));
