@@ -130,6 +130,7 @@ namespace Comet.Client
         public const ushort RemoveEntity = 135;
         public const ushort Jump = 137;
         public const ushort LoginComplete = 251;
+        public const ushort QueryStatInfo = 408;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),

@@ -84,6 +84,15 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task TheStatQueryIsNotEchoed()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 700, 560)).Player;
+            await player.Game.SendAsync(ActionMessage.Build(0, ActionMessage.QueryStatInfo));
+            Assert.Null(await player.Game.WaitForActionAsync(
+                ActionMessage.QueryStatInfo, 0, System.TimeSpan.FromMilliseconds(500)));
+        }
+
+        [Fact]
         public async Task ItemsAboveTheCharactersLevelAreRefused()
         {
             await using var player = (await this.PlayingAtAsync(1002, 660, 560, GameMaster)).Player;

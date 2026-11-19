@@ -141,6 +141,10 @@ namespace Comet.Game.Packets
                 // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
 
+                // Asks for the stat window (1040), sent after login and each equipment
+                // change. Not answered until there are stats to show.
+                [ActionType.QueryStatInfo] = (msg, client) => Task.CompletedTask,
+
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
                 [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
 
@@ -213,7 +217,8 @@ namespace Comet.Game.Packets
             CharacterPartnerInfo,
             CharacterAway = 161,
             MapPathfinding,
-            LoginComplete = 251
+            LoginComplete = 251,
+            QueryStatInfo = 408
         }
     }
 }
