@@ -1,6 +1,7 @@
 namespace Comet.Game
 {
     using Comet.Game.Items;
+    using Comet.Game.Npcs;
     using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.Services;
@@ -35,6 +36,9 @@ namespace Comet.Game
 
         // NPCs on each map, read from Data/npcs.json at startup
         public static NpcTable Npcs = new NpcTable(new Npc[0]);
+
+        // NPCs that teleport for a fare, read from Data/teleporters.json at startup
+        public static Teleporters Teleporters = new Teleporters(new Teleporter[0]);
 
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();

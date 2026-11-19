@@ -9,13 +9,13 @@ namespace Comet.Game.Npcs
     using Comet.Game.World;
 
     // Finds the NPC a player talks to and runs its dialog. Each NPC's dialog is a method
-    // taking the step of the conversation; NPCs without one give a short default answer.
+    // taking the step of the conversation. NPCs without one teleport or give a short
+    // default answer.
     public static class Dialogs
     {
         private static readonly Dictionary<uint, Func<NpcTalk, Task>> Scripts =
             new Dictionary<uint, Func<NpcTalk, Task>>
             {
-                [TwinCity.ConductressID] = TwinCity.ConductressAsync,
                 [TwinCity.GuardID] = TwinCity.GuardAsync,
             };
 
@@ -37,26 +37,38 @@ namespace Comet.Game.Npcs
             return RunAsync(client, client.ActiveNpc, option, input);
         }
 
-        private static async Task RunAsync(Client client, uint npcID, byte option, string input)
+        // The NPC if it stands on the player's map within view; logs why not otherwise
+        public static Npc Reach(Client client, uint npcID, string use)
         {
             var character = client.Character;
             if (character == null)
-                return;
+                return null;
             var npc = Kernel.Npcs.Find(character.MapID, npcID);
-            if (npc == null || !GameMap<Client>.InView(character.X, character.Y, npc.X, npc.Y))
-            {
-                LogEvents.For(typeof(Dialogs), LogEvents.NpcRejected).Warning(
-                    "{Name} can't talk to NPC {NpcId} from map {MapId} at {X},{Y}: {Reason}",
-                    character.Name, npcID, character.MapID, character.X, character.Y,
-                    npc == null ? "not_on_map" : "too_far");
+            if (npc != null && GameMap<Client>.InView(character.X, character.Y, npc.X, npc.Y))
+                return npc;
+            LogEvents.For(typeof(Dialogs), LogEvents.NpcRejected).Warning(
+                "{Name} can't reach NPC {NpcId} to {Use} from map {MapId} at {X},{Y}: {Reason}",
+                character.Name, npcID, use, character.MapID, character.X, character.Y,
+                npc == null ? "not_on_map" : "too_far");
+            return null;
+        }
+
+        private static async Task RunAsync(Client client, uint npcID, byte option, string input)
+        {
+            var npc = Reach(client, npcID, "talk");
+            if (npc == null)
                 return;
-            }
 
             client.ActiveNpc = npcID;
             LogEvents.For(typeof(Dialogs), LogEvents.NpcTalk).Debug(
-                "{Name} talked to NPC {NpcId} (option {Option})", character.Name, npcID, option);
+                "{Name} talked to NPC {NpcId} (option {Option})", client.Character.Name, npcID, option);
             var talk = new NpcTalk(client, npc, option, input);
-            await (Scripts.TryGetValue(npcID, out var script) ? script(talk) : DefaultAsync(talk));
+            if (Scripts.TryGetValue(npcID, out var script))
+                await script(talk);
+            else if (Kernel.Teleporters.Find(npcID) is Teleporter teleporter)
+                await Teleporters.TalkAsync(talk, teleporter);
+            else
+                await DefaultAsync(talk);
         }
 
         private static Task DefaultAsync(NpcTalk talk) => talk

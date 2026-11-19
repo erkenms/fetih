@@ -10,6 +10,7 @@
     using Comet.Game.Database;
     using Comet.Game.Database.Repositories;
     using Comet.Game.Items;
+    using Comet.Game.Npcs;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -102,6 +103,25 @@
             catch (Exception e)
             {
                 Log.Error(e, "Can't read Data/npcs.json");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
+                var teleporters = Teleporters.Load(DataFiles.PathOf("teleporters.json"));
+                var nowhere = teleporters.SelectMany(t => t.Destinations.Select(d => (t.NpcID, d)))
+                    .Where(x => !Kernel.Maps.Exists(x.d.MapID)).ToList();
+                foreach (var (npcID, destination) in nowhere)
+                    Log.Warning("Teleporter {NpcId} leads to map {MapId}, which the client doesn't have",
+                        npcID, destination.MapID);
+                Kernel.Teleporters = new Teleporters(teleporters);
+                LogEvents.For(typeof(Program), LogEvents.TeleportersLoaded).Information(
+                    "Loaded {TeleporterCount} teleporters", Kernel.Teleporters.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read Data/teleporters.json");
                 Log.CloseAndFlush();
                 return;
             }

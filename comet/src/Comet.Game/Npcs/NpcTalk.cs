@@ -39,6 +39,13 @@ namespace Comet.Game.Npcs
             return this;
         }
 
+        // A text box; the client answers with the option and the text typed
+        public NpcTalk TextBox(string text, byte option, ushort maxLength = 16)
+        {
+            this.Page.Add(new MsgTaskDialog(DialogAction.Input, option, text) { Data = maxLength });
+            return this;
+        }
+
         public NpcTalk Face(byte face)
         {
             this.FaceID = face;

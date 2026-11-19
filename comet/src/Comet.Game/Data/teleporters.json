@@ -1,0 +1,61 @@
+// NPCs that teleport players for a fare. "text" is the greeting, one dialog line per entry;
+// each destination becomes a choice, in order. Texts are from the original NPC scripts.
+{
+  "teleporters": [
+    {
+      "id": 10050, "fare": 100, "face": 1,
+      "text": ["Where are you heading for? I can teleport you for a price of 100 silver."],
+      "destinations": [
+        { "name": "Phoenix Castle", "map": 1002, "x": 958, "y": 555 },
+        { "name": "Desert City", "map": 1002, "x": 69, "y": 473 },
+        { "name": "Ape Mountain", "map": 1002, "x": 555, "y": 957 },
+        { "name": "Bird Island", "map": 1002, "x": 232, "y": 190 },
+        { "name": "Mine Cave", "map": 1002, "x": 53, "y": 399 },
+        { "name": "Market", "map": 1036, "x": 211, "y": 196 },
+      ],
+    },
+    {
+      "id": 10051, "fare": 100, "face": 1,
+      "text": ["Where are you heading for? I can teleport you for a price of 100 silver."],
+      "destinations": [
+        { "name": "Twin City", "map": 1000, "x": 971, "y": 666 },
+        { "name": "Mystic Castle", "map": 1000, "x": 85, "y": 323 },
+        { "name": "Market", "map": 1036, "x": 211, "y": 196 },
+      ],
+    },
+    {
+      "id": 10052, "fare": 100, "face": 1,
+      "text": ["Where are you heading for? I can teleport you anywhere for 100 silver."],
+      "destinations": [
+        { "name": "Twin City", "map": 1011, "x": 11, "y": 376 },
+        { "name": "Market", "map": 1036, "x": 211, "y": 196 },
+      ],
+    },
+    {
+      "id": 10053, "fare": 100, "face": 1,
+      "text": ["With only 100 silver, I can teleport you to somewhere far away. Please choose your destination."],
+      "destinations": [
+        { "name": "Twin City", "map": 1020, "x": 381, "y": 21 },
+        { "name": "Market", "map": 1036, "x": 211, "y": 196 },
+      ],
+    },
+    {
+      "id": 10056, "fare": 100, "face": 1,
+      "text": ["Where are you heading for? I can teleport you anywhere for 100 silver."],
+      "destinations": [
+        { "name": "Twin City", "map": 1015, "x": 1010, "y": 710 },
+        { "name": "Market", "map": 1036, "x": 211, "y": 196 },
+      ],
+    },
+    {
+      "id": 10021, "fare": 50, "face": 7,
+      "text": [
+        "The arena is open. Welcome to challenge other people. The admission fee is only 50 silver.",
+        "If you PK in the arena, you will not gain or lose any experience or items equipped, and will get revived at the place you die.",
+      ],
+      "destinations": [
+        { "name": "Enter the arena.", "map": 1005, "x": 51, "y": 71 },
+      ],
+    },
+  ]
+}

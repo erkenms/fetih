@@ -70,6 +70,7 @@ namespace Comet.Core.Logging
         public const string NpcsLoaded = "npc.loaded";
         public const string NpcTalk = "npc.talk";
         public const string NpcRejected = "npc.rejected";
+        public const string TeleportersLoaded = "npc.teleporters_loaded";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
