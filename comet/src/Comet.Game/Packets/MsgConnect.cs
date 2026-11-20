@@ -150,6 +150,8 @@ namespace Comet.Game.Packets
                     Kernel.Players.Count);
                 await client.SendAsync(MsgTalk.LoginOk);
                 await client.SendAsync(new MsgUserInfo(client.Character));
+                await client.SendAsync(new MsgUserAttrib(
+                    client.ID, MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina));
             }            
         }
 

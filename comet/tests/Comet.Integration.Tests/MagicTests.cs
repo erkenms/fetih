@@ -21,6 +21,15 @@ namespace Comet.Integration.Tests
             this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name);
 
         [Fact]
+        public async Task StaminaIsSentWhenLoggingIn()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 700, 760)).Player;
+            var stamina = await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(Stamina, out var value) && value == 100);
+            Assert.NotNull(stamina);
+        }
+
+        [Fact]
         public async Task SpellsAndProficienciesAreListedAtLogin()
         {
             var (player, email) = await this.PlayingAtAsync(1002, 700, 760, GameMaster);
