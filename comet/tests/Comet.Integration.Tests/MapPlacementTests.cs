@@ -42,6 +42,19 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task LeavingTheMarketSavesItsEntrance()
+        {
+            var (player, email) = await this.PlayingAtAsync(ServerFixture.Market, 150, 150);
+            var name = player.User.Name;
+            await player.DisposeAsync();
+            await this.Servers.WaitForLogoutSaveAsync(name);
+
+            await using var again = await this.Servers.PlayAsync(email, Password);
+            Assert.Equal(ServerFixture.Market, again.Spawn.Command);
+            Assert.Equal((303, 237), (again.Spawn.X, again.Spawn.Y));
+        }
+
+        [Fact]
         public async Task CharacterOutsideTheMapIsMovedToTheStart()
         {
             await using var player = await this.ReturnAtAsync(1002, 5000, 10);

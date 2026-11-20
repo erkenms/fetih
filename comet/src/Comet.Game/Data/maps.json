@@ -1,18 +1,20 @@
 // Map type flags sent in MsgMapInfo, from Albetros's cq_map "type" for the maps the 5619
 // client has. Names from World/MapTypes.cs, comma separated. Maps not listed have none.
+// RecordDisable maps aren't kept as a login place: "reborn" is cq_map's reborn map and that
+// map's portal0, where the player logs in instead.
 {
   "maps": [
-    { "map": 601, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable, Bit16" }, // OfflineTG
-    { "map": 700, "flags": "RecordDisable, PkDisable, TeleportDisable, WingDisable, Bit16" }, // Lottery
+    { "map": 601, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable, Bit16", "reborn": { "map": 601, "x": 65, "y": 55 } }, // OfflineTG
+    { "map": 700, "flags": "RecordDisable, PkDisable, TeleportDisable, WingDisable, Bit16", "reborn": { "map": 700, "x": 40, "y": 47 } }, // Lottery
     { "map": 1000, "flags": "NeverWound" }, // DesertCity
     { "map": 1001, "flags": "NeverWound" }, // MysticCastle
     { "map": 1002, "flags": "PkDisable" }, // TwinCity
     { "map": 1003, "flags": "NeverWound" }, // tc.hiddenMine[A]
-    { "map": 1004, "flags": "RecordDisable, PkDisable, NeverWound, DeadIsland" }, // JobCenter
+    { "map": 1004, "flags": "RecordDisable, PkDisable, NeverWound, DeadIsland", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // JobCenter
     { "map": 1005, "flags": "PkField" }, // tc.PKarena
-    { "map": 1006, "flags": "RecordDisable, PkDisable, NeverWound, DeadIsland" }, // tc.horses
+    { "map": 1006, "flags": "RecordDisable, PkDisable, NeverWound, DeadIsland", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // tc.horses
     { "map": 1007, "flags": "NeverWound" }, // tc.Blacksmith[A]
-    { "map": 1008, "flags": "ChangeMapDisable, RecordDisable, PkDisable, NeverWound" }, // tc.Shopboy[A]
+    { "map": 1008, "flags": "ChangeMapDisable, RecordDisable, PkDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // tc.Shopboy[A]
     { "map": 1009, "flags": "NeverWound" }, // tc.Shopboy2[A]
     { "map": 1011, "flags": "NeverWound, DeadIsland" }, // CastleCity
     { "map": 1012, "flags": "NeverWound" }, // quest[?]
@@ -20,19 +22,19 @@
     { "map": 1014, "flags": "NeverWound" }, // pc.DragonPool
     { "map": 1015, "flags": "NeverWound" }, // BirdIsland
     { "map": 1016, "flags": "NeverWound" }, // pc.KylinCave
-    { "map": 1018, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // arena?[?]
+    { "map": 1018, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // arena?[?]
     { "map": 1020, "flags": "NeverWound, DeadIsland" }, // ApeCity
-    { "map": 1021, "flags": "ChangeMapDisable, RecordDisable, NeverWound" }, // tc.hiddenMine[A]
-    { "map": 1022, "flags": "ChangeMapDisable, RecordDisable, PkDisable, WingDisable, NeverWound" }, // tc.hidden[A]
+    { "map": 1021, "flags": "ChangeMapDisable, RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // tc.hiddenMine[A]
+    { "map": 1022, "flags": "ChangeMapDisable, RecordDisable, PkDisable, WingDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // tc.hidden[A]
     { "map": 1025, "flags": "ChangeMapDisable, MineField, NeverWound" }, // pc.mine
     { "map": 1026, "flags": "ChangeMapDisable, MineField, NeverWound" }, // ac.mine
     { "map": 1027, "flags": "ChangeMapDisable, MineField, NeverWound" }, // dc.mine
     { "map": 1028, "flags": "ChangeMapDisable, MineField, NeverWound" }, // tc.mine
-    { "map": 1036, "flags": "ChangeMapDisable, RecordDisable, PkDisable, BoothEnable" }, // Market
+    { "map": 1036, "flags": "ChangeMapDisable, RecordDisable, PkDisable, BoothEnable", "reborn": { "map": 1036, "x": 303, "y": 237 } }, // Market
     { "map": 1038, "flags": "ChangeMapDisable, GuildMap, Bit16" }, // GuildWar
-    { "map": 1039, "flags": "ChangeMapDisable, RecordDisable, PkDisable, Bit16" }, // TG
-    { "map": 1040, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound" }, // 1040
-    { "map": 1041, "flags": "ChangeMapDisable, RecordDisable, WingDisable, Bit16" }, // 1041
+    { "map": 1039, "flags": "ChangeMapDisable, RecordDisable, PkDisable, Bit16", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // TG
+    { "map": 1040, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1040
+    { "map": 1041, "flags": "ChangeMapDisable, RecordDisable, WingDisable, Bit16", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1041
     { "map": 1042, "flags": "NeverWound" }, // MBquest
     { "map": 1043, "flags": "ChangeMapDisable, TeleportDisable, NeverWound" }, // MBquest
     { "map": 1044, "flags": "ChangeMapDisable, TeleportDisable, NeverWound" }, // MBquest
@@ -43,30 +45,30 @@
     { "map": 1049, "flags": "ChangeMapDisable, TeleportDisable, NeverWound" }, // MBquest
     { "map": 1050, "flags": "ChangeMapDisable, TeleportDisable, NeverWound" }, // 1050
     { "map": 1051, "flags": "NeverWound" }, // bi.map3
-    { "map": 1060, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound" }, // 1060
-    { "map": 1061, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound" }, // 1061
-    { "map": 1062, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound" }, // 1062
-    { "map": 1063, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound" }, // bi.map2
+    { "map": 1060, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1060
+    { "map": 1061, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1061
+    { "map": 1062, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1062
+    { "map": 1063, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "reborn": { "map": 1015, "x": 717, "y": 577 } }, // bi.map2
     { "map": 1068, "flags": "ChangeMapDisable, PkDisable, Bit16" }, // 1068
-    { "map": 1070, "flags": "ChangeMapDisable, RecordDisable, NeverWound" }, // 1070
+    { "map": 1070, "flags": "ChangeMapDisable, RecordDisable, NeverWound", "reborn": { "map": 1020, "x": 566, "y": 565 } }, // 1070
     { "map": 1075, "flags": "NeverWound" }, // ac.2map
     { "map": 1076, "flags": "NeverWound" }, // pc.2map
     { "map": 1077, "flags": "NeverWound" }, // dc.2map
     { "map": 1078, "flags": "NeverWound" }, // bi.map
-    { "map": 1080, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1080
-    { "map": 1081, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1081
-    { "map": 1090, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1090
-    { "map": 1091, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1091
-    { "map": 1100, "flags": "RecordDisable, NeverWound" }, // moon.1
-    { "map": 1101, "flags": "RecordDisable, NeverWound" }, // moon.2
-    { "map": 1102, "flags": "RecordDisable, NeverWound" }, // moon.3
-    { "map": 1103, "flags": "RecordDisable, NeverWound" }, // moon.4
-    { "map": 1104, "flags": "RecordDisable, NeverWound" }, // moon.5
-    { "map": 1105, "flags": "RecordDisable, NeverWound" }, // moon.6
-    { "map": 1106, "flags": "RecordDisable, NeverWound" }, // moon.7
-    { "map": 1107, "flags": "RecordDisable, NeverWound" }, // moon.8
-    { "map": 1108, "flags": "RecordDisable, NeverWound" }, // moon.9
-    { "map": 1109, "flags": "RecordDisable, NeverWound" }, // moon.10
+    { "map": 1080, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1080
+    { "map": 1081, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1081
+    { "map": 1090, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1090
+    { "map": 1091, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1091
+    { "map": 1100, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.1
+    { "map": 1101, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.2
+    { "map": 1102, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.3
+    { "map": 1103, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.4
+    { "map": 1104, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.5
+    { "map": 1105, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.6
+    { "map": 1106, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.7
+    { "map": 1107, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.8
+    { "map": 1108, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.9
+    { "map": 1109, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // moon.10
     { "map": 1201, "flags": "ChangeMapDisable" }, // adv.z.>4
     { "map": 1202, "flags": "ChangeMapDisable" }, // adv.z.>3
     { "map": 1204, "flags": "ChangeMapDisable" }, // adv.z.>6
@@ -86,26 +88,26 @@
     { "map": 1354, "flags": "ChangeMapDisable, NeverWound" }, // Labyrinth4
     { "map": 1360, "flags": "ChangeMapDisable, NeverWound" }, // ..[?]
     { "map": 1364, "flags": "ChangeMapDisable, NeverWound" }, // R[?]
-    { "map": 1505, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1505
-    { "map": 1506, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1506
-    { "map": 1507, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1507
-    { "map": 1508, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1508
-    { "map": 1509, "flags": "PkField, ChangeMapDisable, RecordDisable" }, // 1509
+    { "map": 1505, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1505
+    { "map": 1506, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1506
+    { "map": 1507, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1507
+    { "map": 1508, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1508
+    { "map": 1509, "flags": "PkField, ChangeMapDisable, RecordDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1509
     { "map": 1511, "flags": "PkDisable, NeverWound" }, // 1511
-    { "map": 1550, "flags": "RecordDisable, NeverWound" }, // 1550
-    { "map": 1551, "flags": "RecordDisable, NeverWound" }, // 1551
+    { "map": 1550, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1550
+    { "map": 1551, "flags": "RecordDisable, NeverWound", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1551
     { "map": 1700, "flags": "PkField, ChangeMapDisable, NeverWound" }, // 1700
-    { "map": 1730, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1730
-    { "map": 1731, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1731
-    { "map": 1732, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1732
-    { "map": 1733, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1733
-    { "map": 1734, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1734
-    { "map": 1735, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1735
-    { "map": 1736, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1736
-    { "map": 1737, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable" }, // 1737
+    { "map": 1730, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1730
+    { "map": 1731, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1731
+    { "map": 1732, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1732
+    { "map": 1733, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1733
+    { "map": 1734, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1734
+    { "map": 1735, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1735
+    { "map": 1736, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1736
+    { "map": 1737, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1737
     { "map": 1763, "flags": "ChangeMapDisable" }, // 1763
     { "map": 1764, "flags": "ChangeMapDisable" }, // 1764
-    { "map": 1765, "flags": "ChangeMapDisable, RecordDisable, PkDisable" }, // 1765
+    { "map": 1765, "flags": "ChangeMapDisable, RecordDisable, PkDisable", "reborn": { "map": 1002, "x": 430, "y": 380 } }, // 1765
     { "map": 2021, "flags": "ChangeMapDisable, MineField, NeverWound" }, // ac.mine.R
     { "map": 2022, "flags": "ChangeMapDisable, MineField, NeverWound" }, // ac.mine.D.D
     { "map": 2023, "flags": "ChangeMapDisable, MineField, NeverWound" }, // ac.mine.D.R

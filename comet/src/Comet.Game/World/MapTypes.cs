@@ -36,12 +36,18 @@ namespace Comet.Game.World
         [JsonPropertyName("map")] public uint MapID { get; init; }
         [JsonPropertyName("flags"), JsonConverter(typeof(JsonStringEnumConverter))]
         public MapFlags Flags { get; init; }
+        [JsonPropertyName("reborn")] public MapPoint Reborn { get; init; }
     }
+
+    public sealed record MapPoint(
+        [property: JsonPropertyName("map")] uint MapID,
+        [property: JsonPropertyName("x")] ushort X,
+        [property: JsonPropertyName("y")] ushort Y);
 
     // Data/maps.json; maps not listed have no flags
     public sealed class MapTypes
     {
-        private readonly Dictionary<uint, MapFlags> Flags;
+        private readonly Dictionary<uint, MapType> Maps;
 
         private sealed record MapTypeFile(List<MapType> Maps);
 
@@ -51,14 +57,22 @@ namespace Comet.Game.World
             var repeated = maps.GroupBy(m => m.MapID).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (repeated.Count > 0)
                 throw new InvalidDataException($"{path} lists these maps more than once: {string.Join(", ", repeated)}");
+            var homeless = maps.Where(m => m.Flags.HasFlag(MapFlags.RecordDisable) && m.Reborn == null)
+                .Select(m => m.MapID).ToList();
+            if (homeless.Count > 0)
+                throw new InvalidDataException($"{path} has RecordDisable maps without a reborn point: {string.Join(", ", homeless)}");
             return maps;
         }
 
         public MapTypes(IEnumerable<MapType> maps) =>
-            this.Flags = maps.ToDictionary(m => m.MapID, m => m.Flags);
+            this.Maps = maps.ToDictionary(m => m.MapID);
 
-        public int Count => this.Flags.Count;
+        public int Count => this.Maps.Count;
 
-        public MapFlags Of(uint mapID) => this.Flags.TryGetValue(mapID, out var flags) ? flags : MapFlags.None;
+        public MapFlags Of(uint mapID) => this.Maps.TryGetValue(mapID, out var map) ? map.Flags : MapFlags.None;
+
+        // Where a player on this map is saved, or null to save where they stand
+        public MapPoint LoginPointOf(uint mapID) =>
+            this.Maps.TryGetValue(mapID, out var map) && map.Flags.HasFlag(MapFlags.RecordDisable) ? map.Reborn : null;
     }
 }

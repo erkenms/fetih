@@ -219,7 +219,7 @@ namespace Comet.Integration.Tests
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
-            File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(300, 300));
+            File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));

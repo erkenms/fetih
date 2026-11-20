@@ -19,11 +19,15 @@ namespace Comet.Game.States
             CopyStored(character, this);
         }
 
-        // A copy for the database, so a save never holds the live character
+        // A copy for the database, so a save never holds the live character. A map that
+        // isn't recorded (RecordDisable) saves its reborn point instead.
         public DbCharacter Snapshot()
         {
             var copy = new DbCharacter(this.AccountID, this.CharacterID, this.Name);
             CopyStored(this, copy);
+            var reborn = Kernel.MapTypes.LoginPointOf(this.MapID);
+            if (reborn != null)
+                (copy.MapID, copy.X, copy.Y) = (reborn.MapID, reborn.X, reborn.Y);
             return copy;
         }
 
