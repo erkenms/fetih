@@ -51,9 +51,11 @@ namespace Comet.Game.Packets
         }
 
         // Asked by both sides of a whisper about the other one. The reply is the name and the details shown
-        // in the whisper window: "ID level battle-power #guild #family spouse nobility male".
+        // in the whisper window: "ID level battle-power guild family spouse nobility male", '#' for none.
         public static string WhisperDetails(Character character) =>
-            $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} # # None 0 " +
+            $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} " +
+            $"{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? "#"} " +
+            $"{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? "#"} None 0 " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =
@@ -68,6 +70,9 @@ namespace Comet.Game.Packets
                     msg.Strings = new List<string> { target.Character.Name, WhisperDetails(target.Character) };
                     return client.SendAsync(msg);
                 },
+                // The guild member list's kick button, with the member's name
+                [NameAction.GuildKick] = (msg, client) =>
+                    Social.Guilds.KickAsync(client, msg.Strings.Count > 0 ? msg.Strings[0] : null),
             };
 
         public static bool Handles(NameAction action) => Handlers.ContainsKey(action);
@@ -90,6 +95,9 @@ namespace Comet.Game.Packets
             QueryPoliceWanted,
             PoliceWanted,
             QuerySpouse,
+            // A guild's ID and summary for the guild window's lists
+            SetAlly = 21,
+            SetEnemy,
             WhisperDetails = 26
         }
     }

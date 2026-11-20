@@ -61,6 +61,28 @@ namespace Comet.Game.Chat
                         await member.SendAsync(msg);
                     break;
 
+                case TalkChannel.Guild:
+                    if (Social.Guilds.Of(client.ID) == null)
+                    {
+                        await RejectAsync(client, msg, "no_guild", "You are not in a guild.");
+                        return;
+                    }
+                    Log(client, msg, null);
+                    foreach (var member in Social.Guilds.OthersOf(client))
+                        await member.SendAsync(msg);
+                    break;
+
+                case TalkChannel.Clan:
+                    if (Social.Clans.Of(client.ID) == null)
+                    {
+                        await RejectAsync(client, msg, "no_clan", "You are not in a clan.");
+                        return;
+                    }
+                    Log(client, msg, null);
+                    foreach (var member in Social.Clans.OthersOf(client))
+                        await member.SendAsync(msg);
+                    break;
+
                 case TalkChannel.Friend:
                     Log(client, msg, null);
                     foreach (var id in client.Friends.Keys)

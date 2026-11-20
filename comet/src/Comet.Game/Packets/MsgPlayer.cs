@@ -24,11 +24,27 @@ namespace Comet.Game.Packets
         public ulong Status { get; set; }
         public uint MonsterHealth { get; set; }
         public ushort MonsterLevel { get; set; }
+        public uint GuildID { get; set; }
+        public ushort GuildRank { get; set; }
+        public uint ClanID { get; set; }
+        public ushort ClanRank { get; set; }
+        public string ClanName { get; set; } = string.Empty;
 
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
             this.Mesh = client.Life.Mesh(client.Character);
             this.Status = client.Status;
+            if (Social.Guilds.Of(client.ID) is Social.Guilds.Membership guild)
+            {
+                this.GuildID = guild.Guild.ID;
+                this.GuildRank = (ushort)guild.Member.Rank;
+            }
+            if (Social.Clans.Of(client.ID) is Social.Clans.Membership clan)
+            {
+                this.ClanID = clan.Clan.ID;
+                this.ClanRank = (ushort)clan.Member.Rank;
+                this.ClanName = clan.Clan.Name;
+            }
         }
 
         public MsgPlayer(Monster monster)
@@ -81,8 +97,8 @@ namespace Comet.Game.Packets
             writer.Write((ushort)base.Type);
             writer.Write(this.Mesh);                // 4
             writer.Write(this.CharacterID);         // 8
-            writer.Write(0u);                       // 12  guild ID
-            writer.Write(0u);                       // 16  guild rank
+            writer.Write(this.GuildID);             // 12
+            writer.Write((uint)this.GuildRank);     // 16
             writer.Write((ushort)0);                // 20
             writer.Write(this.Status);              // 22  status flags
             writer.Write(new byte[12]);             // 30
@@ -122,8 +138,8 @@ namespace Comet.Game.Packets
             writer.Write((ushort)0);                // 155
             writer.Write((ushort)0);                // 157
             writer.Write(0u);                       // 159
-            writer.Write(0u);                       // 163 clan ID
-            writer.Write(0u);                       // 167 clan rank
+            writer.Write(this.ClanID);              // 163
+            writer.Write((uint)this.ClanRank);      // 167
             writer.Write(0u);                       // 171
             writer.Write((ushort)0);                // 175 title
             writer.Write(0u);                       // 177
@@ -144,7 +160,7 @@ namespace Comet.Game.Packets
             writer.Write(new List<string> {         // 226
                 this.Name,
                 string.Empty,
-                string.Empty                        // clan name
+                this.ClanName
             });
             return writer.ToArray();
         }
