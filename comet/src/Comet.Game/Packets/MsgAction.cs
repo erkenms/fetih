@@ -223,8 +223,10 @@ namespace Comet.Game.Packets
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
-                // The Revive button; refused until the player has been dead long enough
-                [ActionType.CharacterRevive] = (msg, client) => Combat.Death.ReviveAsync(client, "button"),
+                // The Revive button; refused until the player has been dead long enough.
+                // Non-zero Command asks to revive where the player lies (WCO 5808).
+                [ActionType.CharacterRevive] = (msg, client) =>
+                    Combat.Death.ReviveAsync(client, "button", here: msg.Command != 0),
                 [ActionType.CharacterDead] = (msg, client) => Combat.Death.BecomeGhostAsync(client),
                 [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
 

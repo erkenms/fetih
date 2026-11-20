@@ -42,6 +42,9 @@ namespace Comet.Integration.Tests
         // Teleports to Twin City's portal, 430,380 in Data/maps.json
         public static readonly (uint Id, string Name, ushort Amount, byte Level) TwinCityGate = (1060020, "TwinCityGate", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Steed = (300000, "Steed", 100, 0);
+        // Three and seven days of heaven blessing
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) SmallPrayingStone = (1200000, "PrayingStone(S)", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) PrayingStone = (1200001, "PrayingStone(M)", 1, 0);
         // The vigor of a +1 steed, from the test itemadd.ini
         public const ushort SteedVigor = 50;
 
@@ -239,7 +242,8 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed));
+                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed,
+                    SmallPrayingStone, PrayingStone));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, SteedVigor)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),

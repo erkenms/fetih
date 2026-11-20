@@ -157,6 +157,7 @@ namespace Comet.Game.Combat
                     character.Name, type.Name, monster.Identity, type.ID, monster.Map.Id, x, y);
             }
 
+            experience = HeavenBlessing.HuntingExperience(experience, HeavenBlessing.IsBlessed(character, DateTime.UtcNow));
             if (experience > 0)
                 await Progress.AwardExperienceAsync(client, experience, "monster");
             if (killed)

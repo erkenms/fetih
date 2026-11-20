@@ -435,6 +435,10 @@ namespace Comet.Client
         public Task ReviveAsync(uint characterId) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Revive));
 
+        // The blessed may revive where they died
+        public Task ReviveHereAsync(uint characterId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Revive, command: 1));
+
         public async Task<bool> WaitForRemovalAsync(uint entityId, TimeSpan? timeout = null) =>
             await this.WaitForActionAsync(ActionMessage.RemoveEntity, entityId, timeout) != null;
 

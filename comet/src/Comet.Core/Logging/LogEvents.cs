@@ -37,6 +37,8 @@ namespace Comet.Core.Logging
         public const string CharacterDied = "character.died";
         public const string CharacterRevived = "character.revived";
         public const string CharacterReviveRejected = "character.revive_rejected";
+        public const string CharacterBlessed = "character.blessed";
+        public const string CharacterBlessingEnded = "character.blessing_ended";
 
         public const string ItemTypesLoaded = "item.types_loaded";
         public const string ItemCreated = "item.created";

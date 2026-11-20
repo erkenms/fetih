@@ -41,6 +41,7 @@ namespace Comet.Game.States
             to.EnlightenPoints = from.EnlightenPoints;
             to.Experience = from.Experience;
             to.Hairstyle = from.Hairstyle;
+            to.HeavenBlessing = from.HeavenBlessing;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

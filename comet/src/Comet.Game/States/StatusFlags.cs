@@ -19,6 +19,7 @@ namespace Comet.Game.States
         public const ulong BlackName = 0x8000;
         public const ulong Superman = 0x40000;
         public const ulong Cyclone = 0x800000;
+        public const ulong HeavenBlessing = 1UL << 33;
         public const ulong Riding = 1UL << 50;
     }
 

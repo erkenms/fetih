@@ -72,6 +72,7 @@ namespace Comet.Game.Packets
             Vitality = 14,
             Strength = 15,
             Agility = 16,
+            HeavenBlessing = 17,    // seconds left
             Rebirths = 22,
             Status = 25,
             Hairstyle = 26,

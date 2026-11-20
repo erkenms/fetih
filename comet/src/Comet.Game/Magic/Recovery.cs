@@ -56,12 +56,14 @@ namespace Comet.Game.Magic
                     "{Name} status 0x{Status:X} ended", character.Name, ended);
             }
 
+            await HeavenBlessing.ExpireAsync(client, now);
+
             if (client.Life.Dead)
                 return;
             await Items.Riding.RecoverAsync(client, now);
 
             int gain = character.Stance == Items.Vending.SitStance ? StaminaSitting : StaminaStanding;
-            byte stamina = (byte)Math.Min(Energy.MaxStamina, energy.Stamina + gain);
+            byte stamina = (byte)Math.Min(HeavenBlessing.MaxStamina(client), energy.Stamina + gain);
             if (stamina != energy.Stamina)
             {
                 energy.Stamina = stamina;

@@ -55,6 +55,7 @@ CREATE TABLE `character` (
   `EnlightenPoints` smallint(5) unsigned NOT NULL DEFAULT '0',
   `QuizPoints` int(10) unsigned NOT NULL DEFAULT '0',
   `VIPLevel` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `HeavenBlessing` datetime DEFAULT NULL,
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),

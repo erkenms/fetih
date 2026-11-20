@@ -153,6 +153,14 @@ namespace Comet.Game.Packets
                 await Nobility.Peerage.LoginAsync(client);
                 await client.SendAsync(new MsgUserAttrib(
                     client.ID, MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina));
+                if (HeavenBlessing.IsBlessed(entered, DateTime.UtcNow))
+                {
+                    await HeavenBlessing.SendAsync(client);
+                    await client.SendAsync(new MsgUserAttrib(
+                        client.ID, MsgUserAttrib.AttributeType.Status, client.Status));
+                }
+                else
+                    entered.HeavenBlessing = null;
             }            
         }
 

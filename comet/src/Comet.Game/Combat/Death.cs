@@ -61,7 +61,8 @@ namespace Comet.Game.Combat
 
         // The client's Revive button (MsgAction 94). Revives at full health at the reborn
         // point of the map died on (the jail's is the jail), or in Twin City if it has none.
-        public static async Task<bool> ReviveAsync(Client client, string reason, bool anyTime = false)
+        // The blessed may ask to stay where they lie.
+        public static async Task<bool> ReviveAsync(Client client, string reason, bool anyTime = false, bool here = false)
         {
             var character = client.Character;
             var life = client.Life;
@@ -79,6 +80,11 @@ namespace Comet.Game.Combat
             }
 
             await RaiseAsync(client, now);
+            if (here && HeavenBlessing.CanReviveHere(client))
+            {
+                await ShowRevivalAsync(client, reason + "_here");
+                return true;
+            }
             var reborn = Kernel.MapTypes.RebornPointOf(character.MapID);
             if (reborn == null || !await Movement.TeleportAsync(client, reborn.MapID, reborn.X, reborn.Y))
                 await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);

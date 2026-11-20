@@ -51,6 +51,9 @@ namespace Comet.Game.Database.Models
         public virtual ushort EnlightenPoints { get; set; }
         public virtual uint QuizPoints { get; set; }
         public virtual uint VIPLevel { get; set; }
+
+        // When the heaven blessing runs out (UTC); null if never blessed or expired
+        public virtual DateTime? HeavenBlessing { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

@@ -397,7 +397,7 @@ namespace Comet.Game.Chat
                 return false;
             character.HealthPoints = Attributes.MaxHealth(character);
             character.ManaPoints = Attributes.MaxMana(character);
-            client.Energy.Stamina = Magic.Energy.MaxStamina;
+            client.Energy.Stamina = HeavenBlessing.MaxStamina(client);
             // The maximums first, so the client doesn't cut health or mana to an older one
             await new MsgUserAttrib(client.ID)
                 .Append(MsgUserAttrib.AttributeType.MaxHealth, character.HealthPoints)
