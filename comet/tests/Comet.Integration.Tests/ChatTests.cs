@@ -157,6 +157,31 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task GameMasterTeleportsByPlaceName()
+        {
+            await using var gm = (await this.PlayingAtAsync(1002, 680, 520, GameMaster)).Player;
+
+            async Task<(uint, int, int)> TeleportAsync(string command)
+            {
+                await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", command);
+                var moved = await gm.Game.WaitForActionAsync(ActionMessage.Teleport, gm.User.Id);
+                Assert.NotNull(moved);
+                return (moved.Command, moved.X, moved.Y);
+            }
+
+            Assert.Equal((ServerFixture.Market, 303, 237), await TeleportAsync("/tp market"));
+            Assert.Equal((ServerFixture.Market, 40, 50), await TeleportAsync("/tp 40 50"));
+            Assert.Equal((1002u, 430, 380), await TeleportAsync("/tp TC"));
+            Assert.Equal((1006u, 20, 25), await TeleportAsync("/tp stable 20 25"));
+            Assert.Equal((ServerFixture.DesertCity, 100, 120), await TeleportAsync("/tp desert 100 120"));
+            Assert.Equal((1002u, 600, 520), await TeleportAsync("/tp 1002 600 520"));
+
+            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/tp nowhere");
+            var places = await NoticeAsync(gm, "No place nowhere");
+            Assert.Contains("twin_city (tc)", places?.Text);
+        }
+
+        [Fact]
         public async Task ModeratorCanKickButNotTeleport()
         {
             await using var mod = (await this.PlayingAtAsync(1002, 660, 520, Moderator)).Player;

@@ -33,7 +33,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "online" }, Authority.Moderator, "/online", OnlineAsync),
             new Command(new[] { "where" }, Authority.Moderator, "/where [name]", WhereAsync),
             new Command(new[] { "kick" }, Authority.Moderator, "/kick <name>", KickAsync),
-            new Command(new[] { "teleport", "tp" }, Authority.GameMaster, "/tp <map> <x> <y>", TeleportAsync),
+            new Command(new[] { "teleport", "tp" }, Authority.GameMaster, TeleportUsage, TeleportAsync),
             new Command(new[] { "goto" }, Authority.GameMaster, "/goto <name>", GotoAsync),
             new Command(new[] { "grab" }, Authority.GameMaster, "/grab <name>", GrabAsync),
             new Command(new[] { "broadcast", "bc" }, Authority.GameMaster, "/bc <text>", BroadcastAsync),
@@ -176,12 +176,48 @@ namespace Comet.Game.Chat
             return true;
         }
 
+        private const string TeleportUsage = "/tp <place|map> [x y], /tp <x> <y>";
+
+        // /tp market goes to the map's own portal, /tp market 200 200 to a cell on it, and
+        // /tp 200 200 to a cell on this map. Places are names from Data/maps.json or map IDs.
         private static async Task<bool> TeleportAsync(Client client, string[] args, string rest)
         {
-            if (args.Length != 3 || !uint.TryParse(args[0], out var map) ||
-                !ushort.TryParse(args[1], out var x) || !ushort.TryParse(args[2], out var y))
-                return await UsageAsync(client, "/tp <map> <x> <y>");
-            return await MoveAsync(client, map, x, y);
+            var character = client.Character;
+            if (args.Length == 2 && ushort.TryParse(args[0], out var hereX) && ushort.TryParse(args[1], out var hereY))
+                return await MoveAsync(client, character.MapID, hereX, hereY);
+            if (args.Length != 1 && args.Length != 3)
+                return await UsageAsync(client, TeleportUsage);
+
+            uint map;
+            if (!uint.TryParse(args[0], out map))
+            {
+                var named = Kernel.MapTypes.Find(args[0]);
+                if (named == null)
+                {
+                    var places = Kernel.MapTypes.Named.Select(m => m.Aliases?.Count > 0 ? $"{m.Name} ({string.Join(", ", m.Aliases)})" : m.Name);
+                    foreach (var line in Lines($"No place {args[0]}. Places:", places))
+                        await Talk.NoticeAsync(client, line);
+                    return false;
+                }
+                map = named.MapID;
+            }
+
+            if (args.Length == 3)
+            {
+                if (!ushort.TryParse(args[1], out var x) || !ushort.TryParse(args[2], out var y))
+                    return await UsageAsync(client, TeleportUsage);
+                return await MoveAsync(client, map, x, y);
+            }
+
+            var point = Kernel.MapTypes.PortalOf(map);
+            if (point == null && Kernel.Portals.Into(map) is PortalTarget into)
+                point = new MapPoint(map, into.X, into.Y);
+            if (point == null)
+            {
+                await Talk.NoticeAsync(client, $"Map {map} has no default point. Try /tp {args[0]} <x> <y>.");
+                return false;
+            }
+            return await MoveAsync(client, point.MapID, point.X, point.Y);
         }
 
         private static async Task<bool> GotoAsync(Client client, string[] args, string rest)

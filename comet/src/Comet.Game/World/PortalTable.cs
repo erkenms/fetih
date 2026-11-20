@@ -35,5 +35,12 @@ namespace Comet.Game.World
 
         public bool TryGet(uint mapID, uint index, out PortalTarget target) =>
             this.Targets.TryGetValue((mapID, index), out target);
+
+        // Where some portal into this map lands, or null if none leads there
+        public PortalTarget? Into(uint mapID)
+        {
+            var into = this.Targets.Where(t => t.Value.MapID == mapID).OrderBy(t => t.Key).ToList();
+            return into.Count > 0 ? into[0].Value : null;
+        }
     }
 }
