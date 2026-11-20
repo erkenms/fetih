@@ -101,7 +101,7 @@ namespace Comet.Client
     // A number, the action as one byte, then the strings
     public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
     {
-        public const byte Guild = 3, GuildKick = 12, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
+        public const byte Guild = 3, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
 
         public static NameMessage Parse(byte[] packet) => new NameMessage(
             BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));
@@ -290,6 +290,7 @@ namespace Comet.Client
         public const ushort QueryStatInfo = 408;
         public const ushort OpenWindow = 126, OpenShop = 160;
         public const ushort CharacterAway = 161;
+        public const ushort Observe = 117;
         public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4;
 
@@ -365,16 +366,22 @@ namespace Comet.Client
     }
 
     // An item in someone's booth: item ID, booth ID, price, type, amount and its limit,
-    // then 1 for silver or 3 for Conquer Points
+    // then 1 for silver or 3 for Conquer Points, and the position at 26. An item another
+    // player wears comes the same way with view 4 and that player's ID for the booth's.
     public sealed record BoothItem(uint Id, uint BoothId, uint Price, uint TypeId, ushort Amount, ushort AmountLimit, ushort View)
     {
-        public const ushort Silver = 1, ConquerPoints = 3;
+        public const ushort Silver = 1, ConquerPoints = 3, Worn = 4;
+
+        public ushort Position { get; init; }
 
         public static BoothItem Parse(byte[] packet) => new BoothItem(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
             BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
-            BitConverter.ToUInt16(packet, 24));
+            BitConverter.ToUInt16(packet, 24))
+        {
+            Position = BitConverter.ToUInt16(packet, 26),
+        };
     }
 
     // An item or character ID, a value (a slot when equipping), the action, a timestamp and

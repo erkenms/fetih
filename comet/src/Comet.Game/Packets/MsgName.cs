@@ -58,6 +58,14 @@ namespace Comet.Game.Packets
             $"{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? "#"} None 0 " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
+        // No marriages yet: everyone's spouse is "None", as in MsgUserInfo
+        public static MsgName SpouseOf(uint characterID) => new MsgName
+        {
+            Data = characterID,
+            Action = NameAction.QuerySpouse,
+            Strings = new List<string> { "None" },
+        };
+
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =
             new Dictionary<NameAction, Func<MsgName, Client, Task>>
             {
@@ -70,6 +78,8 @@ namespace Comet.Game.Packets
                     msg.Strings = new List<string> { target.Character.Name, WhisperDetails(target.Character) };
                     return client.SendAsync(msg);
                 },
+                // Albetros (5517): asked about a player in view, for the gear window
+                [NameAction.QuerySpouse] = (msg, client) => client.SendAsync(SpouseOf(msg.Data)),
                 // The guild member list's kick button, with the member's name
                 [NameAction.GuildKick] = (msg, client) =>
                     Social.Guilds.KickAsync(client, msg.Strings.Count > 0 ? msg.Strings[0] : null),

@@ -5,21 +5,22 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // An item on sale in a booth, as a buyer sees it. Albetros (5517) layout, 84 bytes.
+    // An item on sale in a booth, as a buyer sees it, or one worn by another player.
+    // Albetros (5517) layout, 84 bytes.
     public sealed class MsgItemInfoEx : MsgBase<Client>
     {
         public const int Size = 84;
 
         public DbItem Item { get; }
-        public uint BoothID { get; }
+        public uint OwnerID { get; }
         public uint Price { get; }
         public ViewType View { get; }
 
-        public MsgItemInfoEx(DbItem item, uint boothID, uint price, ViewType view)
+        public MsgItemInfoEx(DbItem item, uint ownerID, uint price, ViewType view)
         {
             base.Type = PacketType.MsgItemInfoEx;
             this.Item = item;
-            this.BoothID = boothID;
+            this.OwnerID = ownerID;
             this.Price = price;
             this.View = view;
         }
@@ -29,7 +30,7 @@ namespace Comet.Game.Packets
             var body = new byte[Size];
             var span = body.AsSpan();
             BitConverter.TryWriteBytes(span[4..], this.Item.ItemID);
-            BitConverter.TryWriteBytes(span[8..], this.BoothID);
+            BitConverter.TryWriteBytes(span[8..], this.OwnerID);
             BitConverter.TryWriteBytes(span[12..], this.Price);
             BitConverter.TryWriteBytes(span[16..], this.Item.TypeID);
             BitConverter.TryWriteBytes(span[20..], this.Item.Amount);
@@ -55,6 +56,7 @@ namespace Comet.Game.Packets
         {
             Silver = 1,
             ConquerPoints = 3,
+            Equipment = 4,
         }
     }
 }

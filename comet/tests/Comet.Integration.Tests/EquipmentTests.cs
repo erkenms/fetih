@@ -84,6 +84,27 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ObservingAPlayerShowsWhatTheyWear()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 720, 560, GameMaster)).Player;
+            await using var observer = (await this.PlayingAtAsync(1002, 722, 560)).Player;
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(blade.Id, RightHand);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
+            Assert.NotNull(await observer.Game.WaitForSpawnAsync(player.User.Id,
+                s => s.RightHand == ServerFixture.Blade.Id));
+
+            await observer.Game.ObserveAsync(observer.User.Id, player.User.Id);
+            var worn = await observer.Game.WaitForBoothItemAsync(i => i.Id == blade.Id);
+            Assert.Equal((player.User.Id, ServerFixture.Blade.Id, BoothItem.Worn, (ushort)RightHand),
+                (worn?.BoothId, worn?.TypeId, worn?.View, worn?.Position));
+            var spouse = await observer.Game.WaitForNameAsync(n => n.Action == NameMessage.Spouse);
+            Assert.Equal((player.User.Id, "None"), (spouse?.Data, spouse?.Strings.FirstOrDefault()));
+            Assert.Null(await observer.Game.WaitForActionAsync(
+                ActionMessage.Observe, observer.User.Id, System.TimeSpan.FromMilliseconds(300)));
+        }
+
+        [Fact]
         public async Task TheStatQueryIsNotEchoed()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 560)).Player;

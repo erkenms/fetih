@@ -237,6 +237,19 @@ namespace Comet.Game.Packets
                     msg.CharacterID = client.ID;
                     return Movement.SendToViewAsync(client, msg);
                 },
+                // Albetros (5517): the target's ID in Command; answered with the target's spawn,
+                // each worn item and the spouse's name, not echoed
+                [ActionType.CharacterObservation] = async (msg, client) =>
+                {
+                    if (client.Character == null || msg.Command == client.ID ||
+                        !Kernel.Players.TryGet(msg.Command, out var target) ||
+                        target.Character == null || target.Equipment == null)
+                        return;
+                    await client.SendAsync(new MsgPlayer(target));
+                    foreach (var item in target.Equipment.Items)
+                        await client.SendAsync(new MsgItemInfoEx(item, target.ID, 0, MsgItemInfoEx.ViewType.Equipment));
+                    await client.SendAsync(MsgName.SpouseOf(target.ID));
+                },
                 [ActionType.CharacterAway] = (msg, client) =>
                 {
                     if (client.Character == null)

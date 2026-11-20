@@ -288,6 +288,9 @@ namespace Comet.Client
         public Task RemoveFromBoothAsync(uint itemId, uint boothId) =>
             this.SendAsync(ItemMessage.Build(itemId, boothId, ItemMessage.BoothRemove));
 
+        public Task ObserveAsync(uint characterId, uint targetId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Observe, targetId));
+
         public Task ViewBoothAsync(uint boothId) =>
             this.SendAsync(ItemMessage.Build(boothId, 0, ItemMessage.BoothView));
 
