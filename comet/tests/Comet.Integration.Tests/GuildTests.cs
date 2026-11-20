@@ -62,6 +62,8 @@ namespace Comet.Integration.Tests
             await this.Servers.WaitForEventAsync("game", "guild.created", "name", founder.User.Name);
             await RecruitAsync(founder, member, guildID);
             await this.Servers.WaitForEventAsync("game", "guild.joined", "name", member.User.Name);
+            var whisper = await founder.Game.AskWhisperDetailsAsync(member.User.Name);
+            Assert.Contains($"#{name}", whisper?.Strings[1]);
 
             await member.Game.SayAsync(TalkChannels.Guild, member.User.Name, "ALLUSERS", "hello guild");
             Assert.NotNull(await founder.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Guild && t.Text == "hello guild"));

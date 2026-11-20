@@ -22,7 +22,7 @@ namespace Comet.Game.Tests.Packets
         {
             var msg = new MsgName { Action = MsgName.NameAction.WhisperDetails };
             msg.Strings.Add("Altay");
-            msg.Strings.Add("1000001 70 70 # # None 0 1");
+            msg.Strings.Add("1000001 70 70 #Mogollar #Adamlar None 0 1");
             var bytes = msg.Encode();
             Assert.Equal(1015, BitConverter.ToUInt16(bytes, 2));
             Assert.Equal(26, bytes[8]);

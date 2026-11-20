@@ -51,11 +51,12 @@ namespace Comet.Game.Packets
         }
 
         // Asked by both sides of a whisper about the other one. The reply is the name and the details shown
-        // in the whisper window: "ID level battle-power guild family spouse nobility male", '#' for none.
+        // in the whisper window: "ID level battle-power guild family spouse nobility male". The client drops
+        // the first character of guild and family unless the field is just "#", hence the '#' prefix.
         public static string WhisperDetails(Character character) =>
             $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} " +
-            $"{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? "#"} " +
-            $"{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? "#"} None 0 " +
+            $"#{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? string.Empty} " +
+            $"#{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? string.Empty} None 0 " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
         // No marriages yet: everyone's spouse is "None", as in MsgUserInfo

@@ -66,6 +66,8 @@ namespace Comet.Integration.Tests
             Assert.Equal((clanID, name), (joined?.Data, joined?.Strings[1]));
             Assert.NotNull(await founder.Game.WaitForSpawnAsync(member.User.Id,
                 s => s.ClanId == clanID && s.ClanRank == FamilyMessage.Member && s.ClanName == name));
+            var whisper = await founder.Game.AskWhisperDetailsAsync(member.User.Name);
+            Assert.Contains($"#{name}", whisper?.Strings[1]);
             await this.Servers.WaitForEventAsync("game", "clan.joined", "name", member.User.Name);
 
             await member.Game.SayAsync(TalkChannels.Clan, member.User.Name, "ALLUSERS", "hello clan");
