@@ -29,6 +29,9 @@ namespace Comet.Game
         // Where portal cells lead, read from Data/portals.json at startup
         public static PortalTable Portals = new PortalTable(new Portal[0]);
 
+        // Map type flags, read from Data/maps.json at startup
+        public static MapTypes MapTypes = new MapTypes(new MapType[0]);
+
         // Experience to reach each next level, read from Data/levels.json at startup
         public static ExperienceTable Experience = new ExperienceTable(new LevelExp[0]);
 

@@ -111,6 +111,19 @@
 
             try
             {
+                Kernel.MapTypes = new MapTypes(MapTypes.Load(DataFiles.PathOf("maps.json")));
+                LogEvents.For(typeof(Program), LogEvents.MapTypesLoaded).Information(
+                    "Loaded type flags for {MapCount} maps", Kernel.MapTypes.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read Data/maps.json");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json"));
                 var placed = npcs.Where(n => Kernel.Maps.Exists(n.MapID)).ToList();
                 Kernel.Npcs = new NpcTable(placed);

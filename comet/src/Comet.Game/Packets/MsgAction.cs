@@ -161,6 +161,7 @@ namespace Comet.Game.Packets
                     msg.X = client.Character.X;
                     msg.Y = client.Character.Y;
                     await client.SendAsync(msg);
+                    await client.SendAsync(MsgMapInfo.For(msg.Command));
                 },
 
                 [ActionType.LoginInventory] = async (msg, client) =>

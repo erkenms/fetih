@@ -1,0 +1,7 @@
+// Map type flags sent in MsgMapInfo, only for what the server enforces. Names from
+// World/MapTypes.cs, comma separated. Maps not listed have none.
+{
+  "maps": [
+    { "map": 1036, "flags": "BoothEnable" },
+  ]
+}

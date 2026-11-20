@@ -105,6 +105,8 @@ namespace Comet.Game.World
             character.Y = y;
             character.Stance = 0;
             await client.SendAsync(MsgAction.Teleport(client.ID, mapID, x, y, character.Direction));
+            if (from != to)
+                await client.SendAsync(MsgMapInfo.For(mapID));
             await Visibility.EnterAsync(client);
             LogEvents.For(typeof(Movement), LogEvents.MoveTeleport).Information(
                 "{Name} teleported from map {FromMapId} at {FromX},{FromY} to map {MapId} at {X},{Y}",

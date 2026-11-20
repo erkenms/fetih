@@ -49,13 +49,14 @@ namespace Comet.Integration.Tests
                     "in MsgRegister", "out MsgTalk",            // ANSWER_OK
                     "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
                     "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
+                    "out MsgMapInfo",
                     "in MsgAction 75", "out MsgAction 75",      // LoginInventory, still empty
                     "out MsgItem 46",                           // DisplayGears
                     "in MsgAction 76", "out MsgAction 76",      // LoginRelationships, no friends yet
                     "in MsgAction 77", "out MsgAction 77",      // LoginProficiencies, none yet
                     "in MsgAction 78", "out MsgAction 78",      // LoginSpells, none yet
                     "in MsgAction 251"                          // LoginComplete
-                }, trace.Skip(2).Take(19));
+                }, trace.Skip(2).Take(20));
             }
         }
 

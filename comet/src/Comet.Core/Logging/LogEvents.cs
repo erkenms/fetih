@@ -92,6 +92,7 @@ namespace Comet.Core.Logging
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";
         public const string PortalsLoaded = "map.portals_loaded";
+        public const string MapTypesLoaded = "map.types_loaded";
 
         public const string NpcsLoaded = "npc.loaded";
         public const string NpcTalk = "npc.talk";
