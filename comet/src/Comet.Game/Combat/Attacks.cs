@@ -252,11 +252,13 @@ namespace Comet.Game.Combat
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
                 attackerCharacter.Name, character.Name, damage, character.HealthPoints, kind);
+            await Arena.Qualifier.OnHitAsync(attacker, target, dealt);
 
             if (character.HealthPoints > 0)
                 return;
             await Death.DieAsync(target, attacker.ID, attackerCharacter.Name);
-            await Pking.OnKillAsync(attacker, target);
+            if (!await Arena.Qualifier.OnKillAsync(attacker, target))
+                await Pking.OnKillAsync(attacker, target);
         }
 
         // Runs on the player's queue, posted by the monster loop

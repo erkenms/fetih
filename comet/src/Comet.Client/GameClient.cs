@@ -565,6 +565,39 @@ namespace Comet.Client
             return packet == null ? null : FriendMessage.Parse(packet);
         }
 
+        public async Task<QualifierMessage> WaitForQualifierAsync(Func<QualifierMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgQualifyingInteractive && match(QualifierMessage.Parse(p)), timeout);
+            return packet == null ? null : QualifierMessage.Parse(packet);
+        }
+
+        public async Task<QualifierDetails> WaitForQualifierDetailsAsync(Func<QualifierDetails, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgQualifyingDetailInfo && match(QualifierDetails.Parse(p)), timeout);
+            return packet == null ? null : QualifierDetails.Parse(packet);
+        }
+
+        public async Task<QualifierMatches> WaitForQualifierMatchesAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgQualifyingFightersList, timeout);
+            return packet == null ? null : QualifierMatches.Parse(packet);
+        }
+
+        public async Task<QualifierRanking> WaitForQualifierRankingAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgQualifyingRank, timeout);
+            return packet == null ? null : QualifierRanking.Parse(packet);
+        }
+
+        public async Task<ArenaScore> WaitForArenaScoreAsync(Func<ArenaScore, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgArenicScore && match(ArenaScore.Parse(p)), timeout);
+            return packet == null ? null : ArenaScore.Parse(packet);
+        }
+
         public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>
             this.SendAsync(AllotMessage.Build(strength, agility, vitality, spirit));
 

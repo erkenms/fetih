@@ -167,10 +167,13 @@
                 await Social.Clans.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ClansLoaded).Information(
                     "Loaded {ClanCount} clans", Social.Clans.Count);
+                await Arena.Qualifier.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
+                    "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't load guilds and clans from the database");
+                Log.Error(e, "Can't load guilds, clans and arena records from the database");
                 Log.CloseAndFlush();
                 return;
             }
@@ -252,6 +255,11 @@
             Magic.Recovery.XpInterval = TimeSpan.FromMilliseconds(Math.Max(100, config.Magic.XpMilliseconds));
             Magic.Recovery.XpFullTime = TimeSpan.FromSeconds(Math.Max(1, config.Magic.XpFullSeconds));
             _ = Magic.Recovery.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Arena.Qualifier.InviteTime = TimeSpan.FromSeconds(Math.Max(1, config.Arena.InviteSeconds));
+            Arena.Qualifier.CountdownTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.CountdownSeconds));
+            Arena.Qualifier.MatchTime = TimeSpan.FromSeconds(Math.Max(1, config.Arena.MatchSeconds));
+            Arena.Qualifier.EndTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.EndSeconds));
+            _ = Arena.Qualifier.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);

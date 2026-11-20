@@ -32,6 +32,12 @@ namespace Comet.Game.Items
         {
             if (client.Character == null)
                 return;
+            if (Arena.Qualifier.IsSignedUp(client))
+            {
+                Reject(client, "open", 0, 0, "qualifier");
+                await Talk.NoticeAsync(client, "Please quit the Qualifier before you start running booth.");
+                return;
+            }
             await Gate.WaitAsync();
             try
             {

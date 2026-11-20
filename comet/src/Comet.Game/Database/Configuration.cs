@@ -18,6 +18,7 @@ namespace Comet.Game.Database
         public CombatConfiguration Combat { get; set; } = new CombatConfiguration();
         public PkConfiguration Pk { get; set; } = new PkConfiguration();
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
+        public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -111,6 +112,16 @@ namespace Comet.Game.Database
         {
             public int XpMilliseconds { get; set; } = 3000;
             public int XpFullSeconds { get; set; } = 20;
+        }
+
+        // The qualifier: time to accept a match, the countdown before fighting, the longest
+        // fight, and how long fighters stay in the arena after it
+        public class ArenaConfiguration
+        {
+            public int InviteSeconds { get; set; } = 60;
+            public int CountdownSeconds { get; set; } = 10;
+            public int MatchSeconds { get; set; } = 300;
+            public int EndSeconds { get; set; } = 3;
         }
 
         public ServerConfiguration(string[] args)

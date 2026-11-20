@@ -78,15 +78,38 @@ namespace Comet.Game.Combat
                 return false;
             }
 
+            await RaiseAsync(client, now);
+            var reborn = Kernel.MapTypes.RebornPointOf(character.MapID);
+            if (reborn == null || !await Movement.TeleportAsync(client, reborn.MapID, reborn.X, reborn.Y))
+                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+            await ShowRevivalAsync(client, reason);
+            return true;
+        }
+
+        // Where the player lies, as the arena does after a match
+        public static async Task ReviveHereAsync(Client client, string reason)
+        {
+            if (client.Character == null || !client.Life.Dead)
+                return;
+            await RaiseAsync(client, DateTime.UtcNow);
+            await ShowRevivalAsync(client, reason);
+        }
+
+        private static async Task RaiseAsync(Client client, DateTime now)
+        {
+            var character = client.Character;
+            var life = client.Life;
             life.Dead = false;
             life.Ghost = false;
             life.ProtectedUntil = now + Protection;
             character.HealthPoints = Attributes.MaxHealth(character);
             await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Health, character.HealthPoints));
             await SendLookAsync(client);
-            var reborn = Kernel.MapTypes.RebornPointOf(character.MapID);
-            if (reborn == null || !await Movement.TeleportAsync(client, reborn.MapID, reborn.X, reborn.Y))
-                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+        }
+
+        private static async Task ShowRevivalAsync(Client client, string reason)
+        {
+            var character = client.Character;
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, MsgMagicEffect.Revive);
             effect.Targets.Add((client.ID, 0));
             await client.SendAsync(effect);
@@ -94,7 +117,6 @@ namespace Comet.Game.Combat
             LogEvents.For(typeof(Death), LogEvents.CharacterRevived).Information(
                 "{Name} revived on map {MapId} at {X},{Y} ({Reason})",
                 character.Name, character.MapID, character.X, character.Y, reason);
-            return true;
         }
 
         // Status and body, to the player and everyone who sees them. One packet each, as the

@@ -85,6 +85,11 @@ namespace Comet.Integration.Tests
         // Shopkeepers in Twin City, with what the test Shop.dat has them sell
         public const uint Blacksmith = 5, Pharmacist = 3;
 
+        // The qualifier arena, and its timings: short, but long enough to try an attack
+        // during the countdown and to accept a match
+        public const uint Arena = 900000;
+        public const int ArenaInviteSeconds = 3, ArenaCountdownSeconds = 3, ArenaEndSeconds = 1;
+
         // Short, so a test can see a periodic save happen
         public const int SaveIntervalSeconds = 2;
 
@@ -202,6 +207,8 @@ namespace Comet.Integration.Tests
                 "--Death:ReviveSeconds=" + ReviveSeconds,
                 "--Monsters:WanderChance=0",
                 "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
+                "--Arena:InviteSeconds=" + ArenaInviteSeconds, "--Arena:CountdownSeconds=" + ArenaCountdownSeconds,
+                "--Arena:EndSeconds=" + ArenaEndSeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
@@ -221,7 +228,7 @@ namespace Comet.Integration.Tests
                 MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
                     (Market, "map/map/market.7z"),
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
-                    (6000, "map/map/jail.7z")));
+                    (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
@@ -230,6 +237,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
+            File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),

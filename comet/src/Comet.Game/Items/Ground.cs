@@ -28,6 +28,8 @@ namespace Comet.Game.Items
             var item = client.Inventory?.Find(itemID);
             if (character == null || item == null)
                 return Reject(client, "drop", itemID, "not_in_inventory");
+            if (character.MapID == Arena.Qualifier.MapID)
+                return Reject(client, "drop", itemID, "qualifier");
             if (!Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "drop", itemID, "no_map");
 
@@ -65,6 +67,8 @@ namespace Comet.Game.Items
             var character = client.Character;
             if (character == null || amount == 0 || amount > character.Silver)
                 return Reject(client, "drop", 0, "not_enough_silver");
+            if (character.MapID == Arena.Qualifier.MapID)
+                return Reject(client, "drop", 0, "qualifier");
             if (!Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "drop", 0, "no_map");
 

@@ -21,6 +21,11 @@ namespace Comet.Client
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgQualifyingInteractive = 2205;
+        public const ushort MsgQualifyingFightersList = 2206;
+        public const ushort MsgQualifyingRank = 2207;
+        public const ushort MsgQualifyingDetailInfo = 2209;
+        public const ushort MsgArenicScore = 2210;
         public const ushort MsgSynpOffer = 1058;
         public const ushort MsgSyndicateAttributeInfo = 1106;
         public const ushort MsgSyndicate = 1107;
@@ -588,6 +593,87 @@ namespace Comet.Client
     }
 
     // Action at 4 (2 = the steed's vigor), value at 8; 36 bytes
+    // The arena window's buttons and dialogs, 52 bytes: action at 4, option at 8, then a
+    // player: ID at 12, name (16 bytes) at 16, rank at 32, class at 36, arena points at 44,
+    // level at 48
+    public sealed record QualifierMessage(uint Action, uint Option, uint Id, string Name, uint Rank, uint Points, uint Level)
+    {
+        public const uint SignUp = 0, Quit = 1, Countdown = 2, Answer = 3, OpponentGaveUp = 4,
+            BuyPoints = 5, Match = 6, StartFight = 8, Dialog = 9, EndDialog = 10;
+        public const uint Accept = 1, GiveUp = 2;
+        public const uint Won = 1, Lost = 3;
+
+        public static QualifierMessage Parse(byte[] packet) => new QualifierMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12),
+            Packet.ReadText(packet, 16, 16), BitConverter.ToUInt32(packet, 32), BitConverter.ToUInt32(packet, 44),
+            BitConverter.ToUInt32(packet, 48));
+
+        public static byte[] Build(uint action, uint option = 0) =>
+            Build(PacketTypes.MsgQualifyingInteractive, 52, (4, action), (8, option));
+
+        // The arena window opening asks for these, with the 5619 client's sizes
+        public static byte[] BuildDetailQuery() => Packet.Create(PacketTypes.MsgQualifyingDetailInfo, 44);
+        public static byte[] BuildFightersQuery(uint page) =>
+            Build(PacketTypes.MsgQualifyingFightersList, 148, (4, page), (8, 6));
+        public static byte[] BuildRankQuery(ushort kind, ushort page) =>
+            Build(PacketTypes.MsgQualifyingRank, 52, (4, (uint)(kind | page << 16)));
+
+        private static byte[] Build(ushort type, int length, params (int Offset, uint Value)[] fields)
+        {
+            var packet = Packet.Create(type, length);
+            foreach (var (offset, value) in fields)
+                BitConverter.TryWriteBytes(packet.AsSpan(offset), value);
+            return packet;
+        }
+    }
+
+    // The player's arena details: rank at 4, status at 12 (0 not signed up, 1 waiting,
+    // 2 invited, 3 fighting), total wins/losses at 16/20, today's at 24/28, total and current
+    // honor at 32/36, arena points at 40
+    public sealed record QualifierDetails(uint Rank, uint Status, uint WinsTotal, uint LossesTotal,
+        uint WinsToday, uint LossesToday, uint HonorTotal, uint Honor, uint Points)
+    {
+        public static QualifierDetails Parse(byte[] packet) => new QualifierDetails(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt32(packet, 20), BitConverter.ToUInt32(packet, 24), BitConverter.ToUInt32(packet, 28),
+            BitConverter.ToUInt32(packet, 32), BitConverter.ToUInt32(packet, 36), BitConverter.ToUInt32(packet, 40));
+    }
+
+    // Matches being fought: count at 12, shown at 24, 120 bytes per match from 28 with the
+    // two fighters' IDs at 0 and 60
+    public sealed record QualifierMatches(uint Count, List<(uint A, uint B)> Shown)
+    {
+        public static QualifierMatches Parse(byte[] packet)
+        {
+            var shown = new List<(uint, uint)>();
+            for (int i = 0, at = 28; i < BitConverter.ToInt32(packet, 24); i++, at += 120)
+                shown.Add((BitConverter.ToUInt32(packet, at), BitConverter.ToUInt32(packet, at + 60)));
+            return new QualifierMatches(BitConverter.ToUInt32(packet, 12), shown);
+        }
+    }
+
+    // A ranking page: kind u16 at 4, page u16 at 6, ranked at 8, shown at 12, 36 bytes per
+    // player from 16: rank u16, name (16 bytes), kind u16, points
+    public sealed record QualifierRanking(uint Total, List<(ushort Rank, string Name, uint Points)> Shown)
+    {
+        public static QualifierRanking Parse(byte[] packet)
+        {
+            var shown = new List<(ushort, string, uint)>();
+            for (int i = 0, at = 16; i < BitConverter.ToInt32(packet, 12); i++, at += 36)
+                shown.Add((BitConverter.ToUInt16(packet, at), Packet.ReadText(packet, at + 2, 16),
+                    BitConverter.ToUInt32(packet, at + 20)));
+            return new QualifierRanking(BitConverter.ToUInt32(packet, 8), shown);
+        }
+    }
+
+    // The match score: IDs at 4 and 28, damage at 24 and 48
+    public sealed record ArenaScore(uint IdA, uint DamageA, uint IdB, uint DamageB)
+    {
+        public static ArenaScore Parse(byte[] packet) => new ArenaScore(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 24),
+            BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt32(packet, 48));
+    }
+
     public sealed record DataMessage(uint Action, uint Value)
     {
         public const uint Vigor = 2;

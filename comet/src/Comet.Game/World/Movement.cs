@@ -93,10 +93,14 @@ namespace Comet.Game.World
 
         // Moves the character to a cell on any map. Players around the old cell lose them;
         // players around the new one see them.
-        public static async Task<bool> TeleportAsync(Client client, uint mapID, ushort x, ushort y)
+        public static async Task<bool> TeleportAsync(Client client, uint mapID, ushort x, ushort y) =>
+            Kernel.World.TryGet(mapID, out var to) && await TeleportAsync(client, to, x, y);
+
+        // Also to a map of its own, such as a qualifier arena: the client is told the map's ID
+        public static async Task<bool> TeleportAsync(Client client, GameMap<Client> to, ushort x, ushort y)
         {
-            if (!TryGetPosition(client, out var from, out var fromX, out var fromY) ||
-                !Kernel.World.TryGet(mapID, out var to) || !to.Grid.Contains(x, y))
+            uint mapID = to.Id;
+            if (!TryGetPosition(client, out var from, out var fromX, out var fromY) || !to.Grid.Contains(x, y))
                 return false;
 
             if (from != to)

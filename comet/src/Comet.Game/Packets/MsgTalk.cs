@@ -137,6 +137,7 @@ namespace Comet.Game.Packets
             Service,
             Tip,
             World = 2021,
+            Qualifier,
             Register = 2100,
             Login,
             Shop,

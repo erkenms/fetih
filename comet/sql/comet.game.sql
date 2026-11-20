@@ -231,6 +231,27 @@ CREATE TABLE `family_relation` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
+-- Table structure for table `arena`
+--
+-- Arena qualifier records, one per character that opened the arena. Day is the UTC day
+-- (days since 1970) the "today" wins and losses count for.
+--
+
+DROP TABLE IF EXISTS `arena`;
+CREATE TABLE `arena` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Points` int(10) unsigned NOT NULL DEFAULT '0',
+  `Day` int(10) unsigned NOT NULL DEFAULT '0',
+  `WinsToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `LossesToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `WinsTotal` int(10) unsigned NOT NULL DEFAULT '0',
+  `LossesTotal` int(10) unsigned NOT NULL DEFAULT '0',
+  `HonorPoints` int(10) unsigned NOT NULL DEFAULT '0',
+  `HonorTotal` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Dumping events for database 'comet.game'
 --
 

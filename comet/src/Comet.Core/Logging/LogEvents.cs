@@ -146,6 +146,17 @@ namespace Comet.Core.Logging
         public const string MountStarted = "mount.started";
         public const string MountEnded = "mount.ended";
 
+        public const string ArenaLoaded = "arena.loaded";
+        public const string ArenaJoined = "arena.joined";
+        public const string ArenaLeft = "arena.left";
+        public const string ArenaMatched = "arena.matched";
+        public const string ArenaStarted = "arena.started";
+        public const string ArenaEnded = "arena.ended";
+        public const string ArenaPointsBought = "arena.points_bought";
+        public const string ArenaRejected = "arena.rejected";
+        public const string ArenaSaveFailed = "arena.save_failed";
+        public const string ArenaLoopFailed = "arena.loop_failed";
+
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
         public const string MoveTeleport = "move.teleport";

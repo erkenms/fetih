@@ -60,8 +60,11 @@ namespace Comet.Game.Pk
 
         public static bool CanAttack(Client attacker, Client target)
         {
-            if (attacker == target || attacker.Character == null || target.Character == null ||
-                IsPeaceful(attacker.Character.MapID))
+            if (attacker == target || attacker.Character == null || target.Character == null)
+                return false;
+            if (Arena.Qualifier.CanFight(attacker, target) is bool fighting)
+                return fighting;
+            if (IsPeaceful(attacker.Character.MapID))
                 return false;
             bool ally = attacker.Friends.ContainsKey(target.ID) ||
                 Social.Teams.OthersOf(attacker).Contains(target);
