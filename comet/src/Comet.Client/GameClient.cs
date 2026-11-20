@@ -313,6 +313,43 @@ namespace Comet.Client
             return packet == null ? null : PlayerSpawn.Parse(packet);
         }
 
+        public async Task<PlayerSpawn> WaitForMonsterAsync(Func<PlayerSpawn, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPlayer &&
+                PlayerSpawn.Parse(p) is var s && s.IsMonster && match(s), timeout);
+            return packet == null ? null : PlayerSpawn.Parse(packet);
+        }
+
+        public Task AttackAsync(uint characterId, uint targetId, int x, int y) =>
+            this.SendAsync(InteractMessage.Build(InteractMessage.Attack, characterId, targetId, x, y));
+
+        public Task ShootAsync(uint characterId, uint targetId, int x, int y) =>
+            this.SendAsync(InteractMessage.Build(InteractMessage.Shoot, characterId, targetId, x, y));
+
+        public async Task<InteractMessage> WaitForInteractAsync(Func<InteractMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgInteract && match(InteractMessage.Parse(p)), timeout);
+            return packet == null ? null : InteractMessage.Parse(packet);
+        }
+
+        // A spell effect cast by the caster: the magic type, or null if none came in time
+        public async Task<ushort?> WaitForMagicEffectAsync(uint casterId, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMagicEffect &&
+                BitConverter.ToUInt32(p, 4) == casterId, timeout);
+            return packet == null ? null : BitConverter.ToUInt16(packet, 12);
+        }
+
+        // Sent by the client once the death animation is over
+        public Task BecomeGhostAsync(uint characterId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Ghost));
+
+        public Task ReviveAsync(uint characterId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Revive));
+
         public async Task<bool> WaitForRemovalAsync(uint entityId, TimeSpan? timeout = null) =>
             await this.WaitForActionAsync(ActionMessage.RemoveEntity, entityId, timeout) != null;
 

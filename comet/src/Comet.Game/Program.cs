@@ -141,6 +141,25 @@
 
             try
             {
+                Kernel.MonsterTypes = new MonsterTypeTable(MonsterTypeTable.Load(DataFiles.PathOf("monsters.json")));
+                var spawnsFile = System.IO.Path.GetFullPath(config.Monsters.SpawnsFile, DataFiles.PathOf(""));
+                var generators = Generator.Load(spawnsFile, Kernel.MonsterTypes);
+                Kernel.Monsters = new WorldMaps<Monster>(Kernel.Maps);
+                var (placed, skipped) = Monsters.Spawn(generators, Random.Shared);
+                LogEvents.For(typeof(Program), LogEvents.MonstersLoaded).Information(
+                    "Loaded {MonsterTypeCount} monster types and {SpawnCount} spawns from {SpawnsFile}; " +
+                    "placed {MonsterCount} monsters ({SkippedCount} spawns on maps the client doesn't have)",
+                    Kernel.MonsterTypes.Count, generators.Count, spawnsFile, placed, skipped);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read Data/monsters.json or the spawns file");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.Experience = new ExperienceTable(ExperienceTable.Load(DataFiles.PathOf("levels.json")));
                 Log.Information("Loaded experience for {LevelCount} levels; the level cap is {MaxLevel}",
                     Kernel.Experience.Count, Kernel.Experience.MaxLevel);
@@ -169,10 +188,15 @@
                 config.GameNetwork.IPAddress, config.GameNetwork.Port);
             
             Ground.Lifetime = TimeSpan.FromSeconds(Math.Max(1, config.Ground.ExpireSeconds));
+            Combat.Death.ReviveDelay = TimeSpan.FromSeconds(Math.Max(0, config.Death.ReviveSeconds));
+            Combat.Attacks.PlayerInterval = TimeSpan.FromMilliseconds(Math.Max(0, config.Combat.PlayerAttackMilliseconds));
+            World.MonsterAI.WanderChance = Math.Clamp(config.Monsters.WanderChance, 0, 100);
+            World.MonsterAI.AttackInterval = TimeSpan.FromMilliseconds(Math.Max(0, config.Combat.MonsterAttackMilliseconds));
             int lost = await ItemsRepository.DeleteGroundAsync((byte)ItemPosition.Ground);
             if (lost > 0)
                 Log.Information("Deleted {Count} items left on the ground by the last run", lost);
             _ = Ground.RunExpiryAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            _ = MonsterAI.RunAsync(TimeSpan.FromMilliseconds(100), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);

@@ -183,6 +183,10 @@ namespace Comet.Game.Packets
                 [ActionType.BoothLeave] = (msg, client) => Items.Vending.CloseAsync(client, "closed"),
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
+
+                // The Revive button; refused until the player has been dead long enough
+                [ActionType.CharacterRevive] = (msg, client) => Combat.Death.ReviveAsync(client, "button"),
+                [ActionType.CharacterDead] = (msg, client) => Combat.Death.BecomeGhostAsync(client),
                 [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
 
                 // Turning and emotes go to everyone in view, not back to the player

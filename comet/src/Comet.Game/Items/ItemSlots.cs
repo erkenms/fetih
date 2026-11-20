@@ -16,6 +16,15 @@ namespace Comet.Game.Items
 
         public static bool IsShield(uint type) => Sort(type) == 900;
 
+        // The last digit of a type ID: 3 to 5 normal, 6 refined, 7 unique, 8 elite, 9 super
+        public static int Quality(uint type) => (int)(type % 10);
+
+        // What monsters drop: worn gear, but no garments and no arrows
+        public static bool IsMonsterDrop(uint type) =>
+            Fits(type, ItemPosition.Headwear) || Fits(type, ItemPosition.Necklace) ||
+            Fits(type, ItemPosition.Armor) || Fits(type, ItemPosition.RightHand) ||
+            IsShield(type) || Fits(type, ItemPosition.Ring) || Fits(type, ItemPosition.Boots);
+
         public static bool Fits(uint type, ItemPosition position) => position switch
         {
             ItemPosition.Headwear => Sort(type) is >= 111 and <= 118 or 123 or >= 141 and <= 145,

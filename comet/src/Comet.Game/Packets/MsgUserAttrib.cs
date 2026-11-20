@@ -63,6 +63,7 @@ namespace Comet.Game.Packets
             Strength = 15,
             Agility = 16,
             Rebirths = 22,
+            Status = 25,
             Hairstyle = 26,
             Jewels = 29,
             VipLevel = 39,

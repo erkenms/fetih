@@ -103,6 +103,21 @@ namespace Comet.Game.World
             }
         }
 
+        public bool TryGet(uint identity, out T obj, out ushort x, out ushort y)
+        {
+            lock (this.Lock)
+            {
+                if (this.Objects.TryGetValue(identity, out var current))
+                {
+                    (obj, x, y) = current;
+                    return true;
+                }
+
+                (obj, x, y) = (null, 0, 0);
+                return false;
+            }
+        }
+
         public List<T> InView(ushort x, ushort y, T except = null)
         {
             var found = new List<T>();

@@ -20,6 +20,13 @@ namespace Comet.Game.World
         public DbItem Item { get; init; }
         public uint Silver { get; init; }
 
+        // Loot is only the killer's to pick up until OwnedUntil; 0 for anyone's
+        public uint OwnerID { get; init; }
+        public DateTime OwnedUntil { get; init; }
+
+        public bool MayPickUp(uint characterID, DateTime now) =>
+            this.OwnerID == 0 || this.OwnerID == characterID || now >= this.OwnedUntil;
+
         public static uint SilverType(uint amount) =>
             amount > 10000 ? 1091020u :
             amount > 5000 ? 1091010u :

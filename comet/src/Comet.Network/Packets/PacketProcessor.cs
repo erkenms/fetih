@@ -52,12 +52,25 @@ namespace Comet.Network.Packets
                 });
         }
 
+        // Work for the actor that runs in order with its packets, so it never runs alongside
+        // them. The caller handles the work's exceptions.
+        public void Queue(TClient actor, Func<Task> work)
+        {
+            if (!this.CancelWrites.IsCancellationRequested)
+                this.Channels[actor.Partition].Writer.TryWrite(new Message {
+                    Actor = actor,
+                    Work = work
+                });
+        }
+
         protected async Task DequeueAsync(Channel<Message> channel)
         {
             while (!this.CancelReads.IsCancellationRequested)
             {
                 var msg = await channel.Reader.ReadAsync(this.CancelReads);
-                if (msg != null) 
+                if (msg?.Work != null)
+                    await msg.Work().ConfigureAwait(false);
+                else if (msg != null) 
                 { 
                     await this.Process(msg.Actor, msg.Packet).ConfigureAwait(false); 
                 }
@@ -90,6 +103,7 @@ namespace Comet.Network.Packets
         {
             public TClient Actor;
             public byte[] Packet;
+            public Func<Task> Work;
         }
 
         protected class Partition

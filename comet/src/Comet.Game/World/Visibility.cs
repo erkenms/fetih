@@ -24,6 +24,7 @@ namespace Comet.Game.World
             }
             await Items.Ground.ShowAroundAsync(client, character.X, character.Y);
             await ShowNpcsAsync(client, character.X, character.Y);
+            await Monsters.ShowAroundAsync(client, character.MapID, character.X, character.Y);
         }
 
         // NPCs in view of the cell; with a previous cell, only those that weren't in view there

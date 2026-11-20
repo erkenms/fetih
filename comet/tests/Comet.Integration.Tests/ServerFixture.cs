@@ -37,6 +37,22 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Potion = (1000000, "Stancher", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050000, "LuckyArrow", 3, 0);
+
+        // Test monsters on 1002, away from the cells other tests use. Pheasants (type 1) attack
+        // only players next to them; guards (900) kill monsters within 15 cells and players who
+        // hit them. Each spawn has one monster that comes back after RespawnSeconds.
+        public const int RespawnSeconds = 2;
+        public static readonly (ushort X, ushort Y) PheasantToKill = (820, 820);
+        public static readonly (ushort X, ushort Y) PheasantToShoot = (840, 820);
+        public static readonly (ushort X, ushort Y) PheasantThatBites = (820, 860);
+        public static readonly (ushort X, ushort Y) GuardToProvoke = (860, 860);
+        public static readonly (ushort X, ushort Y) GuardOnDuty = (900, 900);
+        public static readonly (ushort X, ushort Y) PheasantNearGuard = (903, 900);
+
+        // Short, so a test can revive a dead player
+        public const int ReviveSeconds = 1;
 
         // The market, with the booth flags of Data/npcs.json
         public const uint Market = 1036;
@@ -144,6 +160,7 @@ namespace Comet.Integration.Tests
 
             // Synthetic map files, so the tests don't need a copy of the client
             this.WriteMaps();
+            this.WriteSpawns();
 
             // The game server first, so the account server finds its RPC port
             this.StartServer("Comet.Game", this.GameSchema, "game",
@@ -153,6 +170,9 @@ namespace Comet.Integration.Tests
                 "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,
                 "--Saving:IntervalSeconds=" + SaveIntervalSeconds,
                 "--Ground:ExpireSeconds=" + GroundExpireSeconds,
+                "--Monsters:SpawnsFile=" + Path.Combine(this.MapDirectory, "spawns.json"),
+                "--Death:ReviveSeconds=" + ReviveSeconds,
+                "--Monsters:WanderChance=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
@@ -177,9 +197,21 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet));
+                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
                 (Blacksmith, new[] { Blade.Id, Glaive.Id }), (Pharmacist, new[] { Potion.Id })));
+        }
+
+        private void WriteSpawns()
+        {
+            var spawns = new[]
+            {
+                (PheasantToKill, 1u), (PheasantToShoot, 1u), (PheasantThatBites, 1u),
+                (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
+            }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
+                $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),
+                "{ \"spawns\": [\n" + string.Join(",\n", spawns) + "\n] }\n");
         }
 
         public async Task DisposeAsync()

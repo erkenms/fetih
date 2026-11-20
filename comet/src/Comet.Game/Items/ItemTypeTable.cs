@@ -30,6 +30,8 @@ namespace Comet.Game.Items
 
         public bool TryGet(uint id, out ItemType type) => this.Types.TryGetValue(id, out type);
 
+        public IEnumerable<ItemType> All => this.Types.Values;
+
         public static ItemTypeTable Load(string clientDirectory)
         {
             var path = Path.Combine(clientDirectory, "ini", "itemtype.dat");

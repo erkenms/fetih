@@ -5,6 +5,7 @@ namespace Comet.Game
     using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.Services;
+    using System;
     using System.Collections.Generic;
     using System.Collections.Concurrent;
     using System.Runtime.Caching;
@@ -42,6 +43,15 @@ namespace Comet.Game
 
         // What shopkeepers sell, read from the client's Shop.dat at startup
         public static ShopTable Shops = new ShopTable(new Shop[0]);
+
+        // Monster types from Data/monsters.json and the monsters on each map, from the
+        // generators in the spawn file
+        public static MonsterTypeTable MonsterTypes = new MonsterTypeTable(new MonsterType[0]);
+        public static WorldMaps<Monster> Monsters;
+
+        // Runs work on the player's own packet queue, after the packets before it. The server
+        // sets this; without one (in unit tests) the work runs at once.
+        public static Action<Client, Func<Task>> Post = (client, work) => _ = work();
 
         public static MemoryCache Logins = MemoryCache.Default;
         public static ConcurrentDictionary<uint, byte> Registration = new ConcurrentDictionary<uint, byte>();

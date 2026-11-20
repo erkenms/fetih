@@ -92,11 +92,18 @@ namespace Comet.Game.Items
             var character = client.Character;
             if (character == null || !Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "pick_up", groundID, "no_map");
+            if (client.Life.Dead)
+                return Reject(client, "pick_up", groundID, "dead");
             var found = ground.InView(character.X, character.Y).FirstOrDefault(g => g.Identity == groundID);
             if (found == null)
                 return Reject(client, "pick_up", groundID, "not_found");
             if (Math.Max(Math.Abs(found.X - character.X), Math.Abs(found.Y - character.Y)) > 1)
                 return Reject(client, "pick_up", groundID, "too_far");
+            if (!found.MayPickUp(character.CharacterID, DateTime.UtcNow))
+            {
+                await Chat.Talk.NoticeAsync(client, "This item belongs to someone else for now.");
+                return Reject(client, "pick_up", groundID, "not_owner");
+            }
             if (found.Item != null && client.Inventory.FreeSlots == 0)
             {
                 await Chat.Talk.NoticeAsync(client, "Your inventory is full.");
@@ -179,13 +186,30 @@ namespace Comet.Game.Items
             }
         }
 
-        // The player's cell, or a free walkable cell next to it; null if there's none
-        private static GroundItem Place(Client client, GameMap<GroundItem> ground, GroundItem item)
+        // Loot left by a monster at its cell or next to it; null if there's no room
+        public static async Task<GroundItem> PlaceLootAsync(uint mapID, ushort x, ushort y, GroundItem item)
         {
-            var character = client.Character;
+            if (!Kernel.Ground.TryGet(mapID, out var ground))
+                return null;
+            var placed = Place(ground, x, y, item);
+            if (placed != null && Kernel.World.TryGet(mapID, out var map))
+            {
+                var shown = new MsgMapItem(placed, MapItemAction.Create);
+                foreach (var player in map.InView(placed.X, placed.Y))
+                    await player.SendAsync(shown);
+            }
+            return placed;
+        }
+
+        private static GroundItem Place(Client client, GameMap<GroundItem> ground, GroundItem item) =>
+            Place(ground, client.Character.X, client.Character.Y, item);
+
+        // The cell, or a free walkable cell next to it; null if there's none
+        private static GroundItem Place(GameMap<GroundItem> ground, ushort atX, ushort atY, GroundItem item)
+        {
             lock (PlaceLock)
             {
-                foreach (var (x, y) in Around(character.X, character.Y))
+                foreach (var (x, y) in Around(atX, atY))
                 {
                     if (!ground.Grid.Contains(x, y) || !ground.Grid.IsWalkable(x, y) ||
                         ground.AnyAt((ushort)x, (ushort)y))
@@ -194,6 +218,7 @@ namespace Comet.Game.Items
                     {
                         MapID = item.MapID, X = (ushort)x, Y = (ushort)y, TypeID = item.TypeID,
                         Item = item.Item, Silver = item.Silver, ExpiresAt = item.ExpiresAt,
+                        OwnerID = item.OwnerID, OwnedUntil = item.OwnedUntil,
                     };
                     ground.Add(placed, placed.X, placed.Y);
                     return placed;

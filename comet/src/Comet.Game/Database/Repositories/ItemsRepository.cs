@@ -55,6 +55,13 @@ namespace Comet.Game.Database.Repositories
                 .SetProperty(x => x.Package, package));
         }
 
+        public static async Task SetAmountAsync(uint itemID, ushort amount)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == itemID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
+        }
+
         public static async Task DeleteAsync(uint itemID)
         {
             using var db = new ServerDbContext();

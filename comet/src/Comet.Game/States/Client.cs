@@ -35,6 +35,15 @@ namespace Comet.Game.States
         public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
         public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();
 
+        public Life Life { get; } = new Life();
+
+        // The monster the player keeps attacking until it dies, they move or pick another;
+        // each new attack or stop changes AttackRun, so a pending swing of an old one is dropped
+        public uint AttackTarget { get; set; }
+        public bool AttackShooting { get; set; }
+        public int AttackRun { get; set; }
+        public DateTime NextAttackAt { get; set; }
+
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }
         public DiffieHellman DiffieHellman = null;

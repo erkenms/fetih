@@ -13,6 +13,9 @@ namespace Comet.Game.Database
         public MapsConfiguration Maps { get; set; }
         public SavingConfiguration Saving { get; set; } = new SavingConfiguration();
         public GroundConfiguration Ground { get; set; } = new GroundConfiguration();
+        public MonstersConfiguration Monsters { get; set; } = new MonstersConfiguration();
+        public DeathConfiguration Death { get; set; } = new DeathConfiguration();
+        public CombatConfiguration Combat { get; set; } = new CombatConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -68,6 +71,29 @@ namespace Comet.Game.Database
         public class GroundConfiguration
         {
             public int ExpireSeconds { get; set; } = 60;
+        }
+
+        // Where monsters spawn: a file in Data/ or a full path
+        public class MonstersConfiguration
+        {
+            public string SpawnsFile { get; set; } = "spawns.json";
+
+            // Chance in percent that an idle monster takes a random step, ten times a second
+            public int WanderChance { get; set; } = 10;
+        }
+
+        // How long a dead player waits before the Revive button works
+        public class DeathConfiguration
+        {
+            public int ReviveSeconds { get; set; } = 20;
+        }
+
+        // The shortest time between two swings. Weapons and monster data give 500-1000 ms, which
+        // looks too fast in the client.
+        public class CombatConfiguration
+        {
+            public int PlayerAttackMilliseconds { get; set; } = 1500;
+            public int MonsterAttackMilliseconds { get; set; } = 1500;
         }
 
         public ServerConfiguration(string[] args)

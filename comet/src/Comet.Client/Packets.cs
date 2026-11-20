@@ -21,6 +21,8 @@ namespace Comet.Client
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
         public const ushort MsgPackage = 1102;
+        public const ushort MsgInteract = 1022;
+        public const ushort MsgMagicEffect = 1105;
         public const ushort MsgNpcInfo = 2030;
         public const ushort MsgNpc = 2031;
         public const ushort MsgTaskDialog = 2032;
@@ -116,11 +118,17 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64));
     }
 
+    // Monsters come as players too, with their health at 84 and level at 90
     public sealed record PlayerSpawn(
         uint Id, uint Mesh, ushort X, ushort Y, ushort Hairstyle, byte Direction,
         uint Stance, ushort Level, ushort Class, string Name,
-        uint Helmet, uint Armor, uint RightHand, uint LeftHand)
+        uint Helmet, uint Armor, uint RightHand, uint LeftHand,
+        ulong Status = 0, uint MonsterHealth = 0, ushort MonsterLevel = 0)
     {
+        public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
+
+        public bool IsMonster => this.Id >= FirstMonsterId && this.Id <= LastMonsterId;
+
         public static PlayerSpawn Parse(byte[] packet) => new PlayerSpawn(
             BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 4),
             BitConverter.ToUInt16(packet, 92), BitConverter.ToUInt16(packet, 94),
@@ -128,7 +136,33 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 107), BitConverter.ToUInt16(packet, 219),
             Packet.ReadStrings(packet, 226)[0],
             BitConverter.ToUInt32(packet, 44), BitConverter.ToUInt32(packet, 52),
-            BitConverter.ToUInt32(packet, 56), BitConverter.ToUInt32(packet, 60));
+            BitConverter.ToUInt32(packet, 56), BitConverter.ToUInt32(packet, 60),
+            BitConverter.ToUInt64(packet, 22), BitConverter.ToUInt32(packet, 84),
+            BitConverter.ToUInt16(packet, 90));
+    }
+
+    // A timestamp, sender and target, the cell, the action at 20 and its data (the damage, or
+    // for a kill the count) at 24; 40 bytes
+    public sealed record InteractMessage(uint Sender, uint Target, ushort X, ushort Y, uint Action, uint Data)
+    {
+        public const uint Attack = 2, Kill = 14, Shoot = 28;
+
+        public static InteractMessage Parse(byte[] packet) => new InteractMessage(
+            BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12),
+            BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18),
+            BitConverter.ToUInt32(packet, 20), BitConverter.ToUInt32(packet, 24));
+
+        public static byte[] Build(uint action, uint sender, uint target, int x, int y)
+        {
+            var packet = Packet.Create(PacketTypes.MsgInteract, 40);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), (uint)Environment.TickCount);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), sender);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), target);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), (ushort)x);
+            BitConverter.TryWriteBytes(packet.AsSpan(18), (ushort)y);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), action);
+            return packet;
+        }
     }
 
     public sealed record ActionMessage(
@@ -145,6 +179,8 @@ namespace Comet.Client
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
+        public const ushort Revive = 94;
+        public const ushort Ghost = 145;
         public const ushort Portal = 85;
         public const ushort Teleport = 86;
         public const ushort RemoveEntity = 135;
@@ -200,7 +236,8 @@ namespace Comet.Client
     {
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
-            Strength = 15, Agility = 16;
+            Strength = 15, Agility = 16, Mesh = 11, Status = 25;
+        public const ulong DeadStatus = 0x400;
 
         public static UserAttribMessage Parse(byte[] packet)
         {

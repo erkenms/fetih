@@ -3,6 +3,7 @@ namespace Comet.Game.Packets
     using System.Collections.Generic;
     using Comet.Game.Items;
     using Comet.Game.States;
+    using Comet.Game.World;
     using Comet.Network.Packets;
 
     public sealed class MsgPlayer : MsgBase<Client>
@@ -20,8 +21,28 @@ namespace Comet.Game.Packets
         public string Name { get; set; }
         public uint Helmet, Garment, Armor, RightHand, LeftHand;
         public ushort ArmorColor, ShieldColor, HelmetColor;
+        public ulong Status { get; set; }
+        public uint MonsterHealth { get; set; }
+        public ushort MonsterLevel { get; set; }
 
-        public MsgPlayer(Client client) : this(client.Character, client.Equipment) { }
+        public MsgPlayer(Client client) : this(client.Character, client.Equipment)
+        {
+            this.Mesh = client.Life.Mesh(client.Character);
+            this.Status = client.Life.Status;
+        }
+
+        public MsgPlayer(Monster monster)
+        {
+            base.Type = PacketType.MsgPlayer;
+            this.Mesh = monster.Type.Lookface;
+            this.CharacterID = monster.Identity;
+            this.X = monster.X;
+            this.Y = monster.Y;
+            this.Direction = monster.Direction;
+            this.MonsterHealth = monster.Health;
+            this.MonsterLevel = monster.Type.Level;
+            this.Name = monster.Type.Name;
+        }
 
         public MsgPlayer(Character character, Equipment equipment) : this(character)
         {
@@ -63,7 +84,8 @@ namespace Comet.Game.Packets
             writer.Write(0u);                       // 12  guild ID
             writer.Write(0u);                       // 16  guild rank
             writer.Write((ushort)0);                // 20
-            writer.Write(new byte[20]);             // 22  status flags
+            writer.Write(this.Status);              // 22  status flags
+            writer.Write(new byte[12]);             // 30
             writer.Write((ushort)0);                // 42  appearance type
             writer.Write(this.Helmet);              // 44  item types worn
             writer.Write(this.Garment);             // 48
@@ -73,9 +95,9 @@ namespace Comet.Game.Packets
             writer.Write(new byte[16]);             // 64  accessories, mount and mount armor
             writer.Write((ushort)0);                // 80
             writer.Write((ushort)0);                // 82
-            writer.Write(0u);                       // 84  monster health
+            writer.Write(this.MonsterHealth);       // 84  monster health
             writer.Write((ushort)0);                // 88
-            writer.Write((ushort)0);                // 90  monster level
+            writer.Write(this.MonsterLevel);        // 90  monster level
             writer.Write(this.X);                   // 92
             writer.Write(this.Y);                   // 94
             writer.Write(this.Hairstyle);           // 96

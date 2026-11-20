@@ -40,6 +40,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
+            new Command(new[] { "attr" }, Authority.GameMaster, "/attr <type> <value>", AttributeAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -221,6 +222,23 @@ namespace Comet.Game.Chat
             await Talk.NoticeAsync(client, $"Silver must stay between 0 and {uint.MaxValue}.");
             return false;
         }
+
+        // Sends any MsgUserAttrib as is, for finding out what the client does with a value.
+        // Values may be hex (0x...). Nothing is saved.
+        private static async Task<bool> AttributeAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 2 || !uint.TryParse(args[0], out var type) || !TryParseNumber(args[1], out var value))
+                return await UsageAsync(client, "/attr <type> <value>");
+            var attribute = new MsgUserAttrib(client.ID, (MsgUserAttrib.AttributeType)type, value);
+            await client.SendAsync(attribute);
+            await Movement.SendToViewAsync(client, attribute);
+            return true;
+        }
+
+        private static bool TryParseNumber(string text, out ulong value) =>
+            text.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? ulong.TryParse(text.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out value)
+                : ulong.TryParse(text, out value);
 
         private static async Task<bool> ItemAsync(Client client, string[] args, string rest)
         {

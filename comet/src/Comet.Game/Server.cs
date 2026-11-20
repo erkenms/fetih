@@ -27,7 +27,24 @@ namespace Comet.Game
         {
             this.Processor = new PacketProcessor<Client>(this.ProcessAsync);
             this.ProcessorTask = this.Processor.StartAsync(CancellationToken.None);
+            Kernel.Post = this.Post;
         }
+
+        private void Post(Client actor, Func<Task> work) =>
+            this.Processor.Queue(actor, async () =>
+            {
+                if (!actor.Socket.Connected)
+                    return;
+                using var connScope = LogContext.PushProperty("ConnId", actor.ConnId);
+                using var characterScope = actor.ID != 0
+                    ? LogContext.PushProperty("CharacterId", actor.ID) : null;
+                try { await work(); }
+                catch (Exception e)
+                {
+                    LogEvents.For<Server>(LogEvents.PacketError).Error(e,
+                        "Failed to run queued work for connection {ConnId}", actor.ConnId);
+                }
+            });
 
         protected override async Task<Client> AcceptedAsync(Socket socket, Memory<byte> buffer)
         {

@@ -21,7 +21,11 @@ namespace Comet.Game.World
                 return;
             int toX = x + DeltaX[step.Facing];
             int toY = y + DeltaY[step.Facing];
-            string reason = step.CharacterID != client.ID ? "wrong_id" : CheckCell(map, toX, toY);
+            // A body that hasn't turned into a ghost yet stays where it fell
+            string reason =
+                step.CharacterID != client.ID ? "wrong_id" :
+                client.Life.Dead && !client.Life.Ghost ? "dead" :
+                CheckCell(map, toX, toY);
             if (reason != null)
             {
                 await RejectAsync(client, map, x, y, toX, toY, "walk", reason);
@@ -42,6 +46,7 @@ namespace Comet.Game.World
             int toY = (int)(jump.Command >> 16);
             string reason =
                 jump.CharacterID != client.ID ? "wrong_id" :
+                client.Life.Dead ? (client.Life.Ghost ? "ghost" : "dead") :
                 Math.Max(Math.Abs(toX - x), Math.Abs(toY - y)) > MaxJumpDistance ? "too_far" :
                 CheckCell(map, toX, toY);
             if (reason != null)
@@ -90,6 +95,8 @@ namespace Comet.Game.World
             Visibility.Leave(client);
             foreach (var other in before)
                 await client.SendAsync(MsgAction.RemoveEntity(other.ID));
+            await Monsters.HideAroundAsync(client, from.Id, fromX, fromY);
+            Combat.Attacks.Stop(client);
 
             var character = client.Character;
             client.Map = to;
@@ -137,6 +144,7 @@ namespace Comet.Game.World
             ushort fromX, ushort fromY, ushort toX, ushort toY, IPacket move)
         {
             await Items.Vending.CloseAsync(client, "moved");
+            Combat.Attacks.Stop(client);
             var before = map.InView(fromX, fromY, except: client);
             map.Move(client, toX, toY);
             client.Character.X = toX;
@@ -168,6 +176,7 @@ namespace Comet.Game.World
             }
             await Items.Ground.ShowAroundAsync(client, toX, toY, fromX, fromY);
             await Visibility.ShowNpcsAsync(client, toX, toY, fromX, fromY);
+            await Monsters.ShowAroundAsync(client, map.Id, toX, toY, fromX, fromY);
         }
 
         private static async Task RejectAsync(Client client, GameMap<Client> map,

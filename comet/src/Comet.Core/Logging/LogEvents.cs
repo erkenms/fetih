@@ -34,6 +34,9 @@ namespace Comet.Core.Logging
         public const string CharacterSilver = "character.silver";
         public const string CharacterConquerPoints = "character.conquer_points";
         public const string CharacterStoredSilver = "character.stored_silver";
+        public const string CharacterDied = "character.died";
+        public const string CharacterRevived = "character.revived";
+        public const string CharacterReviveRejected = "character.revive_rejected";
 
         public const string ItemTypesLoaded = "item.types_loaded";
         public const string ItemCreated = "item.created";
@@ -86,6 +89,15 @@ namespace Comet.Core.Logging
         public const string NpcTalk = "npc.talk";
         public const string NpcRejected = "npc.rejected";
         public const string TeleportersLoaded = "npc.teleporters_loaded";
+
+        public const string MonstersLoaded = "monster.loaded";
+        public const string MonsterKilled = "monster.killed";
+        public const string MonsterRespawned = "monster.respawned";
+        public const string MonsterDrop = "monster.drop";
+        public const string MonsterLoopFailed = "monster.loop_failed";
+
+        public const string CombatHit = "combat.hit";
+        public const string CombatRejected = "combat.rejected";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
