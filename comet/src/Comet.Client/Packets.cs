@@ -145,6 +145,7 @@ namespace Comet.Client
         public uint ClanId { get; init; }
         public uint ClanRank { get; init; }
         public string ClanName { get; init; }
+        public bool Away { get; init; }
 
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
@@ -166,6 +167,7 @@ namespace Comet.Client
             ClanId = BitConverter.ToUInt32(packet, 163),
             ClanRank = BitConverter.ToUInt32(packet, 167),
             ClanName = Packet.ReadStrings(packet, 226) is var s && s.Count > 2 ? s[2] : "",
+            Away = packet[110] != 0,
         };
     }
 
@@ -277,6 +279,7 @@ namespace Comet.Client
         public const ushort LoginComplete = 251;
         public const ushort QueryStatInfo = 408;
         public const ushort OpenWindow = 126, OpenShop = 160;
+        public const ushort CharacterAway = 161;
         public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4;
 

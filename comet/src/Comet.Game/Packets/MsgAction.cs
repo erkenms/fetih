@@ -237,6 +237,13 @@ namespace Comet.Game.Packets
                     msg.CharacterID = client.ID;
                     return Movement.SendToViewAsync(client, msg);
                 },
+                [ActionType.CharacterAway] = (msg, client) =>
+                {
+                    if (client.Character == null)
+                        return Task.CompletedTask;
+                    client.Away = msg.Command != 0;
+                    return Movement.SendToViewAsync(client, new MsgPlayer(client));
+                },
                 // The 5619 client sits down (250) on opening a booth; standing up ends it
                 [ActionType.CharacterEmote] = async (msg, client) =>
                 {

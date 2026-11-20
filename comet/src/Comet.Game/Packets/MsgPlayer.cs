@@ -19,6 +19,7 @@ namespace Comet.Game.Packets
         public ushort Level { get; set; }
         public ushort CurrentClass { get; set; }
         public string Name { get; set; }
+        public bool Away { get; set; }
         public uint Helmet, Garment, Armor, RightHand, LeftHand;
         public ushort ArmorColor, ShieldColor, HelmetColor;
         public ulong Status { get; set; }
@@ -34,6 +35,7 @@ namespace Comet.Game.Packets
         {
             this.Mesh = client.Life.Mesh(client.Character);
             this.Status = client.Status;
+            this.Away = client.Away;
             if (Social.Guilds.Of(client.ID) is Social.Guilds.Membership guild)
             {
                 this.GuildID = guild.Guild.ID;
@@ -124,7 +126,7 @@ namespace Comet.Game.Packets
             writer.Write(this.Rebirths);            // 106
             writer.Write(this.Level);               // 107
             writer.Write((byte)0);                  // 109 equipment viewable
-            writer.Write((byte)0);                  // 110 away
+            writer.Write((byte)(this.Away ? 1 : 0)); // 110 away
             writer.Write(new byte[20]);             // 111 flowers, nobility, ...
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133
