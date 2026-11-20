@@ -42,12 +42,17 @@ namespace Comet.Integration.Tests
                 var trace = this.Trace("game", connId);
 
                 // Key exchange first (no packet type), then a new account's login: creating
-                // the character, logging in again on the same connection, entering the map
-                Assert.Equal(new[]
+                // the character, logging in again on the same connection, entering the map.
+                // The client asks for each login step on the echo of the one before, so what the
+                // server sends after an echo (MsgMapInfo, DisplayGears) may be traced before or
+                // after the next request. Each direction keeps its order, and each step's
+                // request comes before its echo.
+                var expected = new[]
                 {
                     "in MsgConnect", "out MsgTalk",             // NEW_ROLE
                     "in MsgRegister", "out MsgTalk",            // ANSWER_OK
                     "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
+                    "out MsgUserAttrib",                        // Stamina
                     "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
                     "out MsgMapInfo",
                     "in MsgAction 75", "out MsgAction 75",      // LoginInventory, still empty
@@ -58,7 +63,14 @@ namespace Comet.Integration.Tests
                     "in MsgAction 97",                          // LoginGuild: the empty guild window
                     "out MsgSyndicateAttributeInfo", "out MsgAction 97",
                     "in MsgAction 251"                          // LoginComplete
-                }, trace.Skip(2).Take(23));
+                };
+                var steps = trace.Skip(2).Take(expected.Length).ToList();
+                foreach (var direction in new[] { "in ", "out " })
+                    Assert.Equal(expected.Where(p => p.StartsWith(direction)),
+                        steps.Where(p => p.StartsWith(direction)));
+                foreach (var step in new[] { 74, 75, 76, 77, 78, 97 })
+                    Assert.True(steps.IndexOf($"in MsgAction {step}") < steps.IndexOf($"out MsgAction {step}"),
+                        $"Step {step} echoed before it was asked for: {string.Join(", ", steps)}");
             }
         }
 
