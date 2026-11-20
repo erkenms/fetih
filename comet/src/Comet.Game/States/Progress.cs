@@ -91,13 +91,13 @@ namespace Comet.Game.States
             return true;
         }
 
-        public static async Task AllotAsync(Client client, byte strength, byte agility, byte vitality, byte spirit)
+        public static async Task AllotAsync(Client client, uint strength, uint agility, uint vitality, uint spirit)
         {
             var character = client.Character;
             if (character == null)
                 return;
 
-            int total = strength + agility + vitality + spirit;
+            ulong total = (ulong)strength + agility + vitality + spirit;
             if (total == 0 || total > character.AttributePoints)
             {
                 LogEvents.For(typeof(Progress), LogEvents.CharacterAllotRejected).Warning(
@@ -107,16 +107,53 @@ namespace Comet.Game.States
                 return;
             }
 
-            character.Strength = AddPoints(character.Strength, strength);
-            character.Agility = AddPoints(character.Agility, agility);
-            character.Vitality = AddPoints(character.Vitality, vitality);
-            character.Spirit = AddPoints(character.Spirit, spirit);
+            ushort maxHealth = Attributes.MaxHealth(character), maxMana = Attributes.MaxMana(character);
+            character.Strength = AddPoints(character.Strength, (int)strength);
+            character.Agility = AddPoints(character.Agility, (int)agility);
+            character.Vitality = AddPoints(character.Vitality, (int)vitality);
+            character.Spirit = AddPoints(character.Spirit, (int)spirit);
             character.AttributePoints -= (ushort)total;
             await SendAttributesAsync(client);
+            await FollowMaximumsAsync(client, maxHealth, maxMana);
             LogEvents.For(typeof(Progress), LogEvents.CharacterAllotted).Debug(
                 "{Name} added {Strength}/{Agility}/{Vitality}/{Spirit} to strength/agility/" +
                 "vitality/spirit; {Available} points left",
                 character.Name, strength, agility, vitality, spirit, character.AttributePoints);
+        }
+
+        public enum Stat { Strength, Agility, Vitality, Spirit, Points }
+
+        // Sets a stat, or changes it by the amount, within 0 to 65535. Health and mana above
+        // their new maximums come down to them.
+        public static async Task SetStatAsync(Client client, Stat stat, int amount, bool relative, string reason)
+        {
+            var character = client.Character;
+            if (character == null)
+                return;
+            ushort current = stat switch
+            {
+                Stat.Strength => character.Strength,
+                Stat.Agility => character.Agility,
+                Stat.Vitality => character.Vitality,
+                Stat.Spirit => character.Spirit,
+                _ => character.AttributePoints,
+            };
+            ushort value = (ushort)Math.Clamp(relative ? current + amount : amount, 0, ushort.MaxValue);
+            ushort oldMaxHealth = Attributes.MaxHealth(character), oldMaxMana = Attributes.MaxMana(character);
+            switch (stat)
+            {
+                case Stat.Strength: character.Strength = value; break;
+                case Stat.Agility: character.Agility = value; break;
+                case Stat.Vitality: character.Vitality = value; break;
+                case Stat.Spirit: character.Spirit = value; break;
+                default: character.AttributePoints = value; break;
+            }
+
+            await SendAttributesAsync(client);
+            await FollowMaximumsAsync(client, oldMaxHealth, oldMaxMana);
+            LogEvents.For(typeof(Progress), LogEvents.CharacterAllotted).Information(
+                "{Name} {Stat} set from {From} to {To} ({Reason})",
+                character.Name, stat.ToString(), current, value, reason);
         }
 
         private static async Task LevelChangedAsync(Client client, byte from, string reason)
@@ -124,14 +161,15 @@ namespace Comet.Game.States
             var character = client.Character;
             character.HealthPoints = Attributes.MaxHealth(character);
             character.ManaPoints = Attributes.MaxMana(character);
-            await client.SendAsync(new MsgUserAttrib(client.ID)
+            await new MsgUserAttrib(client.ID)
                 .Append(AttributeType.Level, character.Level)
                 .Append(AttributeType.Experience, character.Experience)
                 .Append(AttributeType.AttributePoints, character.AttributePoints)
                 .Append(AttributeType.MaxHealth, character.HealthPoints)
                 .Append(AttributeType.Health, character.HealthPoints)
                 .Append(AttributeType.MaxMana, character.ManaPoints)
-                .Append(AttributeType.Mana, character.ManaPoints));
+                .Append(AttributeType.Mana, character.ManaPoints)
+                .SendEachAsync(client);
 
             if (character.Level > from)
             {
@@ -146,17 +184,44 @@ namespace Comet.Game.States
             await client.SaveAsync("level");
         }
 
+        // Health and mana go up with their maximums, so vitality and spirit points show at
+        // once; a lower maximum cuts them. The dead stay at 0 health.
+        private static async Task FollowMaximumsAsync(Client client, ushort oldMaxHealth, ushort oldMaxMana)
+        {
+            var character = client.Character;
+            if (!client.Life.Dead)
+            {
+                ushort health = Follow(character.HealthPoints, oldMaxHealth, Attributes.MaxHealth(character));
+                if (health != character.HealthPoints)
+                {
+                    character.HealthPoints = health;
+                    await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Health, health));
+                }
+            }
+
+            ushort mana = Follow(character.ManaPoints, oldMaxMana, Attributes.MaxMana(character));
+            if (mana != character.ManaPoints)
+            {
+                character.ManaPoints = mana;
+                await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, mana));
+            }
+        }
+
+        private static ushort Follow(ushort value, ushort oldMaximum, ushort maximum) =>
+            (ushort)Math.Clamp(value + Math.Max(0, maximum - oldMaximum), 0, maximum);
+
         private static Task SendAttributesAsync(Client client)
         {
             var character = client.Character;
-            return client.SendAsync(new MsgUserAttrib(client.ID)
+            return new MsgUserAttrib(client.ID)
                 .Append(AttributeType.Strength, character.Strength)
                 .Append(AttributeType.Agility, character.Agility)
                 .Append(AttributeType.Vitality, character.Vitality)
                 .Append(AttributeType.Spirit, character.Spirit)
                 .Append(AttributeType.AttributePoints, character.AttributePoints)
                 .Append(AttributeType.MaxHealth, Attributes.MaxHealth(character))
-                .Append(AttributeType.MaxMana, Attributes.MaxMana(character)));
+                .Append(AttributeType.MaxMana, Attributes.MaxMana(character))
+                .SendEachAsync(client);
         }
 
         private static ushort AddPoints(ushort value, int added) =>

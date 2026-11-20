@@ -25,11 +25,14 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
-        public void AllotReadsOneBytePerAttribute()
+        public void AllotReadsFourBytesPerAttributeFromEight()
         {
+            // As the 5619 client sent it: 3 points to spirit
             var msg = new MsgAllot();
-            msg.Decode(new byte[] { 8, 0, 0x00, 0x04, 1, 2, 3, 4 });
-            Assert.Equal((1, 2, 3, 4), (msg.Strength, msg.Agility, msg.Vitality, msg.Spirit));
+            msg.Decode(Convert.FromHexString("180000040000000000000000000000000000000003000000"));
+            Assert.Equal((0u, 0u, 0u, 3u), (msg.Strength, msg.Agility, msg.Vitality, msg.Spirit));
+            msg.Decode(Comet.Client.AllotMessage.Build(1, 2, 3, 4));
+            Assert.Equal((1u, 2u, 3u, 4u), (msg.Strength, msg.Agility, msg.Vitality, msg.Spirit));
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -26,6 +27,15 @@ namespace Comet.Game.Packets
         {
             this.Attributes.Add((type, value));
             return this;
+        }
+
+        // One packet per attribute. The 5619 client misreads the entries after the first (the
+        // VM showed an empty health bar after Health with Mana and Stamina in one packet), so
+        // its entries are probably longer than 5517's 20 bytes; single ones are VM-confirmed.
+        public async Task SendEachAsync(Client client)
+        {
+            foreach (var (type, value) in this.Attributes)
+                await client.SendAsync(new MsgUserAttrib(this.Identity, type, value));
         }
 
         // Identity, a count, then per attribute its type and value, padded to 20 bytes
@@ -65,6 +75,7 @@ namespace Comet.Game.Packets
             Rebirths = 22,
             Status = 25,
             Hairstyle = 26,
+            XpCircle = 27,
             Jewels = 29,
             VipLevel = 39,
             QuizPoints = 40,

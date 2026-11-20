@@ -41,7 +41,8 @@ namespace Comet.Game.Chat
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
-            new Command(new[] { "attr" }, Authority.GameMaster, "/attr <type> <value>", AttributeAsync),
+            new Command(new[] { "attr" }, Authority.GameMaster, "/attr <str|agi|vit|spi|points> <value|+n|-n>", StatAsync),
+            new Command(new[] { "rawattr" }, Authority.GameMaster, "/rawattr <type> <value>", AttributeAsync),
             new Command(new[] { "pk" }, Authority.GameMaster, "/pk <points> [name]", PkPointsAsync),
             new Command(new[] { "flash" }, Authority.GameMaster, "/flash [seconds]", FlashAsync),
             new Command(new[] { "jail" }, Authority.GameMaster, "/jail <name>", JailAsync),
@@ -240,12 +241,31 @@ namespace Comet.Game.Chat
             return false;
         }
 
+        private static readonly Dictionary<string, Progress.Stat> Stats = new Dictionary<string, Progress.Stat>
+        {
+            ["str"] = Progress.Stat.Strength, ["agi"] = Progress.Stat.Agility,
+            ["vit"] = Progress.Stat.Vitality, ["spi"] = Progress.Stat.Spirit,
+            ["points"] = Progress.Stat.Points,
+        };
+
+        // Sets a stat (/attr spi 0), or adds to it or takes from it (/attr vit +5, /attr str -2)
+        private static async Task<bool> StatAsync(Client client, string[] args, string rest)
+        {
+            const string usage = "/attr <str|agi|vit|spi|points> <value|+n|-n>";
+            if (args.Length != 2 || !Stats.TryGetValue(args[0].ToLowerInvariant(), out var stat) ||
+                !int.TryParse(args[1], out var amount))
+                return await UsageAsync(client, usage);
+            bool relative = args[1][0] == '+' || args[1][0] == '-';
+            await Progress.SetStatAsync(client, stat, amount, relative, "gm");
+            return true;
+        }
+
         // Sends any MsgUserAttrib as is, for finding out what the client does with a value.
         // Values may be hex (0x...). Nothing is saved.
         private static async Task<bool> AttributeAsync(Client client, string[] args, string rest)
         {
             if (args.Length != 2 || !uint.TryParse(args[0], out var type) || !TryParseNumber(args[1], out var value))
-                return await UsageAsync(client, "/attr <type> <value>");
+                return await UsageAsync(client, "/rawattr <type> <value>");
             var attribute = new MsgUserAttrib(client.ID, (MsgUserAttrib.AttributeType)type, value);
             await client.SendAsync(attribute);
             await Movement.SendToViewAsync(client, attribute);

@@ -4,24 +4,26 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // The player adds attribute points from the status window: one byte each for
-    // strength, agility, vitality and spirit
+    // The player adds attribute points from the status window. 24 bytes (VM-seen, offsets as
+    // Albetros reads them): 4 unknown (0), then u32 each for strength at 8, agility at 12,
+    // vitality at 16 and spirit at 20.
     public sealed class MsgAllot : MsgBase<Client>
     {
-        public byte Strength { get; set; }
-        public byte Agility { get; set; }
-        public byte Vitality { get; set; }
-        public byte Spirit { get; set; }
+        public uint Strength { get; set; }
+        public uint Agility { get; set; }
+        public uint Vitality { get; set; }
+        public uint Spirit { get; set; }
 
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);
             this.Length = reader.ReadUInt16();
             this.Type = (PacketType)reader.ReadUInt16();
-            this.Strength = reader.ReadByte();
-            this.Agility = reader.ReadByte();
-            this.Vitality = reader.ReadByte();
-            this.Spirit = reader.ReadByte();
+            reader.ReadUInt32();
+            this.Strength = reader.ReadUInt32();
+            this.Agility = reader.ReadUInt32();
+            this.Vitality = reader.ReadUInt32();
+            this.Spirit = reader.ReadUInt32();
         }
 
         public override Task ProcessAsync(Client client) =>

@@ -27,11 +27,12 @@ namespace Comet.Integration.Tests
 
             // Level 1 needs 59 and level 2 needs 195
             await CommandAsync(player, "/exp 264");
-            var update = await AttribAsync(player, Level, 3);
-            Assert.NotNull(update);
-            Assert.Equal(10UL, update.Values[Experience]);
-            Assert.Equal(6UL, update.Values[AttributePoints]);
-            Assert.Equal(update.Values[MaxHealth], update.Values[Health]);
+            // One attribute per packet, in this order
+            Assert.NotNull(await AttribAsync(player, Level, 3));
+            Assert.NotNull(await AttribAsync(player, Experience, 10));
+            Assert.NotNull(await AttribAsync(player, AttributePoints, 6));
+            var maxHealth = await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(MaxHealth));
+            Assert.NotNull(await AttribAsync(player, Health, maxHealth.Values[MaxHealth]));
             Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.LevelUp, player.User.Id));
             Assert.NotNull(await observer.Game.WaitForActionAsync(ActionMessage.LevelUp, player.User.Id));
 
@@ -56,20 +57,22 @@ namespace Comet.Integration.Tests
             await CommandAsync(player, "/level 2");
             Assert.NotNull(await AttribAsync(player, AttributePoints, 3));
 
+            // One attribute per packet, in this order
             await player.Game.AllotAsync(1, 0, 2, 0);
-            var update = await AttribAsync(player, AttributePoints, 0);
-            Assert.NotNull(update);
-            Assert.Equal((user.Strength + 1UL, user.Agility + 0UL, user.Vitality + 2UL, user.Spirit + 0UL),
-                (update.Values[Strength], update.Values[Agility], update.Values[Vitality], update.Values[Spirit]));
-            Assert.Equal((ulong)((user.Vitality + 2) * 24 + (user.Strength + 1 + user.Agility + user.Spirit) * 3),
-                update.Values[MaxHealth]);
+            Assert.NotNull(await AttribAsync(player, Strength, user.Strength + 1UL));
+            Assert.NotNull(await AttribAsync(player, Agility, user.Agility));
+            Assert.NotNull(await AttribAsync(player, Vitality, user.Vitality + 2UL));
+            Assert.NotNull(await AttribAsync(player, Spirit, user.Spirit));
+            Assert.NotNull(await AttribAsync(player, AttributePoints, 0));
+            ulong maxHealth = (ulong)((user.Vitality + 2) * 24 + (user.Strength + 1 + user.Agility + user.Spirit) * 3);
+            Assert.NotNull(await AttribAsync(player, MaxHealth, maxHealth));
+            Assert.NotNull(await AttribAsync(player, Health, maxHealth));
 
             await player.Game.AllotAsync(1, 0, 0, 0);
             var rejected = await this.Servers.WaitForEventAsync(
                 "game", "character.allot_rejected", "name", user.Name);
             Assert.Equal(0, rejected.GetProperty("available").GetInt32());
-            update = await AttribAsync(player, Strength, user.Strength + 1UL);
-            Assert.NotNull(update);
+            Assert.NotNull(await AttribAsync(player, Strength, user.Strength + 1UL));
         }
 
         [Fact]

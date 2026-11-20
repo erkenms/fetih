@@ -398,16 +398,17 @@ namespace Comet.Client
         }
     }
 
-    // Points to add to strength, agility, vitality and spirit, a byte each
+    // Points to add to strength, agility, vitality and spirit
     public static class AllotMessage
     {
-        public static byte[] Build(byte strength, byte agility, byte vitality, byte spirit)
+        // 24 bytes: 0 at 4, then u32 each for strength, agility, vitality and spirit from 8
+        public static byte[] Build(uint strength, uint agility, uint vitality, uint spirit)
         {
-            var packet = Packet.Create(PacketTypes.MsgAllot, 8);
-            packet[4] = strength;
-            packet[5] = agility;
-            packet[6] = vitality;
-            packet[7] = spirit;
+            var packet = Packet.Create(PacketTypes.MsgAllot, 24);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), strength);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), agility);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), vitality);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), spirit);
             return packet;
         }
     }
