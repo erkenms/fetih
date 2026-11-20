@@ -37,6 +37,16 @@ namespace Comet.Game.Packets
                 Y = y
             };
 
+        public static MsgAction Turn(uint identity, byte direction) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.CharacterDirection,
+            Direction = direction
+        };
+
         public static MsgAction LevelUp(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,

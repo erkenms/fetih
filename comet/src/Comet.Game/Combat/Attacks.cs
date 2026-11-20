@@ -216,11 +216,25 @@ namespace Comet.Game.Combat
             int defense = Buffs.Defense(target.Effects, stats.Defense, DateTime.UtcNow);
             uint damage = !sure && !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
                 shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense);
+            if (!shooting)
+                await FacePlayerTowardAsync(target, attackerCharacter.X, attackerCharacter.Y);
             var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
                 attacker.ID, target.ID, character.X, character.Y, damage);
             await target.SendAsync(hit);
             await Movement.SendToViewAsync(target, hit);
             await DamagePlayerAsync(attacker, target, damage, shooting ? "shoot" : "melee");
+        }
+
+        private static async Task FacePlayerTowardAsync(Client target, int x, int y)
+        {
+            var character = target.Character;
+            if (character == null)
+                return;
+            byte direction = Movement.DirectionTo(character.X, character.Y, x, y, character.Direction);
+            if (direction == character.Direction)
+                return;
+            character.Direction = direction;
+            await Movement.SendToViewAsync(target, MsgAction.Turn(target.ID, direction));
         }
 
         // On the target's queue, after what shows the hit was sent: health, and death
@@ -261,6 +275,7 @@ namespace Comet.Game.Combat
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
 
+            await FacePlayerTowardAsync(client, monster.X, monster.Y);
             var hit = new MsgInteract(InteractionType.Attack, monster.Identity, client.ID, character.X, character.Y, damage);
             await client.SendAsync(hit);
             await Movement.SendToViewAsync(client, hit);

@@ -31,6 +31,7 @@ namespace Comet.Integration.Tests
         {
             await using var attacker = (await this.PlayingAtAsync(1002, 700, 700)).Player;
             await using var victim = (await this.PlayingAtAsync(1002, 701, 700, GameMaster)).Player;
+            await using var watcher = (await this.PlayingAtAsync(1002, 702, 700)).Player;
 
             await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
             Assert.Equal("pk_mode", (await RejectedAsync(attacker)).GetProperty("reason").GetString());
@@ -41,6 +42,10 @@ namespace Comet.Integration.Tests
             await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
             var hit = await victim.Game.WaitForInteractAsync(i => i.Sender == attacker.User.Id && i.Target == victim.User.Id);
             Assert.Equal(InteractMessage.Attack, hit?.Action);
+            var turn = await watcher.Game.WaitForActionAsync(ActionMessage.Turn, victim.User.Id);
+            Assert.Equal((ushort)2, turn?.Direction);
+            Assert.Null(await victim.Game.WaitForActionAsync(
+                ActionMessage.Turn, victim.User.Id, TimeSpan.FromMilliseconds(300)));
             Assert.NotNull(await attacker.Game.WaitForInteractAsync(i => i.Sender == attacker.User.Id && i.Target == victim.User.Id));
             if (hit.Data > 0)
                 Assert.NotNull(await victim.Game.WaitForAttribAsync(a =>
