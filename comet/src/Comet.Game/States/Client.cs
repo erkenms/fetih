@@ -24,6 +24,9 @@ namespace Comet.Game.States
         public Social.Trade Trade { get; set; }
         public Social.Team Team { get; set; }
 
+        // The player's open booth in the market; buyers' packets read it too
+        public Booth Booth { get; set; }
+
         // The player this one asked to trade with, or to be friends with (0 if none)
         public uint TradeRequest { get; set; }
         public uint FriendRequest { get; set; }

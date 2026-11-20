@@ -22,6 +22,33 @@ namespace Comet.Game.Tests.Npcs
         }
 
         [Fact]
+        public void ABoothCarriesItsOwnersName()
+        {
+            var bytes = new MsgNpcInfo(50, 121, 217, 406, 14, "Seller").Encode();
+            Assert.Equal((406, 14), (BitConverter.ToUInt16(bytes, 16), BitConverter.ToUInt16(bytes, 18)));
+            Assert.Equal((1, 6), (bytes[22], bytes[23]));
+            Assert.Equal("Seller", System.Text.Encoding.Latin1.GetString(bytes, 24, 6));
+            Assert.Equal(31, bytes.Length);
+
+            var spawn = Client.NpcSpawn.Parse(bytes);
+            Assert.Equal((50u, "Seller"), (spawn.Id, spawn.Name));
+        }
+
+        [Fact]
+        public void BoothItemsCarryBoothPriceAndCurrency()
+        {
+            var item = new Comet.Game.Database.Models.DbItem
+            {
+                ItemID = 7, TypeID = 410301, Amount = 1000, AmountLimit = 1099, Gem1 = 1, Plus = 3, Color = 3,
+            };
+            var bytes = new MsgItemInfoEx(item, 50, 300, MsgItemInfoEx.ViewType.ConquerPoints).Encode();
+            Assert.Equal((84, 1108), (bytes.Length, BitConverter.ToUInt16(bytes, 2)));
+            var parsed = Client.BoothItem.Parse(bytes);
+            Assert.Equal(new Client.BoothItem(7, 50, 300, 410301, 1000, 1099, 3), parsed);
+            Assert.Equal((1, 3, 3), (bytes[32], bytes[41], bytes[56]));
+        }
+
+        [Fact]
         public void DialogPartsCarryOptionActionAndText()
         {
             var bytes = new MsgTaskDialog(DialogAction.Option, 3, "Desert City").Encode();

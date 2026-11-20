@@ -59,6 +59,13 @@ namespace Comet.Core.Logging
         public const string TradeCancelled = "trade.cancelled";
         public const string TradeRejected = "trade.rejected";
 
+        public const string BoothOpened = "booth.opened";
+        public const string BoothClosed = "booth.closed";
+        public const string BoothListed = "booth.listed";
+        public const string BoothUnlisted = "booth.unlisted";
+        public const string BoothSold = "booth.sold";
+        public const string BoothRejected = "booth.rejected";
+
         public const string TeamCreated = "team.created";
         public const string TeamJoined = "team.joined";
         public const string TeamLeft = "team.left";

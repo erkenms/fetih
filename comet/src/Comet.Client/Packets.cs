@@ -18,6 +18,7 @@ namespace Comet.Client
         public const ushort MsgTeamMember = 1026;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
+        public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
         public const ushort MsgPackage = 1102;
         public const ushort MsgNpcInfo = 2030;
@@ -45,6 +46,7 @@ namespace Comet.Client
         public const ushort Center = 2011;
         public const ushort Service = 2014;
         public const ushort World = 2021;
+        public const ushort Vendor = 2104;
         public const ushort Register = 2100;
         public const ushort Login = 2101;
     }
@@ -150,6 +152,7 @@ namespace Comet.Client
         public const ushort LoginComplete = 251;
         public const ushort QueryStatInfo = 408;
         public const ushort OpenWindow = 126, OpenShop = 160;
+        public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
@@ -218,6 +221,19 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
     }
 
+    // An item in someone's booth: item ID, booth ID, price, type, amount and its limit,
+    // then 1 for silver or 3 for Conquer Points
+    public sealed record BoothItem(uint Id, uint BoothId, uint Price, uint TypeId, ushort Amount, ushort AmountLimit, ushort View)
+    {
+        public const ushort Silver = 1, ConquerPoints = 3;
+
+        public static BoothItem Parse(byte[] packet) => new BoothItem(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
+            BitConverter.ToUInt16(packet, 24));
+    }
+
     // An item or character ID, a value (a slot when equipping), the action, a timestamp and
     // an argument at 20 (the amount when buying; shops put their NPC ID in the first field).
     // DisplayGears carries the item IDs worn in slots 1 to 9 from offset 32
@@ -226,6 +242,10 @@ namespace Comet.Client
         public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
             StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Ping = 27, Drop = 37,
             DropSilver = 38, DisplayGears = 46;
+
+        // Booths: viewing has the booth's ID first; adding has the item and its price,
+        // removing and buying the item and the booth's ID
+        public const uint BoothView = 21, BoothAdd = 22, BoothRemove = 23, BoothBuy = 24, BoothAddCps = 29;
 
         public static ItemMessage Parse(byte[] packet) => new ItemMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -291,12 +311,17 @@ namespace Comet.Client
     }
 
     // An NPC's ID, cell, look and role
-    public sealed record NpcSpawn(uint Id, ushort X, ushort Y, ushort Lookface, ushort Role)
+    // ID, position, look and role, then strings from 22: none, or a booth's owner
+    public sealed record NpcSpawn(uint Id, ushort X, ushort Y, ushort Lookface, ushort Role, string Name)
     {
-        public static NpcSpawn Parse(byte[] packet) => new NpcSpawn(
-            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt16(packet, 12),
-            BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt16(packet, 16),
-            BitConverter.ToUInt16(packet, 18));
+        public static NpcSpawn Parse(byte[] packet)
+        {
+            var strings = Packet.ReadStrings(packet, 22);
+            return new NpcSpawn(
+                BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt16(packet, 12),
+                BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt16(packet, 16),
+                BitConverter.ToUInt16(packet, 18), strings.Count > 0 ? strings[0] : null);
+        }
 
         // A click on the NPC: its ID, then data and event 0
         public static byte[] BuildClick(uint npcId)

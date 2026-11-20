@@ -89,6 +89,11 @@ namespace Comet.Game.Chat
                             await other.SendAsync(msg);
                     break;
 
+                case TalkChannel.Vendor:
+                    Log(client, msg, null);
+                    await Items.Vending.HawkAsync(client, msg);
+                    break;
+
                 default:
                     LogEvents.For(typeof(Talk), LogEvents.PacketUnhandled).Warning(
                         "Unhandled packet {PacketType} channel {Channel} ({Length} bytes)",

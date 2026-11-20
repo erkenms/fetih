@@ -86,7 +86,7 @@ namespace Comet.Integration.Tests
 
             await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/help");
             var help = await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Commands:"));
-            Assert.Equal("Commands: /help, /drop <silver>", help?.Text);
+            Assert.Equal("Commands: /help, /drop <silver>, /closebooth", help?.Text);
         }
 
         [Fact]

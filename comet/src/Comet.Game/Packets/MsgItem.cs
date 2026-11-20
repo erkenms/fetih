@@ -29,6 +29,10 @@ namespace Comet.Game.Packets
         public static MsgItem Removed(uint itemID) =>
             Create(itemID, 0, ItemActionType.InventoryRemove);
 
+        // Albetros (5517): tells a booth's owner that an item left the booth; booth ID in Command
+        public static MsgItem BoothUnlisted(uint itemID, uint boothID) =>
+            Create(itemID, boothID, ItemActionType.BoothRemove);
+
         public static MsgItem Unequipped(uint itemID, ItemPosition position) =>
             Create(itemID, (uint)position, ItemActionType.EquipmentRemove);
 
@@ -122,6 +126,14 @@ namespace Comet.Game.Packets
                 [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
                 [ItemActionType.BankDeposit] = (msg, client) => Storing.MoveSilverAsync(client, msg.Command),
                 [ItemActionType.BankWithdraw] = (msg, client) => Storing.MoveSilverAsync(client, -(long)msg.Command),
+
+                // Booths: the item ID, then its price, or the booth's ID when buying. Viewing a
+                // booth has the booth's ID in the ID field.
+                [ItemActionType.BoothSell] = (msg, client) => Vending.ListAsync(client, msg, conquerPoints: false),
+                [ItemActionType.BoothSellPoints] = (msg, client) => Vending.ListAsync(client, msg, conquerPoints: true),
+                [ItemActionType.BoothRemove] = (msg, client) => Vending.UnlistAsync(client, msg),
+                [ItemActionType.BoothQuery] = (msg, client) => Vending.ShowAsync(client, msg.CharacterID),
+                [ItemActionType.BoothPurchase] = (msg, client) => Vending.BuyAsync(client, msg),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);

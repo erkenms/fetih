@@ -33,7 +33,7 @@ namespace Comet.Game.World
             {
                 if (fromX.HasValue && GameMap<Client>.InView(fromX.Value, fromY.Value, npc.X, npc.Y))
                     continue;
-                await client.SendAsync(new MsgNpcInfo(npc));
+                await Items.Vending.ShowNpcAsync(client, npc);
             }
         }
 

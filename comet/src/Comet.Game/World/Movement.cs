@@ -85,6 +85,7 @@ namespace Comet.Game.World
 
             if (from != to)
                 await Social.Trading.CancelAsync(client, "teleport");
+            await Items.Vending.CloseAsync(client, "teleport");
             var before = from.InView(fromX, fromY, except: client);
             Visibility.Leave(client);
             foreach (var other in before)
@@ -135,6 +136,7 @@ namespace Comet.Game.World
         private static async Task MoveAsync(Client client, GameMap<Client> map,
             ushort fromX, ushort fromY, ushort toX, ushort toY, IPacket move)
         {
+            await Items.Vending.CloseAsync(client, "moved");
             var before = map.InView(fromX, fromY, except: client);
             map.Move(client, toX, toY);
             client.Character.X = toX;

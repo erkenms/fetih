@@ -29,6 +29,7 @@ namespace Comet.Game.Chat
         {
             new Command(new[] { "help" }, Authority.Player, "/help", HelpAsync),
             new Command(new[] { "drop" }, Authority.Player, "/drop <silver>", DropAsync),
+            new Command(new[] { "closebooth" }, Authority.Player, "/closebooth", CloseBoothAsync),
             new Command(new[] { "online" }, Authority.Moderator, "/online", OnlineAsync),
             new Command(new[] { "where" }, Authority.Moderator, "/where [name]", WhereAsync),
             new Command(new[] { "kick" }, Authority.Moderator, "/kick <name>", KickAsync),
@@ -108,6 +109,20 @@ namespace Comet.Game.Chat
             var usages = All.Where(c => client.Authority >= c.Minimum).Select(c => c.Usage);
             foreach (var line in Lines("Commands:", usages))
                 await Talk.NoticeAsync(client, line);
+            return true;
+        }
+
+        // The client shows no button to close a booth yet
+        private static async Task<bool> CloseBoothAsync(Client client, string[] args, string rest)
+        {
+            if (client.Booth == null)
+            {
+                await Talk.NoticeAsync(client, "You have no booth open.");
+                return false;
+            }
+            await Vending.CloseAsync(client, "command");
+            await client.SendAsync(MsgAction.DestroyBooth(client.ID));
+            await Talk.NoticeAsync(client, "Your booth is closed.");
             return true;
         }
 

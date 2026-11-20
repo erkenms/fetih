@@ -38,6 +38,9 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
 
+        // The market, with the booth flags of Data/npcs.json
+        public const uint Market = 1036;
+
         // Shopkeepers in Twin City, with what the test Shop.dat has them sell
         public const uint Blacksmith = 5, Pharmacist = 3;
 
@@ -166,11 +169,13 @@ namespace Comet.Integration.Tests
             Directory.CreateDirectory(maps);
             Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
-                MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z")));
+                MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
+                    (Market, "map/map/market.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
+            File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

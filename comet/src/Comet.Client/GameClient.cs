@@ -218,6 +218,44 @@ namespace Comet.Client
             return packet == null ? null : PackageMessage.Parse(packet);
         }
 
+        // The booth's cell goes in Command; the answer has the booth's ID there. Null if none comes
+        public async Task<uint?> OpenBoothAsync(uint characterId, int x, int y, int direction, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.CreateBooth,
+                command: (uint)(x | (y << 16)), direction: direction, x: x, y: y));
+            var answer = await this.WaitForActionAsync(ActionMessage.CreateBooth, characterId, timeout);
+            return answer?.Command;
+        }
+
+        public Task CloseBoothAsync(uint characterId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.CloseBooth));
+
+        public Task AddToBoothAsync(uint itemId, uint price, bool conquerPoints = false) =>
+            this.SendAsync(ItemMessage.Build(itemId, price, conquerPoints ? ItemMessage.BoothAddCps : ItemMessage.BoothAdd));
+
+        public Task RemoveFromBoothAsync(uint itemId, uint boothId) =>
+            this.SendAsync(ItemMessage.Build(itemId, boothId, ItemMessage.BoothRemove));
+
+        public Task ViewBoothAsync(uint boothId) =>
+            this.SendAsync(ItemMessage.Build(boothId, 0, ItemMessage.BoothView));
+
+        public Task BuyFromBoothAsync(uint itemId, uint boothId) =>
+            this.SendAsync(ItemMessage.Build(itemId, boothId, ItemMessage.BoothBuy));
+
+        public async Task<BoothItem> WaitForBoothItemAsync(Func<BoothItem, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItemInfoEx && match(BoothItem.Parse(p)), timeout);
+            return packet == null ? null : BoothItem.Parse(packet);
+        }
+
+        public async Task<NpcSpawn> WaitForNpcAsync(Func<NpcSpawn, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgNpcInfo && match(NpcSpawn.Parse(p)), timeout);
+            return packet == null ? null : NpcSpawn.Parse(packet);
+        }
+
         public Task PickUpAsync(uint groundId, int x, int y) =>
             this.SendAsync(GroundItemMessage.BuildPick(groundId, x, y));
 

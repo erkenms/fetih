@@ -71,6 +71,16 @@ namespace Comet.Game.Packets
             Y = y,
         };
 
+        // Wiki 5017: tells the client its booth is gone
+        public static MsgAction DestroyBooth(uint identity) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.BoothLeave,
+        };
+
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -176,6 +186,12 @@ namespace Comet.Game.Packets
                 // change. Not answered until there are stats to show.
                 [ActionType.QueryStatInfo] = (msg, client) => Task.CompletedTask,
 
+                // Albetros (5517): the client asks for a booth and opens its window on the
+                // echo. The 5619 client sends 114 after each map load (login, teleport); a
+                // booth doesn't outlive that.
+                [ActionType.BoothSpawn] = (msg, client) => Items.Vending.OpenAsync(client, msg),
+                [ActionType.BoothLeave] = (msg, client) => Items.Vending.CloseAsync(client, "closed"),
+
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
                 [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
 
@@ -188,14 +204,17 @@ namespace Comet.Game.Packets
                     msg.CharacterID = client.ID;
                     return Movement.SendToViewAsync(client, msg);
                 },
-                [ActionType.CharacterEmote] = (msg, client) =>
+                // The 5619 client sits down (250) on opening a booth; standing up ends it
+                [ActionType.CharacterEmote] = async (msg, client) =>
                 {
                     if (client.Character == null)
-                        return Task.CompletedTask;
+                        return;
                     client.Character.Stance = msg.Command;
                     client.Character.Direction = (byte)(msg.Direction % 8);
                     msg.CharacterID = client.ID;
-                    return Movement.SendToViewAsync(client, msg);
+                    await Movement.SendToViewAsync(client, msg);
+                    if (msg.Command != Items.Vending.SitStance)
+                        await Items.Vending.CloseAsync(client, "stood_up");
                 },
             };
 
