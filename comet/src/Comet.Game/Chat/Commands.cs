@@ -46,6 +46,10 @@ namespace Comet.Game.Chat
             new Command(new[] { "pk" }, Authority.GameMaster, "/pk <points> [name]", PkPointsAsync),
             new Command(new[] { "flash" }, Authority.GameMaster, "/flash [seconds]", FlashAsync),
             new Command(new[] { "jail" }, Authority.GameMaster, "/jail <name>", JailAsync),
+            new Command(new[] { "learn" }, Authority.GameMaster, "/learn <magic type> [level]", LearnAsync),
+            new Command(new[] { "prof" }, Authority.GameMaster, "/prof <weapon type> <level>", ProficiencyAsync),
+            new Command(new[] { "xp" }, Authority.GameMaster, "/xp", XpAsync),
+            new Command(new[] { "restore" }, Authority.GameMaster, "/restore", RestoreAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -297,6 +301,56 @@ namespace Comet.Game.Chat
                     return i > 0;
                 }
             }
+            return true;
+        }
+
+        private static async Task<bool> LearnAsync(Client client, string[] args, string rest)
+        {
+            ushort level = 0;
+            if (args.Length < 1 || args.Length > 2 || !ushort.TryParse(args[0], out var type) ||
+                (args.Length == 2 && !ushort.TryParse(args[1], out level)))
+                return await UsageAsync(client, "/learn <magic type> [level]");
+            if (await Magic.Casting.LearnAsync(client, type, level, "gm"))
+                return true;
+            await Talk.NoticeAsync(client, Kernel.Magics.Exists(type)
+                ? $"Magic {type} goes up to level {Kernel.Magics.MaxLevel(type)}."
+                : $"No magic type {type} in magictype.dat.");
+            return false;
+        }
+
+        // Weapon types are item type / 1000: 410 blade, 420 sword, 480 club, 500 bow, 510 glaive
+        private static async Task<bool> ProficiencyAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 2 || !ushort.TryParse(args[0], out var type) || type == 0 ||
+                !ushort.TryParse(args[1], out var level) || level > Kernel.Proficiencies.MaxLevel)
+                return await UsageAsync(client, $"/prof <weapon type> <level up to {Kernel.Proficiencies.MaxLevel}>");
+            client.Skills.TryGetProficiency(type, out var current);
+            await Magic.Proficiency.SetAsync(client, type, new Magic.SkillLevel(level, 0), current?.Level ?? 0, "gm");
+            return true;
+        }
+
+        private static async Task<bool> XpAsync(Client client, string[] args, string rest)
+        {
+            await Magic.Recovery.AddXpAsync(client, Magic.Energy.MaxXp, DateTime.UtcNow);
+            return true;
+        }
+
+        private static async Task<bool> RestoreAsync(Client client, string[] args, string rest)
+        {
+            var character = client.Character;
+            if (client.Life.Dead)
+                return false;
+            character.HealthPoints = Attributes.MaxHealth(character);
+            character.ManaPoints = Attributes.MaxMana(character);
+            client.Energy.Stamina = Magic.Energy.MaxStamina;
+            // The maximums first, so the client doesn't cut health or mana to an older one
+            await new MsgUserAttrib(client.ID)
+                .Append(MsgUserAttrib.AttributeType.MaxHealth, character.HealthPoints)
+                .Append(MsgUserAttrib.AttributeType.Health, character.HealthPoints)
+                .Append(MsgUserAttrib.AttributeType.MaxMana, character.ManaPoints)
+                .Append(MsgUserAttrib.AttributeType.Mana, character.ManaPoints)
+                .Append(MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina)
+                .SendEachAsync(client);
             return true;
         }
 

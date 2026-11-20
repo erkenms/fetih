@@ -107,6 +107,17 @@ namespace Comet.Core.Logging
         public const string CombatHit = "combat.hit";
         public const string CombatRejected = "combat.rejected";
 
+        public const string MagicTypesLoaded = "magic.types_loaded";
+        public const string MagicCast = "magic.cast";
+        public const string MagicRejected = "magic.rejected";
+        public const string MagicLearned = "magic.learned";
+        public const string MagicLevel = "magic.level";
+        public const string ProficiencyLevel = "proficiency.level";
+        public const string XpFull = "xp.full";
+        public const string StatusStarted = "status.started";
+        public const string StatusEnded = "status.ended";
+        public const string EnergyLoopFailed = "energy.loop_failed";
+
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
         public const string MoveTeleport = "move.teleport";

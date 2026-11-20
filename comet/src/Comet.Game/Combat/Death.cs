@@ -31,6 +31,9 @@ namespace Comet.Game.Combat
             Attacks.Stop(client);
             await Social.Trading.CancelAsync(client, "died");
             character.HealthPoints = 0;
+            client.Effects.Clear();
+            client.Energy.KoCount = 0;
+            await Magic.Recovery.SetXpAsync(client, 0);
             life.Dead = true;
             life.Ghost = false;
             var diedAt = life.DiedAt = DateTime.UtcNow;

@@ -81,6 +81,23 @@
 
             try
             {
+                Kernel.Magics = Magic.MagicTypeTable.Load(config.Maps.ResolveClientDirectory());
+                Kernel.Proficiencies = Magic.ProficiencyTable.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.MagicTypesLoaded).Information(
+                    "Loaded {MagicTypeCount} spell levels ({SkippedCount} records skipped) and " +
+                    "{ProficiencyLevelCount} proficiency levels",
+                    Kernel.Magics.Count, Kernel.Magics.Skipped, Kernel.Proficiencies.MaxLevel);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/magictype.dat or ini/WeaponSkillLevelExp.ini from {Directory}",
+                    config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.Portals = new PortalTable(PortalTable.Load(DataFiles.PathOf("portals.json")));
                 LogEvents.For(typeof(Program), LogEvents.PortalsLoaded).Information(
                     "Loaded {PortalCount} portals", Kernel.Portals.Count);
@@ -201,6 +218,9 @@
             Pking.FlashTime = TimeSpan.FromSeconds(Math.Max(1, config.Pk.FlashSeconds));
             Pking.DecayInterval = TimeSpan.FromSeconds(Math.Max(1, config.Pk.DecaySeconds));
             _ = Pking.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Magic.Recovery.XpInterval = TimeSpan.FromMilliseconds(Math.Max(100, config.Magic.XpMilliseconds));
+            Magic.Recovery.XpFullTime = TimeSpan.FromSeconds(Math.Max(1, config.Magic.XpFullSeconds));
+            _ = Magic.Recovery.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);

@@ -47,8 +47,16 @@ namespace Comet.Game.States
 
         public PkState Pk { get; } = new PkState();
 
-        // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing
-        public ulong Status => this.Life.Status | Pking.Status(this);
+        // Statuses that run out: XP full and what spells give
+        public TimedStatus Effects { get; } = new TimedStatus();
+
+        // Stamina, the XP bar and learned skills, changed on the player's own queue
+        public Magic.Energy Energy { get; } = new Magic.Energy();
+        public Magic.Skills Skills { get; set; } = new Magic.Skills();
+        public DateTime NextCastAt { get; set; }
+
+        // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
+        public ulong Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow);
 
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }
@@ -117,6 +125,7 @@ namespace Comet.Game.States
             try
             {
                 await CharactersRepository.SaveAsync(character.Snapshot());
+                await SkillsRepository.SaveAsync(character.CharacterID, this.Skills.Snapshot());
             }
             catch (Exception e)
             {

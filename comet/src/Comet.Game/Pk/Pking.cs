@@ -18,10 +18,9 @@ namespace Comet.Game.Pk
     // the attacker flash (Albetros).
     public static class Pking
     {
-        // Status bits (MsgUserAttrib 25, MsgPlayer 22), as in Albetros (5517)
-        public const ulong FlashingStatus = 0x1;
-        public const ulong RedNameStatus = 0x4000;
-        public const ulong BlackNameStatus = 0x8000;
+        public const ulong FlashingStatus = StatusFlags.Flashing;
+        public const ulong RedNameStatus = StatusFlags.RedName;
+        public const ulong BlackNameStatus = StatusFlags.BlackName;
 
         public const ushort RedNamePoints = 30;
         public const ushort BlackNamePoints = 100;

@@ -23,6 +23,8 @@ namespace Comet.Client
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
+        public const ushort MsgMagicInfo = 1103;
+        public const ushort MsgWeaponSkill = 1025;
         public const ushort MsgNpcInfo = 2030;
         public const ushort MsgNpc = 2031;
         public const ushort MsgTaskDialog = 2032;
@@ -150,7 +152,31 @@ namespace Comet.Client
     // for a kill the count) at 24; 40 bytes
     public sealed record InteractMessage(uint Sender, uint Target, ushort X, ushort Y, uint Action, uint Data)
     {
-        public const uint Attack = 2, Kill = 14, Shoot = 28;
+        public const uint Attack = 2, Kill = 14, MagicAttack = 24, Shoot = 28;
+
+        // A spell cast: the magic type in the low half of data and the level in the high half;
+        // type, target, cell and level are hidden with the sender's ID (TQ's ENCODE_MAGICATTACK)
+        public static byte[] BuildMagic(uint sender, ushort magicType, ushort level, uint target, int x, int y)
+        {
+            uint timestamp = (uint)Environment.TickCount;
+            uint type = (ExchangeShortBits(magicType - 0x14BEu, 3) ^ sender ^ 0x915D) & 0xFFFF;
+            uint encodedLevel = ((level + 0x100 * (timestamp % 0x100)) ^ 0x3721) & 0xFFFF;
+            var packet = Build(MagicAttack, sender,
+                ExchangeLongBits((target - 0x8B90B51A) ^ sender ^ 0x5F2D2463, 32 - 13),
+                (int)((ExchangeShortBits((uint)x - 0xDD12, 1) ^ sender ^ 0x2ED6) & 0xFFFF),
+                (int)((ExchangeShortBits((uint)y - 0x76DE, 5) ^ sender ^ 0xB99B) & 0xFFFF));
+            BitConverter.TryWriteBytes(packet.AsSpan(4), timestamp);
+            BitConverter.TryWriteBytes(packet.AsSpan(24), type | (encodedLevel << 16));
+            return packet;
+        }
+
+        private static uint ExchangeShortBits(uint data, int bits)
+        {
+            data &= 0xFFFF;
+            return ((data >> bits) | (data << (16 - bits))) & 0xFFFF;
+        }
+
+        private static uint ExchangeLongBits(uint data, int bits) => (data >> bits) | (data << (32 - bits));
 
         public static InteractMessage Parse(byte[] packet) => new InteractMessage(
             BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12),
@@ -170,6 +196,39 @@ namespace Comet.Client
         }
     }
 
+    // A learned spell: experience at 4, magic type at 8 and level at 10, both ushorts
+    public sealed record MagicInfo(ushort Type, ushort Level, uint Experience)
+    {
+        public static MagicInfo Parse(byte[] packet) => new MagicInfo(
+            BitConverter.ToUInt16(packet, 8), BitConverter.ToUInt16(packet, 10), BitConverter.ToUInt32(packet, 4));
+    }
+
+    // A weapon proficiency: weapon type (item type / 1000), level, experience and what the
+    // level needs, from 4
+    public sealed record WeaponSkill(uint Type, uint Level, uint Experience, uint Needed)
+    {
+        public static WeaponSkill Parse(byte[] packet) => new WeaponSkill(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16));
+    }
+
+    // A spell's effect: caster, cell, magic type and level, then per target 32 bytes from 20,
+    // starting with its ID and damage
+    public sealed record MagicEffect(uint Caster, ushort X, ushort Y, ushort Type, ushort Level,
+        List<(uint Id, uint Damage)> Targets)
+    {
+        public static MagicEffect Parse(byte[] packet)
+        {
+            var targets = new List<(uint, uint)>();
+            uint count = BitConverter.ToUInt32(packet, 16);
+            for (int i = 0, offset = 20; i < count && offset + 8 <= packet.Length; i++, offset += 32)
+                targets.Add((BitConverter.ToUInt32(packet, offset), BitConverter.ToUInt32(packet, offset + 4)));
+            return new MagicEffect(BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt16(packet, 8),
+                BitConverter.ToUInt16(packet, 10), BitConverter.ToUInt16(packet, 12),
+                BitConverter.ToUInt16(packet, 14), targets);
+        }
+    }
+
     public sealed record ActionMessage(
         uint CharacterId, uint Command, ushort Action, ushort Direction, ushort X, ushort Y)
     {
@@ -181,6 +240,8 @@ namespace Comet.Client
         public const ushort LoginSpawn = 74;
         public const ushort LoginInventory = 75;
         public const ushort LoginRelationships = 76;
+        public const ushort LoginProficiencies = 77;
+        public const ushort LoginSpells = 78;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
@@ -242,11 +303,12 @@ namespace Comet.Client
     {
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
-            Strength = 15, Agility = 16, Mesh = 11, PkPoints = 6, Status = 25;
+            Strength = 15, Agility = 16, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27;
         public const ulong DeadStatus = 0x400;
 
         // Status flags
         public const ulong Flashing = 0x1, RedName = 0x4000, BlackName = 0x8000;
+        public const ulong XpFull = 0x10, Superman = 0x40000, Cyclone = 0x800000;
 
         public static UserAttribMessage Parse(byte[] packet)
         {

@@ -20,8 +20,10 @@ namespace Comet.Client
     {
         private volatile bool HandshakeReceived;
 
-        // Friends and enemies the server listed while entering the map
+        // Friends and enemies, proficiencies and spells the server listed while entering the map
         public List<FriendMessage> Relationships { get; } = new List<FriendMessage>();
+        public List<WeaponSkill> Proficiencies { get; } = new List<WeaponSkill>();
+        public List<MagicInfo> Spells { get; } = new List<MagicInfo>();
 
         private GameClient(System.Net.Sockets.TcpClient tcp)
             : base(tcp, new Cast5Cipher(), footer: "TQClient")
@@ -160,6 +162,29 @@ namespace Comet.Client
                 if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
                     break;
                 this.Relationships.Add(FriendMessage.Parse(packet));
+            }
+
+            // Proficiencies, then spells, each before the reply to its step
+            foreach (var (step, type) in new[]
+            {
+                (ActionMessage.LoginProficiencies, PacketTypes.MsgWeaponSkill),
+                (ActionMessage.LoginSpells, PacketTypes.MsgMagicInfo),
+            })
+            {
+                await this.SendAsync(ActionMessage.Build(characterId, step));
+                while (true)
+                {
+                    var packet = await this.ReceiveAsync(p =>
+                        BitConverter.ToUInt16(p, 2) == type ||
+                        BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAction && ActionMessage.Parse(p).Action == step)
+                        ?? throw new InvalidOperationException("Game server closed the connection");
+                    if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
+                        break;
+                    if (type == PacketTypes.MsgWeaponSkill)
+                        this.Proficiencies.Add(WeaponSkill.Parse(packet));
+                    else
+                        this.Spells.Add(MagicInfo.Parse(packet));
+                }
             }
 
             await this.SendAsync(ActionMessage.BuildLoginComplete());
@@ -341,6 +366,30 @@ namespace Comet.Client
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMagicEffect &&
                 BitConverter.ToUInt32(p, 4) == casterId, timeout);
             return packet == null ? null : BitConverter.ToUInt16(packet, 12);
+        }
+
+        public Task CastAsync(uint characterId, ushort magicType, uint targetId, int x, int y, ushort level = 0) =>
+            this.SendAsync(InteractMessage.BuildMagic(characterId, magicType, level, targetId, x, y));
+
+        public async Task<MagicEffect> WaitForEffectAsync(Func<MagicEffect, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMagicEffect && match(MagicEffect.Parse(p)), timeout);
+            return packet == null ? null : MagicEffect.Parse(packet);
+        }
+
+        public async Task<MagicInfo> WaitForMagicInfoAsync(Func<MagicInfo, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMagicInfo && match(MagicInfo.Parse(p)), timeout);
+            return packet == null ? null : MagicInfo.Parse(packet);
+        }
+
+        public async Task<WeaponSkill> WaitForWeaponSkillAsync(Func<WeaponSkill, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgWeaponSkill && match(WeaponSkill.Parse(p)), timeout);
+            return packet == null ? null : WeaponSkill.Parse(packet);
         }
 
         // Sent by the client once the death animation is over

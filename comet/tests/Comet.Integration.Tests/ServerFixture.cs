@@ -50,6 +50,20 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) GuardToProvoke = (860, 860);
         public static readonly (ushort X, ushort Y) GuardOnDuty = (900, 900);
         public static readonly (ushort X, ushort Y) PheasantNearGuard = (903, 900);
+        public static readonly (ushort X, ushort Y) PheasantForMagic = (880, 820);
+        public static readonly (ushort X, ushort Y) PheasantForBlade = (900, 820);
+        public static readonly (ushort X, ushort Y) PheasantForFastBlade = (920, 820);
+
+        // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
+        // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
+        public static readonly MagicFiles.Spell Thunder =
+            new MagicFiles.Spell(1000, 0, 1, "Thunder") { Power = 1000, Distance = 9, NeedExperience = 20 };
+        public static readonly MagicFiles.Spell Thunder1 =
+            new MagicFiles.Spell(1000, 1, 1, "Thunder") { Power = 1000, Distance = 9 };
+        public static readonly MagicFiles.Spell Superman =
+            new MagicFiles.Spell(1025, 0, 6, "Superman") { Power = 31000, StepSeconds = 20, XpSkill = true };
+        public static readonly MagicFiles.Spell FastBlade =
+            new MagicFiles.Spell(1045, 0, 14, "FastBlade") { Power = 30110, Range = 4, Distance = 10, Stamina = 20, WeaponSubtype = 410 };
 
         // Short, so a test can revive a dead player
         public const int ReviveSeconds = 1;
@@ -204,6 +218,10 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
+                MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
+                MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
                 (Blacksmith, new[] { Blade.Id, Glaive.Id }), (Pharmacist, new[] { Potion.Id })));
         }
@@ -214,6 +232,7 @@ namespace Comet.Integration.Tests
             {
                 (PheasantToKill, 1u), (PheasantToShoot, 1u), (PheasantThatBites, 1u),
                 (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
+                (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

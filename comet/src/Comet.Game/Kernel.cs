@@ -35,6 +35,11 @@ namespace Comet.Game
         // Item types read from the client's itemtype.dat at startup
         public static ItemTypeTable ItemTypes = new ItemTypeTable(new ItemType[0]);
 
+        // Spells and weapon proficiency levels, read from the client's magictype.dat and
+        // WeaponSkillLevelExp.ini at startup
+        public static Magic.MagicTypeTable Magics = new Magic.MagicTypeTable(new Magic.MagicType[0]);
+        public static Magic.ProficiencyTable Proficiencies = new Magic.ProficiencyTable(new (ushort, uint)[0]);
+
         // NPCs on each map, read from Data/npcs.json at startup
         public static NpcTable Npcs = new NpcTable(new Npc[0]);
 

@@ -5,6 +5,7 @@ namespace Comet.Game.Combat
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
     using Comet.Game.Items;
+    using Comet.Game.Magic;
     using Comet.Game.Packets;
     using Comet.Game.Pk;
     using Comet.Game.States;
@@ -97,14 +98,15 @@ namespace Comet.Game.Combat
                 return;
             }
 
-            var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
+            var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
             var type = monster.Type;
             uint damage = 0;
-            if (Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
+            if (Buffs.HasAccuracy(client.Effects, now) || Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
                 damage = shooting
                     ? Damage.Archery(stats.MinAttack, stats.MaxAttack, character.Level, type.Level, type.Dodge, Random.Shared)
                     : Damage.Melee(stats.MinAttack, stats.MaxAttack, character.Level, type.Level, type.Defense, Random.Shared);
+            damage = Buffs.AgainstMonster(client.Effects, damage, now);
             if (shooting)
                 await UseArrowAsync(client, arrows);
             if (type.IsGuard)
@@ -126,14 +128,29 @@ namespace Comet.Game.Combat
                 "{Name} hit {MonsterName} {MonsterId} for {Damage} ({Dealt} dealt, {Kind})",
                 character.Name, type.Name, monster.Identity, damage, dealt, shooting ? "shoot" : "melee");
 
-            // Hitting guards teaches nothing
+            if (killed)
+                Stop(client);
+            if (!type.IsGuard)
+                await Proficiency.GainAsync(client, dealt);
+            await AfterMonsterHitAsync(client, monster, x, y, dealt, killed);
+            if (!killed)
+                Schedule(client, run, interval);
+        }
+
+        // After a player's hit on a monster: experience, and for a kill the kill message (with
+        // the XP skill's KO count) and the loot. Hitting guards teaches nothing.
+        public static async Task AfterMonsterHitAsync(Client client, Monster monster, ushort x, ushort y,
+            uint dealt, bool killed)
+        {
+            var character = client.Character;
+            var type = monster.Type;
             ulong experience = type.IsGuard ? 0 : Damage.Experience(dealt, character.Level, type.Level);
             if (killed)
             {
                 if (!type.IsGuard)
                     experience += Damage.KillBonus(type.Life);
-                Stop(client);
-                await SendAroundAsync(client, monster, new MsgInteract(InteractionType.Kill, client.ID, monster.Identity, x, y, 1));
+                uint data = Buffs.CountKill(client, DateTime.UtcNow);
+                await SendAroundAsync(client, monster, new MsgInteract(InteractionType.Kill, client.ID, monster.Identity, x, y, data));
                 LogEvents.For(typeof(Attacks), LogEvents.MonsterKilled).Information(
                     "{Name} killed {MonsterName} {MonsterId} (type {MonsterTypeId}) on map {MapId} at {X},{Y}",
                     character.Name, type.Name, monster.Identity, type.ID, monster.Map.Id, x, y);
@@ -143,8 +160,13 @@ namespace Comet.Game.Combat
                 await Progress.AwardExperienceAsync(client, experience, "monster");
             if (killed)
                 await Loot.DropAsync(client, monster, x, y, Random.Shared);
-            else
-                Schedule(client, run, interval);
+        }
+
+        // Cyclone swings three times as fast
+        private static TimeSpan Interval(Client client, Stats stats, DateTime now)
+        {
+            var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
+            return client.Effects.Has(StatusFlags.Cyclone, now) ? interval / 3 : interval;
         }
 
         private static async Task SwingAtPlayerAsync(Client client, int run, DateTime now)
@@ -171,18 +193,19 @@ namespace Comet.Game.Combat
                 return;
             }
 
-            var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
+            var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
             await Pking.OnAttackAsync(client, target);
-            int attack = Damage.Roll(stats.MinAttack, stats.MaxAttack, Random.Shared);
+            int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinAttack, stats.MaxAttack, Random.Shared), now);
+            bool sure = Buffs.HasAccuracy(client.Effects, now);
             if (shooting)
                 await UseArrowAsync(client, arrows);
-            Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, shooting));
+            Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, shooting, sure));
             Schedule(client, run, interval);
         }
 
         // On the target's queue: their defense and dodge decide what the attacker's roll does
-        private static async Task PlayerHitsPlayerAsync(Client attacker, Client target, int attack, bool shooting)
+        private static async Task PlayerHitsPlayerAsync(Client attacker, Client target, int attack, bool shooting, bool sure)
         {
             var character = target.Character;
             var attackerCharacter = attacker.Character;
@@ -190,19 +213,29 @@ namespace Comet.Game.Combat
                 return;
 
             var stats = Stats.Of(target);
-            uint damage = !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
-                shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, stats.Defense);
-            uint dealt = Math.Min(damage, character.HealthPoints);
-            character.HealthPoints -= (ushort)dealt;
-
+            int defense = Buffs.Defense(target.Effects, stats.Defense, DateTime.UtcNow);
+            uint damage = !sure && !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
+                shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense);
             var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
                 attacker.ID, target.ID, character.X, character.Y, damage);
             await target.SendAsync(hit);
             await Movement.SendToViewAsync(target, hit);
+            await DamagePlayerAsync(attacker, target, damage, shooting ? "shoot" : "melee");
+        }
+
+        // On the target's queue, after what shows the hit was sent: health, and death
+        public static async Task DamagePlayerAsync(Client attacker, Client target, uint damage, string kind)
+        {
+            var character = target.Character;
+            var attackerCharacter = attacker.Character;
+            if (character == null || attackerCharacter == null || target.Life.Dead || target.Map != attacker.Map)
+                return;
+            uint dealt = Math.Min(damage, character.HealthPoints);
+            character.HealthPoints -= (ushort)dealt;
             await target.SendAsync(new MsgUserAttrib(target.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
-                attackerCharacter.Name, character.Name, damage, character.HealthPoints, shooting ? "shoot" : "melee");
+                attackerCharacter.Name, character.Name, damage, character.HealthPoints, kind);
 
             if (character.HealthPoints > 0)
                 return;
@@ -224,7 +257,7 @@ namespace Comet.Game.Combat
             var stats = Stats.Of(client);
             var type = monster.Type;
             uint damage = Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared)
-                ? Damage.MonsterMelee(type.AttackMin, type.AttackMax, stats.Defense, Random.Shared) : 0;
+                ? Damage.MonsterMelee(type.AttackMin, type.AttackMax, Buffs.Defense(client.Effects, stats.Defense, now), Random.Shared) : 0;
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
 
@@ -299,7 +332,7 @@ namespace Comet.Game.Combat
                 TaskScheduler.Default);
 
         // The attacker and everyone who sees the monster
-        private static async Task SendAroundAsync(Client client, Monster monster, IPacket packet)
+        public static async Task SendAroundAsync(Client client, Monster monster, IPacket packet)
         {
             await client.SendAsync(packet);
             foreach (var player in Monsters.PlayersInView(monster))
@@ -307,7 +340,7 @@ namespace Comet.Game.Combat
                     await player.SendAsync(packet);
         }
 
-        private static void Reject(Client client, uint targetID, string reason) =>
+        public static void Reject(Client client, uint targetID, string reason) =>
             LogEvents.For(typeof(Attacks), LogEvents.CombatRejected).Warning(
                 "{Name} can't attack {TargetId}: {Reason}", client.Character?.Name, targetID, reason);
     }

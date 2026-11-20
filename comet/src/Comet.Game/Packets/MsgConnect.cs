@@ -129,6 +129,7 @@ namespace Comet.Game.Packets
                 client.Inventory = new Inventory(items.Where(i => i.Position == (byte)ItemPosition.Inventory));
                 client.Equipment = new Equipment(items.Where(i => Equipment.IsEquipped(i.Position)));
                 await Social.Relationships.LoadAsync(client);
+                client.Skills = await SkillsRepository.LoadAsync(character.CharacterID);
                 client.Warehouses = new Warehouses(items.Where(i => i.Position == (byte)ItemPosition.Warehouse));
                 if (!ResolveMap(client))
                 {

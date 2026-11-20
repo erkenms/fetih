@@ -45,7 +45,29 @@ namespace Comet.Game.Packets
             this.Y = reader.ReadUInt16();
             this.Action = (InteractionType)reader.ReadUInt32();
             this.Data = reader.ReadUInt32();
+            if (this.Action == InteractionType.MagicAttack)
+                this.DecodeMagicAttack();
         }
+
+        public ushort MagicType => (ushort)this.Data;
+
+        private void DecodeMagicAttack()
+        {
+            uint user = this.SenderID;
+            uint magicType = (ExchangeShortBits((this.Data & 0xFFFF) ^ user ^ 0x915D, 16 - 3) + 0x14BE) & 0xFFFF;
+            this.TargetID = (ExchangeLongBits(this.TargetID, 13) ^ user ^ 0x5F2D2463) + 0x8B90B51A;
+            this.X = (ushort)(ExchangeShortBits(this.X ^ user ^ 0x2ED6, 16 - 1) + 0xDD12);
+            this.Y = (ushort)(ExchangeShortBits(this.Y ^ user ^ 0xB99B, 16 - 5) + 0x76DE);
+            this.Data = (this.Data & 0xFFFF0000) | magicType;
+        }
+
+        private static uint ExchangeShortBits(uint data, int bits)
+        {
+            data &= 0xFFFF;
+            return ((data >> bits) | (data << (16 - bits))) & 0xFFFF;
+        }
+
+        private static uint ExchangeLongBits(uint data, int bits) => (data >> bits) | (data << (32 - bits));
 
         public override byte[] Encode()
         {
@@ -64,7 +86,10 @@ namespace Comet.Game.Packets
             return writer.ToArray();
         }
 
-        public override Task ProcessAsync(Client client) => Attacks.RequestAsync(client, this);
+        public override Task ProcessAsync(Client client) =>
+            this.Action == InteractionType.MagicAttack
+                ? Magic.Casting.CastAsync(client, this.MagicType, this.TargetID, this.X, this.Y)
+                : Attacks.RequestAsync(client, this);
 
         public enum InteractionType : uint
         {

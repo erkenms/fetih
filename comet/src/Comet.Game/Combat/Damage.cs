@@ -15,6 +15,22 @@ namespace Comet.Game.Combat
             return delta <= 5 ? 1.5 : 1 + 0.7 * delta / 5;
         }
 
+        // Spells: 0.6 more for every 5 levels instead of 0.7 (Albetros)
+        public static double MagicLevelBonus(int attackerLevel, int targetLevel)
+        {
+            int delta = attackerLevel - targetLevel;
+            if (delta <= 3)
+                return 1;
+            return delta <= 5 ? 1.5 : 1 + 0.6 * delta / 5;
+        }
+
+        // The caster's magic attack and the spell's power; monsters have no magic defense
+        public static uint Magic(int magicAttack, int power, int attackerLevel, int targetLevel) =>
+            AtLeastOne((magicAttack + power) * MagicLevelBonus(attackerLevel, targetLevel));
+
+        public static uint PlayerMagic(int magicAttack, int power, int targetMagicDefense) =>
+            AtLeastOne(magicAttack + power - targetMagicDefense);
+
         public static uint Melee(int minAttack, int maxAttack, int attackerLevel, int targetLevel,
             int targetDefense, Random random)
         {

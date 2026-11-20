@@ -8,7 +8,7 @@ namespace Comet.Game.States
     {
         // Status bit (MsgUserAttrib 25, MsgPlayer 22) for the dead: the client shows its revive
         // buttons. Albetros also sets 0x20, which the wiki doesn't list. The ghost is only the body.
-        public const ulong DeadStatus = 0x400;
+        public const ulong DeadStatus = StatusFlags.Dead;
 
         // The ghost look replaces the body with a transformation: 98 for men, 99 for women
         private const uint TransformFactor = 10_000_000;

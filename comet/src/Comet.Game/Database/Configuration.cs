@@ -17,6 +17,7 @@ namespace Comet.Game.Database
         public DeathConfiguration Death { get; set; } = new DeathConfiguration();
         public CombatConfiguration Combat { get; set; } = new CombatConfiguration();
         public PkConfiguration Pk { get; set; } = new PkConfiguration();
+        public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -103,6 +104,13 @@ namespace Comet.Game.Database
         {
             public int FlashSeconds { get; set; } = 30;
             public int DecaySeconds { get; set; } = 360;
+        }
+
+        // How fast the XP bar fills (a point each XpMilliseconds) and how long it stays full
+        public class MagicConfiguration
+        {
+            public int XpMilliseconds { get; set; } = 3000;
+            public int XpFullSeconds { get; set; } = 20;
         }
 
         public ServerConfiguration(string[] args)

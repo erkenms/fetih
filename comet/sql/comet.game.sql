@@ -121,6 +121,31 @@ CREATE TABLE `enemy` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
+-- Table structure for tables `magic` and `proficiency`
+--
+-- Spells a character learned, by magic type, and weapon proficiencies, by item type / 1000
+-- (410 blade). Experience counts toward the next level.
+--
+
+DROP TABLE IF EXISTS `magic`;
+CREATE TABLE `magic` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Type` smallint(5) unsigned NOT NULL,
+  `Level` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Experience` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`,`Type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS `proficiency`;
+CREATE TABLE `proficiency` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Type` smallint(5) unsigned NOT NULL,
+  `Level` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Experience` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`,`Type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Dumping events for database 'comet.game'
 --
 

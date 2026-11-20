@@ -169,6 +169,18 @@ namespace Comet.Game.Packets
                     await client.SendAsync(msg);
                 },
 
+                [ActionType.LoginProficiencies] = async (msg, client) =>
+                {
+                    await Magic.Proficiency.SendAllAsync(client);
+                    await client.SendAsync(msg);
+                },
+
+                [ActionType.LoginSpells] = async (msg, client) =>
+                {
+                    await Magic.Casting.SendAllAsync(client);
+                    await client.SendAsync(msg);
+                },
+
                 // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = async (msg, client) =>
                 {
