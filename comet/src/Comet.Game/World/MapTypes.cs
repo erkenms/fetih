@@ -41,6 +41,7 @@ namespace Comet.Game.World
         [JsonPropertyName("portal")] public Cell Portal { get; init; }
         [JsonPropertyName("reborn")] public uint? RebornMapID { get; init; }
         [JsonPropertyName("scroll")] public uint? ScrollTypeID { get; init; }
+        [JsonPropertyName("ridePlus")] public byte RidePlus { get; init; }
 
         public IEnumerable<string> Names =>
             (this.Name == null ? Enumerable.Empty<string>() : new[] { this.Name }).Concat(this.Aliases ?? new List<string>());
@@ -107,6 +108,9 @@ namespace Comet.Game.World
         public int Count => this.Maps.Count;
 
         public MapFlags Of(uint mapID) => this.Maps.TryGetValue(mapID, out var map) ? map.Flags : MapFlags.None;
+
+        // The steed plus needed to ride on the map
+        public byte RidePlusOf(uint mapID) => this.Maps.TryGetValue(mapID, out var map) ? map.RidePlus : (byte)0;
 
         // The map's own portal, or null
         public MapPoint PortalOf(uint mapID) =>

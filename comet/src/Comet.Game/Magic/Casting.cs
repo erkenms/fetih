@@ -33,7 +33,7 @@ namespace Comet.Game.Magic
         private static readonly HashSet<MagicSort> Supported = new HashSet<MagicSort>
         {
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
-            MagicSort.Recruit, MagicSort.AttachStatus,
+            MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -54,6 +54,12 @@ namespace Comet.Game.Magic
                 !client.Skills.TryGetSpell(magicType, out learned) ? "not_learned" :
                 !Kernel.Magics.TryGet(magicType, learned.Level, out spell) ? "unknown_magic" :
                 null;
+            // Getting off costs nothing
+            if (reason == null && spell.Sort == MagicSort.Riding && client.Mount.Riding)
+            {
+                await Riding.DismountAsync(client, "magic");
+                return;
+            }
             reason ??= Problem(client, spell, now);
             if (reason != null)
             {
@@ -62,8 +68,13 @@ namespace Comet.Game.Magic
             }
 
             Attacks.Stop(client);
+            if (spell.Sort != MagicSort.Riding)
+                await Riding.DismountAsync(client, "magic");
             switch (spell.Sort)
             {
+                case MagicSort.Riding:
+                    await RideAsync(client, spell, now);
+                    break;
                 case MagicSort.Recruit:
                     await HealAsync(client, spell, targetID, now);
                     break;
@@ -83,6 +94,7 @@ namespace Comet.Game.Magic
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
             client.Energy.Stamina < spell.UseStamina ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
+            spell.Sort == MagicSort.Riding ? Riding.Problem(client) :
             null;
 
         private static bool Holds(Client client, uint weaponSubtype) =>
@@ -330,6 +342,18 @@ namespace Comet.Game.Magic
             LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
                 "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
                 character.Name, status, spell.StepSeconds, client.Character.Name, spell.Name);
+            LogCast(client, spell, character.X, character.Y, 1);
+        }
+
+        private static async Task RideAsync(Client client, MagicType spell, DateTime now)
+        {
+            await PayAsync(client, spell, now);
+            var character = client.Character;
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((client.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Riding.MountAsync(client);
             LogCast(client, spell, character.X, character.Y, 1);
         }
 

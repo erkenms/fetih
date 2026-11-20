@@ -41,6 +41,9 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050000, "LuckyArrow", 3, 0);
         // Teleports to Twin City's portal, 430,380 in Data/maps.json
         public static readonly (uint Id, string Name, ushort Amount, byte Level) TwinCityGate = (1060020, "TwinCityGate", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Steed = (300000, "Steed", 100, 0);
+        // The vigor of a +1 steed, from the test itemadd.ini
+        public const ushort SteedVigor = 50;
 
         // Test monsters on 1002, away from the cells other tests use. Pheasants (type 1) attack
         // only players next to them; guards (900) kill monsters within 15 cells and players who
@@ -66,6 +69,8 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(1025, 0, 6, "Superman") { Power = 31000, StepSeconds = 20, XpSkill = true };
         public static readonly MagicFiles.Spell FastBlade =
             new MagicFiles.Spell(1045, 0, 14, "FastBlade") { Power = 30110, Range = 4, Distance = 10, Stamina = 20, WeaponSubtype = 410 };
+        public static readonly MagicFiles.Spell Riding =
+            new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
         // Short, so a test can revive a dead player
         public const int ReviveSeconds = 1;
@@ -226,9 +231,11 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate));
+                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
+                ItemFiles.ItemAddIni((Steed.Id, 1, SteedVigor)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
-                MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade));
+                MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

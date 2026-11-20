@@ -16,6 +16,8 @@ namespace Comet.Game.Items
 
         public static bool IsShield(uint type) => Sort(type) == 900;
 
+        public static bool IsSteed(uint type) => Sort(type) == 300;
+
         // The last digit of a type ID: 3 to 5 normal, 6 refined, 7 unique, 8 elite, 9 super
         public static int Quality(uint type) => (int)(type % 10);
 
@@ -35,6 +37,7 @@ namespace Comet.Game.Items
             ItemPosition.Ring => Sort(type) is >= 150 and <= 152,
             ItemPosition.Boots => Sort(type) == 160,
             ItemPosition.Garment => Sort(type) is >= 181 and <= 194,
+            ItemPosition.Steed => IsSteed(type),
             _ => false,
         };
     }

@@ -22,6 +22,8 @@ namespace Comet.Game.Packets
         public bool Away { get; set; }
         public uint Helmet, Garment, Armor, RightHand, LeftHand;
         public ushort ArmorColor, ShieldColor, HelmetColor;
+        public uint Steed;
+        public byte SteedPlus;
         public ulong Status { get; set; }
         public uint MonsterHealth { get; set; }
         public ushort MonsterLevel { get; set; }
@@ -74,6 +76,8 @@ namespace Comet.Game.Packets
             this.ArmorColor = equipment.ColorAt(ItemPosition.Armor);
             this.ShieldColor = equipment.ColorAt(ItemPosition.LeftHand);
             this.HelmetColor = equipment.ColorAt(ItemPosition.Headwear);
+            this.Steed = equipment.TypeAt(ItemPosition.Steed);
+            this.SteedPlus = equipment[ItemPosition.Steed]?.Plus ?? 0;
         }
 
         public MsgPlayer(Character character)
@@ -110,7 +114,9 @@ namespace Comet.Game.Packets
             writer.Write(this.Armor);               // 52
             writer.Write(this.RightHand);           // 56
             writer.Write(this.LeftHand);            // 60
-            writer.Write(new byte[16]);             // 64  accessories, mount and mount armor
+            writer.Write(new byte[8]);              // 64  accessories
+            writer.Write(this.Steed);               // 72  steed type (Albetros 5517, +4 as helmet)
+            writer.Write(0u);                       // 76
             writer.Write((ushort)0);                // 80
             writer.Write((ushort)0);                // 82
             writer.Write(this.MonsterHealth);       // 84  monster health
@@ -132,9 +138,10 @@ namespace Comet.Game.Packets
             writer.Write(this.ShieldColor);         // 133
             writer.Write(this.HelmetColor);         // 135
             writer.Write(0u);                       // 137 quiz points
-            writer.Write((ushort)0);                // 141 mount plus
+            writer.Write(this.SteedPlus);           // 141 steed plus
+            writer.Write((byte)0);                  // 142
             writer.Write(0u);                       // 143
-            writer.Write(0u);                       // 147
+            writer.Write(0u);                       // 147 steed color
             writer.Write((ushort)0);                // 151 enlighten points
             writer.Write((ushort)0);                // 153 merit points
             writer.Write((ushort)0);                // 155

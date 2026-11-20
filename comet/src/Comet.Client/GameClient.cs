@@ -571,6 +571,17 @@ namespace Comet.Client
         public Task WalkAsync(uint characterId, int direction) =>
             this.SendAsync(WalkMessage.Build(characterId, direction));
 
+        public Task RideAsync(uint characterId, int direction) =>
+            this.SendAsync(WalkMessage.Build(characterId, direction, WalkMessage.Ride));
+
+        public async Task<uint?> WaitForVigorAsync(Func<uint, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgData && DataMessage.Parse(p) is var d &&
+                d.Action == DataMessage.Vigor && match(d.Value), timeout);
+            return packet == null ? null : DataMessage.Parse(packet).Value;
+        }
+
         public Task JumpAsync(uint characterId, int fromX, int fromY, int toX, int toY) =>
             this.SendAsync(ActionMessage.BuildJump(characterId, fromX, fromY, toX, toY));
 

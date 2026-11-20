@@ -58,6 +58,7 @@ namespace Comet.Game.Magic
         AttachStatus = 6,
         DetachStatus = 7,
         Line = 14,
+        Riding = 32,
     }
 
     public sealed class MagicTypeTable

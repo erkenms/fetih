@@ -28,6 +28,8 @@ namespace Comet.Game.States
         // The player's open booth in the market; buyers' packets read it too
         public Booth Booth { get; set; }
 
+        public bool Away { get; set; }
+
         // The player this one asked to trade with, or to be friends with (0 if none)
         public uint TradeRequest { get; set; }
         public uint FriendRequest { get; set; }
@@ -61,10 +63,12 @@ namespace Comet.Game.States
         // Stamina, the XP bar and learned skills, changed on the player's own queue
         public Magic.Energy Energy { get; } = new Magic.Energy();
         public Magic.Skills Skills { get; set; } = new Magic.Skills();
+        public Mount Mount { get; } = new Mount();
         public DateTime NextCastAt { get; set; }
 
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
-        public ulong Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow);
+        public ulong Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
+            (this.Mount.Riding ? StatusFlags.Riding : 0);
 
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }

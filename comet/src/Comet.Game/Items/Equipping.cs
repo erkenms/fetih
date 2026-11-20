@@ -67,6 +67,8 @@ namespace Comet.Game.Items
             foreach (var (old, from) in moves)
                 await client.SendAsync(MsgItem.Unequipped(old.ItemID, from));
             await client.SendAsync(MsgItem.Equipped(item.ItemID, position));
+            if (position == ItemPosition.Steed)
+                await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemEquipped).Debug(
@@ -90,6 +92,8 @@ namespace Comet.Game.Items
 
             await ItemsRepository.SetPositionsAsync(new[] { (item.ItemID, item.Position) });
             await client.SendAsync(MsgItem.Unequipped(item.ItemID, position));
+            if (position == ItemPosition.Steed)
+                await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemUnequipped).Debug(

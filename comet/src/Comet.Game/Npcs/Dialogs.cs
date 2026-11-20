@@ -20,6 +20,7 @@ namespace Comet.Game.Npcs
                 [Pk.Jail.WardenID] = Pk.Jail.WardenAsync,
                 [GuildDirector.ID] = GuildDirector.TalkAsync,
                 [ClanManager.ID] = ClanManager.TalkAsync,
+                [MountTrainer.ID] = MountTrainer.TalkAsync,
             };
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

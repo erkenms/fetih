@@ -15,27 +15,36 @@ namespace Comet.Game.World
         public static readonly int[] DeltaX = { 0, -1, -1, -1, 0, 1, 1, 1 };
         public static readonly int[] DeltaY = { 1, 1, 0, -1, -1, -1, 0, 1 };
 
+        // A ride step (MsgWalk mode 9) by its direction modulo 24 (Albetros, 5808)
+        public static readonly int[] RideDeltaX = { 0, -2, -2, -2, 0, 2, 2, 2, 1, 0, -2, 0, 1, 0, 2, 0, 0, -2, 0, -1, 0, 2, 0, 1 };
+        public static readonly int[] RideDeltaY = { 2, 2, 0, -2, -2, -2, 0, 2, 2, 0, -1, 0, -2, 0, 1, 0, 0, 1, 0, -2, 0, -1, 0, 2 };
+
         public static async Task WalkAsync(Client client, MsgWalk step)
         {
             if (!TryGetPosition(client, out var map, out var x, out var y))
                 return;
-            int toX = x + DeltaX[step.Facing];
-            int toY = y + DeltaY[step.Facing];
+            bool ride = step.Mode == MsgWalk.RideMode;
+            int toX = x + (ride ? RideDeltaX[step.Direction % 24] : DeltaX[step.Facing]);
+            int toY = y + (ride ? RideDeltaY[step.Direction % 24] : DeltaY[step.Facing]);
             // A body that hasn't turned into a ghost yet stays where it fell
             string reason =
                 step.CharacterID != client.ID ? "wrong_id" :
                 client.Life.Dead && !client.Life.Ghost ? "dead" :
+                ride && !client.Mount.Riding ? "not_riding" :
                 CheckCell(map, toX, toY);
             if (reason != null)
             {
-                await RejectAsync(client, map, x, y, toX, toY, "walk", reason);
+                await RejectAsync(client, map, x, y, toX, toY, ride ? "ride" : "walk", reason);
                 return;
             }
 
-            client.Character.Direction = step.Facing;
+            client.Character.Direction = ride
+                ? DirectionTo(x, y, toX, toY, client.Character.Direction)
+                : step.Facing;
             await MoveAsync(client, map, x, y, (ushort)toX, (ushort)toY, step);
+            await Items.Riding.SpendAsync(client, ride ? Items.Riding.RideStepCost : Items.Riding.WalkStepCost, DateTime.UtcNow);
             LogEvents.For(typeof(Movement), LogEvents.MoveWalk).Debug(
-                "{Name} walked to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
+                "{Name} walked to {X},{Y} on map {MapId} (mode {Mode})", client.Character.Name, toX, toY, map.Id, step.Mode);
         }
 
         public static async Task JumpAsync(Client client, MsgAction jump)
@@ -57,6 +66,8 @@ namespace Comet.Game.World
 
             client.Character.Direction = DirectionTo(x, y, toX, toY, client.Character.Direction);
             await MoveAsync(client, map, x, y, (ushort)toX, (ushort)toY, jump);
+            await Items.Riding.SpendAsync(client,
+                Items.Riding.JumpCost(Math.Max(Math.Abs(toX - x), Math.Abs(toY - y))), DateTime.UtcNow);
             LogEvents.For(typeof(Movement), LogEvents.MoveJump).Debug(
                 "{Name} jumped to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
         }
@@ -104,6 +115,8 @@ namespace Comet.Game.World
             character.X = x;
             character.Y = y;
             character.Stance = 0;
+            if (client.Mount.Riding && Items.Riding.Problem(client) != null)
+                await Items.Riding.DismountAsync(client, "map");
             await client.SendAsync(MsgAction.Teleport(client.ID, mapID, x, y, character.Direction));
             if (from != to)
                 await client.SendAsync(MsgMapInfo.For(mapID));

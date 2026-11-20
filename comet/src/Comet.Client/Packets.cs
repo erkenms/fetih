@@ -16,6 +16,7 @@ namespace Comet.Client
         public const ushort MsgFriend = 1019;
         public const ushort MsgTeam = 1023;
         public const ushort MsgTeamMember = 1026;
+        public const ushort MsgData = 1033;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
@@ -146,6 +147,8 @@ namespace Comet.Client
         public uint ClanRank { get; init; }
         public string ClanName { get; init; }
         public bool Away { get; init; }
+        public uint Steed { get; init; }
+        public byte SteedPlus { get; init; }
 
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
@@ -168,6 +171,8 @@ namespace Comet.Client
             ClanRank = BitConverter.ToUInt32(packet, 167),
             ClanName = Packet.ReadStrings(packet, 226) is var s && s.Count > 2 ? s[2] : "",
             Away = packet[110] != 0,
+            Steed = BitConverter.ToUInt32(packet, 72),
+            SteedPlus = packet[141],
         };
     }
 
@@ -582,18 +587,31 @@ namespace Comet.Client
             BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16));
     }
 
+    // Action at 4 (2 = the steed's vigor), value at 8; 36 bytes
+    public sealed record DataMessage(uint Action, uint Value)
+    {
+        public const uint Vigor = 2;
+
+        public static DataMessage Parse(byte[] packet) => new DataMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8));
+    }
+
     public sealed record WalkMessage(uint Direction, uint CharacterId, uint Mode)
     {
         public static WalkMessage Parse(byte[] packet) => new WalkMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12));
 
-        public static byte[] Build(uint characterId, int direction)
+        public const uint Run = 1, Ride = 9;
+
+        // Walking directions are 0-7, riding ones 0-23; the client adds a multiple of either
+        public static byte[] Build(uint characterId, int direction, uint mode = Run)
         {
             var packet = Packet.Create(PacketTypes.MsgWalk, 24);
-            BitConverter.TryWriteBytes(packet.AsSpan(4), (uint)(8 * Random.Shared.Next(1, 30) + direction));
+            int directions = mode == Ride ? 24 : 8;
+            BitConverter.TryWriteBytes(packet.AsSpan(4), (uint)(directions * Random.Shared.Next(1, 30) + direction));
             BitConverter.TryWriteBytes(packet.AsSpan(8), characterId);
-            BitConverter.TryWriteBytes(packet.AsSpan(12), 1u);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), mode);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
             return packet;
         }

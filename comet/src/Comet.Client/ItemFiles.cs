@@ -24,6 +24,16 @@ namespace Comet.Client
             return Encoding.Latin1.GetBytes(text.ToString());
         }
 
+        // itemadd.ini: per line item type, plus, then life, attack, defense and magic values
+        // (0 here), dexterity (a steed's vigor) and dodge (its speed)
+        public static byte[] ItemAddIni(params (uint Type, byte Plus, ushort Dexterity)[] additions)
+        {
+            var text = new StringBuilder();
+            foreach (var (type, plus, dexterity) in additions)
+                text.Append($"{type} {plus} 0 0 0 0 0 0 {dexterity} 0\r\n");
+            return Encoding.Latin1.GetBytes(text.ToString());
+        }
+
         // An encrypted itemtype.dat: per item one line of 61 fields, each ending in "@@".
         // Each item sets ID, name, required level, durability and its limit, and costs
         // TestPrice silver; other fields are 0.

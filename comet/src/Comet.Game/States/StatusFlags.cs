@@ -19,6 +19,7 @@ namespace Comet.Game.States
         public const ulong BlackName = 0x8000;
         public const ulong Superman = 0x40000;
         public const ulong Cyclone = 0x800000;
+        public const ulong Riding = 1UL << 50;
     }
 
     // Statuses that last a while: XP full, and those spells give, with the spell's power.

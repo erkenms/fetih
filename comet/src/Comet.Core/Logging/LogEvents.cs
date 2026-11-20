@@ -143,6 +143,9 @@ namespace Comet.Core.Logging
         public const string StatusEnded = "status.ended";
         public const string EnergyLoopFailed = "energy.loop_failed";
 
+        public const string MountStarted = "mount.started";
+        public const string MountEnded = "mount.ended";
+
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
         public const string MoveTeleport = "move.teleport";

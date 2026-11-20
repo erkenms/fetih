@@ -72,6 +72,7 @@ namespace Comet.Game.Items
         Bottle = 7,
         Boots = 8,
         Garment = 9,
+        Steed = 12,
         Warehouse = 230,
         Ground = 254,
     }

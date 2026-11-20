@@ -3,13 +3,15 @@
 // "portal": cq_map portal0, the map's default point. "reborn": cq_map reborn_map, the map
 // whose portal a player revives at, and logs in at when this map is RecordDisable.
 // "name" and "aliases" are for /tp; "scroll" is the item type that teleports to the portal.
+// "ridePlus": the steed's lineage level (plus) needed to ride on the map; the client's
+// steed tooltip says 4 in the main cities and 6 in the market.
 {
   "maps": [
     { "map": 601, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable, Bit16", "portal": { "x": 65, "y": 55 }, "reborn": 601 }, // OfflineTG
     { "map": 700, "flags": "RecordDisable, PkDisable, TeleportDisable, WingDisable, Bit16", "portal": { "x": 40, "y": 47 }, "reborn": 700 }, // Lottery
-    { "map": 1000, "name": "desert_city", "aliases": ["dc"], "flags": "NeverWound", "portal": { "x": 499, "y": 650 }, "reborn": 1000, "scroll": 1060021 }, // DesertCity
+    { "map": 1000, "name": "desert_city", "aliases": ["dc"], "flags": "NeverWound", "portal": { "x": 499, "y": 650 }, "reborn": 1000, "scroll": 1060021, "ridePlus": 4 }, // DesertCity
     { "map": 1001, "name": "mystic_castle", "aliases": ["mc"], "flags": "NeverWound", "reborn": 1000 }, // MysticCastle
-    { "map": 1002, "name": "twin_city", "aliases": ["tc"], "flags": "PkDisable", "portal": { "x": 430, "y": 380 }, "reborn": 1002, "scroll": 1060020 }, // TwinCity
+    { "map": 1002, "name": "twin_city", "aliases": ["tc"], "flags": "PkDisable", "portal": { "x": 430, "y": 380 }, "reborn": 1002, "scroll": 1060020, "ridePlus": 4 }, // TwinCity
     { "map": 1003, "flags": "NeverWound", "reborn": 1002 }, // tc.hiddenMine[A]
     { "map": 1004, "name": "job_center", "aliases": ["jc"], "flags": "RecordDisable, PkDisable, NeverWound, DeadIsland", "reborn": 1002 }, // JobCenter
     { "map": 1005, "name": "pk_arena", "aliases": ["arena"], "flags": "PkField", "portal": { "x": 51, "y": 50 }, "reborn": 1005 }, // tc.PKarena
@@ -18,21 +20,21 @@
     { "map": 1008, "flags": "ChangeMapDisable, RecordDisable, PkDisable, NeverWound", "portal": { "x": 22, "y": 25 }, "reborn": 1002 }, // tc.Shopboy[A]
     { "map": 1009, "flags": "NeverWound", "portal": { "x": 22, "y": 25 }, "reborn": 1002 }, // tc.Shopboy2[A]
     { "map": 1010, "portal": { "x": 60, "y": 108 }, "reborn": 1002 }, // BirthVillage
-    { "map": 1011, "name": "phoenix_castle", "aliases": ["pc"], "flags": "NeverWound, DeadIsland", "portal": { "x": 193, "y": 266 }, "reborn": 1011, "scroll": 1060023 }, // CastleCity
+    { "map": 1011, "name": "phoenix_castle", "aliases": ["pc"], "flags": "NeverWound, DeadIsland", "portal": { "x": 193, "y": 266 }, "reborn": 1011, "scroll": 1060023, "ridePlus": 4 }, // CastleCity
     { "map": 1012, "flags": "NeverWound", "reborn": 1020 }, // quest[?]
     { "map": 1013, "flags": "NeverWound", "portal": { "x": 22, "y": 25 }, "reborn": 1011 }, // pc.WonderLand
     { "map": 1014, "flags": "NeverWound", "portal": { "x": 22, "y": 25 }, "reborn": 1011 }, // pc.DragonPool
-    { "map": 1015, "name": "bird_island", "aliases": ["bi"], "flags": "NeverWound", "portal": { "x": 717, "y": 577 }, "reborn": 1015, "scroll": 1060024 }, // BirdIsland
+    { "map": 1015, "name": "bird_island", "aliases": ["bi"], "flags": "NeverWound", "portal": { "x": 717, "y": 577 }, "reborn": 1015, "scroll": 1060024, "ridePlus": 4 }, // BirdIsland
     { "map": 1016, "flags": "NeverWound", "portal": { "x": 22, "y": 25 }, "reborn": 1011 }, // pc.KylinCave
     { "map": 1018, "flags": "PkField, ChangeMapDisable, RecordDisable", "portal": { "x": 430, "y": 380 }, "reborn": 1002 }, // arena?[?]
-    { "map": 1020, "name": "ape_city", "aliases": ["ac", "ape"], "flags": "NeverWound, DeadIsland", "portal": { "x": 566, "y": 565 }, "reborn": 1020, "scroll": 1060022 }, // ApeCity
+    { "map": 1020, "name": "ape_city", "aliases": ["ac", "ape"], "flags": "NeverWound, DeadIsland", "portal": { "x": 566, "y": 565 }, "reborn": 1020, "scroll": 1060022, "ridePlus": 4 }, // ApeCity
     { "map": 1021, "flags": "ChangeMapDisable, RecordDisable, NeverWound", "reborn": 1002 }, // tc.hiddenMine[A]
     { "map": 1022, "flags": "ChangeMapDisable, RecordDisable, PkDisable, WingDisable, NeverWound", "portal": { "x": 499, "y": 520 }, "reborn": 1002 }, // tc.hidden[A]
     { "map": 1025, "name": "pc_mine", "flags": "ChangeMapDisable, MineField, NeverWound", "reborn": 1011 }, // pc.mine
     { "map": 1026, "name": "ac_mine", "flags": "ChangeMapDisable, MineField, NeverWound", "reborn": 1020 }, // ac.mine
     { "map": 1027, "name": "dc_mine", "flags": "ChangeMapDisable, MineField, NeverWound", "reborn": 1000 }, // dc.mine
     { "map": 1028, "name": "tc_mine", "flags": "ChangeMapDisable, MineField, NeverWound", "reborn": 1002 }, // tc.mine
-    { "map": 1036, "name": "market", "aliases": ["mk"], "flags": "ChangeMapDisable, RecordDisable, PkDisable, BoothEnable", "portal": { "x": 303, "y": 237 }, "reborn": 1036 }, // Market
+    { "map": 1036, "name": "market", "aliases": ["mk"], "flags": "ChangeMapDisable, RecordDisable, PkDisable, BoothEnable", "portal": { "x": 303, "y": 237 }, "reborn": 1036, "ridePlus": 6 }, // Market
     { "map": 1038, "name": "guild_war", "aliases": ["gw"], "flags": "ChangeMapDisable, GuildMap, Bit16", "reborn": 6001 }, // GuildWar
     { "map": 1039, "name": "training_ground", "aliases": ["tg"], "flags": "ChangeMapDisable, RecordDisable, PkDisable, Bit16", "portal": { "x": 29, "y": 72 }, "reborn": 1002 }, // TG
     { "map": 1040, "flags": "ChangeMapDisable, RecordDisable, WingDisable, NeverWound", "portal": { "x": 595, "y": 383 }, "reborn": 1020 }, // 1040

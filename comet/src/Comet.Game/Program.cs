@@ -67,13 +67,15 @@
             try
             {
                 Kernel.ItemTypes = ItemTypeTable.Load(config.Maps.ResolveClientDirectory());
+                Kernel.ItemAdditions = ItemAdditionTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.ItemTypesLoaded).Information(
-                    "Loaded {ItemTypeCount} item types ({SkippedCount} records skipped)",
-                    Kernel.ItemTypes.Count, Kernel.ItemTypes.Skipped);
+                    "Loaded {ItemTypeCount} item types ({SkippedCount} records skipped) and " +
+                    "{ItemAdditionCount} item additions",
+                    Kernel.ItemTypes.Count, Kernel.ItemTypes.Skipped, Kernel.ItemAdditions.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read ini/itemtype.dat from {Directory}",
+                Log.Error(e, "Can't read ini/itemtype.dat or ini/itemadd.ini from {Directory}",
                     config.Maps.ResolveClientDirectory());
                 Log.CloseAndFlush();
                 return;

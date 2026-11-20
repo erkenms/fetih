@@ -43,7 +43,8 @@ namespace Comet.Game.Packets
             var msg = Create(characterID, 255, ItemActionType.DisplayGears);
             msg.Gears = new uint[9];
             foreach (var item in equipment?.Items ?? Enumerable.Empty<Database.Models.DbItem>())
-                msg.Gears[item.Position - 1] = item.ItemID;
+                if (item.Position <= msg.Gears.Length)
+                    msg.Gears[item.Position - 1] = item.ItemID;
             return msg;
         }
 

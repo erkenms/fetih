@@ -28,6 +28,7 @@ namespace Comet.Game.Items
         public void Clear(ItemPosition position) => this.Slots.Remove(position);
 
         public static bool IsEquipped(byte position) =>
-            position >= (byte)ItemPosition.Headwear && position <= (byte)ItemPosition.Garment;
+            position >= (byte)ItemPosition.Headwear && position <= (byte)ItemPosition.Garment ||
+            position == (byte)ItemPosition.Steed;
     }
 }

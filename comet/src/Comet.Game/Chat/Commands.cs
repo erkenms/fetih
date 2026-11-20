@@ -41,6 +41,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
+            new Command(new[] { "steed" }, Authority.GameMaster, "/steed [plus]", SteedAsync),
             new Command(new[] { "attr" }, Authority.GameMaster, "/attr <str|agi|vit|spi|points> <value|+n|-n>", StatAsync),
             new Command(new[] { "rawattr" }, Authority.GameMaster, "/rawattr <type> <value>", AttributeAsync),
             new Command(new[] { "pk" }, Authority.GameMaster, "/pk <points> [name]", PkPointsAsync),
@@ -316,6 +317,24 @@ namespace Comet.Game.Chat
             text.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
                 ? ulong.TryParse(text.AsSpan(2), System.Globalization.NumberStyles.HexNumber, null, out value)
                 : ulong.TryParse(text, out value);
+
+        private const uint SteedType = 300000;
+
+        private static async Task<bool> SteedAsync(Client client, string[] args, string rest)
+        {
+            byte plus = 0;
+            if (args.Length > 1 || (args.Length == 1 && (!byte.TryParse(args[0], out plus) || plus > 12)))
+                return await UsageAsync(client, "/steed [plus 0-12]");
+            if (!Kernel.ItemTypes.TryGet(SteedType, out var type))
+            {
+                await Talk.NoticeAsync(client, $"There's no item type {SteedType}.");
+                return false;
+            }
+            if (await ItemActions.GiveAsync(client, type, "gm", plus) != null)
+                return true;
+            await Talk.NoticeAsync(client, "Your inventory is full.");
+            return false;
+        }
 
         private static async Task<bool> ItemAsync(Client client, string[] args, string rest)
         {

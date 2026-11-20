@@ -13,7 +13,11 @@ namespace Comet.Game.Packets
         public uint Timestamp { get; set; }
         public uint Map { get; set; }
 
-        // The client sends the direction as any number whose remainder by 8 is the direction.
+        // On a steed; the direction is then one of 24 (Movement.RideDeltaX)
+        public const uint RideMode = 9;
+
+        // The client sends the direction as any number whose remainder by 8 (24 when riding)
+        // is the direction.
         public override void Decode(byte[] bytes)
         {
             var reader = new PacketReader(bytes);

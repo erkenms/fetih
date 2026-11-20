@@ -58,6 +58,7 @@ namespace Comet.Game.Magic
 
             if (client.Life.Dead)
                 return;
+            await Items.Riding.RecoverAsync(client, now);
 
             int gain = character.Stance == Items.Vending.SitStance ? StaminaSitting : StaminaStanding;
             byte stamina = (byte)Math.Min(Energy.MaxStamina, energy.Stamina + gain);

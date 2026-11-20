@@ -30,6 +30,7 @@ namespace Comet.Game.Combat
 
             Attacks.Stop(client);
             await Social.Trading.CancelAsync(client, "died");
+            await Items.Riding.DismountAsync(client, "died");
             character.HealthPoints = 0;
             client.Effects.Clear();
             client.Energy.KoCount = 0;

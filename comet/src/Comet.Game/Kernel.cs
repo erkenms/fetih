@@ -38,6 +38,9 @@ namespace Comet.Game
         // Item types read from the client's itemtype.dat at startup
         public static ItemTypeTable ItemTypes = new ItemTypeTable(new ItemType[0]);
 
+        // What "+N" adds to items, read from the client's itemadd.ini at startup
+        public static ItemAdditionTable ItemAdditions = new ItemAdditionTable(new ItemAddition[0]);
+
         // Spells and weapon proficiency levels, read from the client's magictype.dat and
         // WeaponSkillLevelExp.ini at startup
         public static Magic.MagicTypeTable Magics = new Magic.MagicTypeTable(new Magic.MagicType[0]);
