@@ -22,8 +22,11 @@ namespace Comet.Game.Tests.World
         public void TheShippedMapFileLoads()
         {
             var types = new MapTypes(MapTypes.Load(DataFiles.PathOf("maps.json")));
-            Assert.Equal(MapFlags.BoothEnable, types.Of(1036));
-            Assert.Equal(MapFlags.None, types.Of(1002));
+            Assert.True(types.Count > 100);
+            Assert.Equal(MapFlags.ChangeMapDisable | MapFlags.RecordDisable | MapFlags.PkDisable |
+                MapFlags.BoothEnable, types.Of(1036));
+            Assert.Equal(MapFlags.PkDisable, types.Of(1002));
+            Assert.Equal(MapFlags.None, types.Of(1010));
         }
     }
 }

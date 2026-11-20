@@ -26,6 +26,9 @@ namespace Comet.Game.World
         PkGame = 1 << 12,
         NeverWound = 1 << 13,
         DeadIsland = 1 << 14,
+        // Set on some maps in cq_map, meaning unknown
+        Bit15 = 1 << 15,
+        Bit16 = 1 << 16,
     }
 
     public sealed class MapType
