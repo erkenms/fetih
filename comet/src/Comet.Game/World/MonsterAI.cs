@@ -102,8 +102,8 @@ namespace Comet.Game.World
                     return;
         }
 
-        // Keeps a target that's still there; otherwise guards pick the nearest monster and
-        // aggressive monsters the nearest player they can see
+        // Keeps a target that's still there; otherwise guards pick the nearest monster or guilty
+        // player (flashing or black name), and aggressive monsters the nearest player they see
         private static (Client Player, Monster Victim, ushort X, ushort Y) FindTarget(Monster monster, DateTime now)
         {
             uint target = monster.Target;
@@ -116,34 +116,39 @@ namespace Comet.Game.World
             }
 
             int range = monster.Type.ViewRange;
+            Monster prey = null;
             if (monster.IsGuard)
-            {
-                var prey = monster.Map.InView(monster.X, monster.Y, except: monster)
+                prey = monster.Map.InView(monster.X, monster.Y, except: monster)
                     .Where(m => !m.IsGuard && m.Alive && Distance(monster.X, monster.Y, m.X, m.Y) <= range)
                     .OrderBy(m => Distance(monster.X, monster.Y, m.X, m.Y))
                     .FirstOrDefault();
-                if (prey == null)
-                    return default;
-                monster.Target = prey.Identity;
-                return (null, prey, prey.X, prey.Y);
-            }
 
-            if (!monster.Type.IsAggressive || !Kernel.World.TryGet(monster.Map.Id, out var players))
-                return default;
+            if ((!monster.Type.IsAggressive && !monster.IsGuard) || !Kernel.World.TryGet(monster.Map.Id, out var players))
+                return Chosen(monster, prey);
             Client nearest = null;
             ushort nearestX = 0, nearestY = 0;
             foreach (var player in players.InView(monster.X, monster.Y))
             {
                 if (!players.TryGetPosition(player, out var px, out var py) || !CanBeAttacked(player, now) ||
+                    monster.IsGuard && !Pk.Pking.IsGuilty(player, now) ||
                     Distance(monster.X, monster.Y, px, py) > range ||
                     nearest != null && Distance(monster.X, monster.Y, px, py) >= Distance(monster.X, monster.Y, nearestX, nearestY))
                     continue;
                 (nearest, nearestX, nearestY) = (player, px, py);
             }
-            if (nearest == null)
-                return default;
+            if (nearest == null || prey != null &&
+                Distance(monster.X, monster.Y, prey.X, prey.Y) < Distance(monster.X, monster.Y, nearestX, nearestY))
+                return Chosen(monster, prey);
             monster.Target = nearest.ID;
             return (nearest, null, nearestX, nearestY);
+        }
+
+        private static (Client Player, Monster Victim, ushort X, ushort Y) Chosen(Monster monster, Monster prey)
+        {
+            if (prey == null)
+                return default;
+            monster.Target = prey.Identity;
+            return (null, prey, prey.X, prey.Y);
         }
 
         private static (Client Player, Monster Victim, ushort X, ushort Y) Resolve(Monster monster, uint target, DateTime now)
@@ -158,6 +163,7 @@ namespace Comet.Game.World
 
             if (Kernel.Players.TryGet(target, out var player) && player.Map?.Id == monster.Map.Id &&
                 player.Map.TryGetPosition(player, out var x, out var y) && CanBeAttacked(player, now) &&
+                (!monster.IsGuard || Pk.Pking.IsGuilty(player, now)) &&
                 Distance(monster.X, monster.Y, x, y) <= ChaseRange)
                 return (player, null, x, y);
             return default;

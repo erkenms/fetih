@@ -61,7 +61,14 @@ namespace Comet.Game.Combat
         // Extra experience for the kill: 5% of the monster's life
         public static ulong KillBonus(uint monsterLife) => monsterLife * 5UL / 100;
 
-        private static int Roll(int min, int max, Random random) =>
+        // Against players there's no level bonus (Albetros)
+        public static uint PlayerMelee(int attack, int targetDefense) => AtLeastOne(attack - targetDefense);
+
+        // Dodge takes its percentage off, and of the rest arrows do 45% to players (Albetros)
+        public static uint PlayerArchery(int attack, int targetDodge) =>
+            AtLeastOne(attack * (100 - Math.Clamp(targetDodge, 0, 100)) / 100.0 * 0.45);
+
+        public static int Roll(int min, int max, Random random) =>
             max <= min ? min : random.Next(min, max + 1);
 
         private static uint AtLeastOne(double damage) => (uint)Math.Max(1, damage);

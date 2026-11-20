@@ -102,14 +102,23 @@ namespace Comet.Integration.Tests
             var at = ServerFixture.GuardToProvoke;
             await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y)).Player;
             var guard = await MonsterAtAsync(player, at);
+
+            // Guards can only be attacked in free PK mode, and hitting one makes the player flash
             await player.Game.AttackAsync(player.User.Id, guard.Id, at.X, at.Y);
+            var refused = await this.Servers.WaitForEventAsync("game", "combat.rejected", "name", player.User.Name);
+            Assert.Equal("guard_not_free_pk", refused.GetProperty("reason").GetString());
+            await player.Game.SendAsync(ActionMessage.Build(player.User.Id, ActionMessage.PkMode, command: 0));
+            Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.PkMode, player.User.Id));
+            await player.Game.AttackAsync(player.User.Id, guard.Id, at.X, at.Y);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0));
 
             var kill = await player.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Kill && i.Target == player.User.Id);
             Assert.Equal(guard.Id, kill?.Sender);
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && s == DeadStatus));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & DeadStatus) != 0));
             await player.Game.ReviveAsync(player.User.Id);
-            var refused = await this.Servers.WaitForEventAsync("game", "character.revive_rejected", "name", player.User.Name);
-            Assert.Equal("too_soon", refused.GetProperty("reason").GetString());
+            var early = await this.Servers.WaitForEventAsync("game", "character.revive_rejected", "name", player.User.Name);
+            Assert.Equal("too_soon", early.GetProperty("reason").GetString());
 
             // The body can't move until it's a ghost; a ghost walks but can't jump
             await player.Game.WalkAsync(player.User.Id, 0);
@@ -136,7 +145,7 @@ namespace Comet.Integration.Tests
             await Task.Delay(TimeSpan.FromSeconds(ServerFixture.ReviveSeconds));
             await player.Game.ReviveAsync(player.User.Id);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Health, out var hp) && hp == player.User.HealthPoints));
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && s == 0));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & DeadStatus) == 0));
             Assert.Equal((ushort)1050, await player.Game.WaitForMagicEffectAsync(player.User.Id));
             var teleport = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
             Assert.Equal((1002u, (ushort)428, (ushort)378), (teleport?.Command, teleport?.X, teleport?.Y));

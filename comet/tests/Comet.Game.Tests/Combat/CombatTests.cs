@@ -34,6 +34,17 @@ namespace Comet.Game.Tests.Combat
             Assert.Equal(60u, Damage.Archery(100, 100, 1, 1, 40, new Random(1)));
 
         [Fact]
+        public void PlayersHitPlayersWithoutALevelBonus()
+        {
+            Assert.Equal(70u, Damage.PlayerMelee(100, 30));
+            Assert.Equal(1u, Damage.PlayerMelee(10, 30));
+        }
+
+        [Fact]
+        public void ArrowsDoLessToPlayers() =>
+            Assert.Equal(27u, Damage.PlayerArchery(100, 40));
+
+        [Fact]
         public void MonsterHitsAreReducedByDefense() =>
             Assert.Equal(4u, Damage.MonsterMelee(9, 9, 5, new Random(1)));
 

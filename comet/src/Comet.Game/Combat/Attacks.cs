@@ -6,14 +6,16 @@ namespace Comet.Game.Combat
     using Comet.Game.Database.Repositories;
     using Comet.Game.Items;
     using Comet.Game.Packets;
+    using Comet.Game.Pk;
     using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.Packets;
     using static Comet.Game.Packets.MsgInteract;
 
-    // The client asks once to attack a monster; the server keeps swinging at the weapon's speed
-    // until the monster dies, the player moves, dies, or asks for something else. Swings run on
-    // the player's own packet queue.
+    // The client asks once to attack a monster or a player; the server keeps swinging at the
+    // weapon's speed until the target dies, the player moves, dies, or asks for something else.
+    // Swings run on the attacker's own packet queue; a hit on a player is applied on the
+    // target's queue, so a player's health only changes there.
     public static class Attacks
     {
         // How far past the weapon's range a target may be, for a monster that just stepped away
@@ -37,7 +39,7 @@ namespace Comet.Game.Combat
                 client.Character == null ? "no_character" :
                 request.SenderID != client.ID ? "wrong_id" :
                 client.Life.Dead ? "dead" :
-                request.TargetID < Monster.FirstID || request.TargetID > Monster.LastID ? "not_a_monster" :
+                !IsMonster(request.TargetID) && !Kernel.Players.TryGet(request.TargetID, out _) ? "unknown_target" :
                 null;
             if (reason != null)
             {
@@ -68,6 +70,12 @@ namespace Comet.Game.Combat
                 return;
             }
 
+            if (!IsMonster(client.AttackTarget))
+            {
+                await SwingAtPlayerAsync(client, run, now);
+                return;
+            }
+
             var character = client.Character;
             uint targetID = client.AttackTarget;
             Monster monster = null;
@@ -79,10 +87,8 @@ namespace Comet.Game.Combat
                 !Kernel.Monsters.TryGet(character.MapID, out var map) ||
                 !map.TryGet(targetID, out monster, out x, out y) ? "not_found" :
                 !monster.Alive ? "dead_target" :
-                shooting != stats.Bow ? (shooting ? "no_bow" : "bow_melee") :
-                shooting && (arrows == null || !ItemSlots.IsArrow(arrows.TypeID) || arrows.Amount == 0) ? "no_arrows" :
-                MonsterAI.Distance(character.X, character.Y, x, y) > stats.Range + RangeSlack ? "too_far" :
-                null;
+                monster.IsGuard && client.Pk.Mode != PkMode.Free ? "guard_not_free_pk" :
+                WeaponProblem(stats, shooting, arrows, MonsterAI.Distance(character.X, character.Y, x, y));
             if (reason != null)
             {
                 Stop(client);
@@ -101,6 +107,8 @@ namespace Comet.Game.Combat
                     : Damage.Melee(stats.MinAttack, stats.MaxAttack, character.Level, type.Level, type.Defense, Random.Shared);
             if (shooting)
                 await UseArrowAsync(client, arrows);
+            if (type.IsGuard)
+                await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
 
             if (damage == 0)
                 monster.Provoke(client.ID);
@@ -139,12 +147,76 @@ namespace Comet.Game.Combat
                 Schedule(client, run, interval);
         }
 
+        private static async Task SwingAtPlayerAsync(Client client, int run, DateTime now)
+        {
+            var character = client.Character;
+            uint targetID = client.AttackTarget;
+            var stats = Stats.Of(client);
+            var arrows = client.Equipment?[ItemPosition.LeftHand];
+            bool shooting = client.AttackShooting;
+            Client target = null;
+            ushort x = 0, y = 0;
+            string reason =
+                !Kernel.Players.TryGet(targetID, out target) || target.Character == null ||
+                target.Map != client.Map || !target.Map.TryGetPosition(target, out x, out y) ? "not_found" :
+                target.Life.Dead ? "dead_target" :
+                now < target.Life.ProtectedUntil ? "protected" :
+                !Pking.CanAttack(client, target) ? "pk_mode" :
+                WeaponProblem(stats, shooting, arrows, MonsterAI.Distance(character.X, character.Y, x, y));
+            if (reason != null)
+            {
+                Stop(client);
+                if (reason != "dead_target")
+                    Reject(client, targetID, reason);
+                return;
+            }
+
+            var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
+            client.NextAttackAt = now + interval;
+            await Pking.OnAttackAsync(client, target);
+            int attack = Damage.Roll(stats.MinAttack, stats.MaxAttack, Random.Shared);
+            if (shooting)
+                await UseArrowAsync(client, arrows);
+            Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, shooting));
+            Schedule(client, run, interval);
+        }
+
+        // On the target's queue: their defense and dodge decide what the attacker's roll does
+        private static async Task PlayerHitsPlayerAsync(Client attacker, Client target, int attack, bool shooting)
+        {
+            var character = target.Character;
+            var attackerCharacter = attacker.Character;
+            if (character == null || attackerCharacter == null || target.Life.Dead || target.Map != attacker.Map)
+                return;
+
+            var stats = Stats.Of(target);
+            uint damage = !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
+                shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, stats.Defense);
+            uint dealt = Math.Min(damage, character.HealthPoints);
+            character.HealthPoints -= (ushort)dealt;
+
+            var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
+                attacker.ID, target.ID, character.X, character.Y, damage);
+            await target.SendAsync(hit);
+            await Movement.SendToViewAsync(target, hit);
+            await target.SendAsync(new MsgUserAttrib(target.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
+            LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
+                "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
+                attackerCharacter.Name, character.Name, damage, character.HealthPoints, shooting ? "shoot" : "melee");
+
+            if (character.HealthPoints > 0)
+                return;
+            await Death.DieAsync(target, attacker.ID, attackerCharacter.Name);
+            await Pking.OnKillAsync(attacker, target);
+        }
+
         // Runs on the player's queue, posted by the monster loop
         public static async Task MonsterHitsPlayerAsync(Monster monster, Client client)
         {
             var character = client.Character;
             var now = DateTime.UtcNow;
             if (character == null || client.Life.Dead || now < client.Life.ProtectedUntil || !monster.Alive ||
+                monster.IsGuard && !Pking.IsGuilty(client, now) ||
                 client.Map?.Id != monster.Map.Id ||
                 MonsterAI.Distance(monster.X, monster.Y, character.X, character.Y) > Math.Max(1, monster.Type.AttackRange) + RangeSlack)
                 return;
@@ -164,8 +236,11 @@ namespace Comet.Game.Combat
                 "{MonsterName} {MonsterId} hit {Name} for {Damage}; {Health} health left",
                 type.Name, monster.Identity, character.Name, damage, character.HealthPoints);
 
-            if (character.HealthPoints == 0)
-                await Death.DieAsync(client, monster.Identity, type.Name);
+            if (character.HealthPoints > 0)
+                return;
+            await Death.DieAsync(client, monster.Identity, type.Name);
+            if (type.IsGuard)
+                await Pking.OnKilledByGuardAsync(client);
         }
 
         // Guards against monsters, on the monster loop
@@ -210,6 +285,14 @@ namespace Comet.Game.Combat
             await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
             await Movement.SendToViewAsync(client, new MsgPlayer(client));
         }
+
+        public static bool IsMonster(uint id) => id >= Monster.FirstID && id <= Monster.LastID;
+
+        private static string WeaponProblem(Stats stats, bool shooting, Database.Models.DbItem arrows, int distance) =>
+            shooting != stats.Bow ? (shooting ? "no_bow" : "bow_melee") :
+            shooting && (arrows == null || !ItemSlots.IsArrow(arrows.TypeID) || arrows.Amount == 0) ? "no_arrows" :
+            distance > stats.Range + RangeSlack ? "too_far" :
+            null;
 
         private static void Schedule(Client client, int run, TimeSpan delay) =>
             _ = Task.Delay(delay).ContinueWith(_ => Kernel.Post(client, () => SwingAsync(client, run)),

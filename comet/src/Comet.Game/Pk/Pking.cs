@@ -14,6 +14,8 @@ namespace Comet.Game.Pk
 
     // Who may attack whom, flashing names, PK points and the name colors they give.
     // Combat asks CanAttack before a hit on a player and calls OnAttackAsync and OnKillAsync after.
+    // Guards hunt the guilty, and attacking a guard is allowed in free PK mode only and makes
+    // the attacker flash (Albetros).
     public static class Pking
     {
         // Status bits (MsgUserAttrib 25, MsgPlayer 22), as in Albetros (5517)
@@ -89,6 +91,13 @@ namespace Comet.Game.Pk
             await ChangePointsAsync(killer,
                 victimPoints >= RedNamePoints ? PointsPerRedKill : PointsPerKill, "kill");
             await FlashAsync(killer, FlashTime, "kill");
+        }
+
+        // Guards send black names to jail too
+        public static async Task OnKilledByGuardAsync(Client victim)
+        {
+            if (victim.Character?.KillPoints >= BlackNamePoints)
+                await Jail.SendAsync(victim, "killed_by_guard");
         }
 
         public static async Task SetModeAsync(Client client, MsgAction msg)

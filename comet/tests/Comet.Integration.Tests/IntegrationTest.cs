@@ -40,7 +40,7 @@ namespace Comet.Integration.Tests
 
         // Authority as in the account_authority table: 1 player, 2 moderator, 3 game master
         protected async Task<(Player Player, string Email)> PlayingAtAsync(
-            uint mapID, int x, int y, ushort authority = 1, byte level = 1)
+            uint mapID, int x, int y, ushort authority = 1, byte level = 1, ushort strength = 0)
         {
             var (first, email) = await this.PlayingAsync();
             var name = first.User.Name;
@@ -51,6 +51,9 @@ namespace Comet.Integration.Tests
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET MapID = @map, X = @x, Y = @y, Level = @level WHERE Name = @name",
                 ("@map", mapID), ("@x", x), ("@y", y), ("@level", level), ("@name", name));
+            if (strength > 0)
+                await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET Strength = @strength WHERE Name = @name",
+                    ("@strength", strength), ("@name", name));
             await this.Servers.ExecuteAccountSqlAsync(
                 "UPDATE account SET AuthorityID = @authority WHERE Username = @email",
                 ("@authority", authority), ("@email", email));
