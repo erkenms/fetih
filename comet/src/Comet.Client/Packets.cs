@@ -21,6 +21,7 @@ namespace Comet.Client
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgPeerage = 2064;
         public const ushort MsgQualifyingInteractive = 2205;
         public const ushort MsgQualifyingFightersList = 2206;
         public const ushort MsgQualifyingRank = 2207;
@@ -125,6 +126,7 @@ namespace Comet.Client
         ulong Experience, ushort AttributePoints, ushort ManaPoints)
     {
         public ushort PkPoints { get; init; }
+        public byte Nobility { get; init; }
 
         public static UserInfo Parse(byte[] packet) => new UserInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 10),
@@ -136,6 +138,7 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64))
         {
             PkPoints = BitConverter.ToUInt16(packet, 66),
+            Nobility = packet[72],
         };
     }
 
@@ -154,6 +157,7 @@ namespace Comet.Client
         public bool Away { get; init; }
         public uint Steed { get; init; }
         public byte SteedPlus { get; init; }
+        public uint Nobility { get; init; }
 
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
@@ -178,6 +182,7 @@ namespace Comet.Client
             Away = packet[110] != 0,
             Steed = BitConverter.ToUInt32(packet, 72),
             SteedPlus = packet[141],
+            Nobility = BitConverter.ToUInt32(packet, 127),
         };
     }
 
@@ -630,6 +635,51 @@ namespace Comet.Client
             var packet = Packet.Create(type, length);
             foreach (var (offset, value) in fields)
                 BitConverter.TryWriteBytes(packet.AsSpan(offset), value);
+            return packet;
+        }
+    }
+
+    // Nobility (5517 wiki). Action u16 at 4. Asked with a donation u64 at 8 and the currency
+    // u16 at 16 (0 silver, 1 CPs), a board page at 8, or a rank at 8 for its minimum.
+    // Answered with "id 0 amount total position" (donation) or "id total rank position"
+    // (the player's rank) as strings at 32; the board's page u16 at 8, pages u16 at 10,
+    // count at 12 and 48-byte entries from 32 (ID, look at 8, name at 12, donation u64 at 32,
+    // rank at 40, position at 44); or silver still needed u64 at 8 and positions at 20 and 24.
+    public sealed record PeerageMessage(ushort Action, ulong Data, List<string> Strings)
+    {
+        public const ushort Donate = 1, Board = 2, Info = 3, Minimum = 4;
+
+        public static PeerageMessage Parse(byte[] packet) => new PeerageMessage(
+            BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt64(packet, 8),
+            BitConverter.ToUInt16(packet, 4) is Donate or Info ? Packet.ReadStrings(packet, 32) : new List<string>());
+
+        // Info: ID, total donation, rank, position
+        public (uint Id, ulong Total, uint Rank, int Position) Standing =>
+            this.Strings[0].Split(' ') is var f
+                ? (uint.Parse(f[0]), ulong.Parse(f[1]), uint.Parse(f[2]), int.Parse(f[3]))
+                : default;
+
+        // Minimum: the position the donation would give, and the current one
+        public static (ulong Remaining, int Position, int Current) ParseMinimum(byte[] packet) =>
+            (BitConverter.ToUInt64(packet, 8), BitConverter.ToInt32(packet, 20), BitConverter.ToInt32(packet, 24));
+
+        public static (ushort Pages, List<(uint Id, string Name, ulong Donation, uint Rank, int Position)> Entries)
+            ParseBoard(byte[] packet)
+        {
+            var entries = new List<(uint, string, ulong, uint, int)>();
+            for (int i = 0, at = 32; i < BitConverter.ToInt32(packet, 12); i++, at += 48)
+                entries.Add((BitConverter.ToUInt32(packet, at), Packet.ReadText(packet, at + 12, 16),
+                    BitConverter.ToUInt64(packet, at + 32), BitConverter.ToUInt32(packet, at + 40),
+                    BitConverter.ToInt32(packet, at + 44)));
+            return (BitConverter.ToUInt16(packet, 10), entries);
+        }
+
+        public static byte[] Build(ushort action, ulong data, ushort currency = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgPeerage, 32);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), currency);
             return packet;
         }
     }

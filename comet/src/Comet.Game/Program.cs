@@ -170,10 +170,13 @@
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
+                await Nobility.Peerage.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.NobilityLoaded).Information(
+                    "Loaded {DonorCount} nobility donors", Nobility.Peerage.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't load guilds, clans and arena records from the database");
+                Log.Error(e, "Can't load guilds, clans, arena records and nobility from the database");
                 Log.CloseAndFlush();
                 return;
             }

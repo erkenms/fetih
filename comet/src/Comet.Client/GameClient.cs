@@ -568,6 +568,13 @@ namespace Comet.Client
             return packet == null ? null : FriendMessage.Parse(packet);
         }
 
+        public Task PeerageAsync(ushort action, ulong data, ushort currency = 0) =>
+            this.SendAsync(PeerageMessage.Build(action, data, currency));
+
+        public async Task<byte[]> WaitForPeerageAsync(Func<PeerageMessage, bool> match, TimeSpan? timeout = null) =>
+            await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPeerage && match(PeerageMessage.Parse(p)), timeout);
+
         public async Task<QualifierMessage> WaitForQualifierAsync(Func<QualifierMessage, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

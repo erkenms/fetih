@@ -157,6 +157,11 @@ namespace Comet.Core.Logging
         public const string ArenaSaveFailed = "arena.save_failed";
         public const string ArenaLoopFailed = "arena.loop_failed";
 
+        public const string NobilityLoaded = "nobility.loaded";
+        public const string NobilityDonated = "nobility.donated";
+        public const string NobilityRank = "nobility.rank";
+        public const string NobilityRejected = "nobility.rejected";
+
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
         public const string MoveTeleport = "move.teleport";

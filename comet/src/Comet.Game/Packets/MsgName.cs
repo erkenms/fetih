@@ -56,7 +56,8 @@ namespace Comet.Game.Packets
         public static string WhisperDetails(Character character) =>
             $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} " +
             $"#{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? string.Empty} " +
-            $"#{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? string.Empty} None 0 " +
+            $"#{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? string.Empty} None " +
+            $"{(uint)Nobility.Peerage.RankOf(character.CharacterID)} " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
         // No marriages yet: everyone's spouse is "None", as in MsgUserInfo

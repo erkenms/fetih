@@ -30,6 +30,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgSynMemberList] = () => new MsgSynMemberList(),
                 [PacketType.MsgSynpOffer] = () => new MsgSynpOffer(),
                 [PacketType.MsgFamily] = () => new MsgFamily(),
+                [PacketType.MsgPeerage] = () => new MsgPeerage(),
                 [PacketType.MsgQualifyingInteractive] = () => new MsgQualifyingInteractive(),
                 [PacketType.MsgQualifyingFightersList] = () => new MsgQualifyingFightersList(),
                 [PacketType.MsgQualifyingRank] = () => new MsgQualifyingRank(),

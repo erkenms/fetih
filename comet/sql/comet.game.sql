@@ -252,6 +252,20 @@ CREATE TABLE `arena` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
+-- Table structure for table `nobility`
+--
+-- Silver donated for nobility, one row per character that has donated. Ranks follow from
+-- the donations, so they aren't stored.
+--
+
+DROP TABLE IF EXISTS `nobility`;
+CREATE TABLE `nobility` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Donation` bigint(20) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Dumping events for database 'comet.game'
 --
 

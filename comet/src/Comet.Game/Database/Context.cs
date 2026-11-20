@@ -20,6 +20,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbFamilyMember> FamilyMembers { get; set; }
         public virtual DbSet<DbFamilyRelation> FamilyRelations { get; set; }
         public virtual DbSet<DbArena> Arena { get; set; }
+        public virtual DbSet<DbNobility> Nobility { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -47,6 +48,7 @@ namespace Comet.Game.Database
             builder.Entity<DbFamilyMember>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbFamilyRelation>(e => e.HasKey(x => new { x.FamilyID, x.TargetID }));
             builder.Entity<DbArena>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbNobility>(e => e.HasKey(x => x.CharacterID));
         }
 
         public static bool Ping()

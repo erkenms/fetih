@@ -84,7 +84,7 @@ namespace Comet.Game.Packets
             writer.Write(this.CurrentClass);        // 69
             writer.Write(this.PreviousClass);       // 70 guess
             writer.Write(this.AncestorClass);       // 71 guess
-            writer.Write((byte)0);                  // 72 nobility rank
+            writer.Write((byte)Nobility.Peerage.RankOf(this.CharacterID)); // 72 nobility rank
             writer.Write(this.Rebirths);            // 73
             writer.Write((byte)0);                  // 74
             writer.Write(this.QuizPoints);          // 75

@@ -24,8 +24,9 @@ namespace Comet.Game.States
             return (ushort)Math.Min(health, ushort.MaxValue);
         }
 
-        // Only the level until equipment and nobility count
-        public static uint BattlePower(DbCharacter character) => character.Level;
+        // Level and nobility; equipment doesn't count yet
+        public static uint BattlePower(DbCharacter character) =>
+            character.Level + (uint)Nobility.Peerage.RankOf(character.CharacterID);
 
         public static ushort MaxMana(DbCharacter character)
         {

@@ -32,6 +32,7 @@ namespace Comet.Game.Packets
         public uint ClanID { get; set; }
         public ushort ClanRank { get; set; }
         public string ClanName { get; set; } = string.Empty;
+        public Nobility.NobilityRank Nobility { get; set; }
 
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
@@ -94,6 +95,7 @@ namespace Comet.Game.Packets
             this.Level = character.Level;
             this.CurrentClass = character.CurrentClass;
             this.Name = character.Name;
+            this.Nobility = Comet.Game.Nobility.Peerage.RankOf(character.CharacterID);
         }
 
         // Fields other than look, position, level and name stay zero until their features exist.
@@ -133,7 +135,8 @@ namespace Comet.Game.Packets
             writer.Write(this.Level);               // 107
             writer.Write((byte)0);                  // 109 equipment viewable
             writer.Write((byte)(this.Away ? 1 : 0)); // 110 away
-            writer.Write(new byte[20]);             // 111 flowers, nobility, ...
+            writer.Write(new byte[16]);             // 111 flowers, ...
+            writer.Write((uint)this.Nobility);      // 127 nobility rank (5517 + 46, as the colors)
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133
             writer.Write(this.HelmetColor);         // 135
