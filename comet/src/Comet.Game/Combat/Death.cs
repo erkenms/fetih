@@ -58,8 +58,8 @@ namespace Comet.Game.Combat
             await SendLookAsync(client);
         }
 
-        // The client's Revive button (MsgAction 94). Revives at full health in Twin City, or
-        // in the jail for those in it.
+        // The client's Revive button (MsgAction 94). Revives at full health at the reborn
+        // point of the map died on (the jail's is the jail), or in Twin City if it has none.
         public static async Task<bool> ReviveAsync(Client client, string reason, bool anyTime = false)
         {
             var character = client.Character;
@@ -83,9 +83,8 @@ namespace Comet.Game.Combat
             character.HealthPoints = Attributes.MaxHealth(character);
             await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Health, character.HealthPoints));
             await SendLookAsync(client);
-            if (character.MapID == Pk.Jail.MapID)
-                await Movement.TeleportAsync(client, Pk.Jail.MapID, Pk.Jail.X, Pk.Jail.Y);
-            else
+            var reborn = Kernel.MapTypes.RebornPointOf(character.MapID);
+            if (reborn == null || !await Movement.TeleportAsync(client, reborn.MapID, reborn.X, reborn.Y))
                 await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, MsgMagicEffect.Revive);
             effect.Targets.Add((client.ID, 0));

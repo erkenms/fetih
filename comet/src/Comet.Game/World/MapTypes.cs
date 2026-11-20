@@ -34,45 +34,113 @@ namespace Comet.Game.World
     public sealed class MapType
     {
         [JsonPropertyName("map")] public uint MapID { get; init; }
+        [JsonPropertyName("name")] public string Name { get; init; }
+        [JsonPropertyName("aliases")] public List<string> Aliases { get; init; }
         [JsonPropertyName("flags"), JsonConverter(typeof(JsonStringEnumConverter))]
         public MapFlags Flags { get; init; }
-        [JsonPropertyName("reborn")] public MapPoint Reborn { get; init; }
+        [JsonPropertyName("portal")] public Cell Portal { get; init; }
+        [JsonPropertyName("reborn")] public uint? RebornMapID { get; init; }
+        [JsonPropertyName("scroll")] public uint? ScrollTypeID { get; init; }
+
+        public IEnumerable<string> Names =>
+            (this.Name == null ? Enumerable.Empty<string>() : new[] { this.Name }).Concat(this.Aliases ?? new List<string>());
     }
 
-    public sealed record MapPoint(
-        [property: JsonPropertyName("map")] uint MapID,
+    public sealed record Cell(
         [property: JsonPropertyName("x")] ushort X,
         [property: JsonPropertyName("y")] ushort Y);
 
-    // Data/maps.json; maps not listed have no flags
+    public sealed record MapPoint(uint MapID, ushort X, ushort Y);
+
+    // Data/maps.json; maps not listed have no flags, no portal and no reborn point
     public sealed class MapTypes
     {
         private readonly Dictionary<uint, MapType> Maps;
+        private readonly Dictionary<string, MapType> ByName = new Dictionary<string, MapType>();
+        private readonly Dictionary<uint, MapType> ByScroll = new Dictionary<uint, MapType>();
 
         private sealed record MapTypeFile(List<MapType> Maps);
 
         public static List<MapType> Load(string path)
         {
             var maps = DataFiles.Read<MapTypeFile>(path).Maps ?? new List<MapType>();
-            var repeated = maps.GroupBy(m => m.MapID).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
-            if (repeated.Count > 0)
-                throw new InvalidDataException($"{path} lists these maps more than once: {string.Join(", ", repeated)}");
-            var homeless = maps.Where(m => m.Flags.HasFlag(MapFlags.RecordDisable) && m.Reborn == null)
-                .Select(m => m.MapID).ToList();
-            if (homeless.Count > 0)
-                throw new InvalidDataException($"{path} has RecordDisable maps without a reborn point: {string.Join(", ", homeless)}");
+            var problems = new List<string>();
+            void Check(string problem, IEnumerable<object> found)
+            {
+                var list = found.Distinct().ToList();
+                if (list.Count > 0)
+                    problems.Add($"{problem}: {string.Join(", ", list)}");
+            }
+
+            Check("maps listed more than once",
+                maps.GroupBy(m => m.MapID).Where(g => g.Count() > 1).Select(g => (object)g.Key));
+            var portals = maps.Where(m => m.Portal != null).Select(m => m.MapID).ToHashSet();
+            Check("maps reborn at a map without a portal",
+                maps.Where(m => m.RebornMapID is uint r && !portals.Contains(r)).Select(m => (object)m.MapID));
+            Check("RecordDisable maps without a reborn map",
+                maps.Where(m => m.Flags.HasFlag(MapFlags.RecordDisable) && m.RebornMapID == null).Select(m => (object)m.MapID));
+            Check("names used more than once",
+                maps.SelectMany(m => m.Names).GroupBy(Normalize).Where(g => g.Count() > 1).Select(g => (object)g.Key));
+            Check("names that are numbers",
+                maps.SelectMany(m => m.Names).Where(n => uint.TryParse(n, out _)).Select(n => (object)n));
+            Check("scrolls used more than once",
+                maps.Where(m => m.ScrollTypeID != null).GroupBy(m => m.ScrollTypeID).Where(g => g.Count() > 1).Select(g => (object)g.Key));
+            Check("scroll maps without a portal",
+                maps.Where(m => m.ScrollTypeID != null && m.Portal == null).Select(m => (object)m.MapID));
+            if (problems.Count > 0)
+                throw new InvalidDataException($"{path} has {string.Join("; ", problems)}");
             return maps;
         }
 
-        public MapTypes(IEnumerable<MapType> maps) =>
+        public MapTypes(IEnumerable<MapType> maps)
+        {
             this.Maps = maps.ToDictionary(m => m.MapID);
+            foreach (var map in this.Maps.Values)
+            {
+                foreach (var name in map.Names)
+                    this.ByName[Normalize(name)] = map;
+                if (map.ScrollTypeID is uint scroll)
+                    this.ByScroll[scroll] = map;
+            }
+        }
 
         public int Count => this.Maps.Count;
 
         public MapFlags Of(uint mapID) => this.Maps.TryGetValue(mapID, out var map) ? map.Flags : MapFlags.None;
 
+        // The map's own portal, or null
+        public MapPoint PortalOf(uint mapID) =>
+            this.Maps.TryGetValue(mapID, out var map) && map.Portal != null
+                ? new MapPoint(mapID, map.Portal.X, map.Portal.Y) : null;
+
+        // Where a player who died on this map revives, or null if the map has no reborn map
+        public MapPoint RebornPointOf(uint mapID) =>
+            this.Maps.TryGetValue(mapID, out var map) && map.RebornMapID is uint reborn ? this.PortalOf(reborn) : null;
+
         // Where a player on this map is saved, or null to save where they stand
         public MapPoint LoginPointOf(uint mapID) =>
-            this.Maps.TryGetValue(mapID, out var map) && map.Flags.HasFlag(MapFlags.RecordDisable) ? map.Reborn : null;
+            this.Of(mapID).HasFlag(MapFlags.RecordDisable) ? this.RebornPointOf(mapID) : null;
+
+        // Where a teleport scroll of this item type goes, or null
+        public MapPoint ScrollPointOf(uint itemTypeID) =>
+            this.ByScroll.TryGetValue(itemTypeID, out var map) ? this.PortalOf(map.MapID) : null;
+
+        // A map by its name or alias, case and '_', '-' aside, or by the start of exactly one
+        // name ("twin" for twin_city). Null if none or several.
+        public MapType Find(string name)
+        {
+            string key = Normalize(name);
+            if (key.Length == 0)
+                return null;
+            if (this.ByName.TryGetValue(key, out var exact))
+                return exact;
+            var starts = this.Maps.Values.Where(m => m.Name != null && Normalize(m.Name).StartsWith(key)).Take(2).ToList();
+            return starts.Count == 1 ? starts[0] : null;
+        }
+
+        public IEnumerable<MapType> Named => this.Maps.Values.Where(m => m.Name != null).OrderBy(m => m.MapID);
+
+        private static string Normalize(string name) =>
+            new string(name.Where(c => c != '_' && c != '-' && !char.IsWhiteSpace(c)).ToArray()).ToLowerInvariant();
     }
 }

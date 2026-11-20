@@ -148,7 +148,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & DeadStatus) == 0));
             Assert.Equal((ushort)1050, await player.Game.WaitForMagicEffectAsync(player.User.Id));
             var teleport = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
-            Assert.Equal((1002u, (ushort)428, (ushort)378), (teleport?.Command, teleport?.X, teleport?.Y));
+            Assert.Equal((1002u, (ushort)430, (ushort)380), (teleport?.Command, teleport?.X, teleport?.Y));
             await this.Servers.WaitForEventAsync("game", "character.revived", "name", player.User.Name);
         }
     }
