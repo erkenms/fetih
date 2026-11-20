@@ -24,6 +24,7 @@ namespace Comet.Client
         public const ushort MsgSyndicateAttributeInfo = 1106;
         public const ushort MsgSyndicate = 1107;
         public const ushort MsgSynMemberList = 2102;
+        public const ushort MsgFamily = 1312;
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
@@ -51,6 +52,7 @@ namespace Comet.Client
         public const ushort Whisper = 2001;
         public const ushort Team = 2003;
         public const ushort Guild = 2004;
+        public const ushort Clan = 2006;
         public const ushort Friend = 2009;
         public const ushort Center = 2011;
         public const ushort Service = 2014;
@@ -140,6 +142,9 @@ namespace Comet.Client
     {
         public uint GuildId { get; init; }
         public uint GuildRank { get; init; }
+        public uint ClanId { get; init; }
+        public uint ClanRank { get; init; }
+        public string ClanName { get; init; }
 
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
@@ -158,6 +163,9 @@ namespace Comet.Client
         {
             GuildId = BitConverter.ToUInt32(packet, 12),
             GuildRank = BitConverter.ToUInt32(packet, 16),
+            ClanId = BitConverter.ToUInt32(packet, 163),
+            ClanRank = BitConverter.ToUInt32(packet, 167),
+            ClanName = Packet.ReadStrings(packet, 226) is var s && s.Count > 2 ? s[2] : "",
         };
     }
 
@@ -655,6 +663,61 @@ namespace Comet.Client
                     BitConverter.ToUInt32(packet, at + 24), BitConverter.ToUInt32(packet, at + 28),
                     BitConverter.ToUInt32(packet, at + 36), BitConverter.ToUInt32(packet, at + 40) != 0));
             return members;
+        }
+    }
+
+    // Clan actions: action at 4, a player, clan or amount at 8, strings at 16; the member
+    // list has a count at 16 and 36-byte entries (name, level at 16, rank u16 at 20, online
+    // u16 at 22), the ally and enemy lists a count and 56-byte entries (clan ID, name at 4)
+    public sealed record FamilyMessage(uint Action, uint Data, List<string> Strings)
+    {
+        public const uint Query = 1, QueryMembers = 4, Recruit = 9, AcceptRecruit = 10, Join = 11,
+            AcceptJoin = 12, EnemyList = 13, AddEnemy = 14, DeleteEnemy = 15, AllyList = 16,
+            AddAlly = 17, AcceptAlly = 18, DeleteAlly = 20, Abdicate = 21, Kick = 22, Quit = 23,
+            Announce = 24, SetAnnouncement = 25, Donate = 26;
+        public const uint Leader = 100, Member = 10;
+
+        public List<(string Name, uint Level, uint Rank, bool Online)> Members { get; init; }
+        public List<(uint Id, string Name)> Clans { get; init; }
+
+        public string Text => this.Strings.Count > 0 ? this.Strings[0] : "";
+
+        public static FamilyMessage Parse(byte[] packet)
+        {
+            uint action = BitConverter.ToUInt32(packet, 4);
+            uint data = BitConverter.ToUInt32(packet, 8);
+            if (action == QueryMembers)
+            {
+                var members = new List<(string, uint, uint, bool)>();
+                for (int i = 0, at = 20; i < BitConverter.ToInt32(packet, 16); i++, at += 36)
+                    members.Add((Packet.ReadText(packet, at, 16), BitConverter.ToUInt32(packet, at + 16),
+                        BitConverter.ToUInt16(packet, at + 20), BitConverter.ToUInt16(packet, at + 22) != 0));
+                return new FamilyMessage(action, data, new List<string>()) { Members = members };
+            }
+            if (action == AllyList || action == EnemyList)
+            {
+                var clans = new List<(uint, string)>();
+                for (int i = 0, at = 20; i < BitConverter.ToInt32(packet, 16); i++, at += 56)
+                    clans.Add((BitConverter.ToUInt32(packet, at), Packet.ReadText(packet, at + 4, 16)));
+                return new FamilyMessage(action, data, new List<string>()) { Clans = clans };
+            }
+            return new FamilyMessage(action, data,
+                packet.Length > 16 ? Packet.ReadStrings(packet, 16) : new List<string>());
+        }
+
+        public static byte[] Build(uint action, uint data, string text = null)
+        {
+            var bytes = text == null ? null : Encoding.Latin1.GetBytes(text);
+            var packet = Packet.Create(PacketTypes.MsgFamily, 17 + (bytes == null ? 0 : 1 + bytes.Length));
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            if (bytes != null)
+            {
+                packet[16] = 1;
+                packet[17] = (byte)bytes.Length;
+                bytes.CopyTo(packet, 18);
+            }
+            return packet;
         }
     }
 

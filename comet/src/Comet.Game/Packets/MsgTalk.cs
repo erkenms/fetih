@@ -127,7 +127,7 @@ namespace Comet.Game.Packets
             Action,
             Team,
             Guild,
-            Spouse = 2006,
+            Clan = 2006,
             System,
             Yell,
             Friend,

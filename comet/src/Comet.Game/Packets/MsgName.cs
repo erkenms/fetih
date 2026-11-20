@@ -54,7 +54,8 @@ namespace Comet.Game.Packets
         // in the whisper window: "ID level battle-power guild family spouse nobility male", '#' for none.
         public static string WhisperDetails(Character character) =>
             $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} " +
-            $"{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? "#"} # None 0 " +
+            $"{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? "#"} " +
+            $"{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? "#"} None 0 " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =

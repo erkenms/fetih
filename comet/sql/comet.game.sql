@@ -192,6 +192,45 @@ CREATE TABLE `syndicate_relation` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --
+-- Table structure for tables `family`, `family_member` and `family_relation`
+--
+-- Clans. A character is in one clan at most. Relations as for guilds: Kind 1 is an ally
+-- (both clans have a row), 2 an enemy (only the clan that named it).
+--
+
+DROP TABLE IF EXISTS `family`;
+CREATE TABLE `family` (
+  `FamilyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Name` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `LeaderID` int(10) unsigned NOT NULL,
+  `Fund` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `Level` tinyint(3) unsigned NOT NULL DEFAULT '1',
+  `Announcement` varchar(127) NOT NULL DEFAULT '',
+  `Created` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`FamilyID`),
+  UNIQUE KEY `Name` (`Name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS `family_member`;
+CREATE TABLE `family_member` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `FamilyID` int(10) unsigned NOT NULL,
+  `Rank` smallint(5) unsigned NOT NULL DEFAULT '10',
+  `Donation` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `Joined` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`),
+  KEY `FamilyID` (`FamilyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS `family_relation`;
+CREATE TABLE `family_relation` (
+  `FamilyID` int(10) unsigned NOT NULL,
+  `TargetID` int(10) unsigned NOT NULL,
+  `Kind` tinyint(3) unsigned NOT NULL,
+  PRIMARY KEY (`FamilyID`,`TargetID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
 -- Dumping events for database 'comet.game'
 --
 

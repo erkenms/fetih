@@ -36,6 +36,10 @@ namespace Comet.Game.States
         public uint GuildApply { get; set; }
         public uint GuildInvite { get; set; }
 
+        // The clan leader this player asked to join, or the player this leader invited
+        public uint ClanApply { get; set; }
+        public uint ClanInvite { get; set; }
+
         // Names by character ID, loaded at login
         public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
         public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();

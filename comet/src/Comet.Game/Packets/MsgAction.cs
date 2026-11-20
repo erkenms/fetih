@@ -195,6 +195,7 @@ namespace Comet.Game.Packets
                 [ActionType.LoginGuild] = async (msg, client) =>
                 {
                     await Social.Guilds.LoginAsync(client);
+                    await Social.Clans.LoginAsync(client);
                     await client.SendAsync(msg);
                 },
 

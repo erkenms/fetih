@@ -162,10 +162,13 @@
                 await Social.Guilds.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.GuildsLoaded).Information(
                     "Loaded {GuildCount} guilds", Social.Guilds.Count);
+                await Social.Clans.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.ClansLoaded).Information(
+                    "Loaded {ClanCount} clans", Social.Clans.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't load guilds from the database");
+                Log.Error(e, "Can't load guilds and clans from the database");
                 Log.CloseAndFlush();
                 return;
             }
