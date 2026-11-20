@@ -6,11 +6,12 @@ namespace Comet.Integration.Tests
     using Xunit;
     using static Comet.Client.UserAttribMessage;
 
-    // Players fighting players, on 1002 away from the test monsters
+    // Players fighting players, in Desert City unless a test is about the map
     public class PvpTests : IntegrationTest
     {
         private const ushort GameMaster = 3;
         private const uint JailMap = 6000;
+        private const uint DesertCity = ServerFixture.DesertCity, PkField = ServerFixture.PkField;
 
         public PvpTests(ServerFixture servers) : base(servers) { }
 
@@ -29,17 +30,17 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task CaptureModeOnlyAttacksFlashingPlayers()
         {
-            await using var attacker = (await this.PlayingAtAsync(1002, 700, 700)).Player;
-            await using var victim = (await this.PlayingAtAsync(1002, 701, 700, GameMaster)).Player;
-            await using var watcher = (await this.PlayingAtAsync(1002, 702, 700)).Player;
+            await using var attacker = (await this.PlayingAtAsync(DesertCity, 100, 100)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 101, 100, GameMaster)).Player;
+            await using var watcher = (await this.PlayingAtAsync(DesertCity, 102, 100)).Player;
 
-            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 101, 100);
             Assert.Equal("pk_mode", (await RejectedAsync(attacker)).GetProperty("reason").GetString());
 
             await CommandAsync(victim, "/flash 30");
             Assert.NotNull(await attacker.Game.WaitForAttribAsync(a =>
                 a.Id == victim.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0));
-            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 101, 100);
             var hit = await victim.Game.WaitForInteractAsync(i => i.Sender == attacker.User.Id && i.Target == victim.User.Id);
             Assert.Equal(InteractMessage.Attack, hit?.Action);
             var turn = await watcher.Game.WaitForActionAsync(ActionMessage.Turn, victim.User.Id);
@@ -55,11 +56,11 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task KillingAnInnocentPlayerFlashesAndCostsPkPoints()
         {
-            await using var attacker = (await this.PlayingAtAsync(1002, 720, 700, strength: 5000)).Player;
-            await using var victim = (await this.PlayingAtAsync(1002, 721, 700)).Player;
+            await using var attacker = (await this.PlayingAtAsync(DesertCity, 120, 100, strength: 5000)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 121, 100)).Player;
             await FreePkAsync(attacker);
 
-            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 721, 700);
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 121, 100);
             Assert.NotNull(await attacker.Game.WaitForAttribAsync(a =>
                 a.Id == attacker.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0));
             var kill = await victim.Game.WaitForInteractAsync(
@@ -72,6 +73,37 @@ namespace Comet.Integration.Tests
             Assert.Equal(attacker.User.Id, died.GetProperty("killerId").GetUInt32());
             var pk = await this.Servers.WaitForEventAsync("game", "pk.kill", "name", attacker.User.Name);
             Assert.Equal("crime", pk.GetProperty("crime").GetString());
+        }
+
+        [Fact]
+        public async Task TwinCityForbidsAttackingPlayers()
+        {
+            await using var attacker = (await this.PlayingAtAsync(1002, 700, 700)).Player;
+            await using var victim = (await this.PlayingAtAsync(1002, 701, 700)).Player;
+            await FreePkAsync(attacker);
+
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
+            Assert.Equal("peaceful_map", (await RejectedAsync(attacker)).GetProperty("reason").GetString());
+            Assert.Null(await victim.Game.WaitForInteractAsync(
+                i => i.Target == victim.User.Id, TimeSpan.FromMilliseconds(500)));
+        }
+
+        [Fact]
+        public async Task KillingOnAPkFieldIsNoCrime()
+        {
+            await using var attacker = (await this.PlayingAtAsync(PkField, 50, 50, strength: 5000)).Player;
+            await using var victim = (await this.PlayingAtAsync(PkField, 51, 50)).Player;
+            await FreePkAsync(attacker);
+
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 51, 50);
+            var kill = await victim.Game.WaitForInteractAsync(
+                i => i.Action == InteractMessage.Kill && i.Target == victim.User.Id, TimeSpan.FromSeconds(15));
+            Assert.Equal(attacker.User.Id, kill?.Sender);
+            var pk = await this.Servers.WaitForEventAsync("game", "pk.kill", "name", attacker.User.Name);
+            Assert.Equal("no_crime", pk.GetProperty("crime").GetString());
+            Assert.Null(await attacker.Game.WaitForAttribAsync(a =>
+                a.Id == attacker.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0,
+                TimeSpan.FromMilliseconds(300)));
         }
 
         [Fact]

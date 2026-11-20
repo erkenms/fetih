@@ -183,6 +183,7 @@ namespace Comet.Game.Combat
                 target.Map != client.Map || !target.Map.TryGetPosition(target, out x, out y) ? "not_found" :
                 target.Life.Dead ? "dead_target" :
                 now < target.Life.ProtectedUntil ? "protected" :
+                Pking.IsPeaceful(character.MapID) ? "peaceful_map" :
                 !Pking.CanAttack(client, target) ? "pk_mode" :
                 WeaponProblem(stats, shooting, arrows, MonsterAI.Distance(character.X, character.Y, x, y));
             if (reason != null)

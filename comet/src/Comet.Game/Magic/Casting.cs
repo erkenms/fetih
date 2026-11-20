@@ -181,6 +181,7 @@ namespace Comet.Game.Magic
                     target.Map != client.Map || !target.Map.TryGetPosition(target, out px, out py) ? "not_found" :
                     target.Life.Dead ? "dead_target" :
                     now < target.Life.ProtectedUntil ? "protected" :
+                    Pking.IsPeaceful(character.MapID) ? "peaceful_map" :
                     !Pking.CanAttack(client, target) ? "pk_mode" :
                     null;
                 if (reason == null)

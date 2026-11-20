@@ -71,6 +71,10 @@ namespace Comet.Integration.Tests
         // The market, with the booth flags of Data/npcs.json
         public const uint Market = 1036;
 
+        // Players may fight in Desert City; on a PK field it's no crime (Data/maps.json).
+        // Twin City and the market forbid it. Not 1005, the arena: NpcTests need it missing.
+        public const uint DesertCity = 1000, PkField = 1080;
+
         // Shopkeepers in Twin City, with what the test Shop.dat has them sell
         public const uint Blacksmith = 5, Pharmacist = 3;
 
@@ -209,12 +213,15 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
                 MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
                     (Market, "map/map/market.7z"),
+                    (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
                     (6000, "map/map/jail.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(300, 300));
+            File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
+            File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows));

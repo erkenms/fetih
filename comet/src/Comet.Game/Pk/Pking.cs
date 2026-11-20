@@ -1,7 +1,6 @@
 namespace Comet.Game.Pk
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -32,8 +31,12 @@ namespace Comet.Game.Pk
         public static TimeSpan FlashTime { get; set; } = TimeSpan.FromSeconds(30);
         public static TimeSpan DecayInterval { get; set; } = TimeSpan.FromMinutes(6);
 
-        // Killing here is no crime
-        public static readonly HashSet<uint> FreeMaps = new HashSet<uint> { Jail.MapID };
+        // No player may attack another here (Twin City, the market, ...)
+        public static bool IsPeaceful(uint mapID) => Kernel.MapTypes.Of(mapID).HasFlag(MapFlags.PkDisable);
+
+        // Attacking or killing here is no crime: PK arenas and the jail
+        public static bool IsFree(uint mapID) =>
+            (Kernel.MapTypes.Of(mapID) & (MapFlags.PkField | MapFlags.PrisonMap)) != 0;
 
         public static ulong NameStatus(ushort points) =>
             points >= BlackNamePoints ? BlackNameStatus :
@@ -57,7 +60,8 @@ namespace Comet.Game.Pk
 
         public static bool CanAttack(Client attacker, Client target)
         {
-            if (attacker == target || attacker.Character == null || target.Character == null)
+            if (attacker == target || attacker.Character == null || target.Character == null ||
+                IsPeaceful(attacker.Character.MapID))
                 return false;
             bool ally = attacker.Friends.ContainsKey(target.ID) ||
                 Social.Teams.OthersOf(attacker).Contains(target);
@@ -67,7 +71,7 @@ namespace Comet.Game.Pk
         // Attacking an innocent player makes the attacker flash
         public static async Task OnAttackAsync(Client attacker, Client target)
         {
-            if (FreeMaps.Contains(attacker.Character.MapID) || IsGuilty(target, DateTime.UtcNow))
+            if (IsFree(attacker.Character.MapID) || IsGuilty(target, DateTime.UtcNow))
                 return;
             await FlashAsync(attacker, FlashTime, "attack");
         }
@@ -77,7 +81,7 @@ namespace Comet.Game.Pk
         {
             var now = DateTime.UtcNow;
             ushort victimPoints = victim.Character.KillPoints;
-            bool crime = !FreeMaps.Contains(killer.Character.MapID) && !IsGuilty(victim, now);
+            bool crime = !IsFree(killer.Character.MapID) && !IsGuilty(victim, now);
             LogEvents.For(typeof(Pking), LogEvents.PkKill).Information(
                 "{Name} killed {Victim} on map {MapId} ({Crime})",
                 killer.Character.Name, victim.Character.Name, killer.Character.MapID,
