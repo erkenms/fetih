@@ -27,16 +27,24 @@ namespace Comet.Game.Npcs
         public static Task StartAsync(Client client, uint npcID)
         {
             client.ActiveNpc = 0;
+            client.DialogAnswered = false;
             return RunAsync(client, npcID, 0, null);
         }
 
+        // The client sends 255 right after every answer, as its window closes; only a 255
+        // on its own (closing without answering) ends the conversation
         public static Task AnswerAsync(Client client, byte option, string input)
         {
-            if (option == MsgTaskDialog.NoOption || client.ActiveNpc == 0)
+            if (option == MsgTaskDialog.NoOption)
             {
-                client.ActiveNpc = 0;
+                if (!client.DialogAnswered)
+                    client.ActiveNpc = 0;
+                client.DialogAnswered = false;
                 return Task.CompletedTask;
             }
+            client.DialogAnswered = true;
+            if (client.ActiveNpc == 0)
+                return Task.CompletedTask;
             return RunAsync(client, client.ActiveNpc, option, input);
         }
 

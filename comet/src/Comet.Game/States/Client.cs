@@ -68,6 +68,7 @@ namespace Comet.Game.States
 
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }
+        public bool DialogAnswered { get; set; }
         public DiffieHellman DiffieHellman = null;
 
         // Login token this connection authenticated with, and what it was issued for.

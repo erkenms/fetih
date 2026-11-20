@@ -328,8 +328,13 @@ namespace Comet.Client
 
         public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
 
-        public Task AnswerNpcAsync(byte option, string input = null) =>
-            this.SendAsync(DialogMessage.BuildAnswer(option, input));
+        // Like the game, which sends 255 after each answer as its dialog window closes
+        public async Task AnswerNpcAsync(byte option, string input = null)
+        {
+            await this.SendAsync(DialogMessage.BuildAnswer(option, input));
+            if (option != DialogMessage.NoOption)
+                await this.SendAsync(DialogMessage.BuildAnswer(DialogMessage.NoOption));
+        }
 
         // The parts of the next dialog page, up to and including Show; null if none comes
         public async Task<List<DialogMessage>> ReadDialogAsync(TimeSpan? timeout = null)
