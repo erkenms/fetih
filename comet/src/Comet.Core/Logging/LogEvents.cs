@@ -80,6 +80,17 @@ namespace Comet.Core.Logging
         public const string FriendRejected = "friend.rejected";
         public const string EnemyRemoved = "enemy.removed";
 
+        public const string GuildsLoaded = "guild.loaded";
+        public const string GuildCreated = "guild.created";
+        public const string GuildDisbanded = "guild.disbanded";
+        public const string GuildJoined = "guild.joined";
+        public const string GuildLeft = "guild.left";
+        public const string GuildRank = "guild.rank";
+        public const string GuildDonated = "guild.donated";
+        public const string GuildRelation = "guild.relation";
+        public const string GuildAnnounced = "guild.announced";
+        public const string GuildRejected = "guild.rejected";
+
         public const string PkMode = "pk.mode";
         public const string PkModeRejected = "pk.mode_rejected";
         public const string PkPoints = "pk.points";

@@ -20,6 +20,10 @@ namespace Comet.Client
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgSynpOffer = 1058;
+        public const ushort MsgSyndicateAttributeInfo = 1106;
+        public const ushort MsgSyndicate = 1107;
+        public const ushort MsgSynMemberList = 2102;
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
@@ -46,6 +50,7 @@ namespace Comet.Client
         public const ushort Talk = 2000;
         public const ushort Whisper = 2001;
         public const ushort Team = 2003;
+        public const ushort Guild = 2004;
         public const ushort Friend = 2009;
         public const ushort Center = 2011;
         public const ushort Service = 2014;
@@ -88,15 +93,16 @@ namespace Comet.Client
     // A number, the action as one byte, then the strings
     public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
     {
-        public const byte WhisperDetails = 26;
+        public const byte Guild = 3, GuildKick = 12, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
 
         public static NameMessage Parse(byte[] packet) => new NameMessage(
             BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));
 
-        public static byte[] Build(byte action, string text)
+        public static byte[] Build(byte action, string text, uint data = 0)
         {
             var bytes = Encoding.Latin1.GetBytes(text);
             var packet = Packet.Create(PacketTypes.MsgName, 11 + bytes.Length);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), data);
             packet[8] = action;
             packet[9] = 1;
             packet[10] = (byte)bytes.Length;
@@ -132,6 +138,9 @@ namespace Comet.Client
         uint Helmet, uint Armor, uint RightHand, uint LeftHand,
         ulong Status = 0, uint MonsterHealth = 0, ushort MonsterLevel = 0)
     {
+        public uint GuildId { get; init; }
+        public uint GuildRank { get; init; }
+
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
         public bool IsMonster => this.Id >= FirstMonsterId && this.Id <= LastMonsterId;
@@ -145,7 +154,11 @@ namespace Comet.Client
             BitConverter.ToUInt32(packet, 44), BitConverter.ToUInt32(packet, 52),
             BitConverter.ToUInt32(packet, 56), BitConverter.ToUInt32(packet, 60),
             BitConverter.ToUInt64(packet, 22), BitConverter.ToUInt32(packet, 84),
-            BitConverter.ToUInt16(packet, 90));
+            BitConverter.ToUInt16(packet, 90))
+        {
+            GuildId = BitConverter.ToUInt32(packet, 12),
+            GuildRank = BitConverter.ToUInt32(packet, 16),
+        };
     }
 
     // A timestamp, sender and target, the cell, the action at 20 and its data (the damage, or
@@ -242,6 +255,7 @@ namespace Comet.Client
         public const ushort LoginRelationships = 76;
         public const ushort LoginProficiencies = 77;
         public const ushort LoginSpells = 78;
+        public const ushort LoginGuild = 97;
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
@@ -451,11 +465,18 @@ namespace Comet.Client
             return new DialogMessage(packet[10], packet[11], strings.Count > 0 ? strings[0] : null);
         }
 
-        public static byte[] BuildAnswer(byte option)
+        public static byte[] BuildAnswer(byte option, string input = null)
         {
-            var packet = Packet.Create(PacketTypes.MsgTaskDialog, 16);
+            var bytes = Encoding.Latin1.GetBytes(input ?? "");
+            var packet = Packet.Create(PacketTypes.MsgTaskDialog, 16 + (input == null ? 0 : 1 + bytes.Length));
             packet[10] = option;
             packet[11] = Answer;
+            if (input != null)
+            {
+                packet[12] = 1;
+                packet[13] = (byte)bytes.Length;
+                bytes.CopyTo(packet, 14);
+            }
             return packet;
         }
     }
@@ -564,6 +585,76 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(12), 1u);
             BitConverter.TryWriteBytes(packet.AsSpan(16), (uint)Environment.TickCount);
             return packet;
+        }
+    }
+
+    // Guild actions: action at 4, a player, guild or amount at 8, join requirements at 12,
+    // 16 and 20, strings at 24
+    public sealed record SyndicateMessage(uint Action, uint Data, List<string> Strings)
+    {
+        public const uint ApplyJoin = 1, InviteJoin = 2, Leave = 3, QueryName = 6, Ally = 7, Unally = 8,
+            Enemy = 9, Unenemy = 10, DonateSilver = 11, QueryAttribute = 12, SetSyndicate = 14,
+            Disband = 19, DonateConquerPoints = 20, AllyRequest = 23, SetRequirements = 24,
+            Announce = 27, Promote = 28, Discharge = 30, PromotionList = 37;
+
+        public string Text => this.Strings.Count > 0 ? this.Strings[0] : "";
+
+        public static SyndicateMessage Parse(byte[] packet) => new SyndicateMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            packet.Length > 24 ? Packet.ReadStrings(packet, 24) : new List<string>());
+
+        public static byte[] Build(uint action, uint data, string text = null,
+            uint level = 0, uint rebirths = 0, uint professions = 0)
+        {
+            var bytes = text == null ? null : Encoding.Latin1.GetBytes(text);
+            var packet = Packet.Create(PacketTypes.MsgSyndicate, 25 + (bytes == null ? 0 : 1 + bytes.Length));
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), level);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), rebirths);
+            BitConverter.TryWriteBytes(packet.AsSpan(20), professions);
+            if (bytes != null)
+            {
+                packet[24] = 1;
+                packet[25] = (byte)bytes.Length;
+                bytes.CopyTo(packet, 26);
+            }
+            return packet;
+        }
+    }
+
+    // The guild window: guild ID at 4, own silver donation at 8, fund (u64) at 12, CP fund at
+    // 20, members at 24, own rank at 28, leader (16 bytes) at 32, requirements at 48, 52, 56
+    public sealed record GuildInfo(uint GuildId, uint Donation, ulong Fund, uint ConquerPointsFund,
+        uint Members, uint Rank, string Leader, uint RequiredLevel)
+    {
+        public static GuildInfo Parse(byte[] packet) => new GuildInfo(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt64(packet, 12), BitConverter.ToUInt32(packet, 20),
+            BitConverter.ToUInt32(packet, 24), BitConverter.ToUInt32(packet, 28),
+            Packet.ReadText(packet, 32, 16), BitConverter.ToUInt32(packet, 48));
+    }
+
+    // One page of guild members: first index at 8, count at 12, 48-byte entries from 16 with
+    // the name, level at 24, rank at 28, donation at 36, online at 40
+    public sealed record GuildMember(string Name, uint Level, uint Rank, uint Donation, bool Online)
+    {
+        public static byte[] BuildQuery(uint startIndex)
+        {
+            var packet = Packet.Create(PacketTypes.MsgSynMemberList, 20);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), startIndex);
+            return packet;
+        }
+
+        public static List<GuildMember> ParseList(byte[] packet)
+        {
+            var members = new List<GuildMember>();
+            int count = BitConverter.ToInt32(packet, 12);
+            for (int i = 0, at = 16; i < count; i++, at += 48)
+                members.Add(new GuildMember(Packet.ReadText(packet, at, 16),
+                    BitConverter.ToUInt32(packet, at + 24), BitConverter.ToUInt32(packet, at + 28),
+                    BitConverter.ToUInt32(packet, at + 36), BitConverter.ToUInt32(packet, at + 40) != 0));
+            return members;
         }
     }
 

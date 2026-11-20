@@ -13,6 +13,9 @@ namespace Comet.Game.Database
         public virtual DbSet<DbEnemy> Enemies { get; set; }
         public virtual DbSet<DbMagic> Magics { get; set; }
         public virtual DbSet<DbProficiency> Proficiencies { get; set; }
+        public virtual DbSet<DbSyndicate> Syndicates { get; set; }
+        public virtual DbSet<DbSyndicateMember> SyndicateMembers { get; set; }
+        public virtual DbSet<DbSyndicateRelation> SyndicateRelations { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -33,6 +36,9 @@ namespace Comet.Game.Database
             builder.Entity<DbEnemy>(e => e.HasKey(x => new { x.CharacterID, x.EnemyID }));
             builder.Entity<DbMagic>(e => e.HasKey(x => new { x.CharacterID, x.Type }));
             builder.Entity<DbProficiency>(e => e.HasKey(x => new { x.CharacterID, x.Type }));
+            builder.Entity<DbSyndicate>(e => e.HasKey(x => x.SyndicateID));
+            builder.Entity<DbSyndicateMember>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbSyndicateRelation>(e => e.HasKey(x => new { x.SyndicateID, x.TargetID }));
         }
 
         public static bool Ping()

@@ -159,6 +159,19 @@
 
             try
             {
+                await Social.Guilds.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.GuildsLoaded).Information(
+                    "Loaded {GuildCount} guilds", Social.Guilds.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't load guilds from the database");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.Shops = ShopTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.ShopsLoaded).Information(
                     "Loaded {ShopCount} shops", Kernel.Shops.Count);

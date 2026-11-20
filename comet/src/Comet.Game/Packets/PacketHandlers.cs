@@ -26,6 +26,9 @@ namespace Comet.Game.Packets
                 [PacketType.MsgTeam] = () => new MsgTeam(),
                 [PacketType.MsgFriend] = () => new MsgFriend(),
                 [PacketType.MsgInteract] = () => new MsgInteract(),
+                [PacketType.MsgSyndicate] = () => new MsgSyndicate(),
+                [PacketType.MsgSynMemberList] = () => new MsgSynMemberList(),
+                [PacketType.MsgSynpOffer] = () => new MsgSynpOffer(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

@@ -18,6 +18,7 @@ namespace Comet.Game.Npcs
             {
                 [TwinCity.GuardID] = TwinCity.GuardAsync,
                 [Pk.Jail.WardenID] = Pk.Jail.WardenAsync,
+                [GuildDirector.ID] = GuildDirector.TalkAsync,
             };
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

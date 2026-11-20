@@ -25,6 +25,9 @@ namespace Comet.Client
         public List<WeaponSkill> Proficiencies { get; } = new List<WeaponSkill>();
         public List<MagicInfo> Spells { get; } = new List<MagicInfo>();
 
+        // What the server sent for the guild step: the guild window, null if none came
+        public GuildInfo Guild { get; private set; }
+
         private GameClient(System.Net.Sockets.TcpClient tcp)
             : base(tcp, new Cast5Cipher(), footer: "TQClient")
         {
@@ -187,6 +190,20 @@ namespace Comet.Client
                 }
             }
 
+            // The guild window and lists come before the reply to the guild step
+            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginGuild));
+            while (true)
+            {
+                var packet = await this.ReceiveAsync(p =>
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSyndicateAttributeInfo ||
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAction &&
+                    ActionMessage.Parse(p).Action == ActionMessage.LoginGuild)
+                    ?? throw new InvalidOperationException("Game server closed the connection");
+                if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
+                    break;
+                this.Guild = GuildInfo.Parse(packet);
+            }
+
             await this.SendAsync(ActionMessage.BuildLoginComplete());
             return (spawn, inventory);
         }
@@ -301,7 +318,8 @@ namespace Comet.Client
 
         public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
 
-        public Task AnswerNpcAsync(byte option) => this.SendAsync(DialogMessage.BuildAnswer(option));
+        public Task AnswerNpcAsync(byte option, string input = null) =>
+            this.SendAsync(DialogMessage.BuildAnswer(option, input));
 
         // The parts of the next dialog page, up to and including Show; null if none comes
         public async Task<List<DialogMessage>> ReadDialogAsync(TimeSpan? timeout = null)
@@ -458,6 +476,41 @@ namespace Comet.Client
             var packet = await this.TryReceiveAsync(p =>
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgRelation && match(RelationMessage.Parse(p)), timeout);
             return packet == null ? null : RelationMessage.Parse(packet);
+        }
+
+        public Task SyndicateAsync(uint action, uint data, string text = null) =>
+            this.SendAsync(SyndicateMessage.Build(action, data, text));
+
+        public async Task<SyndicateMessage> WaitForSyndicateAsync(
+            Func<SyndicateMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSyndicate && match(SyndicateMessage.Parse(p)), timeout);
+            return packet == null ? null : SyndicateMessage.Parse(packet);
+        }
+
+        public async Task<GuildInfo> WaitForGuildInfoAsync(Func<GuildInfo, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSyndicateAttributeInfo && match(GuildInfo.Parse(p)), timeout);
+            return packet == null ? null : GuildInfo.Parse(packet);
+        }
+
+        public async Task<List<GuildMember>> QueryGuildMembersAsync(uint startIndex = 0, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(GuildMember.BuildQuery(startIndex));
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSynMemberList, timeout);
+            return packet == null ? null : GuildMember.ParseList(packet);
+        }
+
+        public Task NameAsync(byte action, string text, uint data = 0) =>
+            this.SendAsync(NameMessage.Build(action, text, data));
+
+        public async Task<NameMessage> WaitForNameAsync(Func<NameMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgName && match(NameMessage.Parse(p)), timeout);
+            return packet == null ? null : NameMessage.Parse(packet);
         }
 
         public Task TeamAsync(uint action, uint data) => this.SendAsync(TeamMessage.Build(action, data));

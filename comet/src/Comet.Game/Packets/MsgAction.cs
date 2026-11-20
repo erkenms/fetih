@@ -192,6 +192,12 @@ namespace Comet.Game.Packets
                     await client.SendAsync(msg);
                 },
 
+                [ActionType.LoginGuild] = async (msg, client) =>
+                {
+                    await Social.Guilds.LoginAsync(client);
+                    await client.SendAsync(msg);
+                },
+
                 // The last login step: the client has loaded the map. Not echoed.
                 [ActionType.LoginComplete] = async (msg, client) =>
                 {

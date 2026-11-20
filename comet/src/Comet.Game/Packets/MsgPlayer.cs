@@ -24,11 +24,18 @@ namespace Comet.Game.Packets
         public ulong Status { get; set; }
         public uint MonsterHealth { get; set; }
         public ushort MonsterLevel { get; set; }
+        public uint GuildID { get; set; }
+        public ushort GuildRank { get; set; }
 
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
             this.Mesh = client.Life.Mesh(client.Character);
             this.Status = client.Status;
+            if (Social.Guilds.Of(client.ID) is Social.Guilds.Membership guild)
+            {
+                this.GuildID = guild.Guild.ID;
+                this.GuildRank = (ushort)guild.Member.Rank;
+            }
         }
 
         public MsgPlayer(Monster monster)
@@ -81,8 +88,8 @@ namespace Comet.Game.Packets
             writer.Write((ushort)base.Type);
             writer.Write(this.Mesh);                // 4
             writer.Write(this.CharacterID);         // 8
-            writer.Write(0u);                       // 12  guild ID
-            writer.Write(0u);                       // 16  guild rank
+            writer.Write(this.GuildID);             // 12
+            writer.Write((uint)this.GuildRank);     // 16
             writer.Write((ushort)0);                // 20
             writer.Write(this.Status);              // 22  status flags
             writer.Write(new byte[12]);             // 30

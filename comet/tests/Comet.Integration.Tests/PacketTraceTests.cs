@@ -55,8 +55,10 @@ namespace Comet.Integration.Tests
                     "in MsgAction 76", "out MsgAction 76",      // LoginRelationships, no friends yet
                     "in MsgAction 77", "out MsgAction 77",      // LoginProficiencies, none yet
                     "in MsgAction 78", "out MsgAction 78",      // LoginSpells, none yet
+                    "in MsgAction 97",                          // LoginGuild: the empty guild window
+                    "out MsgSyndicateAttributeInfo", "out MsgAction 97",
                     "in MsgAction 251"                          // LoginComplete
-                }, trace.Skip(2).Take(20));
+                }, trace.Skip(2).Take(23));
             }
         }
 
