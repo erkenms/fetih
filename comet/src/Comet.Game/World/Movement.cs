@@ -189,6 +189,7 @@ namespace Comet.Game.World
                 client.Character.Name, kind, x, y, toX, toY, map.Id, reason);
             await client.SendAsync(MsgAction.Teleport(
                 client.ID, map.Id, x, y, client.Character.Direction));
+            await Visibility.ShowAroundAsync(client, x, y);
         }
     }
 }

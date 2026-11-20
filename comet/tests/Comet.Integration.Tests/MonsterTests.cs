@@ -101,7 +101,9 @@ namespace Comet.Integration.Tests
         {
             var at = ServerFixture.GuardToProvoke;
             await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y)).Player;
+            await using var watcher = (await this.PlayingAtAsync(1002, at.X + 6, at.Y)).Player;
             var guard = await MonsterAtAsync(player, at);
+            Assert.NotNull(await player.Game.WaitForSpawnAsync(watcher.User.Id));
 
             // Guards can only be attacked in free PK mode, and hitting one makes the player flash
             await player.Game.AttackAsync(player.User.Id, guard.Id, at.X, at.Y);
@@ -126,6 +128,8 @@ namespace Comet.Integration.Tests
             Assert.Equal("dead", lying.GetProperty("reason").GetString());
             var snapped = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
             Assert.Equal((at.X + 1, (int)at.Y), (snapped.X, snapped.Y));
+            Assert.NotNull(await player.Game.WaitForSpawnAsync(watcher.User.Id));
+            Assert.NotNull(await player.Game.WaitForMonsterAsync(m => m.Id == guard.Id));
 
             await player.Game.BecomeGhostAsync(player.User.Id);
 

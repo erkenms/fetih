@@ -20,11 +20,23 @@ namespace Comet.Game.World
                 if (other.Character == null)
                     continue;
                 await other.SendAsync(spawn);
-                await client.SendAsync(new MsgPlayer(other));
             }
-            await Items.Ground.ShowAroundAsync(client, character.X, character.Y);
-            await ShowNpcsAsync(client, character.X, character.Y);
-            await Monsters.ShowAroundAsync(client, character.MapID, character.X, character.Y);
+            await ShowAroundAsync(client, character.X, character.Y);
+        }
+
+        public static async Task ShowAroundAsync(Client client, ushort x, ushort y)
+        {
+            var map = client.Map;
+            var character = client.Character;
+            if (map == null || character == null)
+                return;
+
+            foreach (var other in map.InView(x, y, except: client))
+                if (other.Character != null)
+                    await client.SendAsync(new MsgPlayer(other));
+            await Items.Ground.ShowAroundAsync(client, x, y);
+            await ShowNpcsAsync(client, x, y);
+            await Monsters.ShowAroundAsync(client, character.MapID, x, y);
         }
 
         // NPCs in view of the cell; with a previous cell, only those that weren't in view there
