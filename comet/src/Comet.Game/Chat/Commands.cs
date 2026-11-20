@@ -112,7 +112,8 @@ namespace Comet.Game.Chat
             return true;
         }
 
-        // The client shows no button to close a booth yet
+        // The client shows no button to close a booth yet. It won't move while it thinks it's
+        // vending; a teleport onto its own cell ends that (seen in the VM).
         private static async Task<bool> CloseBoothAsync(Client client, string[] args, string rest)
         {
             if (client.Booth == null)
@@ -121,7 +122,8 @@ namespace Comet.Game.Chat
                 return false;
             }
             await Vending.CloseAsync(client, "command");
-            await client.SendAsync(MsgAction.DestroyBooth(client.ID));
+            var character = client.Character;
+            await Movement.TeleportAsync(client, character.MapID, character.X, character.Y);
             await Talk.NoticeAsync(client, "Your booth is closed.");
             return true;
         }

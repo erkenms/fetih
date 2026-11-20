@@ -92,7 +92,8 @@ namespace Comet.Integration.Tests
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 213, 0));
             await seller.Game.SayAsync(TalkChannels.Talk, seller.User.Name, "ALLUSERS", "/closebooth");
             Assert.True(await seller.Game.WaitForRemovalAsync(id));
-            Assert.NotNull(await seller.Game.WaitForActionAsync(ActionMessage.CloseBooth, seller.User.Id));
+            var stay = await seller.Game.WaitForActionAsync(ActionMessage.Teleport, seller.User.Id);
+            Assert.Equal((Market, (ushort)120, (ushort)213), (stay?.Command, stay?.X, stay?.Y));
             await EventAsync("booth.closed", seller.User.Name, "command");
 
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 213, 0));

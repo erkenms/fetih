@@ -71,16 +71,6 @@ namespace Comet.Game.Packets
             Y = y,
         };
 
-        // Wiki 5017: tells the client its booth is gone
-        public static MsgAction DestroyBooth(uint identity) => new MsgAction
-        {
-            Type = PacketType.MsgAction,
-            CharacterID = identity,
-            Arguments = new ushort[2],
-            Timestamp = (uint)Environment.TickCount,
-            Action = ActionType.BoothLeave,
-        };
-
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
