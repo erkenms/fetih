@@ -140,9 +140,13 @@ namespace Comet.Integration.Tests
             Assert.NotNull(moved);
             Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
 
+            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/grab " + other.User.Name);
+            moved = await other.Game.WaitForActionAsync(ActionMessage.Teleport, other.User.Id);
+            Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
+
             await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/goto " + other.User.Name.ToLowerInvariant());
             moved = await gm.Game.WaitForActionAsync(ActionMessage.Teleport, gm.User.Id);
-            Assert.Equal((1006u, 10, 10), (moved.Command, (int)moved.X, (int)moved.Y));
+            Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
 
             await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/tp 1006 x");
             Assert.NotNull(await NoticeAsync(gm, "Usage: /tp"));

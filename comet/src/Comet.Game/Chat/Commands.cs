@@ -35,6 +35,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "kick" }, Authority.Moderator, "/kick <name>", KickAsync),
             new Command(new[] { "teleport", "tp" }, Authority.GameMaster, "/tp <map> <x> <y>", TeleportAsync),
             new Command(new[] { "goto" }, Authority.GameMaster, "/goto <name>", GotoAsync),
+            new Command(new[] { "grab" }, Authority.GameMaster, "/grab <name>", GrabAsync),
             new Command(new[] { "broadcast", "bc" }, Authority.GameMaster, "/bc <text>", BroadcastAsync),
             new Command(new[] { "exp" }, Authority.GameMaster, "/exp <amount>", ExperienceAsync),
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
@@ -183,6 +184,19 @@ namespace Comet.Game.Chat
                 return await NotOnlineAsync(client, args[0]);
             var character = target.Character;
             return await MoveAsync(client, character.MapID, character.X, character.Y);
+        }
+
+        private static async Task<bool> GrabAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, "/grab <name>");
+            if (!TryFind(args[0], out var target))
+                return await NotOnlineAsync(client, args[0]);
+            var character = client.Character;
+            if (await Movement.TeleportAsync(target, character.MapID, character.X, character.Y))
+                return true;
+            await Talk.NoticeAsync(client, $"Can't grab {target.Character.Name}.");
+            return false;
         }
 
         private static async Task<bool> BroadcastAsync(Client client, string[] args, string rest)
