@@ -66,6 +66,9 @@ namespace Comet.Integration.Tests
         // Short, so a test can see a dropped item disappear
         public const int GroundExpireSeconds = 4;
 
+        // Short, so a test can see flashing end and PK points go down
+        public const int PkFlashSeconds = 2, PkDecaySeconds = 3;
+
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
         // Database connection (override with environment variables)
@@ -173,6 +176,7 @@ namespace Comet.Integration.Tests
                 "--Monsters:SpawnsFile=" + Path.Combine(this.MapDirectory, "spawns.json"),
                 "--Death:ReviveSeconds=" + ReviveSeconds,
                 "--Monsters:WanderChance=0",
+                "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
@@ -190,12 +194,14 @@ namespace Comet.Integration.Tests
             Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
                 MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
-                    (Market, "map/map/market.7z")));
+                    (Market, "map/map/market.7z"),
+                    (6000, "map/map/jail.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(300, 300));
+            File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

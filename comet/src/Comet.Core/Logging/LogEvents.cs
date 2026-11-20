@@ -80,6 +80,14 @@ namespace Comet.Core.Logging
         public const string FriendRejected = "friend.rejected";
         public const string EnemyRemoved = "enemy.removed";
 
+        public const string PkMode = "pk.mode";
+        public const string PkModeRejected = "pk.mode_rejected";
+        public const string PkPoints = "pk.points";
+        public const string PkFlashing = "pk.flashing";
+        public const string PkKill = "pk.kill";
+        public const string PkJailed = "pk.jailed";
+        public const string PkReleased = "pk.released";
+
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";

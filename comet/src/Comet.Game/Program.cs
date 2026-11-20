@@ -12,6 +12,7 @@
     using Comet.Game.Items;
     using Comet.Game.Npcs;
     using Comet.Game.Packets;
+    using Comet.Game.Pk;
     using Comet.Game.States;
     using Comet.Game.World;
     using Comet.Network.RPC;
@@ -197,6 +198,9 @@
                 Log.Information("Deleted {Count} items left on the ground by the last run", lost);
             _ = Ground.RunExpiryAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = MonsterAI.RunAsync(TimeSpan.FromMilliseconds(100), CancellationToken.None);
+            Pking.FlashTime = TimeSpan.FromSeconds(Math.Max(1, config.Pk.FlashSeconds));
+            Pking.DecayInterval = TimeSpan.FromSeconds(Math.Max(1, config.Pk.DecaySeconds));
+            _ = Pking.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);

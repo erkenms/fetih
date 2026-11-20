@@ -42,6 +42,15 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
+        public void StatusFlagsAreAt22()
+        {
+            var record = new DbCharacter(7, 1000042, "Hero") { Mesh = 1004 };
+            var bytes = new MsgPlayer(new Character(record)) { Status = 0x8001 }.Encode();
+            Assert.Equal(0x8001UL, BitConverter.ToUInt64(bytes, 22));
+            Assert.Equal(0, BitConverter.ToUInt16(bytes, 42));
+        }
+
+        [Fact]
         public void PositionFlagIsZero()
         {
             // The client only places the player at X, Y when the byte at 225 is 0

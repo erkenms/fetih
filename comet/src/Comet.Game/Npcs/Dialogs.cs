@@ -17,6 +17,7 @@ namespace Comet.Game.Npcs
             new Dictionary<uint, Func<NpcTalk, Task>>
             {
                 [TwinCity.GuardID] = TwinCity.GuardAsync,
+                [Pk.Jail.WardenID] = Pk.Jail.WardenAsync,
             };
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

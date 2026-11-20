@@ -108,6 +108,8 @@ namespace Comet.Client
         ushort Vitality, ushort Spirit, ushort HealthPoints, byte Level, byte Class, string Name,
         ulong Experience, ushort AttributePoints, ushort ManaPoints)
     {
+        public ushort PkPoints { get; init; }
+
         public static UserInfo Parse(byte[] packet) => new UserInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 10),
             BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt32(packet, 16),
@@ -115,7 +117,10 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 56), BitConverter.ToUInt16(packet, 58),
             BitConverter.ToUInt16(packet, 62), packet[68], packet[69],
             Packet.ReadStrings(packet, 110)[0], BitConverter.ToUInt64(packet, 24),
-            BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64));
+            BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64))
+        {
+            PkPoints = BitConverter.ToUInt16(packet, 66),
+        };
     }
 
     // Monsters come as players too, with their health at 84 and level at 90
@@ -181,6 +186,7 @@ namespace Comet.Client
         public const ushort LevelUp = 92;
         public const ushort Revive = 94;
         public const ushort Ghost = 145;
+        public const ushort PkMode = 96;
         public const ushort Portal = 85;
         public const ushort Teleport = 86;
         public const ushort RemoveEntity = 135;
@@ -236,8 +242,11 @@ namespace Comet.Client
     {
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
-            Strength = 15, Agility = 16, Mesh = 11, Status = 25;
+            Strength = 15, Agility = 16, Mesh = 11, PkPoints = 6, Status = 25;
         public const ulong DeadStatus = 0x400;
+
+        // Status flags
+        public const ulong Flashing = 0x1, RedName = 0x4000, BlackName = 0x8000;
 
         public static UserAttribMessage Parse(byte[] packet)
         {

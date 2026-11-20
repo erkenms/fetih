@@ -28,7 +28,7 @@ namespace Comet.Game.Packets
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
             this.Mesh = client.Life.Mesh(client.Character);
-            this.Status = client.Life.Status;
+            this.Status = client.Status;
         }
 
         public MsgPlayer(Monster monster)

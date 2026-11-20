@@ -7,6 +7,7 @@ namespace Comet.Game.States
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
     using Comet.Game.Items;
+    using Comet.Game.Pk;
     using Comet.Game.World;
     using Comet.Network.Security;
     using Comet.Network.Sockets;
@@ -43,6 +44,11 @@ namespace Comet.Game.States
         public bool AttackShooting { get; set; }
         public int AttackRun { get; set; }
         public DateTime NextAttackAt { get; set; }
+
+        public PkState Pk { get; } = new PkState();
+
+        // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing
+        public ulong Status => this.Life.Status | Pking.Status(this);
 
         // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }

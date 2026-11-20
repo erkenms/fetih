@@ -16,6 +16,7 @@ namespace Comet.Game.Database
         public MonstersConfiguration Monsters { get; set; } = new MonstersConfiguration();
         public DeathConfiguration Death { get; set; } = new DeathConfiguration();
         public CombatConfiguration Combat { get; set; } = new CombatConfiguration();
+        public PkConfiguration Pk { get; set; } = new PkConfiguration();
 
         public class DatabaseConfiguration
         {
@@ -94,6 +95,14 @@ namespace Comet.Game.Database
         {
             public int PlayerAttackMilliseconds { get; set; } = 1500;
             public int MonsterAttackMilliseconds { get; set; } = 1500;
+        }
+
+        // How long attacking an innocent player makes the attacker flash, and how often a
+        // player online loses a PK point
+        public class PkConfiguration
+        {
+            public int FlashSeconds { get; set; } = 30;
+            public int DecaySeconds { get; set; } = 360;
         }
 
         public ServerConfiguration(string[] args)

@@ -42,6 +42,9 @@ namespace Comet.Game.Chat
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
             new Command(new[] { "attr" }, Authority.GameMaster, "/attr <type> <value>", AttributeAsync),
+            new Command(new[] { "pk" }, Authority.GameMaster, "/pk <points> [name]", PkPointsAsync),
+            new Command(new[] { "flash" }, Authority.GameMaster, "/flash [seconds]", FlashAsync),
+            new Command(new[] { "jail" }, Authority.GameMaster, "/jail <name>", JailAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -275,6 +278,39 @@ namespace Comet.Game.Chat
                 }
             }
             return true;
+        }
+
+        private static async Task<bool> PkPointsAsync(Client client, string[] args, string rest)
+        {
+            var target = client;
+            if (args.Length < 1 || args.Length > 2 || !ushort.TryParse(args[0], out var points))
+                return await UsageAsync(client, "/pk <points> [name]");
+            if (args.Length == 2 && !TryFind(args[1], out target))
+                return await NotOnlineAsync(client, args[1]);
+            await Pk.Pking.ChangePointsAsync(target, points - target.Character.KillPoints, "gm");
+            await Talk.NoticeAsync(client, $"{target.Character.Name} has {points} PK points.");
+            return true;
+        }
+
+        private static async Task<bool> FlashAsync(Client client, string[] args, string rest)
+        {
+            int seconds = (int)Pk.Pking.FlashTime.TotalSeconds;
+            if (args.Length > 1 || (args.Length == 1 && (!int.TryParse(args[0], out seconds) || seconds < 1)))
+                return await UsageAsync(client, "/flash [seconds]");
+            await Pk.Pking.FlashAsync(client, TimeSpan.FromSeconds(seconds), "gm");
+            return true;
+        }
+
+        private static async Task<bool> JailAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, "/jail <name>");
+            if (!TryFind(args[0], out var target))
+                return await NotOnlineAsync(client, args[0]);
+            if (await Pk.Jail.SendAsync(target, "gm"))
+                return true;
+            await Talk.NoticeAsync(client, $"Can't send {target.Character.Name} to jail: map {Pk.Jail.MapID} isn't loaded.");
+            return false;
         }
 
         private static async Task<bool> DropAsync(Client client, string[] args, string rest)

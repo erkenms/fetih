@@ -170,7 +170,12 @@ namespace Comet.Game.Packets
                 },
 
                 // The last login step: the client has loaded the map. Not echoed.
-                [ActionType.LoginComplete] = (msg, client) => Visibility.EnterAsync(client),
+                [ActionType.LoginComplete] = async (msg, client) =>
+                {
+                    await Visibility.EnterAsync(client);
+                    if (Pk.Pking.Status(client) != 0)
+                        await Pk.Pking.SendStatusAsync(client);
+                },
 
                 // Asks for the stat window (1040), sent after login and each equipment
                 // change. Not answered until there are stats to show.
@@ -181,6 +186,10 @@ namespace Comet.Game.Packets
                 // booth doesn't outlive that.
                 [ActionType.BoothSpawn] = (msg, client) => Items.Vending.OpenAsync(client, msg),
                 [ActionType.BoothLeave] = (msg, client) => Items.Vending.CloseAsync(client, "closed"),
+
+                // Sent with the client's mode (3, capture) while logging in, and by the PK mode
+                // button; the client waits for the echo
+                [ActionType.CharacterPkMode] = (msg, client) => Pk.Pking.SetModeAsync(client, msg),
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
