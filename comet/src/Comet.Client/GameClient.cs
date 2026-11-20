@@ -194,6 +194,9 @@ namespace Comet.Client
         public Task EquipAsync(uint itemId, uint position) =>
             this.SendAsync(ItemMessage.Build(itemId, position, ItemMessage.Equip));
 
+        // Equipping to slot 0 uses the item
+        public Task UseAsync(uint itemId) => this.EquipAsync(itemId, 0);
+
         public Task UnequipAsync(uint itemId, uint position) =>
             this.SendAsync(ItemMessage.Build(itemId, position, ItemMessage.Unequip));
 

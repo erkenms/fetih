@@ -58,5 +58,37 @@ namespace Comet.Integration.Tests
             await CommandAsync(player, "/item 999");
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("no item type 999")));
         }
+
+        [Fact]
+        public async Task TeleportScrollsGoToTheirCityAndAreUsedUp()
+        {
+            await using var player = (await this.PlayingAtAsync(1006, 30, 30, GameMaster)).Player;
+            await CommandAsync(player, "/item " + ServerFixture.TwinCityGate.Id);
+            var scroll = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.TwinCityGate.Id);
+            Assert.NotNull(scroll);
+
+            await player.Game.UseAsync(scroll.Id);
+            var moved = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
+            Assert.Equal((1002u, (ushort)430, (ushort)380), (moved?.Command, moved?.X, moved?.Y));
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, scroll.Id));
+            var used = await this.Servers.WaitForEventAsync("game", "item.used", "name", player.User.Name);
+            Assert.Equal(scroll.Id, used.GetProperty("itemId").GetUInt32());
+            var count = await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM item WHERE CharacterID = @id", ("@id", player.User.Id));
+            Assert.Equal(0L, (long)count);
+        }
+
+        [Fact]
+        public async Task TeleportScrollsDontWorkInJail()
+        {
+            await using var player = (await this.PlayingAtAsync(6000, 30, 30, GameMaster)).Player;
+            await CommandAsync(player, "/item " + ServerFixture.TwinCityGate.Id);
+            var scroll = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.TwinCityGate.Id);
+
+            await player.Game.UseAsync(scroll.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
+            Assert.Equal("teleport_disabled", refused.GetProperty("reason").GetString());
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("can't teleport")));
+        }
     }
 }

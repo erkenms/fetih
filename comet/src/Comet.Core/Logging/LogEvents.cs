@@ -46,6 +46,8 @@ namespace Comet.Core.Logging
         public const string ItemDropped = "item.dropped";
         public const string ItemPickedUp = "item.picked_up";
         public const string ItemExpired = "item.expired";
+        public const string ItemUsed = "item.used";
+        public const string ItemUseRejected = "item.use_rejected";
         public const string ItemGroundRejected = "item.ground_rejected";
         public const string ItemBought = "item.bought";
         public const string ItemSold = "item.sold";

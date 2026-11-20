@@ -107,9 +107,10 @@ namespace Comet.Game.Packets
                 // The client checks the connection with pings; the reply is the echo
                 [ItemActionType.ClientPing] = (msg, client) => client.SendAsync(msg),
 
-                // The item ID, and the slot in Command
-                [ItemActionType.InventoryEquip] = (msg, client) =>
-                    Equipping.EquipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
+                // The item ID, and the slot in Command; slot 0 uses the item
+                [ItemActionType.InventoryEquip] = (msg, client) => msg.Command == (uint)ItemPosition.Inventory
+                    ? Using.UseAsync(client, msg.CharacterID)
+                    : Equipping.EquipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
                 [ItemActionType.EquipmentRemove] = (msg, client) =>
                     Equipping.UnequipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
 
