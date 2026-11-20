@@ -674,7 +674,7 @@ namespace Comet.Client
         public const uint Query = 1, QueryMembers = 4, Recruit = 9, AcceptRecruit = 10, Join = 11,
             AcceptJoin = 12, EnemyList = 13, AddEnemy = 14, DeleteEnemy = 15, AllyList = 16,
             AddAlly = 17, AcceptAlly = 18, DeleteAlly = 20, Abdicate = 21, Kick = 22, Quit = 23,
-            Announce = 24, SetAnnouncement = 25, Donate = 26;
+            Announce = 24, SetAnnouncement = 25, Donate = 26, QueryOccupy = 29;
         public const uint Leader = 100, Member = 10;
 
         public List<(string Name, uint Level, uint Rank, bool Online)> Members { get; init; }

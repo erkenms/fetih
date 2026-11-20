@@ -80,6 +80,7 @@ namespace Comet.Game.Social
                 {
                     case FamilyAction.Query: await SendInfoAsync(client); break;
                     case FamilyAction.QueryMembers: await SendMembersAsync(client); break;
+                    case FamilyAction.QueryOccupy: await SendOccupyAsync(client); break;
                     case FamilyAction.Recruit: await RecruitAsync(client, msg.Data); break;
                     case FamilyAction.AcceptRecruit: await AcceptRecruitAsync(client, msg.Data); break;
                     case FamilyAction.Join: await ApplyAsync(client, msg.Data); break;
@@ -645,6 +646,15 @@ namespace Comet.Game.Social
             return client.SendAsync(new MsgFamily(FamilyAction.Query, clan.ID,
                 $"{clan.ID} {clan.Members.Count} 0 {clan.Fund} {clan.Level} {(int)member.Rank} 0 0 0 0 0 {member.Donation}",
                 clan.Name, clan.Leader?.Name ?? string.Empty, "0 0 0 0 0 0 0", string.Empty, string.Empty));
+        }
+
+        private static async Task SendOccupyAsync(Client client)
+        {
+            var clan = Of(client.ID)?.Clan;
+            if (clan == null)
+                return;
+            await SendInfoAsync(client);
+            await client.SendAsync(new MsgFamily(FamilyAction.QueryOccupy, clan.ID, "0 0 0 0 0 0 0 0"));
         }
 
         private static async Task SendRelationsAsync(Client client)

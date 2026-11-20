@@ -49,6 +49,13 @@ namespace Comet.Integration.Tests
             var clanID = await CreateAsync(founder, name);
             await this.Servers.WaitForEventAsync("game", "clan.created", "name", founder.User.Name);
 
+            await founder.Game.FamilyAsync(FamilyMessage.QueryOccupy, 0);
+            Assert.NotNull(await founder.Game.WaitForFamilyAsync(f =>
+                f.Action == FamilyMessage.Query && f.Data == clanID));
+            var occupation = await founder.Game.WaitForFamilyAsync(f =>
+                f.Action == FamilyMessage.QueryOccupy && f.Data == clanID);
+            Assert.Equal("0 0 0 0 0 0 0 0", occupation?.Text);
+
             // Invited by the leader
             Assert.NotNull(await founder.Game.WaitForSpawnAsync(member.User.Id));
             await founder.Game.FamilyAsync(FamilyMessage.Recruit, member.User.Id);
