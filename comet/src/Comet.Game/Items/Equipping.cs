@@ -70,7 +70,7 @@ namespace Comet.Game.Items
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
-            await FollowMaxHealthAsync(client);
+            await FollowMaximumsAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemEquipped).Debug(
                 "{Name} equipped {ItemName} (item {ItemId}) in {Position}; {RemovedCount} items " +
@@ -96,7 +96,7 @@ namespace Comet.Game.Items
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
-            await FollowMaxHealthAsync(client);
+            await FollowMaximumsAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemUnequipped).Debug(
                 "{Name} took off item {ItemId} from {Position}", character.Name, item.ItemID, position);
@@ -109,17 +109,24 @@ namespace Comet.Game.Items
             await Movement.SendToViewAsync(client, new MsgPlayer(client));
         }
 
-        // Worn items change only the maximum health, or putting them on would refill health;
-        // health above a lower maximum comes down to it
-        private static async Task FollowMaxHealthAsync(Client client)
+        // Worn items change only the maximums, or putting them on would refill health and
+        // mana; health and mana above a lower maximum come down to it. Maximums go first, so
+        // the client doesn't cut to an older one.
+        private static async Task FollowMaximumsAsync(Client client)
         {
             var character = client.Character;
-            ushort max = Attributes.MaxHealth(client);
-            var attributes = new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.MaxHealth, max);
-            if (character.HealthPoints > max)
+            ushort maxHealth = Attributes.MaxHealth(client), maxMana = Attributes.MaxMana(client);
+            var attributes = new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.MaxHealth, maxHealth)
+                .Append(MsgUserAttrib.AttributeType.MaxMana, maxMana);
+            if (character.HealthPoints > maxHealth)
             {
-                character.HealthPoints = max;
-                attributes.Append(MsgUserAttrib.AttributeType.Health, max);
+                character.HealthPoints = maxHealth;
+                attributes.Append(MsgUserAttrib.AttributeType.Health, maxHealth);
+            }
+            if (character.ManaPoints > maxMana)
+            {
+                character.ManaPoints = maxMana;
+                attributes.Append(MsgUserAttrib.AttributeType.Mana, maxMana);
             }
             await attributes.SendEachAsync(client);
         }

@@ -41,13 +41,14 @@ namespace Comet.Game.States
             return health;
         }
 
-        public static ushort MaxMana(Client client) => MaxMana(client.Character);
+        public static ushort MaxMana(Client client) => MaxMana(client.Character, client.Equipment);
 
         // Level and nobility; equipment doesn't count yet
         public static uint BattlePower(DbCharacter character) =>
             character.Level + (uint)Nobility.Peerage.RankOf(character.CharacterID);
 
-        public static ushort MaxMana(DbCharacter character)
+        // Worn items add their itemtype mana after the taoists' bonus; itemadd.ini has none
+        public static ushort MaxMana(DbCharacter character, Equipment equipment)
         {
             int mana = character.Spirit * 5;
             // Water and fire taoists from their second promotion
@@ -59,6 +60,7 @@ namespace Comet.Game.States
                 135 or 145 => 6,
                 _ => 1
             };
+            mana += equipment?.Items.Sum(i => Kernel.ItemTypes.TryGet(i.TypeID, out var type) ? type.Mana : 0) ?? 0;
             return (ushort)Math.Min(mana, ushort.MaxValue);
         }
     }

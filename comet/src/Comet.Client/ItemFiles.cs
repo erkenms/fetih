@@ -40,7 +40,8 @@ namespace Comet.Client
         public static byte[] ItemTypeDat(params (uint Id, string Name, ushort Amount, byte Level)[] items) =>
             ItemTypeDat(items, new (uint, string, ushort, ushort)[0]);
 
-        // Potions also set the HP (life) and MP (mana) they restore, with durability 1
+        // Items with HP (life) and MP (mana), with durability 1: what potions restore and
+        // what bottles add
         public static byte[] ItemTypeDat(
             (uint Id, string Name, ushort Amount, byte Level)[] items,
             (uint Id, string Name, ushort Life, ushort Mana)[] potions)

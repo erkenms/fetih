@@ -41,6 +41,8 @@ namespace Comet.Game.Items
             ItemPosition.RightHand => IsOneHanded(type) || IsTwoHanded(type),
             ItemPosition.LeftHand => IsOneHanded(type) || IsShield(type) || IsArrow(type),
             ItemPosition.Ring => Sort(type) is >= 150 and <= 152,
+            // MiraculousGourd, MagicalBottle and the prizes: 2100025 to 2100095
+            ItemPosition.Bottle => Sort(type) == 2100,
             ItemPosition.Boots => Sort(type) == 160,
             ItemPosition.Garment => Sort(type) is >= 181 and <= 194,
             ItemPosition.Steed => IsSteed(type),

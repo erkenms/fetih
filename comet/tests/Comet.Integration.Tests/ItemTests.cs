@@ -167,5 +167,28 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == health));
         }
+
+        [Fact]
+        public async Task WornItemsRaiseMaxManaAndTakingThemOffCutsMana()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 740, 540, GameMaster)).Player;
+            uint mana = player.User.Spirit * 5u;
+            await CommandAsync(player, "/item " + ServerFixture.Bottle.Id);
+            var bottle = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Bottle.Id);
+
+            await player.Game.EquipAsync(bottle.Id, 7);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.MaxMana, out var max) && max == mana + ServerFixture.Bottle.Mana));
+
+            await CommandAsync(player, "/item " + ServerFixture.ManaPotion.Id);
+            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.ManaPotion.Id);
+            await player.Game.UseAsync(potion.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == mana + ServerFixture.ManaPotion.Mana));
+
+            await player.Game.UnequipAsync(bottle.Id, 7);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == mana));
+        }
     }
 }

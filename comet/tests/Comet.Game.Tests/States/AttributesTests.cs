@@ -32,14 +32,14 @@ namespace Comet.Game.Tests.States
         [InlineData(145, 300)]
         public void PromotedTaoistsHaveMoreMana(byte job, int expected)
         {
-            Assert.Equal(expected, Attributes.MaxMana(Character(job, 0, 0, 0, 10)));
+            Assert.Equal(expected, Attributes.MaxMana(Character(job, 0, 0, 0, 10), null));
         }
 
         [Fact]
         public void ValuesStopAtTheirFieldSize()
         {
             Assert.Equal(ushort.MaxValue, Attributes.MaxHealth(Character(15, 0, 0, 60000, 0), null));
-            Assert.Equal(ushort.MaxValue, Attributes.MaxMana(Character(145, 0, 0, 0, 60000)));
+            Assert.Equal(ushort.MaxValue, Attributes.MaxMana(Character(145, 0, 0, 0, 60000), null));
         }
     }
 }
