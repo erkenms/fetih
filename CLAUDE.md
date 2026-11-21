@@ -16,6 +16,10 @@ Conquer Online server built on the Comet emulator: `comet/src/Comet.Account` (lo
 - Unhandled MsgActions are echoed back on purpose: the client waits on its login steps.
 - Packets of one client are processed in order; different clients in parallel.
 - Comet.Client is written from the protocol, not from server classes. Keep it that way.
+- `_CLIENT/5619` is the original client; never edit it. `client/build.cs` builds the Fetih
+  client from it into `_CLIENT/fetih`: `client/files/` adds or replaces files,
+  `client/delete.txt` removes them, `client/patches.json` changes bytes (each names the
+  bytes it expects and why).
 
 ## Commands
 
@@ -23,4 +27,5 @@ Conquer Online server built on the Comet emulator: `comet/src/Comet.Account` (lo
 podman compose -f comet/compose.yaml up -d   # MariaDB; integration tests need it
 dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account
+dotnet run client/build.cs                    # the client, into _CLIENT/fetih
 ```

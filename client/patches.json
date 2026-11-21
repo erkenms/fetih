@@ -1,0 +1,12 @@
+// Byte patches, applied after files/ and delete.txt. Offsets are into the file; the
+// original bytes must match or the build fails. VAs are for reading the disassembly
+// (Conquer.exe: file offset = VA - 0x401000 + 0x400).
+[
+  {
+    "file": "Conquer.exe",
+    "offset": "0x1c0e0b",
+    "original": "ff 75 10",
+    "patched": "eb 54 10",
+    "reason": "Never open the 'please lock the following valuable items' window: event 1209 (VA 0x5c1a0b) jumps to its case's end. MsgItemInfo Add posts it for each +8 item or +5 steed that isn't locked or suspicious, for players who aren't merchants (MsgUserAttrib 38 = 255, which also whispers on every login)."
+  }
+]

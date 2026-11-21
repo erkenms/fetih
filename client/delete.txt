@@ -1,0 +1,1 @@
+# Paths removed from the original client, relative to it; a folder removes all it holds
