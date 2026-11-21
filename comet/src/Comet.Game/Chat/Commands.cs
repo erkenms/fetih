@@ -395,8 +395,8 @@ namespace Comet.Game.Chat
             var character = client.Character;
             if (client.Life.Dead)
                 return false;
-            character.HealthPoints = Attributes.MaxHealth(character);
-            character.ManaPoints = Attributes.MaxMana(character);
+            character.HealthPoints = Attributes.MaxHealth(client);
+            character.ManaPoints = Attributes.MaxMana(client);
             client.Energy.Stamina = HeavenBlessing.MaxStamina(client);
             // The maximums first, so the client doesn't cut health or mana to an older one
             await new MsgUserAttrib(client.ID)

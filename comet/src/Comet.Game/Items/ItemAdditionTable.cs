@@ -26,6 +26,21 @@ namespace Comet.Game.Items
         public ItemAddition Find(uint typeID, byte level) =>
             this.Additions.TryGetValue((typeID, level), out var addition) ? addition : null;
 
+        // What an item of this type gets for its plus level, by the type's key in the table
+        public ItemAddition Of(uint typeID, byte level) => this.Find(Key(typeID), level);
+
+        // Keys have no quality digit. One-handed weapons but backswords (421) share 444xxx,
+        // two-handed ones but bows (500) and scythes (511) 555xxx.
+        public static uint Key(uint typeID)
+        {
+            uint sort = typeID / 1000, key = typeID / 10 * 10;
+            if (sort is >= 400 and < 500 and not 421)
+                return 444000 + key % 1000;
+            if (sort is >= 500 and < 600 and not 500 and not 511)
+                return 555000 + key % 1000;
+            return key;
+        }
+
         public static ItemAdditionTable Load(string clientDirectory)
         {
             var path = Path.Combine(clientDirectory, "ini", "itemadd.ini");

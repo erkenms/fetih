@@ -108,7 +108,7 @@ namespace Comet.Game.Combat
             life.Dead = false;
             life.Ghost = false;
             life.ProtectedUntil = now + Protection;
-            character.HealthPoints = Attributes.MaxHealth(character);
+            character.HealthPoints = Attributes.MaxHealth(client);
             await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Health, character.HealthPoints));
             await SendLookAsync(client);
         }

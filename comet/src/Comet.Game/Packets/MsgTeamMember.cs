@@ -18,12 +18,12 @@ namespace Comet.Game.Packets
 
         public MsgTeamMember() => base.Type = PacketType.MsgTeamMember;
 
-        public MsgTeamMember(Character member) : this()
+        public MsgTeamMember(Character member, ushort maxHealth) : this()
         {
             this.Name = member.Name;
             this.ID = member.CharacterID;
             this.Look = member.Mesh + member.Avatar * 10000u;
-            this.MaxHealth = Attributes.MaxHealth(member);
+            this.MaxHealth = maxHealth;
             this.Health = member.HealthPoints;
         }
 

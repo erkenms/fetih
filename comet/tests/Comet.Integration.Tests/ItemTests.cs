@@ -136,5 +136,36 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await this.Servers.QueryGameScalarAsync(
                 "SELECT ItemID FROM item WHERE ItemID = @id", ("@id", potion.Id)));
         }
+
+        [Fact]
+        public async Task WornItemsRaiseMaxHealthAndTakingThemOffCutsHealth()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 720, 540, GameMaster);
+            var name = first.User.Name;
+            ushort health = first.User.HealthPoints;
+            await CommandAsync(first, "/item " + ServerFixture.Necklace.Id);
+            var necklace = await first.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Necklace.Id);
+            await first.DisposeAsync();
+            await this.Servers.WaitForLogoutSaveAsync(name);
+            await this.Servers.ExecuteGameSqlAsync("UPDATE item SET Plus = 1 WHERE ItemID = @id", ("@id", necklace.Id));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+            uint raised = health + (uint)ServerFixture.NecklaceHealth;
+
+            // Putting it on raises only the maximum
+            await player.Game.EquipAsync(necklace.Id, 2);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.MaxHealth, out var max) && max == raised));
+
+            // A potion fills up to the raised maximum, and taking it off cuts health down again
+            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
+            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            await player.Game.UseAsync(potion.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == raised));
+
+            await player.Game.UnequipAsync(necklace.Id, 2);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == health));
+        }
     }
 }

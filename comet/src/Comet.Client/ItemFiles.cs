@@ -26,11 +26,11 @@ namespace Comet.Client
 
         // itemadd.ini: per line item type, plus, then life, attack, defense and magic values
         // (0 here), dexterity (a steed's vigor) and dodge (its speed)
-        public static byte[] ItemAddIni(params (uint Type, byte Plus, ushort Dexterity)[] additions)
+        public static byte[] ItemAddIni(params (uint Type, byte Plus, ushort Life, ushort Dexterity)[] additions)
         {
             var text = new StringBuilder();
-            foreach (var (type, plus, dexterity) in additions)
-                text.Append($"{type} {plus} 0 0 0 0 0 0 {dexterity} 0\r\n");
+            foreach (var (type, plus, life, dexterity) in additions)
+                text.Append($"{type} {plus} {life} 0 0 0 0 0 {dexterity} 0\r\n");
             return Encoding.Latin1.GetBytes(text.ToString());
         }
 

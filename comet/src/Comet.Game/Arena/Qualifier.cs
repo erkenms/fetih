@@ -463,8 +463,8 @@ namespace Comet.Game.Arena
         private static async Task Restore(Client client)
         {
             var character = client.Character;
-            character.HealthPoints = Attributes.MaxHealth(character);
-            character.ManaPoints = Attributes.MaxMana(character);
+            character.HealthPoints = Attributes.MaxHealth(client);
+            character.ManaPoints = Attributes.MaxMana(client);
             await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
             await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Mana, character.ManaPoints));
         }

@@ -70,6 +70,7 @@ namespace Comet.Game.Items
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
+            await FollowMaxHealthAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemEquipped).Debug(
                 "{Name} equipped {ItemName} (item {ItemId}) in {Position}; {RemovedCount} items " +
@@ -95,6 +96,7 @@ namespace Comet.Game.Items
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
             await ShowLookAsync(client);
+            await FollowMaxHealthAsync(client);
 
             LogEvents.For(typeof(Equipping), LogEvents.ItemUnequipped).Debug(
                 "{Name} took off item {ItemId} from {Position}", character.Name, item.ItemID, position);
@@ -105,6 +107,21 @@ namespace Comet.Game.Items
         {
             await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
             await Movement.SendToViewAsync(client, new MsgPlayer(client));
+        }
+
+        // Worn items change only the maximum health, or putting them on would refill health;
+        // health above a lower maximum comes down to it
+        private static async Task FollowMaxHealthAsync(Client client)
+        {
+            var character = client.Character;
+            ushort max = Attributes.MaxHealth(client);
+            var attributes = new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.MaxHealth, max);
+            if (character.HealthPoints > max)
+            {
+                character.HealthPoints = max;
+                attributes.Append(MsgUserAttrib.AttributeType.Health, max);
+            }
+            await attributes.SendEachAsync(client);
         }
 
         private static bool Reject(Client client, uint itemID, ItemPosition position, string reason)

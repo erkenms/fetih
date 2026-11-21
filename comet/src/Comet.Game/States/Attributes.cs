@@ -1,13 +1,18 @@
 namespace Comet.Game.States
 {
     using System;
+    using System.Linq;
     using Comet.Game.Database.Models;
+    using Comet.Game.Items;
 
     public static class Attributes
     {
         public const ushort PointsPerLevel = 3;
 
-        public static ushort MaxHealth(DbCharacter character)
+        public static ushort MaxHealth(Client client) => MaxHealth(client.Character, client.Equipment);
+
+        // Worn items add their own health after the trojans' bonus
+        public static ushort MaxHealth(DbCharacter character, Equipment equipment)
         {
             int health = character.Vitality * 24
                 + (character.Strength + character.Agility + character.Spirit) * 3;
@@ -21,8 +26,22 @@ namespace Comet.Game.States
                 15 => health * 115 / 100,
                 _ => health
             };
+            health += equipment?.Items.Sum(ItemHealth) ?? 0;
             return (ushort)Math.Min(health, ushort.MaxValue);
         }
+
+        // The item type's life, its plus level's from itemadd.ini, and its enchantment
+        public static int ItemHealth(DbItem item)
+        {
+            int health = item.Enchant;
+            if (Kernel.ItemTypes.TryGet(item.TypeID, out var type))
+                health += type.Life;
+            if (item.Plus > 0)
+                health += Kernel.ItemAdditions.Of(item.TypeID, item.Plus)?.Life ?? 0;
+            return health;
+        }
+
+        public static ushort MaxMana(Client client) => MaxMana(client.Character);
 
         // Level and nobility; equipment doesn't count yet
         public static uint BattlePower(DbCharacter character) =>

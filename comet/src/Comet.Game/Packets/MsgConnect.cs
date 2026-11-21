@@ -122,12 +122,14 @@ namespace Comet.Game.Packets
                 // Character already exists: check where it stands, then add it to the
                 // world (it appears on the map when the client finishes logging in)
                 client.Character = new Character(character);
-                // Logging out dead revives the character
-                if (client.Character.HealthPoints == 0)
-                    client.Character.HealthPoints = Attributes.MaxHealth(client.Character);
                 var items = await ItemsRepository.LoadAsync(character.CharacterID);
                 client.Inventory = new Inventory(items.Where(i => i.Position == (byte)ItemPosition.Inventory));
                 client.Equipment = new Equipment(items.Where(i => Equipment.IsEquipped(i.Position)));
+                // Logging out dead revives the character; nothing is above its maximum
+                ushort maxHealth = Attributes.MaxHealth(client), maxMana = Attributes.MaxMana(client);
+                if (client.Character.HealthPoints == 0 || client.Character.HealthPoints > maxHealth)
+                    client.Character.HealthPoints = maxHealth;
+                client.Character.ManaPoints = Math.Min(client.Character.ManaPoints, maxMana);
                 await Social.Relationships.LoadAsync(client);
                 client.Skills = await SkillsRepository.LoadAsync(character.CharacterID);
                 client.Warehouses = new Warehouses(items.Where(i => i.Position == (byte)ItemPosition.Warehouse));

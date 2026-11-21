@@ -53,14 +53,14 @@ namespace Comet.Game.Tests.Packets
             {
                 Mesh = 1003, Avatar = 2, HealthPoints = 50, Vitality = 12, Level = 1
             });
-            var bytes = new MsgTeamMember(character).Encode();
+            var bytes = new MsgTeamMember(character, 400).Encode();
             Assert.Equal(MsgTeamMember.Size, bytes.Length);
             Assert.Equal(1026, BitConverter.ToUInt16(bytes, 2));
             Assert.Equal((0, 1), (bytes[4], bytes[5]));
             Assert.Equal("Altay", Encoding.ASCII.GetString(bytes, 8, 5));
             Assert.Equal(1000001u, BitConverter.ToUInt32(bytes, 24));
             Assert.Equal(21003u, BitConverter.ToUInt32(bytes, 28));
-            Assert.Equal(Attributes.MaxHealth(character), BitConverter.ToUInt16(bytes, 32));
+            Assert.Equal(400, BitConverter.ToUInt16(bytes, 32));
             Assert.Equal(50, BitConverter.ToUInt16(bytes, 34));
         }
 

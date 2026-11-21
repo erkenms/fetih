@@ -309,7 +309,7 @@ namespace Comet.Game.Magic
                 var healed = target.Character;
                 if (healed == null || target.Life.Dead)
                     return;
-                healed.HealthPoints = (ushort)Math.Min(Attributes.MaxHealth(healed), healed.HealthPoints + amount);
+                healed.HealthPoints = (ushort)Math.Min(Attributes.MaxHealth(target), healed.HealthPoints + amount);
                 await target.SendAsync(new MsgUserAttrib(target.ID, AttributeType.Health, healed.HealthPoints));
             });
             LogCast(client, spell, character.X, character.Y, 1);

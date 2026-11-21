@@ -166,11 +166,11 @@ namespace Comet.Game.Social
                 return;
             }
 
-            var joined = new MsgTeamMember(joiner.Character);
+            var joined = new MsgTeamMember(joiner.Character, Attributes.MaxHealth(joiner));
             foreach (var member in members)
             {
                 await member.SendAsync(joined);
-                await joiner.SendAsync(new MsgTeamMember(member.Character));
+                await joiner.SendAsync(new MsgTeamMember(member.Character, Attributes.MaxHealth(member)));
             }
             await joiner.SendAsync(joined);
             LogEvents.For(typeof(Teams), LogEvents.TeamJoined).Information(

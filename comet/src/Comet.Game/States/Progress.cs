@@ -107,7 +107,7 @@ namespace Comet.Game.States
                 return;
             }
 
-            ushort maxHealth = Attributes.MaxHealth(character), maxMana = Attributes.MaxMana(character);
+            ushort maxHealth = Attributes.MaxHealth(client), maxMana = Attributes.MaxMana(client);
             character.Strength = AddPoints(character.Strength, (int)strength);
             character.Agility = AddPoints(character.Agility, (int)agility);
             character.Vitality = AddPoints(character.Vitality, (int)vitality);
@@ -139,7 +139,7 @@ namespace Comet.Game.States
                 _ => character.AttributePoints,
             };
             ushort value = (ushort)Math.Clamp(relative ? current + amount : amount, 0, ushort.MaxValue);
-            ushort oldMaxHealth = Attributes.MaxHealth(character), oldMaxMana = Attributes.MaxMana(character);
+            ushort oldMaxHealth = Attributes.MaxHealth(client), oldMaxMana = Attributes.MaxMana(client);
             switch (stat)
             {
                 case Stat.Strength: character.Strength = value; break;
@@ -159,8 +159,8 @@ namespace Comet.Game.States
         private static async Task LevelChangedAsync(Client client, byte from, string reason)
         {
             var character = client.Character;
-            character.HealthPoints = Attributes.MaxHealth(character);
-            character.ManaPoints = Attributes.MaxMana(character);
+            character.HealthPoints = Attributes.MaxHealth(client);
+            character.ManaPoints = Attributes.MaxMana(client);
             await new MsgUserAttrib(client.ID)
                 .Append(AttributeType.Level, character.Level)
                 .Append(AttributeType.Experience, character.Experience)
@@ -191,7 +191,7 @@ namespace Comet.Game.States
             var character = client.Character;
             if (!client.Life.Dead)
             {
-                ushort health = Follow(character.HealthPoints, oldMaxHealth, Attributes.MaxHealth(character));
+                ushort health = Follow(character.HealthPoints, oldMaxHealth, Attributes.MaxHealth(client));
                 if (health != character.HealthPoints)
                 {
                     character.HealthPoints = health;
@@ -199,7 +199,7 @@ namespace Comet.Game.States
                 }
             }
 
-            ushort mana = Follow(character.ManaPoints, oldMaxMana, Attributes.MaxMana(character));
+            ushort mana = Follow(character.ManaPoints, oldMaxMana, Attributes.MaxMana(client));
             if (mana != character.ManaPoints)
             {
                 character.ManaPoints = mana;
@@ -219,8 +219,8 @@ namespace Comet.Game.States
                 .Append(AttributeType.Vitality, character.Vitality)
                 .Append(AttributeType.Spirit, character.Spirit)
                 .Append(AttributeType.AttributePoints, character.AttributePoints)
-                .Append(AttributeType.MaxHealth, Attributes.MaxHealth(character))
-                .Append(AttributeType.MaxMana, Attributes.MaxMana(character))
+                .Append(AttributeType.MaxHealth, Attributes.MaxHealth(client))
+                .Append(AttributeType.MaxMana, Attributes.MaxMana(client))
                 .SendEachAsync(client);
         }
 

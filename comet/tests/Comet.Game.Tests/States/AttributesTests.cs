@@ -13,7 +13,7 @@ namespace Comet.Game.Tests.States
         [Fact]
         public void HealthMatchesANewCharacter()
         {
-            Assert.Equal(318, Attributes.MaxHealth(Character(10, 4, 6, 12, 0)));
+            Assert.Equal(318, Attributes.MaxHealth(Character(10, 4, 6, 12, 0), null));
         }
 
         [Theory]
@@ -23,7 +23,7 @@ namespace Comet.Game.Tests.States
         [InlineData(25, 1200)]
         public void PromotedTrojansHaveMoreHealth(byte job, int expected)
         {
-            Assert.Equal(expected, Attributes.MaxHealth(Character(job, 0, 0, 50, 0)));
+            Assert.Equal(expected, Attributes.MaxHealth(Character(job, 0, 0, 50, 0), null));
         }
 
         [Theory]
@@ -38,7 +38,7 @@ namespace Comet.Game.Tests.States
         [Fact]
         public void ValuesStopAtTheirFieldSize()
         {
-            Assert.Equal(ushort.MaxValue, Attributes.MaxHealth(Character(15, 0, 0, 60000, 0)));
+            Assert.Equal(ushort.MaxValue, Attributes.MaxHealth(Character(15, 0, 0, 60000, 0), null));
             Assert.Equal(ushort.MaxValue, Attributes.MaxMana(Character(145, 0, 0, 0, 60000)));
         }
     }

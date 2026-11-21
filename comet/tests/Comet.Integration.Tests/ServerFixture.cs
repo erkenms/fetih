@@ -49,6 +49,9 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) PrayingStone = (1200001, "PrayingStone(M)", 1, 0);
         // The vigor of a +1 steed, from the test itemadd.ini
         public const ushort SteedVigor = 50;
+        // A necklace's health is all from its plus: a +1 HeartNecklace's, by its key in the test itemadd.ini
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Necklace = (120023, "HeartNecklace", 1, 0);
+        public const ushort NecklaceHealth = 23;
 
         // Test monsters on 1002, away from the cells other tests use. Pheasants (type 1) attack
         // only players next to them; guards (900) kill monsters within 15 cells and players who
@@ -249,9 +252,9 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed,
-                    SmallPrayingStone, PrayingStone }, new[] { Potion, ManaPotion }));
+                    SmallPrayingStone, PrayingStone, Necklace }, new[] { Potion, ManaPotion }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
-                ItemFiles.ItemAddIni((Steed.Id, 1, SteedVigor)));
+                ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
