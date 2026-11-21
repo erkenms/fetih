@@ -77,6 +77,7 @@ namespace Comet.Integration.Tests
 
         // Short, so a test can revive a dead player
         public const int ReviveSeconds = 1;
+        public const int TrainingOnlineSeconds = 2;
 
         // The market, with the booth flags of Data/npcs.json
         public const uint Market = 1036;
@@ -208,6 +209,7 @@ namespace Comet.Integration.Tests
                 "--Ground:ExpireSeconds=" + GroundExpireSeconds,
                 "--Monsters:SpawnsFile=" + Path.Combine(this.MapDirectory, "spawns.json"),
                 "--Death:ReviveSeconds=" + ReviveSeconds,
+                "--Training:OnlineSeconds=" + TrainingOnlineSeconds,
                 "--Monsters:WanderChance=0",
                 "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
                 "--Arena:InviteSeconds=" + ArenaInviteSeconds, "--Arena:CountdownSeconds=" + ArenaCountdownSeconds,
@@ -231,7 +233,8 @@ namespace Comet.Integration.Tests
                 MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
                     (Market, "map/map/market.7z"),
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
-                    (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z")));
+                    (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
+                    (601, "map/map/offlinetg.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
@@ -240,6 +243,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
+            File.WriteAllBytes(Path.Combine(maps, "offlinetg.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed,
@@ -470,6 +474,12 @@ namespace Comet.Integration.Tests
         public Task<JsonElement> WaitForLogoutSaveAsync(string name) =>
             this.WaitForEventAsync("game", "character.saved", e =>
                 e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout");
+
+        // The logout save on a map, for a player who logged out before somewhere else
+        public Task<JsonElement> WaitForLogoutSaveAsync(string name, uint mapID, int x) =>
+            this.WaitForEventAsync("game", "character.saved", e =>
+                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout" &&
+                e.GetProperty("mapId").GetUInt32() == mapID && e.GetProperty("x").GetInt32() == x);
 
         public Task<JsonElement> WaitForEventAsync(string server, string eventName, string field, string value) =>
             this.WaitForEventAsync(server, eventName,

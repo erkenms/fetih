@@ -54,6 +54,16 @@ namespace Comet.Game.Database.Models
 
         // When the heaven blessing runs out (UTC); null if never blessed or expired
         public virtual DateTime? HeavenBlessing { get; set; }
+
+        // Heaven blessing EXP not yet claimed, in MsgGodExp units (6,000,000 an EXP ball)
+        public virtual uint OnlineTrainingExp { get; set; }
+        public virtual uint BlessedHuntingExp { get; set; }
+
+        // Offline training: since when (UTC), and where to go back to after claiming
+        public virtual DateTime? OfflineTrainingSince { get; set; }
+        public virtual uint OfflineReturnMapID { get; set; }
+        public virtual ushort OfflineReturnX { get; set; }
+        public virtual ushort OfflineReturnY { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

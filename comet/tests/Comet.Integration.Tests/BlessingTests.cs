@@ -44,7 +44,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await SecondsLeftAsync(player, 9.99));
 
             await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.Servers.WaitForLogoutSaveAsync(player.User.Name, 1002, 620);
             Assert.IsType<DateTime>(await this.Servers.QueryGameScalarAsync(
                 "SELECT HeavenBlessing FROM `character` WHERE CharacterID = @id", ("@id", player.User.Id)));
             await using var again = await this.Servers.PlayAsync(email, Password);

@@ -15,6 +15,7 @@ namespace Comet.Game.Database
         public GroundConfiguration Ground { get; set; } = new GroundConfiguration();
         public MonstersConfiguration Monsters { get; set; } = new MonstersConfiguration();
         public DeathConfiguration Death { get; set; } = new DeathConfiguration();
+        public TrainingConfiguration Training { get; set; } = new TrainingConfiguration();
         public CombatConfiguration Combat { get; set; } = new CombatConfiguration();
         public PkConfiguration Pk { get; set; } = new PkConfiguration();
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
@@ -89,6 +90,12 @@ namespace Comet.Game.Database
         public class DeathConfiguration
         {
             public int ReviveSeconds { get; set; } = 20;
+        }
+
+        // How often a blessed player's online training EXP grows
+        public class TrainingConfiguration
+        {
+            public int OnlineSeconds { get; set; } = 60;
         }
 
         // The shortest time between two swings. Weapons and monster data give 500-1000 ms, which

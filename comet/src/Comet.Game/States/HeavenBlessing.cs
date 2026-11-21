@@ -8,12 +8,12 @@ namespace Comet.Game.States
     using Comet.Game.World;
     using static Comet.Game.Packets.MsgUserAttrib;
 
-    // Praying stones add days to it. While it lasts, monsters give 30% more experience and
-    // stamina goes up to 150 (Albetros 5517), and the player may revive where they died
-    // (WCO 5808). Changed on the player's own queue.
+    // Praying stones add days to it. While it lasts, as the client's tooltip says: stamina up
+    // to 150, reviving where the player died (allowed as in WCO 5808), online and offline
+    // training, and 20% extra EXP from monsters to claim (Training.GodExp). Changed on the
+    // player's own queue.
     public static class HeavenBlessing
     {
-        public const double HuntingBonus = 0.3;
         public const byte BlessedStamina = 150;
 
         // Maps where the dead go back to their reborn point anyway (WCO 5808)
@@ -38,9 +38,6 @@ namespace Comet.Game.States
             character.HeavenBlessing is DateTime until && until > now
                 ? (uint)Math.Ceiling((until - now).TotalSeconds)
                 : 0;
-
-        public static ulong HuntingExperience(ulong experience, bool blessed) =>
-            blessed ? experience + (ulong)(experience * HuntingBonus) : experience;
 
         public static byte MaxStamina(Client client) =>
             IsBlessed(client.Character, DateTime.UtcNow) ? BlessedStamina : Magic.Energy.MaxStamina;

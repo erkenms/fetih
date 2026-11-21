@@ -57,6 +57,7 @@ namespace Comet.Game.Magic
             }
 
             await HeavenBlessing.ExpireAsync(client, now);
+            await Training.GodExp.TickAsync(client, now);
 
             if (client.Life.Dead)
                 return;

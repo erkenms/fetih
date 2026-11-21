@@ -161,6 +161,9 @@ namespace Comet.Game.Packets
                 }
                 else
                     entered.HeavenBlessing = null;
+                if (entered.OnlineTrainingExp > 0 || entered.BlessedHuntingExp > 0 ||
+                    HeavenBlessing.IsBlessed(entered, DateTime.UtcNow))
+                    await Training.GodExp.SendAsync(client);
             }            
         }
 

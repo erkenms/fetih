@@ -37,12 +37,5 @@ namespace Comet.Game.Tests.States
             Assert.Equal(0u, HeavenBlessing.SecondsLeft(character, Now.AddSeconds(91)));
             Assert.False(HeavenBlessing.IsBlessed(new DbCharacter(1, "Plain"), Now));
         }
-
-        [Fact]
-        public void TheBlessedHuntForThirtyPercentMore()
-        {
-            Assert.Equal(130ul, HeavenBlessing.HuntingExperience(100, blessed: true));
-            Assert.Equal(100ul, HeavenBlessing.HuntingExperience(100, blessed: false));
-        }
     }
 }

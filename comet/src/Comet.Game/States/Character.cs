@@ -42,6 +42,12 @@ namespace Comet.Game.States
             to.Experience = from.Experience;
             to.Hairstyle = from.Hairstyle;
             to.HeavenBlessing = from.HeavenBlessing;
+            to.OnlineTrainingExp = from.OnlineTrainingExp;
+            to.BlessedHuntingExp = from.BlessedHuntingExp;
+            to.OfflineTrainingSince = from.OfflineTrainingSince;
+            to.OfflineReturnMapID = from.OfflineReturnMapID;
+            to.OfflineReturnX = from.OfflineReturnX;
+            to.OfflineReturnY = from.OfflineReturnY;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

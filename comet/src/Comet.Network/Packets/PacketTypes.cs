@@ -57,6 +57,8 @@ namespace Comet.Network.Packets
         MsgNpc,
         MsgTaskDialog,
         MsgDataArray = 2036,
+        MsgTrainingInfo = 2043,
+        MsgTraining,
         MsgTradeBuddy = 2046,
         MsgTradeBuddyInfo,
         MsgEquipLock,

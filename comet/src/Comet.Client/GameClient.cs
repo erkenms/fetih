@@ -572,6 +572,30 @@ namespace Comet.Client
             return packet == null ? null : FriendMessage.Parse(packet);
         }
 
+        public Task GodExpAsync(byte action) => this.SendAsync(GodExpMessage.Build(action));
+
+        public async Task<GodExpMessage> WaitForGodExpAsync(Func<GodExpMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgGodExp && match(GodExpMessage.Parse(p)), timeout);
+            return packet == null ? null : GodExpMessage.Parse(packet);
+        }
+
+        public Task TrainingAsync(ushort action) => this.SendAsync(TrainingMessage.Build(action));
+
+        public async Task<TrainingMessage> WaitForTrainingAsync(ushort action, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTraining && TrainingMessage.Parse(p).Action == action, timeout);
+            return packet == null ? null : TrainingMessage.Parse(packet);
+        }
+
+        public async Task<TrainingInfo> WaitForTrainingInfoAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTrainingInfo, timeout);
+            return packet == null ? null : TrainingInfo.Parse(packet);
+        }
+
         public Task PeerageAsync(ushort action, ulong data, ushort currency = 0) =>
             this.SendAsync(PeerageMessage.Build(action, data, currency));
 

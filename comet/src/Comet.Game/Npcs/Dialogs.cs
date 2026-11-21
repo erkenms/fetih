@@ -21,6 +21,7 @@ namespace Comet.Game.Npcs
                 [GuildDirector.ID] = GuildDirector.TalkAsync,
                 [ClanManager.ID] = ClanManager.TalkAsync,
                 [MountTrainer.ID] = MountTrainer.TalkAsync,
+                [OfflineTrainingAdmin.ID] = OfflineTrainingAdmin.TalkAsync,
             };
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

@@ -55,6 +55,9 @@ namespace Comet.Game.States
         public int AttackRun { get; set; }
         public DateTime NextAttackAt { get; set; }
 
+        // When the next minute of online training counts; MinValue while it doesn't run
+        public DateTime NextOnlineTrainingAt { get; set; }
+
         public PkState Pk { get; } = new PkState();
 
         // Statuses that run out: XP full and what spells give

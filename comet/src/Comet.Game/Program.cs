@@ -244,6 +244,7 @@
             
             Ground.Lifetime = TimeSpan.FromSeconds(Math.Max(1, config.Ground.ExpireSeconds));
             Combat.Death.ReviveDelay = TimeSpan.FromSeconds(Math.Max(0, config.Death.ReviveSeconds));
+            Training.GodExp.OnlineInterval = TimeSpan.FromSeconds(Math.Max(1, config.Training.OnlineSeconds));
             Combat.Attacks.PlayerInterval = TimeSpan.FromMilliseconds(Math.Max(0, config.Combat.PlayerAttackMilliseconds));
             World.MonsterAI.WanderChance = Math.Clamp(config.Monsters.WanderChance, 0, 100);
             World.MonsterAI.AttackInterval = TimeSpan.FromMilliseconds(Math.Max(0, config.Combat.MonsterAttackMilliseconds));

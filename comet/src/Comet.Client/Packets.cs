@@ -51,6 +51,9 @@ namespace Comet.Client
         public const ushort MsgWalk = 10005;
         public const ushort MsgPlayer = 10014;
         public const ushort MsgUserAttrib = 10017;
+        public const ushort MsgGodExp = 1036;
+        public const ushort MsgTrainingInfo = 2043;
+        public const ushort MsgTraining = 2044;
     }
 
     public static class TalkChannels
@@ -921,5 +924,50 @@ namespace Comet.Client
             int end = Array.IndexOf(packet, (byte)0, offset, size);
             return Encoding.Latin1.GetString(packet, offset, (end < 0 ? offset + size : end) - offset);
         }
+    }
+
+    // Heaven blessing EXP to claim, 16 bytes: action byte at 4 (0 amounts, 1/2 claim online
+    // training / blessed hunting, 3/4 a pool is full), online u32 at 8, hunting u32 at 12;
+    // 6,000,000 is an EXP ball
+    public sealed record GodExpMessage(byte Action, uint Online, uint Hunting)
+    {
+        public const byte Query = 0, ClaimOnline = 1, ClaimHunting = 2, OnlineFull = 3, HuntingFull = 4;
+        public const uint Ball = 6_000_000;
+
+        public static GodExpMessage Parse(byte[] packet) => new GodExpMessage(
+            packet[4], BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12));
+
+        public static byte[] Build(byte action)
+        {
+            var packet = Packet.Create(PacketTypes.MsgGodExp, 16);
+            packet[4] = action;
+            return packet;
+        }
+    }
+
+    // Offline training, 12 bytes: action u16 at 4 (1 enter, 2 ask for the result, 3 result,
+    // 4 claim), data u32 at 8
+    public sealed record TrainingMessage(ushort Action, uint Data)
+    {
+        public const ushort Query = 0, Enter = 1, AskResult = 2, Result = 3, Claim = 4;
+
+        public static TrainingMessage Parse(byte[] packet) =>
+            new TrainingMessage(BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt32(packet, 8));
+
+        public static byte[] Build(ushort action)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTraining, 12);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            return packet;
+        }
+    }
+
+    // The offline training result, 16 bytes: minutes trained u16 at 4, left u16 at 6, level
+    // after claiming u16 at 8, progress into it in ten-millionths u32 at 12
+    public sealed record TrainingInfo(ushort Trained, ushort Left, ushort Level, uint Progress)
+    {
+        public static TrainingInfo Parse(byte[] packet) => new TrainingInfo(
+            BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt16(packet, 6),
+            BitConverter.ToUInt16(packet, 8), BitConverter.ToUInt32(packet, 12));
     }
 }

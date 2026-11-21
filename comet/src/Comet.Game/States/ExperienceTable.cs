@@ -7,6 +7,9 @@ namespace Comet.Game.States
     public sealed class ExperienceTable
     {
         private readonly Dictionary<byte, ulong> Required;
+        private readonly Dictionary<byte, uint> UpLevTime;
+
+        public const double BallTime = 600;
 
         private sealed record LevelFile(List<LevelExp> Levels);
 
@@ -22,7 +25,9 @@ namespace Comet.Game.States
 
         public ExperienceTable(IEnumerable<LevelExp> rows)
         {
-            this.Required = rows.Where(r => r.Experience > 0).ToDictionary(r => r.Level, r => r.Experience);
+            var listed = rows.ToList();
+            this.Required = listed.Where(r => r.Experience > 0).ToDictionary(r => r.Level, r => r.Experience);
+            this.UpLevTime = listed.Where(r => r.UpLevTime > 0).ToDictionary(r => r.Level, r => r.UpLevTime);
             byte level = 1;
             while (this.Required.ContainsKey(level))
                 level++;
@@ -39,6 +44,32 @@ namespace Comet.Game.States
             experience = 0;
             return level < this.MaxLevel && this.Required.TryGetValue(level, out experience);
         }
+
+        // The experience worth this much level-up time (BallTime per EXP ball), counted from
+        // the level and experience given, through the levels it would gain (TQ's exp balls)
+        public ulong ExperienceOfTime(byte level, ulong experience, double time)
+        {
+            ulong amount = 0;
+            while (time > 0 && this.TryGetRequired(level, out var required) &&
+                this.UpLevTime.TryGetValue(level, out var upLevTime))
+            {
+                ulong left = required > experience ? required - experience : 0;
+                double leftTime = (double)left / required * upLevTime;
+                if (time < leftTime)
+                    return amount + (ulong)(time / upLevTime * required);
+                time -= leftTime;
+                amount += left;
+                experience = 0;
+                level++;
+            }
+            return amount;
+        }
+
+        // The level-up time this much experience is worth at the level
+        public double TimeOfExperience(byte level, ulong amount) =>
+            this.TryGetRequired(level, out var required) && this.UpLevTime.TryGetValue(level, out var upLevTime)
+                ? (double)amount / required * upLevTime
+                : 0;
 
         // Adds experience, levelling up while it reaches the next level. At the cap the
         // experience stays at zero, since there is no next level for it to count toward.
