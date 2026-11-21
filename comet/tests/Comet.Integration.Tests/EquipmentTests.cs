@@ -105,12 +105,31 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task TheStatQueryIsNotEchoed()
+        public async Task TheStatQueryIsAnsweredWithTheStatWindowNotEchoed()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 700, 560)).Player;
-            await player.Game.SendAsync(ActionMessage.Build(0, ActionMessage.QueryStatInfo));
+            await using var player = (await this.PlayingAtAsync(1002, 700, 560, strength: 40)).Player;
+            await player.Game.QueryStatsAsync(player.User.Id);
+            var stats = await player.Game.WaitForStatsAsync(s => s.Id == player.User.Id);
+            var user = player.User;
+            uint maxHealth = (uint)(user.Vitality * 24 + (user.Strength + user.Agility + user.Spirit) * 3);
+            Assert.Equal((maxHealth, user.Spirit * 5u, 40u, 40u, 0u, 0u, 0u, 0u, (uint)user.Agility),
+                (stats?.MaxHealth, stats?.MaxMana, stats?.MaxAttack, stats?.MinAttack, stats?.Defense,
+                    stats?.MagicAttack, stats?.MagicDefense, stats?.Dodge, stats?.Agility));
             Assert.Null(await player.Game.WaitForActionAsync(
-                ActionMessage.QueryStatInfo, 0, System.TimeSpan.FromMilliseconds(500)));
+                ActionMessage.QueryStatInfo, player.User.Id, System.TimeSpan.FromMilliseconds(300)));
+        }
+
+        [Fact]
+        public async Task TheStatWindowCountsWornItems()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 740, 620, GameMaster)).Player;
+            var bottle = await GiveAsync(player, ServerFixture.Bottle.Id);
+            await player.Game.EquipAsync(bottle.Id, 7);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, bottle.Id));
+
+            await player.Game.QueryStatsAsync(player.User.Id);
+            uint mana = player.User.Spirit * 5u + ServerFixture.Bottle.Mana;
+            Assert.NotNull(await player.Game.WaitForStatsAsync(s => s.Id == player.User.Id && s.MaxMana == mana));
         }
 
         [Fact]

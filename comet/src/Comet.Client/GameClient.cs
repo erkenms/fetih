@@ -296,6 +296,16 @@ namespace Comet.Client
         public Task ObserveAsync(uint characterId, uint targetId) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Observe, targetId));
 
+        public Task QueryStatsAsync(uint characterId) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.QueryStatInfo));
+
+        public async Task<StatWindow> WaitForStatsAsync(Func<StatWindow, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPlayerAttribInfo && match(StatWindow.Parse(p)), timeout);
+            return packet == null ? null : StatWindow.Parse(packet);
+        }
+
         public Task ViewBoothAsync(uint boothId) =>
             this.SendAsync(ItemMessage.Build(boothId, 0, ItemMessage.BoothView));
 

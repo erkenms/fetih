@@ -214,9 +214,11 @@ namespace Comet.Game.Packets
 
                 [ActionType.CharacterPartnerInfo] = (msg, client) => Social.TradePartners.InfoAsync(client, msg),
 
-                // Asks for the stat window (1040), sent after login and each equipment
-                // change. Not answered until there are stats to show.
-                [ActionType.QueryStatInfo] = (msg, client) => Task.CompletedTask,
+                // Asks for the stat window, sent after login and each equipment change.
+                // Answered with the player's own stats, not echoed.
+                [ActionType.QueryStatInfo] = (msg, client) => client.Character == null
+                    ? Task.CompletedTask
+                    : client.SendAsync(MsgPlayerAttribInfo.Of(client)),
 
                 // Albetros (5517): the client asks for a booth and opens its window on the
                 // echo. The 5619 client sends 114 after each map load (login, teleport); a
