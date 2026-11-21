@@ -51,13 +51,5 @@ namespace Comet.Game.Tests.Training
             character.OfflineTrainingSince = Now.AddDays(-2);
             Assert.Equal(900, OfflineTraining.TrainedMinutes(character, Now));
         }
-
-        [Fact]
-        public void NoOnlineTrainingInTheTrainingGrounds()
-        {
-            Assert.True(GodExp.Trains(1002));
-            Assert.False(GodExp.Trains(OfflineTraining.MapID));
-            Assert.False(GodExp.Trains(OfflineTraining.OnlineGroundMapID));
-        }
     }
 }

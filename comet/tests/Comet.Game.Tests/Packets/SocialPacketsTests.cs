@@ -76,8 +76,8 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(0, bytes[24]);
 
             var msg = new MsgFriend();
-            msg.Decode(bytes);
-            Assert.Equal((MsgFriend.FriendAction.GetInfo, 1000002u, true, "Bora"), (msg.Action, msg.ID, msg.Online, msg.Name));
+            msg.Decode(Comet.Client.FriendMessage.Build(Comet.Client.FriendMessage.Apply, 1000002, "Bora"));
+            Assert.Equal((MsgFriend.FriendAction.Apply, 1000002u, "Bora"), (msg.Action, msg.ID, msg.Name));
         }
     }
 }

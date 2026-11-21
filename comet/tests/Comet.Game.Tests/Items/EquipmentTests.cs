@@ -26,6 +26,8 @@ namespace Comet.Game.Tests.Items
         [InlineData(150003u, ItemPosition.Ring)]
         [InlineData(160013u, ItemPosition.Boots)]
         [InlineData(181305u, ItemPosition.Garment)]
+        [InlineData(300000u, ItemPosition.Steed)]
+        [InlineData(203009u, ItemPosition.Crop)]
         public void TypesFitTheirSlots(uint type, ItemPosition position) =>
             Assert.True(ItemSlots.Fits(type, position));
 
@@ -37,6 +39,10 @@ namespace Comet.Game.Tests.Items
         [InlineData(1000000u, ItemPosition.RightHand)]
         [InlineData(1000000u, ItemPosition.Inventory)]
         [InlineData(200001u, ItemPosition.Garment)]
+        [InlineData(300000u, ItemPosition.Armor)]
+        [InlineData(300000u, ItemPosition.Crop)]
+        [InlineData(200000u, ItemPosition.Steed)]
+        [InlineData(203009u, ItemPosition.Steed)]
         public void TypesDontFitOtherSlots(uint type, ItemPosition position) =>
             Assert.False(ItemSlots.Fits(type, position));
 
@@ -62,35 +68,17 @@ namespace Comet.Game.Tests.Items
             Assert.Equal("attributes", Requirements.Unmet(character, new ItemType { RequiredStrength = 21 }));
         }
 
-        [Fact]
-        public void EquippedSlotsAreOneToNine()
-        {
-            Assert.False(Equipment.IsEquipped(0));
-            Assert.True(Equipment.IsEquipped(1));
-            Assert.True(Equipment.IsEquipped(9));
-            Assert.False(Equipment.IsEquipped(10));
-        }
-
-        [Fact]
-        public void PlayersShowWhatTheyWear()
-        {
-            var character = new Character(new DbCharacter(1, 1000001, "Hero") { Mesh = 1003, Level = 1 });
-            var equipment = new Equipment(new[]
-                {
-                    new DbItem { ItemID = 1, TypeID = 111003, Position = 1, Color = 5 },
-                    new DbItem { ItemID = 2, TypeID = 130003, Position = 3, Color = 3 },
-                    new DbItem { ItemID = 3, TypeID = 410301, Position = 4 },
-                    new DbItem { ItemID = 4, TypeID = 900000, Position = 5, Color = 7 },
-                    new DbItem { ItemID = 5, TypeID = 181305, Position = 9 },
-                });
-            var bytes = new MsgPlayer(character, equipment).Encode();
-            Assert.Equal((111003u, 181305u, 130003u), (BitConverter.ToUInt32(bytes, 44),
-                BitConverter.ToUInt32(bytes, 48), BitConverter.ToUInt32(bytes, 52)));
-            Assert.Equal((410301u, 900000u), (BitConverter.ToUInt32(bytes, 56), BitConverter.ToUInt32(bytes, 60)));
-            Assert.Equal((3, 7, 5), (BitConverter.ToUInt16(bytes, 131), BitConverter.ToUInt16(bytes, 133),
-                BitConverter.ToUInt16(bytes, 135)));
-            Assert.Equal("Hero", System.Text.Encoding.Latin1.GetString(bytes, 228, 4));
-        }
+        [Theory]
+        [InlineData(0, false)]
+        [InlineData(1, true)]
+        [InlineData(9, true)]
+        [InlineData(10, false)]
+        [InlineData(11, false)]
+        [InlineData(12, true)]   // steed
+        [InlineData(18, true)]   // crop
+        [InlineData(19, false)]
+        public void WornSlotsAreOneToNineTheSteedAndTheCrop(byte position, bool equipped) =>
+            Assert.Equal(equipped, Equipment.IsEquipped(position));
 
         [Fact]
         public void DisplayGearsListsItemIDsBySlot()

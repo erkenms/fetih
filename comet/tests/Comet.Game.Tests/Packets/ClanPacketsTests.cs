@@ -20,7 +20,7 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal("Wolves", Encoding.ASCII.GetString(bytes, 18, 6));
 
             var msg = new MsgFamily();
-            msg.Decode(bytes);
+            msg.Decode(Comet.Client.FamilyMessage.Build(Comet.Client.FamilyMessage.Recruit, 1000001, "Wolves"));
             Assert.Equal((MsgFamily.FamilyAction.Recruit, 1000001u, "Wolves"), (msg.Action, msg.Data, msg.Text));
         }
 

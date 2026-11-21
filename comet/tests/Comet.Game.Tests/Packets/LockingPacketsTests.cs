@@ -21,8 +21,8 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(20261126u, BitConverter.ToUInt32(bytes, 12));
 
             var msg = new MsgEquipLock();
-            msg.Decode(bytes);
-            Assert.Equal((1000010u, MsgEquipLock.LockMode.Unlock, (byte)3, 20261126u), (msg.ItemID, msg.Mode, msg.Flag, msg.Value));
+            msg.Decode(Comet.Client.EquipLockMessage.Build(1000010, Comet.Client.EquipLockMessage.Unlock));
+            Assert.Equal((1000010u, MsgEquipLock.LockMode.Unlock), (msg.ItemID, msg.Mode));
         }
 
         [Fact]

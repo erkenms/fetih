@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Comet.Game\Comet.Game.csproj" />
-    <!-- Writes test map files -->
+    <!-- Writes test map files, and builds and parses packets as the client would, apart from the server -->
     <ProjectReference Include="..\..\src\Comet.Client\Comet.Client.csproj" />
   </ItemGroup>
 

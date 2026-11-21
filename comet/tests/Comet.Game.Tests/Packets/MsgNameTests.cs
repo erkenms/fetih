@@ -1,6 +1,7 @@
 namespace Comet.Game.Tests.Packets
 {
     using System;
+    using System.Text;
     using Comet.Game.Database.Models;
     using Comet.Game.Packets;
     using Comet.Game.States;
@@ -28,6 +29,9 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(26, bytes[8]);
             Assert.Equal(2, bytes[9]);
             Assert.Equal(5, bytes[10]);
+            Assert.Equal("Altay", Encoding.ASCII.GetString(bytes, 11, 5));
+            Assert.Equal(41, bytes[16]);
+            Assert.Equal("1000001 70 70 #Mogollar #Adamlar None 0 1", Encoding.ASCII.GetString(bytes, 17, 41));
         }
 
         [Theory]

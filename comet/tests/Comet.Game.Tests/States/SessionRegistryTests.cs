@@ -18,19 +18,6 @@ namespace Comet.Game.Tests.States
         }
 
         [Fact]
-        public void ReplaceReturnsPreviousSession()
-        {
-            var registry = new SessionRegistry<Session>();
-            var first = new Session();
-            var second = new Session();
-            registry.Replace(1, first);
-
-            Assert.Same(first, registry.Replace(1, second));
-            Assert.True(registry.TryGet(1, out var current));
-            Assert.Same(second, current);
-        }
-
-        [Fact]
         public void RemoveDeletesOwnSession()
         {
             var registry = new SessionRegistry<Session>();
@@ -42,15 +29,15 @@ namespace Comet.Game.Tests.States
         }
 
         [Fact]
-        public void StaleSessionCannotEvictReplacement()
+        public void ReplaceReturnsTheStaleSessionWhichCannotEvictItsReplacement()
         {
             // Duplicate login: the kicked client's disconnect must not remove the new one.
             var registry = new SessionRegistry<Session>();
             var stale = new Session();
             var replacement = new Session();
             registry.Replace(1, stale);
-            registry.Replace(1, replacement);
 
+            Assert.Same(stale, registry.Replace(1, replacement));
             Assert.False(registry.Remove(1, stale));
             Assert.True(registry.TryGet(1, out var current));
             Assert.Same(replacement, current);
@@ -68,8 +55,8 @@ namespace Comet.Game.Tests.States
                 registry.Remove(accountID, session);
             });
 
-            // Every session removed itself or was replaced by a session that removed
-            // itself; at most one leftover per account is impossible to keep.
+            // Each account's last Replace is followed by that session's own Remove, so
+            // nothing may be left over.
             Assert.Equal(0, registry.Count);
             Assert.Empty(registry.Values.ToList());
         }

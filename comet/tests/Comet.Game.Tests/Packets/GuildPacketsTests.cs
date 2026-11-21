@@ -27,7 +27,7 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal("Lions", Encoding.ASCII.GetString(bytes, 26, 5));
 
             var msg = new MsgSyndicate();
-            msg.Decode(bytes);
+            msg.Decode(Comet.Client.SyndicateMessage.Build(Comet.Client.SyndicateMessage.AllyRequest, 7, "Lions"));
             Assert.Equal((MsgSyndicate.SyndicateAction.AllyRequest, 7u, "Lions"), (msg.Action, msg.Data, msg.Text));
         }
 
@@ -86,7 +86,7 @@ namespace Comet.Game.Tests.Packets
         [InlineData("Two Words", "invalid_name")]
         [InlineData("[GM]Guild", "invalid_name")]
         [InlineData("ThisNameIsTooLong", "invalid_name")]
-        public void GuildNamesHaveNoSpaces(string name, string reason)
+        public void GuildNamesAreOneShortWordWithoutGmTags(string name, string reason)
         {
             Assert.Equal(reason, Guilds.CheckName(name));
         }

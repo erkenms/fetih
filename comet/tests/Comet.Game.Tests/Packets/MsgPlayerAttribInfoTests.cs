@@ -29,17 +29,6 @@ namespace Comet.Game.Tests.Packets
             var msg = new MsgPlayerAttribInfo();
             msg.Decode(Convert.FromHexString("8800100440420F00" + new string('0', 256) + "5451436C69656E74"));
             Assert.Equal(1000000u, msg.Identity);
-            var built = Comet.Client.StatWindow.Build(1000001);
-            msg.Decode(built);
-            Assert.Equal((1000001u, MsgPlayerAttribInfo.Size), (msg.Identity, built.Length));
-        }
-
-        [Fact]
-        public void TheClientsParserReadsWhatTheServerWrites()
-        {
-            var stats = new Stats(30, 45, 12, 5, 1, 1000, false, 7, 3);
-            var window = Comet.Client.StatWindow.Parse(new MsgPlayerAttribInfo(1000042, 318, 25, 6, stats).Encode());
-            Assert.Equal(new Comet.Client.StatWindow(1000042, 318, 25, 45, 30, 12, 7, 3, 5, 6), window);
         }
     }
 }

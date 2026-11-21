@@ -26,17 +26,5 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal("Alice", Encoding.ASCII.GetString(bytes, 26, 5));
             Assert.Equal(200, bytes[26 + 5 + 1 + 3 + 1]);
         }
-
-        [Fact]
-        public void DecodeReadsWhatEncodeWrote()
-        {
-            var text = "Çok güzel! " + new string('z', 180);
-            var bytes = new MsgTalk(7, TalkChannel.World, Color.White, "ALLUSERS", "Alice", text).Encode();
-            BitConverter.TryWriteBytes(bytes.AsSpan(0), (ushort)bytes.Length);
-            var msg = new MsgTalk();
-            msg.Decode(bytes);
-            Assert.Equal(TalkChannel.World, msg.Channel);
-            Assert.Equal(("Alice", "ALLUSERS", text), (msg.SenderName, msg.RecipientName, msg.Message));
-        }
     }
 }

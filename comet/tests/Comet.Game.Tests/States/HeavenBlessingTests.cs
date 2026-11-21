@@ -9,14 +9,13 @@ namespace Comet.Game.Tests.States
     {
         private static readonly DateTime Now = new DateTime(2026, 11, 21, 12, 0, 0, DateTimeKind.Utc);
 
-        [Fact]
-        public void StonesGiveThreeSevenOrThirtyDays()
-        {
-            Assert.Equal(TimeSpan.FromDays(3), HeavenBlessing.StoneDuration(1200000));
-            Assert.Equal(TimeSpan.FromDays(7), HeavenBlessing.StoneDuration(1200001));
-            Assert.Equal(TimeSpan.FromDays(30), HeavenBlessing.StoneDuration(1200002));
-            Assert.Null(HeavenBlessing.StoneDuration(1200005));
-        }
+        [Theory]
+        [InlineData(1200000u, 3)]
+        [InlineData(1200001u, 7)]
+        [InlineData(1200002u, 30)]
+        [InlineData(1200005u, null)]
+        public void StonesGiveThreeSevenOrThirtyDays(uint type, int? days) =>
+            Assert.Equal(days.HasValue ? TimeSpan.FromDays(days.Value) : null, HeavenBlessing.StoneDuration(type));
 
         [Fact]
         public void MoreTimeAddsToWhatIsLeftOrStartsNow()

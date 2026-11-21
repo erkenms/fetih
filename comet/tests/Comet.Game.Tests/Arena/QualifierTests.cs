@@ -113,12 +113,19 @@ namespace Comet.Game.Tests.Arena
         }
 
         [Fact]
+        public void NobodyWinsWhileNeitherHasAnswered() =>
+            Assert.Equal(0u, new ArenaMatch(1, 2, Now).UnansweredWinner());
+
+        [Theory]
+        [InlineData(true, 1u)]
+        [InlineData(false, 2u)]
+        public void ACoinBreaksAScoreTie(bool coin, uint winner) =>
+            Assert.Equal(winner, new ArenaMatch(1, 2, Now).WinnerByScore(coin));
+
+        [Fact]
         public void AMatchEndsOnce()
         {
             var match = new ArenaMatch(1, 2, Now);
-            Assert.Equal(0u, match.UnansweredWinner());
-            Assert.Equal(1u, match.WinnerByScore(coin: true));
-            Assert.Equal(2u, match.WinnerByScore(coin: false));
             Assert.False(match.End(3, "killed", Now));
             Assert.True(match.End(2, "gave_up", Now));
             Assert.False(match.End(1, "killed", Now));
@@ -144,7 +151,7 @@ namespace Comet.Game.Tests.Arena
         }
 
         [Fact]
-        public void PacketsHaveTheSizesTheClientAsksWith()
+        public void DetailInfoCarriesTheFightersRecord()
         {
             var fighter = new Fighter(1000002, "Altay", 1003, 52, 15, 4, 1545, 1, 2, 3, 4, 500, 1000);
             var details = new MsgQualifyingDetailInfo(fighter, QualifierStatus.Waiting).Encode();
@@ -153,7 +160,12 @@ namespace Comet.Game.Tests.Arena
                 BitConverter.ToUInt32(details, 12), BitConverter.ToUInt32(details, 16), BitConverter.ToUInt32(details, 20),
                 BitConverter.ToUInt32(details, 24), BitConverter.ToUInt32(details, 28), BitConverter.ToUInt32(details, 32),
                 BitConverter.ToUInt32(details, 36), BitConverter.ToUInt32(details, 40)));
+        }
 
+        [Fact]
+        public void FightersListIs148BytesWithTwoFightersPerMatch()
+        {
+            var fighter = new Fighter(1000002, "Altay", 1003, 52, 15, 4, 1545, 1, 2, 3, 4, 500, 1000);
             Assert.Equal(148, new MsgQualifyingFightersList { Page = 1 }.Encode().Length);
             var list = new MsgQualifyingFightersList { Page = 1, Matches = 1, Waiting = 3 };
             list.Shown.Add((fighter, fighter with { ID = 1000003 }));
@@ -161,11 +173,20 @@ namespace Comet.Game.Tests.Arena
             Assert.Equal(148, bytes.Length);
             Assert.Equal((1u, 3u, 1u), (BitConverter.ToUInt32(bytes, 12), BitConverter.ToUInt32(bytes, 16), BitConverter.ToUInt32(bytes, 24)));
             Assert.Equal((1000002u, 1000003u), (BitConverter.ToUInt32(bytes, 28), BitConverter.ToUInt32(bytes, 88)));
+        }
 
-            Assert.Equal(52, new MsgQualifyingRank().Encode().Length);
-            Assert.Equal(60, new MsgQualifyingSeasonRankList().Encode().Length);
-            Assert.Equal(MsgArenicScore.Size, new MsgArenicScore().Encode().Length);
+        [Fact]
+        public void RankIs52Bytes() => Assert.Equal(52, new MsgQualifyingRank().Encode().Length);
 
+        [Fact]
+        public void SeasonRankListIs60Bytes() => Assert.Equal(60, new MsgQualifyingSeasonRankList().Encode().Length);
+
+        [Fact]
+        public void ArenicScoreIs56Bytes() => Assert.Equal(56, new MsgArenicScore().Encode().Length);
+
+        [Fact]
+        public void RankQueriesCarryKindAndPage()
+        {
             var rank = new MsgQualifyingRank();
             rank.Decode(Convert.FromHexString("34009F08" + "0100" + "0200" + new string('0', 88)));
             Assert.Equal((MsgQualifyingRank.RankKind.Honor, (ushort)2), (rank.Kind, rank.Page));

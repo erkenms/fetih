@@ -22,7 +22,9 @@ namespace Comet.Game.Tests.Items
         [Fact]
         public void ItemsFindTheirPlusByKey()
         {
-            var table = ItemAdditionTable.Parse("120020 2 47 0 0 4 0 0 0 0\r\n444300 1 0 5 5 0 0 0 0 0\r\n");
+            var table = ItemAdditionTable.Parse(
+                "120020 2 47 0 0 4 0 0 0 0\r\n444300 1 0 5 5 0 0 0 0 0\r\nbad line\r\n");
+            Assert.Equal(2, table.Count);
             Assert.Equal(47, table.Of(120023, 2).Life);
             Assert.Equal(5, table.Of(410305, 1).MaxAttack);
             Assert.Null(table.Of(120023, 1));

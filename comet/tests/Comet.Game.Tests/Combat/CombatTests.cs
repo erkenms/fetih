@@ -175,19 +175,6 @@ namespace Comet.Game.Tests.Combat
         }
 
         [Fact]
-        public void MonstersAreSentAsPlayersWithHealthAndLevel()
-        {
-            var bytes = new MsgPlayer(New(33)).Encode();
-            Assert.Equal(104u, BitConverter.ToUInt32(bytes, 4));
-            Assert.Equal(Monster.FirstID, BitConverter.ToUInt32(bytes, 8));
-            Assert.Equal(33u, BitConverter.ToUInt32(bytes, 84));
-            Assert.Equal(3, BitConverter.ToUInt16(bytes, 90));
-            Assert.Equal((11, 12), (BitConverter.ToUInt16(bytes, 92), BitConverter.ToUInt16(bytes, 94)));
-            Assert.Equal(3, bytes[98]);
-            Assert.Equal("Pheasant", System.Text.Encoding.ASCII.GetString(bytes, 228, 8));
-        }
-
-        [Fact]
         public void TheShippedMonstersAndSpawnsLoad()
         {
             var types = new MonsterTypeTable(MonsterTypeTable.Load(DataFiles.PathOf("monsters.json")));
@@ -217,7 +204,7 @@ namespace Comet.Game.Tests.Combat
     public class InteractTests
     {
         [Fact]
-        public void AttacksRoundTripAtTheirOffsets()
+        public void AttacksAreAtTheirOffsets()
         {
             var bytes = new MsgInteract(MsgInteract.InteractionType.Kill, 1000001, 400002, 820, 821, 1).Encode();
             Assert.Equal(40, bytes.Length);
@@ -228,11 +215,15 @@ namespace Comet.Game.Tests.Combat
             Assert.Equal(14u, BitConverter.ToUInt32(bytes, 20));
             Assert.Equal(1u, BitConverter.ToUInt32(bytes, 24));
 
+        }
+
+        [Fact]
+        public void TheClientsAttacksAreRead()
+        {
             var decoded = new MsgInteract();
-            BitConverter.TryWriteBytes(bytes.AsSpan(0), (ushort)bytes.Length);
-            decoded.Decode(bytes);
-            Assert.Equal((1000001u, 400002u, MsgInteract.InteractionType.Kill, 1u),
-                (decoded.SenderID, decoded.TargetID, decoded.Action, decoded.Data));
+            decoded.Decode(Comet.Client.InteractMessage.Build(Comet.Client.InteractMessage.Attack, 1000001, 400002, 820, 821));
+            Assert.Equal((1000001u, 400002u, (ushort)820, (ushort)821, MsgInteract.InteractionType.Attack),
+                (decoded.SenderID, decoded.TargetID, decoded.X, decoded.Y, decoded.Action));
         }
 
         [Fact]

@@ -40,5 +40,14 @@ namespace Comet.Game.Tests.States
             var big = new ExperienceTable(new[] { new LevelExp { Level = 1, Experience = ulong.MaxValue } });
             Assert.Equal((2, 0UL), big.Gain(1, ulong.MaxValue - 1, 10));
         }
+
+        [Fact]
+        public void TheShippedLevelFileLoads()
+        {
+            var experience = new ExperienceTable(ExperienceTable.Load(DataFiles.PathOf("levels.json")));
+            Assert.Equal(120, experience.MaxLevel);
+            Assert.True(experience.TryGetRequired(1, out var first));
+            Assert.Equal(59UL, first);
+        }
     }
 }

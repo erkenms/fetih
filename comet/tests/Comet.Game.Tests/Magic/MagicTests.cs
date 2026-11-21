@@ -62,20 +62,18 @@ namespace Comet.Game.Tests.Magic
         private static readonly ProficiencyTable Table =
             ProficiencyTable.Parse(new[] { "1,0,0", "2,1200,600", "3,68000,600", "" });
 
-        [Fact]
-        public void TheFirstExperienceReachesLevelOne() =>
-            Assert.Equal(((ushort)1, 5u), Table.Gain(0, 0, 5));
+        [Theory]
+        [InlineData(0, 0u, 5u, 1, 5u)]            // the first experience reaches level one
+        [InlineData(1, 1100u, 200u, 2, 100u)]     // levels carry the rest over
+        [InlineData(1, 0u, 1_000_000u, 3, 0u)]    // stops at the top
+        public void ExperienceRaisesTheLevel(ushort level, uint experience, uint amount, ushort newLevel, uint left) =>
+            Assert.Equal((newLevel, left), Table.Gain(level, experience, amount));
 
         [Fact]
-        public void LevelsCarryTheRestOver() =>
-            Assert.Equal(((ushort)2, 100u), Table.Gain(1, 1100, 200));
-
-        [Fact]
-        public void StopsAtTheTop()
+        public void TheTopLevelNeedsNothing()
         {
-            Assert.Equal(((ushort)3, 0u), Table.Gain(1, 0, 1_000_000));
-            Assert.Equal(0u, Table.Needed(3));
             Assert.Equal(68000u, Table.Needed(2));
+            Assert.Equal(0u, Table.Needed(3));
         }
     }
 

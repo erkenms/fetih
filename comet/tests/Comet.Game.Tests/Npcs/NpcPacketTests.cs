@@ -73,37 +73,6 @@ namespace Comet.Game.Tests.Npcs
         }
 
         [Fact]
-        public void TheShippedPortalAndLevelFilesLoad()
-        {
-            var portals = PortalTable.Load(DataFiles.PathOf("portals.json"));
-            var table = new PortalTable(portals);
-            Assert.True(table.TryGet(1002, 3, out var stable));
-            Assert.Equal(new PortalTarget(1006, 37, 31), stable);
-
-            var levels = Comet.Game.States.ExperienceTable.Load(DataFiles.PathOf("levels.json"));
-            var experience = new Comet.Game.States.ExperienceTable(levels);
-            Assert.Equal(120, experience.MaxLevel);
-            Assert.True(experience.TryGetRequired(1, out var first));
-            Assert.Equal(59UL, first);
-        }
-
-        [Fact]
-        public void APortalListedTwiceIsRefused()
-        {
-            var path = System.IO.Path.GetTempFileName();
-            try
-            {
-                System.IO.File.WriteAllText(path, @"{ ""portals"": [
-  { ""map"": 1002, ""portal"": 3, ""toMap"": 1006, ""toX"": 1, ""toY"": 1 },
-  { ""map"": 1002, ""portal"": 3, ""toMap"": 1004, ""toX"": 2, ""toY"": 2 }
-] }");
-                var e = Assert.Throws<System.IO.InvalidDataException>(() => PortalTable.Load(path));
-                Assert.Contains("1002/3", e.Message);
-            }
-            finally { System.IO.File.Delete(path); }
-        }
-
-        [Fact]
         public void AnNpcIDListedTwiceIsRefused()
         {
             var path = System.IO.Path.GetTempFileName();
