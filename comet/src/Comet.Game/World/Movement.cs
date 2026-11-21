@@ -78,6 +78,11 @@ namespace Comet.Game.World
         {
             if (!TryGetPosition(client, out var map, out var x, out var y))
                 return;
+            if (map.Id == Training.OfflineTraining.MapID && request.CharacterID == client.ID)
+            {
+                await Training.OfflineTraining.ExitAsync(client);
+                return;
+            }
             var portal = map.Grid.PortalNear(x, y);
             PortalTarget target = default;
             string reason =

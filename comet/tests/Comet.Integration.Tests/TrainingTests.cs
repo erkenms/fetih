@@ -69,6 +69,12 @@ namespace Comet.Integration.Tests
 
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.NotNull(await again.Game.WaitForTrainingAsync(TrainingMessage.AskResult));
+            // The ground's portal doesn't let a trainee leave without the result
+            await again.Game.UsePortalAsync(again.User.Id, 82, 59);
+            var stayed = await again.Game.WaitForActionAsync(ActionMessage.Teleport, again.User.Id);
+            Assert.Equal((601u, (ushort)65, (ushort)55), (stayed?.Command, stayed?.X, stayed?.Y));
+            Assert.NotNull(await again.Game.WaitForTrainingInfoAsync());
+
             await again.Game.TrainingAsync(TrainingMessage.Result);
             var result = await again.Game.WaitForTrainingInfoAsync();
             Assert.Equal(((ushort)150, (ushort)750), (result?.Trained, result?.Left));
@@ -81,6 +87,15 @@ namespace Comet.Integration.Tests
             Assert.Equal(150, claimed.GetProperty("minutes").GetInt32());
             Assert.NotNull(await again.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(Level, out var level) && level == result.Level));
+        }
+    
+        [Fact]
+        public async Task TheTrainingGroundsPortalTakesOthersToTwinCity()
+        {
+            await using var player = (await this.PlayingAtAsync(601, 82, 59)).Player;
+            await player.Game.UsePortalAsync(player.User.Id, 82, 59);
+            var moved = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
+            Assert.Equal((1002u, (ushort)428, (ushort)378), (moved?.Command, moved?.X, moved?.Y));
         }
     }
 }

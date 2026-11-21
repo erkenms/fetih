@@ -95,6 +95,21 @@ namespace Comet.Game.Training
             return true;
         }
 
+        // The training ground's portal, which no reference lists: those training go back to
+        // the entrance and get their result to claim (claiming takes them back where they
+        // came from); others go to Twin City. Leaving the client on the portal cell would
+        // make it ask again and again.
+        public static async Task ExitAsync(Client client)
+        {
+            if (!IsTraining(client.Character))
+            {
+                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+                return;
+            }
+            await Movement.TeleportAsync(client, MapID, EntranceX, EntranceY);
+            await ShowResultAsync(client);
+        }
+
         // After logging in on the training ground: the client asks for the result
         public static async Task LoginAsync(Client client)
         {
