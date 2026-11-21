@@ -258,6 +258,7 @@
             _ = Pking.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Magic.Recovery.XpInterval = TimeSpan.FromMilliseconds(Math.Max(100, config.Magic.XpMilliseconds));
             Magic.Recovery.XpFullTime = TimeSpan.FromSeconds(Math.Max(1, config.Magic.XpFullSeconds));
+            Magic.Casting.MinimumDelay = TimeSpan.FromMilliseconds(Math.Max(0, config.Magic.MinimumCastMilliseconds));
             _ = Magic.Recovery.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Arena.Qualifier.InviteTime = TimeSpan.FromSeconds(Math.Max(1, config.Arena.InviteSeconds));
             Arena.Qualifier.CountdownTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.CountdownSeconds));

@@ -114,11 +114,13 @@ namespace Comet.Game.Database
             public int DecaySeconds { get; set; } = 360;
         }
 
-        // How fast the XP bar fills (a point each XpMilliseconds) and how long it stays full
+        // How fast the XP bar fills (a point each XpMilliseconds) and how long it stays full, and
+        // the shortest time between casts, whatever a spell's delay says
         public class MagicConfiguration
         {
             public int XpMilliseconds { get; set; } = 3000;
             public int XpFullSeconds { get; set; } = 20;
+            public int MinimumCastMilliseconds { get; set; } = 500;
         }
 
         // The qualifier: time to accept a match, the countdown before fighting, the longest
