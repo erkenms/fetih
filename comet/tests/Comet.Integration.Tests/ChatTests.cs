@@ -201,5 +201,18 @@ namespace Comet.Integration.Tests
                 e.GetProperty("name").GetString() == target.User.Name &&
                 e.GetProperty("reason").GetString() == "kicked");
         }
+
+        [Fact]
+        public async Task GameMastersCanAskTheClientToOpenAnyWindow()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 800, 940, GameMaster)).Player;
+            await CommandAsync(player, "/window 7");
+            var opened = await player.Game.WaitForActionAsync(126, player.User.Id);
+            Assert.Equal(7u, opened?.Command);
+
+            await CommandAsync(player, "/window 9 custom");
+            opened = await player.Game.WaitForActionAsync(160, player.User.Id);
+            Assert.Equal(9u, opened?.Command);
+        }
     }
 }

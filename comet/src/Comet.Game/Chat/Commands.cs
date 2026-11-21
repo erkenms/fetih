@@ -51,6 +51,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "prof" }, Authority.GameMaster, "/prof <weapon type> <level>", ProficiencyAsync),
             new Command(new[] { "xp" }, Authority.GameMaster, "/xp", XpAsync),
             new Command(new[] { "restore" }, Authority.GameMaster, "/restore", RestoreAsync),
+            new Command(new[] { "window" }, Authority.GameMaster, WindowUsage, WindowAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -258,6 +259,21 @@ namespace Comet.Game.Chat
             if (args.Length != 1 || !ulong.TryParse(args[0], out var amount) || amount == 0)
                 return await UsageAsync(client, "/exp <amount>");
             await Progress.AwardExperienceAsync(client, amount, "gm");
+            return true;
+        }
+
+        private const string WindowUsage = "/window <number> [custom]";
+
+        // Asks the client to open one of its windows, to find which number opens which: MsgAction
+        // 126, or 160 with "custom"
+        private static async Task<bool> WindowAsync(Client client, string[] args, string rest)
+        {
+            bool custom = args.Length == 2 && args[1] == "custom";
+            if (args.Length is < 1 or > 2 || args.Length == 2 && !custom || !uint.TryParse(args[0], out var window))
+                return await UsageAsync(client, WindowUsage);
+            var action = custom ? MsgAction.ActionType.ClientCustomDialog : MsgAction.ActionType.ClientDialog;
+            await client.SendAsync(MsgAction.OpenWindow(client.ID, window, client.Character.X, client.Character.Y, action));
+            await Talk.NoticeAsync(client, $"Asked the client to open window {window} ({(int)action}).");
             return true;
         }
 

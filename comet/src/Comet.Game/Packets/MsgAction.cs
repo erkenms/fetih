@@ -57,14 +57,18 @@ namespace Comet.Game.Packets
         };
 
         // The window in Command and the player's position in the arguments
-        public static MsgAction OpenWindow(uint identity, Window window, ushort x, ushort y) => new MsgAction
+        public static MsgAction OpenWindow(uint identity, Window window, ushort x, ushort y) =>
+            OpenWindow(identity, (uint)window, x, y, ActionType.ClientDialog);
+
+        // ClientDialog or ClientCustomDialog, which number the client's windows separately
+        public static MsgAction OpenWindow(uint identity, uint window, ushort x, ushort y, ActionType action) => new MsgAction
         {
             Type = PacketType.MsgAction,
             CharacterID = identity,
-            Command = (uint)window,
+            Command = window,
             Arguments = new ushort[] { x, y },
             Timestamp = (uint)Environment.TickCount,
-            Action = ActionType.ClientDialog,
+            Action = action,
         };
 
         // Command 32 opens a shop, with the shop's NPC in the timestamp field
