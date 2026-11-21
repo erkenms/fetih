@@ -252,5 +252,13 @@ namespace Comet.Game.Tests.Combat
             Assert.Equal(99u * 10_000_000 + 52001, life.Mesh(character));
             Assert.Equal(Life.DeadStatus, life.Status);
         }
+
+        [Theory]
+        [InlineData(1000ul, 10, 10, 1000ul)]   // same level: all of it
+        [InlineData(1000ul, 31, 10, 50ul)]     // over 20 levels above the monster: 5%
+        [InlineData(100000ul, 10, 10, 3600ul)] // at most 360 a level
+        [InlineData(1ul, 130, 1, 1ul)]         // at least 1
+        public void TeammatesGetTheKillBonusByTheirOwnLevel(ulong bonus, int memberLevel, int monsterLevel, ulong gained) =>
+            Assert.Equal(gained, Attacks.TeamExperience(bonus, memberLevel, monsterLevel));
     }
 }

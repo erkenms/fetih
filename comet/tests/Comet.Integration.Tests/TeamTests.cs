@@ -73,5 +73,24 @@ namespace Comet.Integration.Tests
             var ended = await this.Servers.WaitForEventAsync("game", "team.dismissed", "name", leader.User.Name);
             Assert.Equal("logout", ended.GetProperty("reason").GetString());
         }
+
+        [Fact]
+        public async Task TeammatesNearbyShareTheKillBonus()
+        {
+            var at = ServerFixture.PheasantForTeam;
+            await using var leader = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, level: 100)).Player;
+            await using var member = (await this.PlayingAtAsync(1002, at.X + 3, at.Y)).Player;
+            await CreateAsync(leader);
+            await InviteAsync(leader, member);
+
+            var pheasant = await leader.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await leader.Game.AttackAsync(leader.User.Id, pheasant.Id, at.X, at.Y);
+            Assert.NotNull(await leader.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Kill && i.Target == pheasant.Id));
+
+            var shared = await this.Servers.WaitForEventAsync("game", "team.experience", "name", member.User.Name);
+            Assert.Equal((leader.User.Name, 1), (shared.GetProperty("killer").GetString(), shared.GetProperty("experience").GetInt32()));
+            Assert.NotNull(await member.Game.WaitForAttribAsync(a => a.Values.ContainsKey(UserAttribMessage.Experience)));
+        }
     }
 }

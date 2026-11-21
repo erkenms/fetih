@@ -94,6 +94,7 @@ namespace Comet.Core.Logging
         public const string TeamLeft = "team.left";
         public const string TeamDismissed = "team.dismissed";
         public const string TeamRejected = "team.rejected";
+        public const string TeamExperience = "team.experience";
 
         public const string FriendAdded = "friend.added";
         public const string FriendRemoved = "friend.removed";

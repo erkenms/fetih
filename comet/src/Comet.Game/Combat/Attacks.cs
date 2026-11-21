@@ -162,9 +162,44 @@ namespace Comet.Game.Combat
                 await Progress.AwardExperienceAsync(client, experience, "monster");
                 await Training.GodExp.AddHuntingAsync(client, experience);
             }
+            if (killed && !type.IsGuard)
+                ShareKill(client, monster);
             if (killed)
                 await Loot.DropAsync(client, monster, x, y, Random.Shared);
         }
+
+        // TQ's (WCO): the killer's living teammates on the map within this many cells get the
+        // kill bonus as if the kill were theirs, up to 360 per level of theirs
+        public const int TeamShareDistance = 32;
+        public const int TeamShareMaxPerLevel = 360;
+
+        private static void ShareKill(Client client, Monster monster)
+        {
+            var map = client.Map;
+            var character = client.Character;
+            ushort x = character.X, y = character.Y;
+            foreach (var member in Social.Teams.OthersOf(client))
+                Kernel.Post(member, () => TeamExperienceAsync(member, character.Name, map, x, y, monster.Type));
+        }
+
+        private static async Task TeamExperienceAsync(Client member, string killer, GameMap<Client> map,
+            ushort x, ushort y, MonsterType type)
+        {
+            var character = member.Character;
+            if (character == null || member.Life.Dead || member.Map != map ||
+                MonsterAI.Distance(character.X, character.Y, x, y) > TeamShareDistance)
+                return;
+            ulong experience = TeamExperience(Damage.KillBonus(type.Life), character.Level, type.Level);
+            await Progress.AwardExperienceAsync(member, experience, "team");
+            await Chat.Talk.NoticeAsync(member, $"You gained {experience} team experience.");
+            LogEvents.For(typeof(Attacks), LogEvents.TeamExperience).Information(
+                "{Name} gained {Experience} team experience from {Killer}'s kill of {MonsterName}",
+                character.Name, experience, killer, type.Name);
+        }
+
+        public static ulong TeamExperience(ulong bonus, int memberLevel, int monsterLevel) =>
+            Math.Clamp(Damage.Experience((uint)Math.Min(bonus, uint.MaxValue), memberLevel, monsterLevel),
+                1UL, (ulong)(memberLevel * TeamShareMaxPerLevel));
 
         // Cyclone swings three times as fast
         private static TimeSpan Interval(Client client, Stats stats, DateTime now)
