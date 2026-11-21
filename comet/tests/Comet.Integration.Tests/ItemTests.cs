@@ -1,18 +1,12 @@
 namespace Comet.Integration.Tests
 {
-    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
 
     public class ItemTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public ItemTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
 
         [Fact]
         public async Task GivenItemsAreSentAndKeptAfterLogout()
@@ -30,8 +24,7 @@ namespace Comet.Integration.Tests
             Assert.Equal((item.Id, ServerFixture.Blade.Id, "gm"), (logged.GetProperty("itemId").GetUInt32(),
                 logged.GetProperty("typeId").GetUInt32(), logged.GetProperty("reason").GetString()));
 
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
             await using var again = await this.Servers.PlayAsync(email, Password);
             var kept = Assert.Single(again.Inventory);
             Assert.Equal((item.Id, ServerFixture.Blade.Id), (kept.Id, kept.TypeId));
@@ -63,9 +56,7 @@ namespace Comet.Integration.Tests
         public async Task TeleportScrollsGoToTheirCityAndAreUsedUp()
         {
             await using var player = (await this.PlayingAtAsync(1006, 30, 30, GameMaster)).Player;
-            await CommandAsync(player, "/item " + ServerFixture.TwinCityGate.Id);
-            var scroll = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.TwinCityGate.Id);
-            Assert.NotNull(scroll);
+            var scroll = await GiveAsync(player, ServerFixture.TwinCityGate.Id);
 
             await player.Game.UseAsync(scroll.Id);
             var moved = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
@@ -82,8 +73,7 @@ namespace Comet.Integration.Tests
         public async Task TeleportScrollsDontWorkInJail()
         {
             await using var player = (await this.PlayingAtAsync(6000, 30, 30, GameMaster)).Player;
-            await CommandAsync(player, "/item " + ServerFixture.TwinCityGate.Id);
-            var scroll = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.TwinCityGate.Id);
+            var scroll = await GiveAsync(player, ServerFixture.TwinCityGate.Id);
 
             await player.Game.UseAsync(scroll.Id);
             var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
@@ -96,14 +86,12 @@ namespace Comet.Integration.Tests
         {
             var (first, email) = await this.PlayingAtAsync(1002, 680, 540, GameMaster);
             var name = first.User.Name;
-            await first.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(name, 1002, 680);
+            await this.LogOutAsync(first);
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET HealthPoints = 10, ManaPoints = 0, Spirit = 100 WHERE Name = @name", ("@name", name));
             await using var player = await this.Servers.PlayAsync(email, Password);
 
-            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
-            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            var potion = await GiveAsync(player, ServerFixture.Potion.Id);
             await player.Game.UseAsync(potion.Id);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == 10u + ServerFixture.Potion.Life));
@@ -112,8 +100,7 @@ namespace Comet.Integration.Tests
             Assert.Equal((potion.Id, 70, 0), (used.GetProperty("itemId").GetUInt32(),
                 used.GetProperty("health").GetInt32(), used.GetProperty("mana").GetInt32()));
 
-            await CommandAsync(player, "/item " + ServerFixture.ManaPotion.Id);
-            var manaPotion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.ManaPotion.Id);
+            var manaPotion = await GiveAsync(player, ServerFixture.ManaPotion.Id);
             await player.Game.UseAsync(manaPotion.Id);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == ServerFixture.ManaPotion.Mana));
@@ -127,8 +114,7 @@ namespace Comet.Integration.Tests
         public async Task PotionsThatWouldRestoreNothingAreKept()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 540, GameMaster)).Player;
-            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
-            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            var potion = await GiveAsync(player, ServerFixture.Potion.Id);
 
             await player.Game.UseAsync(potion.Id);
             var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
@@ -143,10 +129,8 @@ namespace Comet.Integration.Tests
             var (first, email) = await this.PlayingAtAsync(1002, 720, 540, GameMaster);
             var name = first.User.Name;
             ushort health = first.User.HealthPoints;
-            await CommandAsync(first, "/item " + ServerFixture.Necklace.Id);
-            var necklace = await first.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Necklace.Id);
-            await first.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(name);
+            var necklace = await GiveAsync(first, ServerFixture.Necklace.Id);
+            await this.LogOutAsync(first);
             await this.Servers.ExecuteGameSqlAsync("UPDATE item SET Plus = 1 WHERE ItemID = @id", ("@id", necklace.Id));
             await using var player = await this.Servers.PlayAsync(email, Password);
             uint raised = health + (uint)ServerFixture.NecklaceHealth;
@@ -157,8 +141,7 @@ namespace Comet.Integration.Tests
                 a.Values.TryGetValue(UserAttribMessage.MaxHealth, out var max) && max == raised));
 
             // A potion fills up to the raised maximum, and taking it off cuts health down again
-            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
-            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            var potion = await GiveAsync(player, ServerFixture.Potion.Id);
             await player.Game.UseAsync(potion.Id);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == raised));
@@ -173,15 +156,13 @@ namespace Comet.Integration.Tests
         {
             await using var player = (await this.PlayingAtAsync(1002, 740, 540, GameMaster)).Player;
             uint mana = player.User.Spirit * 5u;
-            await CommandAsync(player, "/item " + ServerFixture.Bottle.Id);
-            var bottle = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Bottle.Id);
+            var bottle = await GiveAsync(player, ServerFixture.Bottle.Id);
 
             await player.Game.EquipAsync(bottle.Id, 7);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.MaxMana, out var max) && max == mana + ServerFixture.Bottle.Mana));
 
-            await CommandAsync(player, "/item " + ServerFixture.ManaPotion.Id);
-            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.ManaPotion.Id);
+            var potion = await GiveAsync(player, ServerFixture.ManaPotion.Id);
             await player.Game.UseAsync(potion.Id);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == mana + ServerFixture.ManaPotion.Mana));

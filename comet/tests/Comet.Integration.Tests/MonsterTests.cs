@@ -9,7 +9,6 @@ namespace Comet.Integration.Tests
     // The test spawns from ServerFixture: pheasants and guards on 1002 past (800, 800)
     public class MonsterTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
 
         public MonsterTests(ServerFixture servers) : base(servers) { }
 
@@ -54,9 +53,9 @@ namespace Comet.Integration.Tests
             var at = ServerFixture.PheasantToShoot;
             await using var player = (await this.PlayingAtAsync(1002, at.X + 2, at.Y, GameMaster)).Player;
             var pheasant = await MonsterAtAsync(player, at);
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.Bow.Id);
+            await CommandAsync(player, "/item " + ServerFixture.Bow.Id);
             var bow = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Bow.Id);
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.Arrows.Id);
+            await CommandAsync(player, "/item " + ServerFixture.Arrows.Id);
             var arrows = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Arrows.Id);
             await player.Game.EquipAsync(bow.Id, 4);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, bow.Id));
@@ -109,8 +108,7 @@ namespace Comet.Integration.Tests
             await player.Game.AttackAsync(player.User.Id, guard.Id, at.X, at.Y);
             var refused = await this.Servers.WaitForEventAsync("game", "combat.rejected", "name", player.User.Name);
             Assert.Equal("guard_not_free_pk", refused.GetProperty("reason").GetString());
-            await player.Game.SendAsync(ActionMessage.Build(player.User.Id, ActionMessage.PkMode, command: 0));
-            Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.PkMode, player.User.Id));
+            await FreePkAsync(player);
             await player.Game.AttackAsync(player.User.Id, guard.Id, at.X, at.Y);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0));

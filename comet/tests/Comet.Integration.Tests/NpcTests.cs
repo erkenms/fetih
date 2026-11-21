@@ -1,6 +1,5 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
@@ -10,7 +9,6 @@ namespace Comet.Integration.Tests
     // Twin City's NPCs come from the seeded npc table
     public class NpcTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021;
 
         public NpcTests(ServerFixture servers) : base(servers) { }
@@ -21,7 +19,8 @@ namespace Comet.Integration.Tests
             await using var player = (await this.PlayingAtAsync(1002, 436, 436)).Player;
             var npc = await player.Game.WaitForNpcAsync(Conductress);
             Assert.Equal(((ushort)435, (ushort)440, (ushort)280, (ushort)29), (npc?.X, npc?.Y, npc?.Lookface, npc?.Role));
-            Assert.Null(await player.Game.WaitForNpcAsync(Warehouseman, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForNpcAsync(Warehouseman, Already));
 
             await player.Game.JumpAsync(player.User.Id, 436, 436, 420, 425);
             await player.Game.JumpAsync(player.User.Id, 420, 425, 410, 410);
@@ -53,15 +52,16 @@ namespace Comet.Integration.Tests
         public async Task TheConductressWantsHerFare()
         {
             await using var player = (await this.PlayingAtAsync(1002, 437, 436, GameMaster)).Player;
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/silver -950");
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 50));
+            await CommandAsync(player, "/silver -950");
+            Assert.NotNull(await SilverAsync(player, 50));
 
             await player.Game.TalkToNpcAsync(Conductress);
             Assert.NotNull(await player.Game.ReadDialogAsync());
             await player.Game.AnswerNpcAsync(1);
             var page = await player.Game.ReadDialogAsync();
             Assert.Contains("do not have 100 silver", page?[0].Text);
-            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Already));
         }
 
         [Fact]
@@ -73,9 +73,10 @@ namespace Comet.Integration.Tests
             Assert.Contains("nothing to say", page?[0].Text);
 
             await player.Game.TalkToNpcAsync(Guard);
-            Assert.Null(await player.Game.ReadDialogAsync(TimeSpan.FromMilliseconds(300)));
             var refused = await this.Servers.WaitForEventAsync("game", "npc.rejected", "name", player.User.Name);
             Assert.Equal("too_far", refused.GetProperty("reason").GetString());
+            await SyncAsync(player);
+            Assert.Null(await player.Game.ReadDialogAsync(Already));
         }
 
         [Fact]
@@ -86,8 +87,9 @@ namespace Comet.Integration.Tests
             var page = await player.Game.ReadDialogAsync();
             Assert.Contains("50 silver", page?[0].Text);
             await player.Game.AnswerNpcAsync(1);
-            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, TimeSpan.FromMilliseconds(300)));
-            Assert.Null(await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(Silver), TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Already));
+            Assert.Null(await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(Silver), Already));
         }
 
         [Fact]
@@ -98,7 +100,8 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.ReadDialogAsync());
             await player.Game.AnswerNpcAsync(DialogMessage.NoOption);
             await player.Game.AnswerNpcAsync(1);
-            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, TimeSpan.FromMilliseconds(500)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Already));
         }
     }
 }

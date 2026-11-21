@@ -8,12 +8,7 @@ namespace Comet.Integration.Tests
 
     public class ProgressTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public ProgressTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
 
         private static Task<UserAttribMessage> AttribAsync(Player player, uint type, ulong value) =>
             player.Game.WaitForAttribAsync(a =>
@@ -43,8 +38,7 @@ namespace Comet.Integration.Tests
             await CommandAsync(player, "/exp 5");
             Assert.NotNull(await AttribAsync(player, Experience, 15));
 
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.Equal((3, 15UL, 6), (again.User.Level, again.User.Experience, again.User.AttributePoints));
         }
@@ -107,15 +101,20 @@ namespace Comet.Integration.Tests
             await using var player = (await this.PlayingAtAsync(1002, 700, 520, GameMaster)).Player;
             await CommandAsync(player, "/silver 250");
             Assert.NotNull(await AttribAsync(player, Silver, 1250));
-
-            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(ServerFixture.SaveIntervalSeconds * 5);
-            while (Convert.ToUInt32(await this.Servers.QueryGameScalarAsync(
-                "SELECT Silver FROM `character` WHERE Name = @name", ("@name", player.User.Name))) != 1250)
+            // The first save logged from here may have read the character before the command;
+            // the one after it can't have
+            int mark = this.Servers.Mark();
+            for (int save = 0; save < 2; save++)
             {
-                Assert.True(DateTime.UtcNow < deadline, "The character wasn't saved while online");
-                await Task.Delay(100);
+                await this.Servers.WaitForEventAsync("game", "character.saved", e =>
+                    e.GetProperty("name").GetString() == player.User.Name && e.GetProperty("reason").GetString() == "periodic",
+                    TimeSpan.FromSeconds(ServerFixture.SaveIntervalSeconds * 3), mark);
+                mark = this.Servers.Mark();
+                if (Convert.ToUInt32(await this.Servers.QueryGameScalarAsync(
+                    "SELECT Silver FROM `character` WHERE Name = @name", ("@name", player.User.Name))) == 1250)
+                    return;
             }
-            await this.Servers.WaitForEventAsync("game", "character.save_round", _ => true);
+            Assert.Fail("The character wasn't saved with its silver while online");
         }
     }
 }

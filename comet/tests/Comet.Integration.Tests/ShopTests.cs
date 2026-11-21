@@ -1,22 +1,16 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
-    using static Comet.Client.UserAttribMessage;
 
     // The test Shop.dat has Twin City's Blacksmith sell blades and glaives, and its
     // Pharmacist potions; every test item costs ItemFiles.TestPrice
     public class ShopTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint Blacksmith = ServerFixture.Blacksmith, Pharmacist = ServerFixture.Pharmacist;
 
         public ShopTests(ServerFixture servers) : base(servers) { }
-
-        private static Task<UserAttribMessage> SilverAsync(Player player, ulong silver) =>
-            player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == silver);
 
         [Fact]
         public async Task TalkingToAShopkeeperOpensTheShop()
@@ -25,7 +19,8 @@ namespace Comet.Integration.Tests
             await player.Game.TalkToNpcAsync(Blacksmith);
             var open = await player.Game.WaitForActionAsync(ActionMessage.OpenShop, player.User.Id);
             Assert.Equal((32u, Blacksmith), (open?.Command, open?.Timestamp));
-            Assert.Null(await player.Game.ReadDialogAsync(TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.ReadDialogAsync(Already));
         }
 
         [Fact]
@@ -52,14 +47,15 @@ namespace Comet.Integration.Tests
             await player.Game.BuyAsync(Blacksmith, ServerFixture.Potion.Id);
             var refused = await this.Servers.WaitForEventAsync("game", "item.shop_rejected", "name", player.User.Name);
             Assert.Equal("not_sold_here", refused.GetProperty("reason").GetString());
-            Assert.Null(await player.Game.WaitForItemAsync(_ => true, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForItemAsync(_ => true, Already));
         }
 
         [Fact]
         public async Task BuyingNeedsTheSilver()
         {
             await using var player = (await this.PlayingAtAsync(1002, 452, 339, GameMaster)).Player;
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/silver -990");
+            await CommandAsync(player, "/silver -990");
             Assert.NotNull(await SilverAsync(player, 10));
             await player.Game.BuyAsync(Pharmacist, ServerFixture.Potion.Id);
             var refused = await this.Servers.WaitForEventAsync("game", "item.shop_rejected", "name", player.User.Name);

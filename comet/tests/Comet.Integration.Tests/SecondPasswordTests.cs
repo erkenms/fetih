@@ -8,7 +8,6 @@ namespace Comet.Integration.Tests
 
     public class SecondPasswordTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint Warehouseman = 8;
 
         public SecondPasswordTests(ServerFixture servers) : base(servers) { }
@@ -17,16 +16,14 @@ namespace Comet.Integration.Tests
         public async Task ThePasswordGuardsTheWarehouseAndUnlockingUntilGiven()
         {
             var (player, email) = await this.PlayingAtAsync(1002, 410, 358, GameMaster);
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.Blade.Id);
-            var blade = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.LockAsync(blade.Id);
             Assert.NotNull(await player.Game.WaitForEquipLockAsync(l => l.Mode == EquipLockMessage.Lock));
             await player.Game.PasswordAsync(PasswordMessage.Set, 0, 1234);
             var set = await player.Game.WaitForPasswordAsync(p => p.Request == PasswordMessage.Correct);
             Assert.Equal(PasswordMessage.HasPassword | PasswordMessage.Verified, set?.Password);
             await this.Servers.WaitForEventAsync("game", "second_password.set", "name", player.User.Name);
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
 
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.NotNull(await again.Game.WaitForPasswordAsync(p =>
@@ -34,10 +31,11 @@ namespace Comet.Integration.Tests
             await again.Game.SendPackageAsync(Warehouseman, PackageMessage.Deposit, blade.Id);
             Assert.NotNull(await again.Game.WaitForTalkAsync(t => t.Text == "Please input the secondary password."));
             Assert.NotNull(await again.Game.WaitForPasswordAsync(p => p.Password == PasswordMessage.HasPassword));
-            Assert.Null(await again.Game.WaitForItemActionAsync(ItemMessage.Remove, blade.Id, TimeSpan.FromMilliseconds(300)));
             await again.Game.UnlockAsync(blade.Id);
             Assert.NotNull(await again.Game.WaitForPasswordAsync(p => p.Password == PasswordMessage.HasPassword));
-            Assert.Null(await again.Game.WaitForEquipLockAsync(_ => true, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(again);
+            Assert.Null(await again.Game.WaitForItemActionAsync(ItemMessage.Remove, blade.Id, Already));
+            Assert.Null(await again.Game.WaitForEquipLockAsync(_ => true, Already));
 
             await again.Game.PasswordAsync(PasswordMessage.Verify, 0, 9999);
             Assert.NotNull(await again.Game.WaitForPasswordAsync(p => p.Request == PasswordMessage.Wrong));

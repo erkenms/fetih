@@ -9,7 +9,6 @@ namespace Comet.Integration.Tests
     public class GuildTests : IntegrationTest
     {
         private const uint GuildDirector = 10003;
-        private const ushort GameMaster = 3;
         private const uint Silver = 4;
         private const uint Leader = 1000, Member = 200;
 
@@ -21,7 +20,7 @@ namespace Comet.Integration.Tests
         private async Task<(Player Player, string Email)> FounderAsync(int x, int y)
         {
             var (player, email) = await this.PlayingAtAsync(1002, x, y, GameMaster, level: 90);
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/silver 1000000");
+            await CommandAsync(player, "/silver 1000000");
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 1_001_000));
             return (player, email);
         }
@@ -90,8 +89,7 @@ namespace Comet.Integration.Tests
             Assert.Equal("kicked", left.GetProperty("reason").GetString());
 
             // The guild outlives the leader's session
-            await founder.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(founder.User.Name);
+            await this.LogOutAsync(founder);
             await using var again = await this.Servers.PlayAsync(founderEmail, Password);
             Assert.Equal((guildID, Leader, 500_100ul), (again.Game.Guild?.GuildId, again.Game.Guild?.Rank, again.Game.Guild?.Fund));
         }

@@ -31,36 +31,19 @@ namespace Comet.Integration.Tests
             Assert.True((await this.Servers.LoginAsync(email, Password)).Accepted);
         }
 
-        [Theory]
-        [InlineData("")]
-        [InlineData("not-an-email")]
-        [InlineData("player@localhost")]
-        [InlineData("two words@example.com")]
-        [InlineData("player@@example.com")]
-        public async Task RefusesNamesThatArentEmailAddresses(string username)
+        // The rules themselves are in AccountRulesTests; these check the repository applies them
+        [Fact]
+        public async Task RefusesNamesThatArentEmailAddresses()
         {
-            var (account, error) = await AccountsRepository.CreateAsync(username, Password);
+            var (account, error) = await AccountsRepository.CreateAsync("not-an-email", Password);
             Assert.Null(account);
             Assert.Equal("invalid_username", error);
         }
 
         [Fact]
-        public async Task RefusesNamesLongerThanTheClientSends()
+        public async Task RefusesPasswordsOutsideTheRules()
         {
-            var email = new string('a', 120) + "@x.example";
-            var (account, error) = await AccountsRepository.CreateAsync(email, Password);
-            Assert.Null(account);
-            Assert.Equal("invalid_username", error);
-        }
-
-        [Theory]
-        [InlineData("")]
-        [InlineData("12345")]
-        [InlineData("seventeen-chars-x")]
-        [InlineData("şifre12")]
-        public async Task RefusesPasswordsOutsideTheRules(string password)
-        {
-            var (account, error) = await AccountsRepository.CreateAsync(this.Servers.NewEmail(), password);
+            var (account, error) = await AccountsRepository.CreateAsync(this.Servers.NewEmail(), "12345");
             Assert.Null(account);
             Assert.Equal("invalid_password", error);
         }

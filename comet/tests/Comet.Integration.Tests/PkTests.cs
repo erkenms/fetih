@@ -1,7 +1,6 @@
 namespace Comet.Integration.Tests
 {
     using System;
-    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -9,14 +8,10 @@ namespace Comet.Integration.Tests
 
     public class PkTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint JailMap = 6000, Warden = 42;
         private static readonly TimeSpan Slow = TimeSpan.FromSeconds(15);
 
         public PkTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
 
         private static Task<UserAttribMessage> AttribAsync(
             Player watcher, uint id, uint type, ulong value, TimeSpan? timeout = null) =>
@@ -60,8 +55,7 @@ namespace Comet.Integration.Tests
             Assert.Equal("gm", logged.GetProperty("reason").GetString());
 
             // Coming back: the points are saved, and others see the black name in the spawn
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.InRange(again.User.PkPoints, 140, 150);
             Assert.NotNull(await observer.Game.WaitForSpawnAsync(id, s => s.Status == BlackName));

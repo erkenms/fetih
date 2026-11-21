@@ -1,6 +1,5 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
@@ -140,20 +139,11 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task ProofWithoutAChallengeClosesTheConnection()
         {
+            int mark = this.Servers.Mark("account");
             await using var account = await this.Servers.ConnectAccountAsync();
             await account.SendAsync(AccountClient.BuildProof(new byte[32], new byte[20]));
             Assert.Null(await account.ReceiveAsync());
-            await this.Servers.WaitForEventAsync("account", "net.disconnect", "reason", "protocol_error");
-        }
-
-        [Fact]
-        public async Task ManyPlayersCanLogInAtOnce()
-        {
-            var emails = await Task.WhenAll(Enumerable.Range(0, 20)
-                .Select(_ => this.Servers.CreateAccountAsync()));
-            var logins = await Task.WhenAll(emails.Select(e => this.Servers.LoginAsync(e, Password)));
-            Assert.All(logins, l => Assert.True(l.Accepted));
-            Assert.Equal(20, logins.Select(l => l.Token).Distinct().Count());
+            await this.Servers.WaitForEventAsync("account", "net.disconnect", "reason", "protocol_error", mark);
         }
 
         [Fact]

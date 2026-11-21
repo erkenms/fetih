@@ -9,20 +9,10 @@ namespace Comet.Integration.Tests
     // Players fighting players, in Desert City unless a test is about the map
     public class PvpTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint JailMap = 6000;
         private const uint DesertCity = ServerFixture.DesertCity, PkField = ServerFixture.PkField;
 
         public PvpTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
-
-        private static async Task FreePkAsync(Player player)
-        {
-            await player.Game.SendAsync(ActionMessage.Build(player.User.Id, ActionMessage.PkMode, command: 0));
-            Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.PkMode, player.User.Id));
-        }
 
         private Task<System.Text.Json.JsonElement> RejectedAsync(Player player) =>
             this.Servers.WaitForEventAsync("game", "combat.rejected", "name", player.User.Name);
@@ -41,16 +31,17 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await attacker.Game.WaitForAttribAsync(a =>
                 a.Id == victim.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0));
             await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 101, 100);
+            // With no dodge every swing hits, for at least 1
             var hit = await victim.Game.WaitForInteractAsync(i => i.Sender == attacker.User.Id && i.Target == victim.User.Id);
             Assert.Equal(InteractMessage.Attack, hit?.Action);
+            Assert.True(hit.Data > 0);
             var turn = await watcher.Game.WaitForActionAsync(ActionMessage.Turn, victim.User.Id);
             Assert.Equal((ushort)2, turn?.Direction);
-            Assert.Null(await victim.Game.WaitForActionAsync(
-                ActionMessage.Turn, victim.User.Id, TimeSpan.FromMilliseconds(300)));
+            // The turn goes out before the hit, and not to the one turning
+            Assert.Null(await victim.Game.WaitForActionAsync(ActionMessage.Turn, victim.User.Id, Already));
             Assert.NotNull(await attacker.Game.WaitForInteractAsync(i => i.Sender == attacker.User.Id && i.Target == victim.User.Id));
-            if (hit.Data > 0)
-                Assert.NotNull(await victim.Game.WaitForAttribAsync(a =>
-                    a.Values.TryGetValue(Health, out var hp) && hp == victim.User.HealthPoints - hit.Data));
+            Assert.NotNull(await victim.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(Health, out var hp) && hp == victim.User.HealthPoints - hit.Data));
         }
 
         [Fact]
@@ -84,8 +75,9 @@ namespace Comet.Integration.Tests
 
             await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, 701, 700);
             Assert.Equal("peaceful_map", (await RejectedAsync(attacker)).GetProperty("reason").GetString());
-            Assert.Null(await victim.Game.WaitForInteractAsync(
-                i => i.Target == victim.User.Id, TimeSpan.FromMilliseconds(500)));
+            // A hit would have been queued for the victim before the refusal was logged
+            await SyncAsync(victim);
+            Assert.Null(await victim.Game.WaitForInteractAsync(i => i.Target == victim.User.Id, Already));
         }
 
         [Fact]
@@ -101,9 +93,9 @@ namespace Comet.Integration.Tests
             Assert.Equal(attacker.User.Id, kill?.Sender);
             var pk = await this.Servers.WaitForEventAsync("game", "pk.kill", "name", attacker.User.Name);
             Assert.Equal("no_crime", pk.GetProperty("crime").GetString());
+            await SyncAsync(attacker);
             Assert.Null(await attacker.Game.WaitForAttribAsync(a =>
-                a.Id == attacker.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0,
-                TimeSpan.FromMilliseconds(300)));
+                a.Id == attacker.User.Id && a.Values.TryGetValue(Status, out var s) && (s & Flashing) != 0, Already));
         }
 
         [Fact]

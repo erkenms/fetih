@@ -7,18 +7,9 @@ namespace Comet.Integration.Tests
 
     public class EquipmentTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint RightHand = 4, LeftHand = 5, Headwear = 1;
 
         public EquipmentTests(ServerFixture servers) : base(servers) { }
-
-        private static async Task<ItemInfo> GiveAsync(Player player, uint type)
-        {
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + type);
-            var item = await player.Game.WaitForItemAsync(i => i.TypeId == type);
-            Assert.NotNull(item);
-            return item;
-        }
 
         private Task<object> PositionAsync(uint itemId) =>
             this.Servers.QueryGameScalarAsync("SELECT Position FROM item WHERE ItemID = @id", ("@id", itemId));
@@ -40,8 +31,7 @@ namespace Comet.Integration.Tests
             Assert.Equal(blade.Id, gears?.Gears[RightHand - 1]);
             Assert.Equal(4, System.Convert.ToInt32(await this.PositionAsync(blade.Id)));
 
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
             await using var again = await this.Servers.PlayAsync(email, Password);
             var kept = Assert.Single(again.Inventory);
             Assert.Equal((blade.Id, (ushort)RightHand), (kept.Id, kept.Position));
@@ -100,8 +90,8 @@ namespace Comet.Integration.Tests
                 (worn?.BoothId, worn?.TypeId, worn?.View, worn?.Position));
             var spouse = await observer.Game.WaitForNameAsync(n => n.Action == NameMessage.Spouse);
             Assert.Equal((player.User.Id, "None"), (spouse?.Data, spouse?.Strings.FirstOrDefault()));
-            Assert.Null(await observer.Game.WaitForActionAsync(
-                ActionMessage.Observe, observer.User.Id, System.TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(observer);
+            Assert.Null(await observer.Game.WaitForActionAsync(ActionMessage.Observe, observer.User.Id, Already));
         }
 
         [Fact]
@@ -115,8 +105,8 @@ namespace Comet.Integration.Tests
             Assert.Equal((maxHealth, user.Spirit * 5u, 40u, 40u, 0u, 0u, 0u, 0u, (uint)user.Agility),
                 (stats?.MaxHealth, stats?.MaxMana, stats?.MaxAttack, stats?.MinAttack, stats?.Defense,
                     stats?.MagicAttack, stats?.MagicDefense, stats?.Dodge, stats?.Agility));
-            Assert.Null(await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Missing packet"),
-                System.TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Missing packet"), Already));
         }
 
         [Fact]
@@ -125,8 +115,8 @@ namespace Comet.Integration.Tests
             await using var player = (await this.PlayingAtAsync(1002, 760, 600)).Player;
             await player.Game.SendAsync(ActionMessage.Build(player.User.Id, ActionMessage.QueryStatInfo));
             Assert.NotNull(await player.Game.WaitForStatsAsync(s => s.Id == player.User.Id));
-            Assert.Null(await player.Game.WaitForActionAsync(
-                ActionMessage.QueryStatInfo, player.User.Id, System.TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.QueryStatInfo, player.User.Id, Already));
         }
 
         [Fact]
@@ -140,7 +130,8 @@ namespace Comet.Integration.Tests
 
             // Nobody online by that ID: nothing
             await observer.Game.QueryStatsAsync(999);
-            Assert.Null(await observer.Game.WaitForStatsAsync(s => s.Id == 999, System.TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(observer);
+            Assert.Null(await observer.Game.WaitForStatsAsync(s => s.Id == 999, Already));
         }
 
         [Fact]
@@ -164,7 +155,8 @@ namespace Comet.Integration.Tests
             await player.Game.EquipAsync(helmet.Id, Headwear);
             var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", helmet.Id.ToString());
             Assert.Equal("level", rejected.GetProperty("reason").GetString());
-            Assert.Null(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, helmet.Id, System.TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, helmet.Id, Already));
             Assert.Equal(0, System.Convert.ToInt32(await this.PositionAsync(helmet.Id)));
         }
 

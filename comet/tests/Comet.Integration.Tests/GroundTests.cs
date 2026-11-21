@@ -4,21 +4,10 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
-    using static Comet.Client.UserAttribMessage;
 
     public class GroundTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public GroundTests(ServerFixture servers) : base(servers) { }
-
-        private static async Task<ItemInfo> GiveAsync(Player player, uint type)
-        {
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + type);
-            var item = await player.Game.WaitForItemAsync(i => i.TypeId == type);
-            Assert.NotNull(item);
-            return item;
-        }
 
         private Task<object> ItemColumnAsync(string column, uint itemId) =>
             this.Servers.QueryGameScalarAsync($"SELECT {column} FROM item WHERE ItemID = @id", ("@id", itemId));
@@ -56,7 +45,7 @@ namespace Comet.Integration.Tests
         {
             await using var player = (await this.PlayingAtAsync(1002, 640, 580)).Player;
             await player.Game.DropSilverAsync(100);
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 900));
+            Assert.NotNull(await SilverAsync(player, 900));
             var pile = await player.Game.WaitForGroundItemAsync(g => g.Action == GroundItemMessage.Create);
             Assert.Equal(1090010u, pile?.TypeId);
 
@@ -65,26 +54,26 @@ namespace Comet.Integration.Tests
             Assert.Equal("not_enough_silver", refused.GetProperty("reason").GetString());
 
             await player.Game.PickUpAsync(pile.Id, pile.X, pile.Y);
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 1000));
+            Assert.NotNull(await SilverAsync(player, 1000));
         }
 
         [Fact]
         public async Task PlayersDropSilverWithACommand()
         {
             await using var player = (await this.PlayingAtAsync(1002, 640, 600)).Player;
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop 300");
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 700));
+            await CommandAsync(player, "/drop 300");
+            Assert.NotNull(await SilverAsync(player, 700));
             var pile = await player.Game.WaitForGroundItemAsync(g => g.Action == GroundItemMessage.Create);
             Assert.Equal(1090020u, pile?.TypeId);
             var logged = await this.Servers.WaitForEventAsync("game", "chat.command", "name", player.User.Name);
             Assert.Equal(("drop", "ok"), (logged.GetProperty("command").GetString(), logged.GetProperty("result").GetString()));
 
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop 5000");
+            await CommandAsync(player, "/drop 5000");
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("only 700 silver")));
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/drop lots");
+            await CommandAsync(player, "/drop lots");
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("/drop <silver>")));
 
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/help");
+            await CommandAsync(player, "/help");
             var help = await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Commands:"));
             Assert.Equal("Commands: /help, /drop <silver>, /closebooth", help?.Text);
         }

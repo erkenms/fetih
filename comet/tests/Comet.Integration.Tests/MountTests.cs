@@ -8,19 +8,12 @@ namespace Comet.Integration.Tests
     // Steeds and the Riding skill, with the test Steed and Riding of ServerFixture
     public class MountTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint SteedSlot = 12, CropSlot = 18;
         private const ushort RidingSkill = 7001;
         private const ulong RidingStatus = 1UL << 50;
         private const uint MountTrainer = 5600;
 
-        // Casting.MinimumDelay, with some slack
-        private const int MinimumCastDelay = 600;
-
         public MountTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
 
         private static Task<UserAttribMessage> RidingAsync(Player observer, uint riderId, bool riding) =>
             observer.Game.WaitForAttribAsync(a => a.Id == riderId &&
@@ -82,7 +75,6 @@ namespace Comet.Integration.Tests
             var refused = await this.Servers.WaitForEventAsync("game", "move.rejected", "name", rider.User.Name);
             Assert.Equal("not_riding", refused.GetProperty("reason").GetString());
 
-            await Task.Delay(MinimumCastDelay);
             await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 20, 82);
             Assert.NotNull(await RidingAsync(watcher, rider.User.Id, true));
             await rider.Game.UnequipAsync(steed.Id, SteedSlot);
@@ -98,8 +90,7 @@ namespace Comet.Integration.Tests
             await CommandAsync(rider, "/learn 7001");
             Assert.NotNull(await rider.Game.WaitForMagicInfoAsync(m => m.Type == RidingSkill));
             await EquipSteedAsync(rider, 1);
-            await CommandAsync(rider, $"/item {ServerFixture.Crop.Id}");
-            var crop = await rider.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Crop.Id);
+            var crop = await GiveAsync(rider, ServerFixture.Crop.Id);
             rider.Game.ForgetKept();    // the steed's DisplayGears
             await rider.Game.EquipAsync(crop.Id, CropSlot);
             Assert.NotNull(await rider.Game.WaitForItemActionAsync(ItemMessage.Equipped, crop.Id));
@@ -109,13 +100,11 @@ namespace Comet.Integration.Tests
             await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
             Assert.NotNull(await rider.Game.WaitForVigorAsync(v => v == ServerFixture.SteedVigor + ServerFixture.CropVigor));
             await rider.Game.AttackAsync(rider.User.Id, target.User.Id, 30, 81);
-            await Task.Delay(MinimumCastDelay);
             await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
             var ended = await this.Servers.WaitForEventAsync("game", "mount.ended", "name", rider.User.Name);
             Assert.Equal("magic", ended.GetProperty("reason").GetString());
 
             // Taking the crop off brings the vigor down to the steed's
-            await Task.Delay(MinimumCastDelay);
             await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
             Assert.NotNull(await RidingAsync(rider, rider.User.Id, true));
             await rider.Game.UnequipAsync(crop.Id, CropSlot);
@@ -145,13 +134,13 @@ namespace Comet.Integration.Tests
         {
             await using var player = (await this.PlayingAtAsync(1002, 390, 388, GameMaster)).Player;
             await CommandAsync(player, "/silver +49000");
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 50000));
+            Assert.NotNull(await SilverAsync(player, 50000));
 
             await player.Game.TalkToNpcAsync(MountTrainer);
             Assert.Contains("50,000 silver", (await player.Game.ReadDialogAsync())?[0].Text);
             await player.Game.AnswerNpcAsync(1);
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == RidingSkill));
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 0));
+            Assert.NotNull(await SilverAsync(player, 0));
             Assert.Contains("learned Riding", (await player.Game.ReadDialogAsync())?[0].Text);
 
             await player.Game.TalkToNpcAsync(MountTrainer);

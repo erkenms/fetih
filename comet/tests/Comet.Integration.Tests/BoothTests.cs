@@ -4,22 +4,17 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
-    using static Comet.Client.UserAttribMessage;
 
     // Booth flags of the market in Data/npcs.json: each test takes its own, in the column at
     // X 118. A booth opens three cells east of its flag, with the flag's ID plus 100000.
     public class BoothTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
         private const uint Market = ServerFixture.Market;
         private const ushort FlagRole = 16, BoothLook = 406, BoothRole = 14;
         private const uint BoothIds = 100000;
         private const uint Sit = 250;
 
         public BoothTests(ServerFixture servers) : base(servers) { }
-
-        private static Task<UserAttribMessage> SilverAsync(Player player, ulong silver) =>
-            player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == silver);
 
         private Task<System.Text.Json.JsonElement> EventAsync(string name, string player, string reason) =>
             this.Servers.WaitForEventAsync("game", name, e =>
@@ -32,12 +27,13 @@ namespace Comet.Integration.Tests
             await using var seller = (await this.PlayingAtAsync(Market, 120, 217, GameMaster)).Player;
             await using var buyer = (await this.PlayingAtAsync(Market, 122, 220)).Player;
             Assert.NotNull(await buyer.Game.WaitForNpcAsync(n => n.Id == flag && n.Role == FlagRole));
-            await seller.Game.SayAsync(TalkChannels.Talk, seller.User.Name, "ALLUSERS", "/item " + ServerFixture.Blade.Id);
-            var blade = await seller.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
+            var blade = await GiveAsync(seller, ServerFixture.Blade.Id);
 
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 217, 0));
             var booth = await buyer.Game.WaitForNpcAsync(n => n.Id == id);
-            Assert.False(await buyer.Game.WaitForRemovalAsync(flag, TimeSpan.FromMilliseconds(300)));
+            // The flag stays
+            await SyncAsync(seller, buyer);
+            Assert.False(await buyer.Game.WaitForRemovalAsync(flag, Already));
             Assert.NotNull(booth);
             Assert.Equal(((ushort)121, (ushort)217, BoothLook, seller.User.Name), (booth.X, booth.Y, booth.Lookface, booth.Name));
             Assert.Equal(BoothRole, booth.Role);
@@ -67,7 +63,8 @@ namespace Comet.Integration.Tests
 
             // Sold out: nothing left to show
             await buyer.Game.ViewBoothAsync(id);
-            Assert.Null(await buyer.Game.WaitForBoothItemAsync(_ => true, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(buyer);
+            Assert.Null(await buyer.Game.WaitForBoothItemAsync(_ => true, Already));
         }
 
         [Fact]
@@ -84,13 +81,14 @@ namespace Comet.Integration.Tests
 
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 213, 0));
             await seller.Game.EmoteAsync(seller.User.Id, Sit, 6);
-            Assert.False(await seller.Game.WaitForRemovalAsync(id, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(seller);
+            Assert.False(await seller.Game.WaitForRemovalAsync(id, Already));
             await seller.Game.EmoteAsync(seller.User.Id, 0, 6);
             Assert.True(await seller.Game.WaitForRemovalAsync(id));
             await EventAsync("booth.closed", seller.User.Name, "stood_up");
 
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 213, 0));
-            await seller.Game.SayAsync(TalkChannels.Talk, seller.User.Name, "ALLUSERS", "/closebooth");
+            await CommandAsync(seller, "/closebooth");
             Assert.True(await seller.Game.WaitForRemovalAsync(id));
             var stay = await seller.Game.WaitForActionAsync(ActionMessage.Teleport, seller.User.Id);
             Assert.Equal((Market, (ushort)120, (ushort)213), (stay?.Command, stay?.X, stay?.Y));
@@ -107,13 +105,15 @@ namespace Comet.Integration.Tests
         {
             const uint flag = 52, id = flag + BoothIds; // at 118,209
             await using var stranger = (await this.PlayingAtAsync(Market, 200, 100)).Player;
-            Assert.Null(await stranger.Game.OpenBoothAsync(stranger.User.Id, 200, 100, 0, TimeSpan.FromMilliseconds(300)));
+            await stranger.Game.SendAsync(ActionMessage.Build(stranger.User.Id, ActionMessage.CreateBooth,
+                command: 200 | (100 << 16), x: 200, y: 100));
             await EventAsync("booth.rejected", stranger.User.Name, "no_free_flag");
+            await SyncAsync(stranger);
+            Assert.Null(await stranger.Game.WaitForActionAsync(ActionMessage.CreateBooth, stranger.User.Id, Already));
 
-            var seller = (await this.PlayingAtAsync(Market, 120, 209, GameMaster)).Player;
+            await using var seller = (await this.PlayingAtAsync(Market, 120, 209, GameMaster)).Player;
             await using var buyer = (await this.PlayingAtAsync(Market, 122, 207)).Player;
-            await seller.Game.SayAsync(TalkChannels.Talk, seller.User.Name, "ALLUSERS", "/item " + ServerFixture.Blade.Id);
-            var blade = await seller.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
+            var blade = await GiveAsync(seller, ServerFixture.Blade.Id);
             Assert.Equal(id, await seller.Game.OpenBoothAsync(seller.User.Id, 121, 209, 0));
 
             await seller.Game.AddToBoothAsync(12345, 10);

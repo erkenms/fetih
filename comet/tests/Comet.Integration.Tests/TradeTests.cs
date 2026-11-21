@@ -5,38 +5,21 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
-    using static Comet.Client.UserAttribMessage;
 
     public class TradeTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public TradeTests(ServerFixture servers) : base(servers) { }
-
-        private static async Task OpenAsync(Player asker, Player other)
-        {
-            // Both must be on the map, which each one's last login step does in parallel
-            Assert.NotNull(await asker.Game.WaitForSpawnAsync(other.User.Id));
-            await asker.Game.TradeAsync(TradeMessage.Request, other.User.Id);
-            var relation = await other.Game.WaitForRelationAsync(r => r.AskerId == asker.User.Id);
-            Assert.Equal((other.User.Id, (uint)asker.User.Level), (relation?.TargetId, relation?.Level));
-            Assert.NotNull(await other.Game.WaitForTradeAsync(t => t.Action == TradeMessage.Request && t.Data == asker.User.Id));
-            await other.Game.TradeAsync(TradeMessage.Request, asker.User.Id);
-            Assert.NotNull(await asker.Game.WaitForTradeAsync(t => t.Action == TradeMessage.ShowTable && t.Data == other.User.Id));
-            Assert.NotNull(await other.Game.WaitForTradeAsync(t => t.Action == TradeMessage.ShowTable && t.Data == asker.User.Id));
-        }
-
-        private static Task<UserAttribMessage> SilverAsync(Player player, ulong silver) =>
-            player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == silver);
 
         [Fact]
         public async Task ATradeSwapsAnItemForSilver()
         {
             await using var seller = (await this.PlayingAtAsync(1002, 200, 200, GameMaster)).Player;
             await using var buyer = (await this.PlayingAtAsync(1002, 201, 200)).Player;
-            await seller.Game.SayAsync(TalkChannels.Talk, seller.User.Name, "ALLUSERS", "/item " + ServerFixture.Blade.Id);
-            var blade = await seller.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
-            await OpenAsync(seller, buyer);
+            var blade = await GiveAsync(seller, ServerFixture.Blade.Id);
+            await OpenTradeAsync(seller, buyer);
+            // The request also showed the buyer who asked
+            var relation = await buyer.Game.WaitForRelationAsync(r => r.AskerId == seller.User.Id);
+            Assert.Equal((buyer.User.Id, (uint)seller.User.Level), (relation?.TargetId, relation?.Level));
 
             await seller.Game.TradeAsync(TradeMessage.AddItem, blade.Id);
             var shown = await buyer.Game.WaitForItemAsync(i => i.Id == blade.Id);
@@ -70,7 +53,7 @@ namespace Comet.Integration.Tests
         {
             await using var first = (await this.PlayingAtAsync(1002, 210, 200)).Player;
             await using var second = (await this.PlayingAtAsync(1002, 211, 200)).Player;
-            await OpenAsync(first, second);
+            await OpenTradeAsync(first, second);
 
             await first.Game.TradeAsync(TradeMessage.AddItem, 12345);
             Assert.NotNull(await first.Game.WaitForTradeAsync(t => t.Action == TradeMessage.AddItemFailed && t.Data == 12345));
@@ -95,7 +78,7 @@ namespace Comet.Integration.Tests
             var refused = await this.Servers.WaitForEventAsync("game", "trade.rejected", "name", first.User.Name);
             Assert.Equal("not_near", refused.GetProperty("reason").GetString());
 
-            await OpenAsync(first, second);
+            await OpenTradeAsync(first, second);
             await second.DisposeAsync();
             Assert.NotNull(await first.Game.WaitForTradeAsync(t => t.Action == TradeMessage.HideTable));
             var ended = await this.Servers.WaitForEventAsync("game", "trade.cancelled", "by", second.User.Name);

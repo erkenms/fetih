@@ -7,58 +7,30 @@ namespace Comet.Integration.Tests
     {
         public MapPlacementTests(ServerFixture servers) : base(servers) { }
 
-        private async Task<Comet.Client.Player> ReturnAtAsync(uint mapID, int x, int y) =>
-            (await this.PlayingAtAsync(mapID, x, y)).Player;
-
-        [Fact]
-        public async Task CharacterAppearsWhereTheyWereSaved()
+        // Saved where they can't stand: moved to the start, 1002 at 428,378
+        [Theory]
+        [InlineData(9999u, 50, 50, "unknown_map")]
+        [InlineData(1002u, 100, 100, "blocked_cell")]
+        [InlineData(1002u, 5000, 10, "blocked_cell")]
+        public async Task CharacterWhereTheyCantStandIsMovedToTheStart(uint map, int x, int y, string reason)
         {
-            await using var player = await this.ReturnAtAsync(1002, 300, 280);
-            Assert.Equal(1002u, player.Spawn.Command);
-            Assert.Equal((300, 280), (player.Spawn.X, player.Spawn.Y));
-        }
-
-        [Fact]
-        public async Task CharacterOnAnUnknownMapIsMovedToTheStart()
-        {
-            await using var player = await this.ReturnAtAsync(9999, 50, 50);
-            Assert.Equal(1002u, player.Spawn.Command);
-            Assert.Equal((428, 378), (player.Spawn.X, player.Spawn.Y));
+            await using var player = (await this.PlayingAtAsync(map, x, y)).Player;
+            Assert.Equal((1002u, 428, 378), (player.Spawn.Command, (int)player.Spawn.X, (int)player.Spawn.Y));
             var relocated = await this.Servers.WaitForEventAsync(
                 "game", "character.relocated", "name", player.User.Name);
-            Assert.Equal("unknown_map", relocated.GetProperty("reason").GetString());
-            Assert.Equal(9999u, relocated.GetProperty("fromMapId").GetUInt32());
-        }
-
-        [Fact]
-        public async Task CharacterOnABlockedCellIsMovedToTheStart()
-        {
-            var (x, y) = ServerFixture.BlockedCell;
-            await using var player = await this.ReturnAtAsync(1002, x, y);
-            Assert.Equal(1002u, player.Spawn.Command);
-            var relocated = await this.Servers.WaitForEventAsync(
-                "game", "character.relocated", "name", player.User.Name);
-            Assert.Equal("blocked_cell", relocated.GetProperty("reason").GetString());
+            Assert.Equal((reason, map, x, y), (relocated.GetProperty("reason").GetString(),
+                relocated.GetProperty("fromMapId").GetUInt32(),
+                relocated.GetProperty("fromX").GetInt32(), relocated.GetProperty("fromY").GetInt32()));
         }
 
         [Fact]
         public async Task LeavingTheMarketSavesItsEntrance()
         {
             var (player, email) = await this.PlayingAtAsync(ServerFixture.Market, 150, 150);
-            var name = player.User.Name;
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(name);
-
+            await this.LogOutAsync(player);
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.Equal(ServerFixture.Market, again.Spawn.Command);
             Assert.Equal((303, 237), (again.Spawn.X, again.Spawn.Y));
-        }
-
-        [Fact]
-        public async Task CharacterOutsideTheMapIsMovedToTheStart()
-        {
-            await using var player = await this.ReturnAtAsync(1002, 5000, 10);
-            Assert.Equal(1002u, player.Spawn.Command);
         }
     }
 }

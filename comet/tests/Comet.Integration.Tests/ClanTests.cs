@@ -9,7 +9,6 @@ namespace Comet.Integration.Tests
     public class ClanTests : IntegrationTest
     {
         private const uint ClanManager = 5533;
-        private const ushort GameMaster = 3;
         private const uint Silver = 4;
 
         public ClanTests(ServerFixture servers) : base(servers) { }
@@ -20,7 +19,7 @@ namespace Comet.Integration.Tests
         private async Task<(Player Player, string Email)> FounderAsync(int x, int y)
         {
             var (player, email) = await this.PlayingAtAsync(1002, x, y, GameMaster, level: 50);
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/silver 500000");
+            await CommandAsync(player, "/silver 500000");
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 501_000));
             return (player, email);
         }
@@ -97,8 +96,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await member.Game.WaitForFamilyAsync(f => f.Action == FamilyMessage.Quit && f.Data == clanID));
 
             // The clan outlives the leader's session
-            await founder.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(founder.User.Name);
+            await this.LogOutAsync(founder);
             await using var again = await this.Servers.PlayAsync(founderEmail, Password);
             Assert.Equal((clanID, name), (again.Game.Clan?.Data, again.Game.Clan?.Strings[1]));
         }

@@ -1,15 +1,11 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
 
     public class ChatTests : IntegrationTest
     {
-        private const ushort Moderator = 2, GameMaster = 3;
-        private static readonly TimeSpan Silence = TimeSpan.FromSeconds(1);
-
         public ChatTests(ServerFixture servers) : base(servers) { }
 
         private static Task<TalkMessage> NoticeAsync(Player player, string containing) =>
@@ -26,8 +22,10 @@ namespace Comet.Integration.Tests
             var heard = await near.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk);
             Assert.NotNull(heard);
             Assert.Equal((speaker.User.Name, "hello there"), (heard.Sender, heard.Text));
-            Assert.Null(await far.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk, Silence));
-            Assert.Null(await speaker.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk, Silence));
+            await SyncAsync(speaker, far);
+            await SyncAsync(speaker);
+            Assert.Null(await far.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk, Already));
+            Assert.Null(await speaker.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk, Already));
 
             var logged = await this.Servers.WaitForEventAsync("game", "chat.message", "name", speaker.User.Name);
             Assert.Equal("Talk", logged.GetProperty("channel").GetString());
@@ -60,7 +58,8 @@ namespace Comet.Integration.Tests
             var heard = await recipient.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Whisper);
             Assert.NotNull(heard);
             Assert.Equal((sender.User.Name, recipient.User.Name, "psst"), (heard.Sender, heard.Recipient, heard.Text));
-            Assert.Null(await bystander.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Whisper, Silence));
+            await SyncAsync(sender, bystander);
+            Assert.Null(await bystander.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Whisper, Already));
         }
 
         [Fact]
@@ -86,7 +85,8 @@ namespace Comet.Integration.Tests
 
             await speaker.Game.SayAsync(TalkChannels.World, speaker.User.Name, "ALLUSERS", "second");
             Assert.NotNull(await NoticeAsync(speaker, "world channel again"));
-            Assert.Null(await elsewhere.Game.WaitForTalkAsync(t => t.Text == "second", Silence));
+            await SyncAsync(speaker, elsewhere);
+            Assert.Null(await elsewhere.Game.WaitForTalkAsync(t => t.Text == "second", Already));
         }
 
         [Fact]
@@ -97,8 +97,10 @@ namespace Comet.Integration.Tests
             await speaker.Game.SayAsync(TalkChannels.World, speaker.User.Name, "ALLUSERS", "too young");
             var rejected = await this.Servers.WaitForEventAsync("game", "chat.rejected", "name", speaker.User.Name);
             Assert.Equal("level", rejected.GetProperty("reason").GetString());
-            Assert.Null(await elsewhere.Game.WaitForTalkAsync(t => t.Text == "too young", Silence));
-            Assert.Null(await speaker.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Service, Silence));
+            await SyncAsync(speaker, elsewhere);
+            await SyncAsync(speaker);
+            Assert.Null(await elsewhere.Game.WaitForTalkAsync(t => t.Text == "too young", Already));
+            Assert.Null(await speaker.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Service, Already));
         }
 
         [Fact]
@@ -111,7 +113,9 @@ namespace Comet.Integration.Tests
             Assert.NotNull(details);
             Assert.Equal(other.User.Name, details.Strings[0]);
             Assert.StartsWith($"{other.User.Id} 42 ", details.Strings[1]);
-            Assert.Null(await asker.Game.AskWhisperDetailsAsync("Nobody", Silence));
+            await asker.Game.SendAsync(NameMessage.Build(NameMessage.WhisperDetails, "Nobody"));
+            await SyncAsync(asker);
+            Assert.Null(await asker.Game.WaitForNameAsync(n => n.Action == NameMessage.WhisperDetails, Already));
         }
 
         [Fact]
@@ -120,10 +124,11 @@ namespace Comet.Integration.Tests
             await using var player = (await this.PlayingAtAsync(1002, 620, 520)).Player;
             await using var near = (await this.PlayingAtAsync(1002, 621, 520)).Player;
 
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/tp 1006 30 30");
+            await CommandAsync(player, "/tp 1006 30 30");
             var heard = await near.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Talk);
             Assert.Equal("/tp 1006 30 30", heard?.Text);
-            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Silence));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Already));
         }
 
         [Fact]
@@ -132,23 +137,23 @@ namespace Comet.Integration.Tests
             await using var gm = (await this.PlayingAtAsync(1002, 640, 520, GameMaster)).Player;
             await using var other = (await this.PlayingAtAsync(1006, 10, 10)).Player;
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/online");
+            await CommandAsync(gm, "/online");
             Assert.NotNull(await NoticeAsync(gm, other.User.Name));
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/teleport 1006 30 30");
+            await CommandAsync(gm, "/teleport 1006 30 30");
             var moved = await gm.Game.WaitForActionAsync(ActionMessage.Teleport, gm.User.Id);
             Assert.NotNull(moved);
             Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/grab " + other.User.Name);
+            await CommandAsync(gm, "/grab " + other.User.Name);
             moved = await other.Game.WaitForActionAsync(ActionMessage.Teleport, other.User.Id);
             Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/goto " + other.User.Name.ToLowerInvariant());
+            await CommandAsync(gm, "/goto " + other.User.Name.ToLowerInvariant());
             moved = await gm.Game.WaitForActionAsync(ActionMessage.Teleport, gm.User.Id);
             Assert.Equal((1006u, 30, 30), (moved.Command, (int)moved.X, (int)moved.Y));
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/tp 1006 x");
+            await CommandAsync(gm, "/tp 1006 x");
             Assert.NotNull(await NoticeAsync(gm, "Usage: /tp"));
 
             var logged = await this.Servers.WaitForEventAsync("game", "gm.command", "name", gm.User.Name);
@@ -163,7 +168,7 @@ namespace Comet.Integration.Tests
 
             async Task<(uint, int, int)> TeleportAsync(string command)
             {
-                await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", command);
+                await CommandAsync(gm, command);
                 var moved = await gm.Game.WaitForActionAsync(ActionMessage.Teleport, gm.User.Id);
                 Assert.NotNull(moved);
                 return (moved.Command, moved.X, moved.Y);
@@ -176,7 +181,7 @@ namespace Comet.Integration.Tests
             Assert.Equal((ServerFixture.DesertCity, 100, 120), await TeleportAsync("/tp desert 100 120"));
             Assert.Equal((1002u, 600, 520), await TeleportAsync("/tp 1002 600 520"));
 
-            await gm.Game.SayAsync(TalkChannels.Talk, gm.User.Name, "ALLUSERS", "/tp nowhere");
+            await CommandAsync(gm, "/tp nowhere");
             var places = await NoticeAsync(gm, "No place nowhere");
             Assert.Contains("twin_city (tc)", places?.Text);
         }
@@ -187,10 +192,10 @@ namespace Comet.Integration.Tests
             await using var mod = (await this.PlayingAtAsync(1002, 660, 520, Moderator)).Player;
             await using var target = (await this.PlayingAtAsync(1002, 661, 520)).Player;
 
-            await mod.Game.SayAsync(TalkChannels.Talk, mod.User.Name, "ALLUSERS", "/tp 1006 30 30");
+            await CommandAsync(mod, "/tp 1006 30 30");
             Assert.NotNull(await NoticeAsync(mod, "Unknown command /tp"));
 
-            await mod.Game.SayAsync(TalkChannels.Talk, mod.User.Name, "ALLUSERS", "/kick " + target.User.Name);
+            await CommandAsync(mod, "/kick " + target.User.Name);
             Assert.True(await target.Game.WaitClosedAsync());
             await this.Servers.WaitForEventAsync("game", "session.logout", e =>
                 e.GetProperty("name").GetString() == target.User.Name &&

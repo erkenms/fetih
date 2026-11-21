@@ -8,17 +8,7 @@ namespace Comet.Integration.Tests
 
     public class TrainingTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public TrainingTests(ServerFixture servers) : base(servers) { }
-
-        private static async Task PrayAsync(Player player)
-        {
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.SmallPrayingStone.Id);
-            var stone = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.SmallPrayingStone.Id);
-            await player.Game.EquipAsync(stone.Id, 17);
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(HeavenBlessing)));
-        }
 
         private Task<System.Text.Json.JsonElement> ClaimedAsync(Player player, string kind) =>
             this.Servers.WaitForEventAsync("game", "training.exp_claimed", e =>
@@ -31,7 +21,7 @@ namespace Comet.Integration.Tests
             await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, strength: 5000)).Player;
             var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
             Assert.NotNull(pheasant);
-            await PrayAsync(player);
+            await PrayAsync(player, ServerFixture.SmallPrayingStone.Id);
 
             await player.Game.AttackAsync(player.User.Id, pheasant.Id, at.X, at.Y);
             Assert.NotNull(await player.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Kill && i.Target == pheasant.Id));
@@ -52,7 +42,7 @@ namespace Comet.Integration.Tests
         public async Task OfflineTrainingPaysWhenClaimedAfterLoggingBackIn()
         {
             var (player, email) = await this.PlayingAtAsync(1002, 640, 600, GameMaster);
-            await PrayAsync(player);
+            await PrayAsync(player, ServerFixture.SmallPrayingStone.Id);
             await player.Game.TrainingAsync(TrainingMessage.Query);
             Assert.Equal(900u, (await player.Game.WaitForTrainingAsync(TrainingMessage.Query))?.Data);
             await player.Game.TrainingAsync(TrainingMessage.Enter);
@@ -61,8 +51,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForTrainingAsync(TrainingMessage.Enter));
             await this.Servers.WaitForEventAsync("game", "training.offline_started", "name", player.User.Name);
 
-            await player.DisposeAsync();
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name, 601, 65);
+            await this.LogOutAsync(player);
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET OfflineTrainingSince = @since WHERE CharacterID = @id",
                 ("@since", DateTime.UtcNow.AddMinutes(-150.5)), ("@id", player.User.Id));

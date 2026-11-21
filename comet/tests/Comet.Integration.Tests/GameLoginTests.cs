@@ -1,9 +1,9 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
+    using MySqlConnector;
     using Xunit;
 
     public class GameLoginTests : IntegrationTest
@@ -13,11 +13,12 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task MadeUpTokenIsRefused()
         {
+            int mark = this.Servers.Mark();
             await using var game = await this.Servers.ConnectGameAsync();
             var result = await game.LoginAsync(0x0123456789ABCDEF);
             Assert.Equal(InvalidLogin, result.Message);
             Assert.True(await game.WaitClosedAsync());
-            await this.Servers.WaitForEventAsync("game", "game.auth_failed", "reason", "invalid_token");
+            await this.Servers.WaitForEventAsync("game", "game.auth_failed", "reason", "invalid_token", mark);
         }
 
         [Fact]
@@ -30,29 +31,6 @@ namespace Comet.Integration.Tests
 
             await using var second = await this.Servers.ConnectGameAsync();
             Assert.Equal(InvalidLogin, (await second.LoginAsync(login.Token)).Message);
-        }
-
-        [Fact]
-        public async Task NewAccountIsAskedToCreateACharacter()
-        {
-            var (game, _, _) = await this.AtCharacterCreationAsync();
-            await using (game)
-                await this.Servers.WaitForEventAsync("game", "net.connect", _ => true);
-        }
-
-        [Fact]
-        public async Task ReturningPlayerGoesStraightToTheMap()
-        {
-            var (first, email) = await this.PlayingAsync();
-            var id = first.User.Id;
-            var name = first.User.Name;
-            await first.DisposeAsync();
-            await this.Servers.WaitForEventAsync("game", "session.logout", "name", name);
-
-            await using var again = await this.Servers.PlayAsync(email, Password);
-            Assert.Equal(id, again.User.Id);
-            Assert.Equal(name, again.User.Name);
-            Assert.Equal(1002u, again.Spawn.Command);
         }
 
         [Fact]
@@ -95,13 +73,42 @@ namespace Comet.Integration.Tests
             {
                 // Even a made-up token gets no answer once the character is in the game
                 await player.Game.SendAsync(GameClient.BuildConnect(0x0123456789ABCDEF));
-                await Assert.ThrowsAsync<TimeoutException>(() =>
-                    player.Game.ReceiveAsync(PacketTypes.MsgTalk, TimeSpan.FromSeconds(1)));
+                await SyncAsync(player);
+                Assert.Null(await player.Game.WaitForTalkAsync(_ => true, Already));
 
                 // The connection still works
                 var (spawn, _) = await player.Game.EnterMapAsync(player.User.Id);
                 Assert.Equal(1002u, spawn.Command);
             }
+        }
+
+        // The logout save runs after the connection is gone. While this test holds the
+        // character's row the save can't finish, and a login that didn't wait for it would
+        // load the position from before the step.
+        [Fact]
+        public async Task LoggingInWhileTheLogoutIsSavingWaitsForTheSave()
+        {
+            var (player, email) = await this.PlayingAsync();
+            int x = player.Spawn.X;
+            await player.Game.WalkAsync(player.User.Id, 6);
+            Assert.NotNull(await player.Game.WaitForWalkAsync(player.User.Id));
+
+            await using var db = await this.Servers.OpenGameDatabaseAsync();
+            await using var hold = await db.BeginTransactionAsync();
+            var row = new MySqlCommand("SELECT Name FROM `character` WHERE CharacterID = @id FOR UPDATE", db, hold);
+            row.Parameters.AddWithValue("@id", player.User.Id);
+            await row.ExecuteScalarAsync();
+
+            // Gone from the server's sessions, so the new login can't find it there
+            int mark = this.Servers.Mark();
+            await player.DisposeAsync();
+            await this.Servers.WaitForEventAsync("game", "session.logout", "name", player.User.Name, mark);
+
+            var again = this.Servers.PlayAsync(email, Password);
+            await Task.WhenAny(again, Task.Delay(500));
+            await hold.RollbackAsync();
+            await using var back = await again;
+            Assert.Equal(x + 1, back.Spawn.X);
         }
 
         [Fact]

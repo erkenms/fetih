@@ -49,30 +49,25 @@ namespace Comet.Integration.Tests
             return watch.Elapsed;
         }
 
+        // One wait for the login timeout for both kinds
         [Fact]
-        public async Task ConnectionsThatDontLogInAreDropped()
-        {
-            var lifetimes = await Task.WhenAll(
-                LifetimeAsync(this.Servers.GamePort),                       // silent
-                this.ExchangedLifetimeAsync(),                              // key exchange only
-                LifetimeAsync(this.Servers.AccountPort),                    // silent
-                LifetimeAsync(this.Servers.AccountPort, new byte[] { 1 })); // one byte
-
-            foreach (var lifetime in lifetimes)
-                Assert.True(lifetime >= LoginTimeout - TimeSpan.FromSeconds(0.5),
-                    $"Dropped after {lifetime}, before the login timeout");
-        }
-
-        [Fact]
-        public async Task LoggedInPlayersAreNeverDroppedForIdling()
+        public async Task ConnectionsThatDontLogInAreDroppedButLoggedInOnesNeverForIdling()
         {
             var (creating, token, _) = await this.AtCharacterCreationAsync();
             await using var creatingGuard = creating;
             var (playing, _) = await this.PlayingAsync();
             await using var playingGuard = playing;
 
-            // Both connections opened more than the login timeout ago by the end of this
-            await Task.Delay(LoginTimeout + TimeSpan.FromSeconds(1));
+            var lifetimes = await Task.WhenAll(
+                LifetimeAsync(this.Servers.GamePort),                       // silent
+                this.ExchangedLifetimeAsync(),                              // key exchange only
+                LifetimeAsync(this.Servers.AccountPort),                    // silent
+                LifetimeAsync(this.Servers.AccountPort, new byte[] { 1 })); // one byte
+            foreach (var lifetime in lifetimes)
+                Assert.True(lifetime >= LoginTimeout - TimeSpan.FromSeconds(0.5),
+                    $"Dropped after {lifetime}, before the login timeout");
+
+            // Opened before those, so past their own login timeout too, and still working
             Assert.False(creating.Closed);
             Assert.False(playing.Game.Closed);
 

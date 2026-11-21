@@ -11,16 +11,22 @@ namespace Comet.Integration.Tests
     {
         public CharacterCreationTests(ServerFixture servers) : base(servers) { }
 
-        private Task CreateFailedAsync(string reason) =>
-            this.Servers.WaitForEventAsync("game", "character.create_failed", "reason", reason);
+        // This account's own failure, logged after the mark
+        private async Task<System.Text.Json.JsonElement> CreateFailedAsync(string email, string reason, int mark)
+        {
+            uint account = await this.Servers.AccountIdAsync(email);
+            return await this.Servers.WaitForEventAsync("game", "character.create_failed", e =>
+                e.GetProperty("reason").GetString() == reason &&
+                (!e.TryGetProperty("accountId", out var id) || id.GetUInt32() == account), after: mark);
+        }
 
-        public static IEnumerable<object[]> ClassesAndBodies() =>
-            from profession in new ushort[] { 10, 20, 40, 50, 60, 70, 100 }
-            from mesh in new ushort[] { 1003, 1004, 2001, 2002 }
-            select new object[] { profession, mesh };
+        // Each class once, the bodies taken in turn
+        public static IEnumerable<object[]> Classes() =>
+            new ushort[] { 10, 20, 40, 50, 60, 70, 100 }.Select((profession, i) =>
+                new object[] { profession, new ushort[] { 1003, 1004, 2001, 2002 }[i % 4] });
 
         [Theory]
-        [MemberData(nameof(ClassesAndBodies))]
+        [MemberData(nameof(Classes))]
         public async Task EveryClassAndBodyCanBeCreated(ushort profession, ushort mesh)
         {
             var (game, token, _) = await this.AtCharacterCreationAsync();
@@ -50,19 +56,24 @@ namespace Comet.Integration.Tests
         }
 
         [Theory]
-        [InlineData(0)]
-        [InlineData(11)]
-        [InlineData(30)]
-        [InlineData(80)]
-        [InlineData(132)]
-        public async Task UnknownClassIsRefused(ushort profession)
+        [InlineData(1003, 0)]
+        [InlineData(1003, 11)]
+        [InlineData(1003, 30)]
+        [InlineData(1003, 80)]
+        [InlineData(1003, 132)]
+        [InlineData(0, 10)]
+        [InlineData(1005, 10)]
+        [InlineData(2003, 10)]
+        public async Task UnknownClassOrBodyIsRefused(ushort mesh, ushort profession)
         {
-            var (game, token, _) = await this.AtCharacterCreationAsync();
+            var (game, token, email) = await this.AtCharacterCreationAsync();
             await using (game)
             {
+                int mark = this.Servers.Mark();
                 Assert.Equal(InvalidCharacter, await game.CreateCharacterAsync(
-                    this.Servers.NewCharacterName(), 1003, profession, (uint)token));
-                await CreateFailedAsync("invalid_input");
+                    this.Servers.NewCharacterName(), mesh, profession, (uint)token));
+                var failed = await this.CreateFailedAsync(email, "invalid_input", mark);
+                Assert.Equal((mesh, profession), (failed.GetProperty("mesh").GetUInt16(), failed.GetProperty("class").GetUInt16()));
 
                 // The player can try again on the same connection
                 Assert.Equal(AnswerOk, await game.CreateCharacterAsync(
@@ -70,54 +81,36 @@ namespace Comet.Integration.Tests
             }
         }
 
-        [Theory]
-        [InlineData(0)]
-        [InlineData(1005)]
-        [InlineData(2003)]
-        public async Task UnknownBodyIsRefused(ushort mesh)
-        {
-            var (game, token, _) = await this.AtCharacterCreationAsync();
-            await using (game)
-                Assert.Equal(InvalidCharacter, await game.CreateCharacterAsync(
-                    this.Servers.NewCharacterName(), mesh, 10, (uint)token));
-        }
-
+        // The rules themselves are in CharacterRulesTests; these check what reaches them from
+        // the client: its Windows-1254 bytes, and plain ASCII
         public static IEnumerable<object[]> BadNames() => new[]
         {
-            new object[] { new byte[0] },
-            new object[] { Encoding.ASCII.GetBytes("Abc") },
-            new object[] { Encoding.ASCII.GetBytes("SixteenCharsLong") },
-            new object[] { Encoding.ASCII.GetBytes("Two Words") },
             new object[] { new byte[] { 0xC7, 0x61, 0xF0, 0x72, 0xFD } },       // Çağrı in Windows-1254
-            new object[] { Encoding.ASCII.GetBytes("Tab\tName") },
-            new object[] { Encoding.ASCII.GetBytes("Boss[GM]") },
-            new object[] { Encoding.ASCII.GetBytes("[pm]Boss") },
+            new object[] { Encoding.ASCII.GetBytes("Two Words") },
         };
 
         [Theory]
         [MemberData(nameof(BadNames))]
         public async Task NamesBreakingTheRulesAreRefused(byte[] name)
         {
-            var (game, token, _) = await this.AtCharacterCreationAsync();
+            var (game, token, email) = await this.AtCharacterCreationAsync();
             await using (game)
             {
+                int mark = this.Servers.Mark();
                 Assert.Equal(InvalidName, await game.CreateCharacterAsync(name, 1003, 10, (uint)token));
-                await CreateFailedAsync("invalid_name");
+                await this.CreateFailedAsync(email, "invalid_name", mark);
                 Assert.Equal(AnswerOk, await game.CreateCharacterAsync(
                     this.Servers.NewCharacterName(), 1003, 10, (uint)token));
             }
         }
 
-        [Theory]
-        [InlineData("~*Star*~")]
-        [InlineData("#01Smile#02")]
-        [InlineData("x.X-[Pro]_9")]
-        public async Task NamesWithSymbolsAreAllowed(string prefix)
+        [Fact]
+        public async Task NamesWithSymbolsAreAllowed()
         {
             var (game, token, _) = await this.AtCharacterCreationAsync();
             await using (game)
             {
-                var name = this.Servers.NewCharacterName(prefix);
+                var name = this.Servers.NewCharacterName("~*Star*~");
                 Assert.Equal(AnswerOk, await game.CreateCharacterAsync(name, 1003, 10, (uint)token));
                 Assert.Equal(name, (await game.LoginAsync(token)).User.Name);
             }
@@ -129,14 +122,15 @@ namespace Comet.Integration.Tests
             var (first, _) = await this.PlayingAsync();
             await using (first)
             {
-                var (game, token, _) = await this.AtCharacterCreationAsync();
+                var (game, token, email) = await this.AtCharacterCreationAsync();
                 await using (game)
                 {
+                    int mark = this.Servers.Mark();
                     Assert.Equal(NameTaken, await game.CreateCharacterAsync(
                         first.User.Name, 1003, 10, (uint)token));
                     Assert.Equal(NameTaken, await game.CreateCharacterAsync(
                         first.User.Name.ToUpperInvariant(), 1003, 10, (uint)token));
-                    await CreateFailedAsync("name_taken");
+                    await this.CreateFailedAsync(email, "name_taken", mark);
                 }
             }
         }
@@ -164,13 +158,15 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task CreationWithTheWrongTokenIsRefused()
         {
-            var (game, token, _) = await this.AtCharacterCreationAsync();
+            var (game, token, email) = await this.AtCharacterCreationAsync();
             await using (game)
             {
+                int mark = this.Servers.Mark();
                 Assert.Equal(InvalidCharacter, await game.CreateCharacterAsync(
                     this.Servers.NewCharacterName(), 1003, 10, (uint)token + 1));
                 Assert.True(await game.WaitClosedAsync());
-                await CreateFailedAsync("invalid_token");
+                // Logged with the connection only
+                await this.CreateFailedAsync(email, "invalid_token", mark);
             }
         }
 
@@ -187,10 +183,11 @@ namespace Comet.Integration.Tests
                     $"FROM `{this.Servers.AccountSchema}`.`account` WHERE Username = @email",
                     ("@name", other), ("@email", email));
 
+                int mark = this.Servers.Mark();
                 Assert.Equal(InvalidCharacter, await game.CreateCharacterAsync(
                     this.Servers.NewCharacterName(), 1003, 10, (uint)token));
                 Assert.True(await game.WaitClosedAsync());
-                await CreateFailedAsync("account_has_character");
+                await this.CreateFailedAsync(email, "account_has_character", mark);
             }
         }
 

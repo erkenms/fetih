@@ -1,6 +1,7 @@
 namespace Comet.Integration.Tests
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -8,17 +9,41 @@ namespace Comet.Integration.Tests
 
     // The arena qualifier: two level 50 players in Desert City sign up, are matched and fight
     // in the arena (900000); a level 50 player starts with 1500 arena points
-    public class ArenaTests : IntegrationTest
+    public class ArenaTests : IntegrationTest, IAsyncLifetime
     {
         private const uint DesertCity = ServerFixture.DesertCity, Arena = ServerFixture.Arena;
         private const uint StartingPoints = 1500;
         private static readonly TimeSpan CountdownTime = TimeSpan.FromSeconds(ServerFixture.ArenaCountdownSeconds);
 
+        private readonly List<Player> Fighters = new List<Player>();
+
         public ArenaTests(ServerFixture servers) : base(servers) { }
 
-        private Task<Player> FighterAsync(int x, ushort strength = 0) =>
-            this.PlayingAtAsync(DesertCity, x, 300 - 50, level: 50, strength: strength)
-                .ContinueWith(t => t.Result.Player);
+        public Task InitializeAsync() => Task.CompletedTask;
+
+        // The queue is the whole server's: a fighter left signed up, say by a failed test,
+        // would be matched in the next one. Quitting is answered once they're off it.
+        public async Task DisposeAsync()
+        {
+            foreach (var fighter in this.Fighters)
+            {
+                // A connection the server closed has left the queue with its logout
+                try
+                {
+                    await fighter.Game.SendAsync(Build(Quit));
+                    await fighter.Game.WaitForQualifierAsync(q => q.Action == Quit, TimeSpan.FromSeconds(2));
+                }
+                catch (System.IO.IOException) { }
+                await this.LogOutAsync(fighter);
+            }
+        }
+
+        private async Task<Player> FighterAsync(int x, ushort strength = 0)
+        {
+            var fighter = (await this.PlayingAtAsync(DesertCity, x, 300 - 50, level: 50, strength: strength)).Player;
+            this.Fighters.Add(fighter);
+            return fighter;
+        }
 
         private static async Task SignUpAsync(Player player)
         {
@@ -50,8 +75,8 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task TheWinnerTakesArenaPointsAndBothGoHome()
         {
-            await using var a = await this.FighterAsync(100, strength: 5000);
-            await using var b = await this.FighterAsync(110);
+            var a = await this.FighterAsync(100, strength: 5000);
+            var b = await this.FighterAsync(110);
             await MatchAsync(a, b);
 
             // In the arena the fighters stand a step apart, at 49,50 and 51,50; nobody may
@@ -101,8 +126,8 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task GivingUpTheInvitationLosesTheMatch()
         {
-            await using var a = await this.FighterAsync(120);
-            await using var b = await this.FighterAsync(130);
+            var a = await this.FighterAsync(120);
+            var b = await this.FighterAsync(130);
             await SignUpAsync(a);
             await SignUpAsync(b);
             Assert.NotNull(await b.Game.WaitForQualifierAsync(q => q.Action == Countdown));
@@ -119,8 +144,8 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task WhoAcceptsAloneWinsWhenTimeIsUp()
         {
-            await using var a = await this.FighterAsync(140);
-            await using var b = await this.FighterAsync(150);
+            var a = await this.FighterAsync(140);
+            var b = await this.FighterAsync(150);
             await SignUpAsync(a);
             await SignUpAsync(b);
             Assert.NotNull(await a.Game.WaitForQualifierAsync(q => q.Action == Countdown));
@@ -130,17 +155,19 @@ namespace Comet.Integration.Tests
                 q => q.Action == EndDialog, TimeSpan.FromSeconds(ServerFixture.ArenaInviteSeconds + 5)))?.Option);
             var ended = await this.Servers.WaitForEventAsync("game", "arena.ended", "winner", a.User.Name);
             Assert.Equal("no_answer", ended.GetProperty("reason").GetString());
-            Assert.Null(await a.Game.WaitForActionAsync(ActionMessage.Teleport, a.User.Id, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(a);
+            Assert.Null(await a.Game.WaitForActionAsync(ActionMessage.Teleport, a.User.Id, Already));
         }
 
         [Fact]
         public async Task LoggingOutLosesTheMatch()
         {
-            await using var a = await this.FighterAsync(160);
+            var a = await this.FighterAsync(160);
             var b = await this.FighterAsync(170);
             await MatchAsync(a, b);
 
             var loser = b.User.Name;
+            this.Fighters.Remove(b);
             await b.DisposeAsync();
             Assert.Equal(Won, (await a.Game.WaitForQualifierAsync(q => q.Action == Dialog))?.Option);
             var ended = await this.Servers.WaitForEventAsync("game", "arena.ended", "winner", a.User.Name);
@@ -156,7 +183,8 @@ namespace Comet.Integration.Tests
             var refused = await this.Servers.WaitForEventAsync("game", "arena.rejected", "name", player.User.Name);
             Assert.Equal("level", refused.GetProperty("reason").GetString());
             Assert.NotNull(await player.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.Points == 0));
-            Assert.Null(await player.Game.WaitForQualifierAsync(q => q.Action == SignUp, TimeSpan.FromMilliseconds(300)));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForQualifierAsync(q => q.Action == SignUp, Already));
         }
 
         private async Task<QualifierMatches> QueryMatchesAsync(Player player)

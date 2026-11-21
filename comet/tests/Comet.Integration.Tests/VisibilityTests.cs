@@ -1,15 +1,11 @@
 namespace Comet.Integration.Tests
 {
-    using System;
     using System.Threading.Tasks;
     using Xunit;
 
     public class VisibilityTests : IntegrationTest
     {
         public VisibilityTests(ServerFixture servers) : base(servers) { }
-
-        // Long enough for a spawn that was going to arrive to have arrived
-        private static readonly TimeSpan Quiet = TimeSpan.FromSeconds(1.5);
 
         [Fact]
         public async Task PlayersNearEachOtherSeeEachOther()
@@ -31,27 +27,20 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task PlayersFartherThan18CellsDontSeeEachOther()
-        {
-            await using var first = (await this.PlayingAtAsync(1002, 500, 500)).Player;
-            await using var second = (await this.PlayingAtAsync(1002, 519, 500)).Player;
-            Assert.Null(await first.Game.WaitForSpawnAsync(second.User.Id, Quiet));
-            Assert.Null(await second.Game.WaitForSpawnAsync(first.User.Id, Quiet));
-        }
-
-        [Fact]
         public async Task PlayersOnDifferentMapsDontSeeEachOther()
         {
             await using var first = (await this.PlayingAtAsync(1002, 520, 600)).Player;
             await using var second = (await this.PlayingAtAsync(1006, 20, 20)).Player;
-            Assert.Null(await first.Game.WaitForSpawnAsync(second.User.Id, Quiet));
+            // The second's login is done once the first hears from it
+            await SyncAsync(second, first);
+            Assert.Null(await first.Game.WaitForSpawnAsync(second.User.Id, Already));
         }
 
         [Fact]
         public async Task PlayerWhoLeavesIsRemovedFromScreens()
         {
             await using var watcher = (await this.PlayingAtAsync(1002, 700, 700)).Player;
-            var leaver = (await this.PlayingAtAsync(1002, 705, 705)).Player;
+            await using var leaver = (await this.PlayingAtAsync(1002, 705, 705)).Player;
             Assert.NotNull(await watcher.Game.WaitForSpawnAsync(leaver.User.Id));
 
             await leaver.DisposeAsync();

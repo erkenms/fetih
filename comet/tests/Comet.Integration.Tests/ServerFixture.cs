@@ -129,8 +129,9 @@ namespace Comet.Integration.Tests
         public int GamePort { get; private set; }
         public string LogDirectory { get; }
         public string MapDirectory { get; }
-        private readonly Dictionary<string, (long Position, List<JsonElement> Events)> LogFiles =
-            new Dictionary<string, (long, List<JsonElement>)>();
+        // Each server's events in the order they were read, and how far each log file was read
+        private readonly Dictionary<string, List<JsonElement>> ServerEvents = new Dictionary<string, List<JsonElement>>();
+        private readonly Dictionary<string, long> LogFiles = new Dictionary<string, long>();
         private readonly string RepoRoot;
         private readonly string BuildConfiguration;
 
@@ -187,6 +188,37 @@ namespace Comet.Integration.Tests
                     "(or set COMET_TEST_DB_HOST, COMET_TEST_DB_USER, COMET_TEST_DB_PASSWORD).", e);
             }
 
+            await this.DropStaleSchemasAsync();
+            try { await this.StartAsync(); }
+            catch
+            {
+                await this.DisposeAsync();
+                throw;
+            }
+        }
+
+        // Runs that were killed never dropped their schemas. Only ones hours old go, so a run
+        // going on at the same time keeps its own. A schema without tables is from a load that
+        // failed, since a load creates the schema and its tables in one batch.
+        private async Task DropStaleSchemasAsync()
+        {
+            await using var db = new MySqlConnection(this.ConnectionString());
+            await db.OpenAsync();
+            var stale = new List<string>();
+            var query = new MySqlCommand(
+                "SELECT s.SCHEMA_NAME FROM information_schema.SCHEMATA s " +
+                "LEFT JOIN information_schema.TABLES t ON t.TABLE_SCHEMA = s.SCHEMA_NAME " +
+                "WHERE s.SCHEMA_NAME LIKE 'comet\\_test\\_%' GROUP BY s.SCHEMA_NAME " +
+                "HAVING COUNT(t.TABLE_NAME) = 0 OR MAX(t.CREATE_TIME) < NOW() - INTERVAL 6 HOUR", db);
+            await using (var reader = await query.ExecuteReaderAsync())
+                while (await reader.ReadAsync())
+                    stale.Add(reader.GetString(0));
+            foreach (var schema in stale)
+                await new MySqlCommand($"DROP DATABASE IF EXISTS `{schema}`", db).ExecuteNonQueryAsync();
+        }
+
+        private async Task StartAsync()
+        {
             // Fresh databases from the default SQL files
             await this.LoadSchemaAsync("comet.account.sql", "comet.account", this.AccountSchema);
             await this.LoadSchemaAsync("comet.game.sql", "comet.game", this.GameSchema);
@@ -223,7 +255,7 @@ namespace Comet.Integration.Tests
                 "--Monsters:WanderChance=0",
                 "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
                 "--Arena:InviteSeconds=" + ArenaInviteSeconds, "--Arena:CountdownSeconds=" + ArenaCountdownSeconds,
-                "--Arena:EndSeconds=" + ArenaEndSeconds,
+                "--Arena:EndSeconds=" + ArenaEndSeconds, "--Magic:MinimumCastMilliseconds=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
@@ -371,6 +403,13 @@ namespace Comet.Integration.Tests
         public Task ExecuteGameSqlAsync(string sql, params (string, object)[] parameters) =>
             this.ExecuteSqlAsync(this.GameSchema, sql, parameters);
 
+        public async Task<MySqlConnection> OpenGameDatabaseAsync()
+        {
+            var db = new MySqlConnection(this.ConnectionString(this.GameSchema));
+            await db.OpenAsync();
+            return db;
+        }
+
         public async Task<object> QueryGameScalarAsync(string sql, params (string, object)[] parameters)
         {
             await using var db = new MySqlConnection(this.ConnectionString(this.GameSchema));
@@ -420,81 +459,100 @@ namespace Comet.Integration.Tests
         public Task<Player> PlayAsync(string email, string password, NewCharacter character = null) =>
             Player.LoginAsync(Host, this.AccountPort, Realm, email, password, character);
 
-        public List<JsonElement> Events(string server)
+        public IReadOnlyList<JsonElement> Events(string server)
         {
+            lock (this.LogFiles)
+                return this.Read(server).ToList();
+        }
+
+        // How many events the server has logged so far: a wait given it as `after` only
+        // accepts events logged since
+        public int Mark(string server = "game")
+        {
+            lock (this.LogFiles)
+                return this.Read(server).Count;
+        }
+
+        // Files only grow, so each read parses just the lines added since the last one
+        // (packet traces make the files large). Callers hold the lock.
+        private List<JsonElement> Read(string server)
+        {
+            if (!this.ServerEvents.TryGetValue(server, out var events))
+                this.ServerEvents[server] = events = new List<JsonElement>();
             var dir = Path.Combine(this.LogDirectory, server);
             if (!Directory.Exists(dir))
-                return new List<JsonElement>();
-
-            // Files only grow, so each read parses just the lines added since the last
-            // one (packet traces make the files large)
-            lock (this.LogFiles)
-            {
-                var events = new List<JsonElement>();
-                foreach (var file in Directory.GetFiles(dir, "*.jsonl").OrderBy(f => f))
-                {
-                    if (!this.LogFiles.TryGetValue(file, out var read))
-                        this.LogFiles[file] = read = (0, new List<JsonElement>());
-
-                    using var stream = new FileStream(
-                        file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                    stream.Seek(read.Position, SeekOrigin.Begin);
-                    var added = new byte[stream.Length - read.Position];
-                    int length = stream.Read(added, 0, added.Length);
-
-                    // Only whole lines: the server may be halfway through writing one
-                    int end = length > 0 ? Array.LastIndexOf(added, (byte)'\n', length - 1) : -1;
-                    if (end >= 0)
-                    {
-                        foreach (var line in System.Text.Encoding.UTF8.GetString(added, 0, end).Split('\n'))
-                        {
-                            if (line.Length == 0) continue;
-                            try { read.Events.Add(JsonDocument.Parse(line).RootElement.Clone()); }
-                            catch (JsonException) { }
-                        }
-
-                        read.Position += end + 1;
-                        this.LogFiles[file] = read;
-                    }
-
-                    events.AddRange(read.Events);
-                }
-
                 return events;
+
+            foreach (var file in Directory.GetFiles(dir, "*.jsonl").OrderBy(f => f))
+            {
+                this.LogFiles.TryGetValue(file, out long position);
+                using var stream = new FileStream(
+                    file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                if (stream.Length <= position)
+                    continue;
+                stream.Seek(position, SeekOrigin.Begin);
+                var added = new byte[stream.Length - position];
+                int length = stream.Read(added, 0, added.Length);
+
+                // Only whole lines: the server may be halfway through writing one
+                int end = length > 0 ? Array.LastIndexOf(added, (byte)'\n', length - 1) : -1;
+                if (end < 0)
+                    continue;
+                foreach (var line in System.Text.Encoding.UTF8.GetString(added, 0, end).Split('\n'))
+                {
+                    if (line.Length == 0) continue;
+                    try { events.Add(JsonDocument.Parse(line).RootElement.Clone()); }
+                    catch (JsonException) { }
+                }
+                this.LogFiles[file] = position + end + 1;
             }
+            return events;
         }
 
         public async Task<JsonElement> WaitForEventAsync(
-            string server, string eventName, Func<JsonElement, bool> match, TimeSpan? timeout = null)
+            string server, string eventName, Func<JsonElement, bool> match, TimeSpan? timeout = null, int after = 0)
         {
             var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(10));
+            int next = after;
             while (true)
             {
-                foreach (var e in this.Events(server))
-                    if (e.TryGetProperty("event", out var name) && name.GetString() == eventName
-                        && match(e))
+                JsonElement[] added;
+                lock (this.LogFiles)
+                {
+                    var events = this.Read(server);
+                    added = events.Skip(next).ToArray();
+                    next = Math.Max(next, events.Count);
+                }
+                foreach (var e in added)
+                    if (e.TryGetProperty("event", out var name) && name.GetString() == eventName && match(e))
                         return e;
                 if (DateTime.UtcNow > deadline)
                     throw new Xunit.Sdk.XunitException(
                         $"The {server} server didn't log {eventName} in time (logs in {this.LogDirectory})");
-                await Task.Delay(50);
+                await Task.Delay(20);
             }
         }
 
-        // Periodic saves log the same event, so only a logout save says the player is gone
-        public Task<JsonElement> WaitForLogoutSaveAsync(string name) =>
-            this.WaitForEventAsync("game", "character.saved", e =>
-                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout");
-
-        // The logout save on a map, for a player who logged out before somewhere else
-        public Task<JsonElement> WaitForLogoutSaveAsync(string name, uint mapID, int x) =>
-            this.WaitForEventAsync("game", "character.saved", e =>
-                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout" &&
-                e.GetProperty("mapId").GetUInt32() == mapID && e.GetProperty("x").GetInt32() == x);
-
-        public Task<JsonElement> WaitForEventAsync(string server, string eventName, string field, string value) =>
+        public Task<JsonElement> WaitForEventAsync(
+            string server, string eventName, string field, string value, int after = 0) =>
             this.WaitForEventAsync(server, eventName,
-                e => e.TryGetProperty(field, out var v) && v.ToString() == value);
+                e => e.TryGetProperty(field, out var v) && v.ToString() == value, after: after);
+
+        // Periodic saves log the same event, so only a logout save says the player is gone.
+        // Every login of a character ends in one, so only one logged after `after` counts.
+        public Task<JsonElement> WaitForLogoutSaveAsync(string name, int after) =>
+            this.WaitForEventAsync("game", "character.saved", e =>
+                e.GetProperty("name").GetString() == name && e.GetProperty("reason").GetString() == "logout",
+                after: after);
+
+        public async Task<uint> AccountIdAsync(string email)
+        {
+            await using var db = new MySqlConnection(this.ConnectionString(this.AccountSchema));
+            await db.OpenAsync();
+            var command = new MySqlCommand("SELECT AccountID FROM account WHERE Username = @email", db);
+            command.Parameters.AddWithValue("@email", email);
+            return Convert.ToUInt32(await command.ExecuteScalarAsync());
+        }
     }
 
     [CollectionDefinition(Name)]

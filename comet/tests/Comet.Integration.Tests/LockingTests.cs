@@ -8,15 +8,11 @@ namespace Comet.Integration.Tests
 
     public class LockingTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public LockingTests(ServerFixture servers) : base(servers) { }
 
         private static async Task<ItemInfo> LockedBladeAsync(Player player)
         {
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.Blade.Id);
-            var blade = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
-            Assert.NotNull(blade);
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.LockAsync(blade.Id);
             Assert.NotNull(await player.Game.WaitForEquipLockAsync(l => l.ItemId == blade.Id && l.Mode == EquipLockMessage.Lock));
             Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == blade.Id && i.Action == 3 && i.Locked));
@@ -29,7 +25,7 @@ namespace Comet.Integration.Tests
             var (player, email) = await this.PlayingAtAsync(1002, 230, 300, GameMaster);
             var blade = await LockedBladeAsync(player);
             await this.Servers.WaitForEventAsync("game", "item.locked", "name", player.User.Name);
-            await player.DisposeAsync();
+            await this.LogOutAsync(player);
 
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.True(again.Inventory.Single(i => i.Id == blade.Id).Locked);
@@ -41,8 +37,7 @@ namespace Comet.Integration.Tests
         public async Task OnlyEquipmentCanBeLocked()
         {
             await using var player = (await this.PlayingAtAsync(1002, 231, 300, GameMaster)).Player;
-            await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + ServerFixture.Potion.Id);
-            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            var potion = await GiveAsync(player, ServerFixture.Potion.Id);
             await player.Game.LockAsync(potion.Id);
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text == "Only equipment can be locked!"));
             Assert.Equal(0, Convert.ToInt32(await this.Servers.QueryGameScalarAsync(
@@ -74,10 +69,9 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await seller.Game.WaitForTradeAsync(t => t.Action == TradeMessage.AddItemFailed && t.Data == blade.Id));
             Assert.NotNull(await seller.Game.WaitForTalkAsync(t =>
                 t.Text == "This equipment is locked. You can only trade it to your trade partners."));
-            await seller.DisposeAsync();
+            await this.LogOutAsync(seller);
 
             // Partners for four days, past the trial
-            await this.Servers.WaitForLogoutSaveAsync(seller.User.Name);
             await this.Servers.ExecuteGameSqlAsync(
                 "INSERT INTO trade_partner (CharacterID, PartnerID, Since) VALUES " +
                 "(@a, @b, UTC_TIMESTAMP() - INTERVAL 4 DAY), (@b, @a, UTC_TIMESTAMP() - INTERVAL 4 DAY)",
@@ -110,9 +104,7 @@ namespace Comet.Integration.Tests
             // Still locked until then
             await player.Game.DropAsync(blade.Id);
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text == "This equipment is locked. It can't be discarded."));
-            await player.DisposeAsync();
-
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
+            await this.LogOutAsync(player);
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE item SET UnlocksAt = UTC_TIMESTAMP() - INTERVAL 1 MINUTE WHERE ItemID = @id", ("@id", blade.Id));
             await using var again = await this.Servers.PlayAsync(email, Password);
@@ -120,15 +112,6 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await again.Game.WaitForEquipLockAsync(l => l.ItemId == blade.Id && l.Mode == EquipLockMessage.Unlocked));
             Assert.Equal(0, Convert.ToInt32(await this.Servers.QueryGameScalarAsync(
                 "SELECT Locked FROM item WHERE ItemID = @id", ("@id", blade.Id))));
-        }
-
-        private static async Task OpenTradeAsync(Player asker, Player other)
-        {
-            Assert.NotNull(await asker.Game.WaitForSpawnAsync(other.User.Id));
-            await asker.Game.TradeAsync(TradeMessage.Request, other.User.Id);
-            Assert.NotNull(await other.Game.WaitForTradeAsync(t => t.Action == TradeMessage.Request && t.Data == asker.User.Id));
-            await other.Game.TradeAsync(TradeMessage.Request, asker.User.Id);
-            Assert.NotNull(await asker.Game.WaitForTradeAsync(t => t.Action == TradeMessage.ShowTable && t.Data == other.User.Id));
         }
     }
 }

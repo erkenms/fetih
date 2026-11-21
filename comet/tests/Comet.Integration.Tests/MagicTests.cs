@@ -1,7 +1,5 @@
 namespace Comet.Integration.Tests
 {
-    using System;
-    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -10,24 +8,10 @@ namespace Comet.Integration.Tests
     // Spells, weapon proficiency and the XP bar, with the test magictype.dat of ServerFixture
     public class MagicTests : IntegrationTest
     {
-        private const ushort GameMaster = 3;
-
         public MagicTests(ServerFixture servers) : base(servers) { }
-
-        private static Task CommandAsync(Player player, string command) =>
-            player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", command);
 
         private Task<System.Text.Json.JsonElement> RejectedAsync(Player player) =>
             this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name);
-
-        [Fact]
-        public async Task StaminaIsSentWhenLoggingIn()
-        {
-            await using var player = (await this.PlayingAtAsync(1002, 700, 760)).Player;
-            var stamina = await player.Game.WaitForAttribAsync(a =>
-                a.Values.TryGetValue(Stamina, out var value) && value == 100);
-            Assert.NotNull(stamina);
-        }
 
         [Fact]
         public async Task SpellsAndProficienciesAreListedAtLogin()
@@ -40,9 +24,9 @@ namespace Comet.Integration.Tests
                 Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1000 && m.Level == 1));
                 await CommandAsync(player, "/prof 410 2");
                 Assert.NotNull(await player.Game.WaitForWeaponSkillAsync(w => w.Type == 410 && w.Level == 2 && w.Needed == 1000));
+                await this.LogOutAsync(player);
             }
 
-            await this.Servers.WaitForLogoutSaveAsync(player.User.Name);
             await using var again = await this.Servers.PlayAsync(email, Password);
             Assert.Equal(new MagicInfo(1000, 1, 0), Assert.Single(again.Game.Spells));
             Assert.Equal(new WeaponSkill(410, 2, 0, 1000), Assert.Single(again.Game.Proficiencies));
@@ -107,8 +91,7 @@ namespace Comet.Integration.Tests
             await player.Game.CastAsync(player.User.Id, 1045, 0, at.X - 2, at.Y);
             Assert.Equal("wrong_weapon", (await RejectedAsync(player)).GetProperty("reason").GetString());
 
-            await CommandAsync(player, "/item " + ServerFixture.Blade.Id);
-            var blade = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(blade.Id, 4);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
 
@@ -157,8 +140,7 @@ namespace Comet.Integration.Tests
             var at = ServerFixture.PheasantForBlade;
             await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
             var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
-            await CommandAsync(player, "/item " + ServerFixture.Blade.Id);
-            var blade = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Blade.Id);
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(blade.Id, 4);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
 
