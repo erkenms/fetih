@@ -74,7 +74,13 @@ namespace Comet.Game.Packets
             writer.Write((uint)this.Stats.MagicDefense);    // 32
             writer.Write((uint)this.Stats.Dodge);           // 36
             writer.Write(this.Agility);                     // 40
-            writer.Write(new byte[Size - 44]);              // 44
+            writer.Write(0u);                               // 44 accuracy
+            writer.Write((uint)this.Stats.AttackPercent);   // 48
+            writer.Write((uint)this.Stats.MagicPercent);    // 52
+            writer.Write((uint)this.Stats.TortoisePercent); // 56 damage taken off
+            writer.Write(0u);                               // 60 curse
+            writer.Write((uint)this.Stats.BlessPercent);    // 64
+            writer.Write(new byte[Size - 68]);              // 68
             return writer.ToArray();
         }
     }

@@ -18,7 +18,7 @@ namespace Comet.Game.Items
         public const uint DragonBall = 1088000;
         public const uint Meteor = 1088001;
         public const uint MeteorTear = 1088002;
-        public const byte EmptySocket = 255;
+        public const byte EmptySocket = Gems.EmptySocket;
 
         // Gear above this required level can't be raised further with meteors
         public const int MaxUpgradeLevel = 120;

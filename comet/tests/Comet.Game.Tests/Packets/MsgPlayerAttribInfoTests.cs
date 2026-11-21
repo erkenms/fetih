@@ -23,6 +23,16 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
+        public void GemAndBlessPercentagesFollowAccuracy()
+        {
+            var stats = new Stats(1, 1, 0, 0, 1, 1000, false)
+                { AttackPercent = 15, MagicPercent = 10, TortoisePercent = 6, BlessPercent = 3 };
+            var bytes = new MsgPlayerAttribInfo(1, 1, 1, 1, stats).Encode();
+            var fields = Enumerable.Range(11, 6).Select(i => BitConverter.ToUInt32(bytes, i * 4));
+            Assert.Equal(new uint[] { 0, 15, 10, 6, 0, 3 }, fields);
+        }
+
+        [Fact]
         public void TheClientAsksWithAnIdAtFour()
         {
             // As the 5619 client sent it on opening the stat pane, seal included

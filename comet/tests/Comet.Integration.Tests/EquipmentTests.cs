@@ -110,6 +110,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task WornGemsAndBlessingsShowInTheStatWindow()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 680, 940, GameMaster, level: 15);
+            var helmet = await GiveAsync(first, ServerFixture.Helmet.Id);
+            await this.LogOutAsync(first);
+            await this.Servers.ExecuteGameSqlAsync(
+                "UPDATE item SET Gem1 = 13, Gem2 = 72, Bless = 3 WHERE ItemID = @id", ("@id", helmet.Id));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+
+            await player.Game.EquipAsync(helmet.Id, 1);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, helmet.Id));
+            await player.Game.QueryStatsAsync(player.User.Id);
+            var stats = await player.Game.WaitForStatsAsync(s => s.Id == player.User.Id);
+            Assert.Equal((15u, 0u, 4u, 3u), (stats?.AttackPercent, stats?.MagicPercent, stats?.ReducePercent, stats?.BlessPercent));
+        }
+
+        [Fact]
         public async Task TheStatQueryActionIsAnsweredWithTheStatWindowNotEchoed()
         {
             await using var player = (await this.PlayingAtAsync(1002, 760, 600)).Player;

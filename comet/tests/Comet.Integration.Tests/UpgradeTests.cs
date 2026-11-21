@@ -11,7 +11,7 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task MeteorsRaiseLevelsAndDragonballsQualityAndAreUsedUp()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 760, 580, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 600, 940, GameMaster)).Player;
             var helmet = await GiveAsync(player, ServerFixture.Helmet.Id);
             var meteor = await GiveAsync(player, ServerFixture.Meteor.Id);
 
@@ -40,7 +40,7 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task OnlyDragonballsRaiseQuality()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 780, 580, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 640, 940, GameMaster)).Player;
             var helmet = await GiveAsync(player, ServerFixture.Helmet.Id);
             var meteor = await GiveAsync(player, ServerFixture.Meteor.Id);
 

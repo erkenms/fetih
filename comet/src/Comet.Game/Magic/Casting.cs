@@ -268,12 +268,12 @@ namespace Comet.Game.Magic
             int level = client.Character.Level;
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
-                    ? Damage.Magic(stats.MagicAttack, spell.Power, level, type.Level) : 0;
+                    ? Damage.Magic(stats.MagicDamage, spell.Power, level, type.Level) : 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
                 return 0;
             uint damage = stats.Bow
-                ? Damage.Archery(stats.MinAttack, stats.MaxAttack, level, type.Level, type.Dodge, Random.Shared)
-                : Damage.Melee(stats.MinAttack, stats.MaxAttack, level, type.Level, type.Defense, Random.Shared);
+                ? Damage.Archery(stats.MinDamage, stats.MaxDamage, level, type.Level, type.Dodge, Random.Shared)
+                : Damage.Melee(stats.MinDamage, stats.MaxDamage, level, type.Level, type.Defense, Random.Shared);
             return Buffs.AgainstMonster(client.Effects, (uint)Math.Max(1, damage * (ulong)spell.PowerPercent / 100), now);
         }
 
@@ -282,14 +282,14 @@ namespace Comet.Game.Magic
             var targetStats = Stats.Of(target);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
-                    ? Damage.PlayerMagic(stats.MagicAttack, spell.Power, targetStats.MagicDefense) : 0;
+                    ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(targetStats.Dodge, targetIsMonster: false, Random.Shared))
                 return 0;
-            int attack = Damage.Roll(stats.MinAttack, stats.MaxAttack, Random.Shared) * spell.PowerPercent / 100;
+            int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * spell.PowerPercent / 100;
             attack = Buffs.AgainstPlayer(client.Effects, attack, now);
-            return stats.Bow
+            return targetStats.Taken(stats.Bow
                 ? Damage.PlayerArchery(attack, targetStats.Dodge)
-                : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now));
+                : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
 
         // Heals by the spell's power, up to full health; the caster if the target isn't a

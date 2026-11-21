@@ -818,11 +818,17 @@ namespace Comet.Client
     }
 
     // The stat window: ID at 4, then u32s: max life, max mana, max attack, min attack,
-    // defense, magic attack, magic defense, dodge and agility. Asked for with the same
-    // 136 bytes, empty but for the ID of the player whose stats are wanted.
+    // defense, magic attack, magic defense, dodge and agility; from 48 the percentages: attack,
+    // magic attack, damage taken off, curse and bless. Asked for with the same 136 bytes, empty
+    // but for the ID of the player whose stats are wanted.
     public sealed record StatWindow(uint Id, uint MaxHealth, uint MaxMana, uint MaxAttack, uint MinAttack,
         uint Defense, uint MagicAttack, uint MagicDefense, uint Dodge, uint Agility)
     {
+        public uint AttackPercent { get; init; }
+        public uint MagicPercent { get; init; }
+        public uint ReducePercent { get; init; }
+        public uint BlessPercent { get; init; }
+
         public static byte[] Build(uint id)
         {
             var packet = Packet.Create(PacketTypes.MsgPlayerAttribInfo, 136);
@@ -835,7 +841,13 @@ namespace Comet.Client
             BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
             BitConverter.ToUInt32(packet, 20), BitConverter.ToUInt32(packet, 24),
             BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt32(packet, 32),
-            BitConverter.ToUInt32(packet, 36), BitConverter.ToUInt32(packet, 40));
+            BitConverter.ToUInt32(packet, 36), BitConverter.ToUInt32(packet, 40))
+        {
+            AttackPercent = BitConverter.ToUInt32(packet, 48),
+            MagicPercent = BitConverter.ToUInt32(packet, 52),
+            ReducePercent = BitConverter.ToUInt32(packet, 56),
+            BlessPercent = BitConverter.ToUInt32(packet, 64),
+        };
     }
 
     public sealed record DataMessage(uint Action, uint Value)

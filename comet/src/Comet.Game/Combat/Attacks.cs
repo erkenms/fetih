@@ -105,8 +105,8 @@ namespace Comet.Game.Combat
             uint damage = 0;
             if (Buffs.HasAccuracy(client.Effects, now) || Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
                 damage = shooting
-                    ? Damage.Archery(stats.MinAttack, stats.MaxAttack, character.Level, type.Level, type.Dodge, Random.Shared)
-                    : Damage.Melee(stats.MinAttack, stats.MaxAttack, character.Level, type.Level, type.Defense, Random.Shared);
+                    ? Damage.Archery(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Dodge, Random.Shared)
+                    : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Defense, Random.Shared);
             damage = Buffs.AgainstMonster(client.Effects, damage, now);
             if (shooting)
                 await UseArrowAsync(client, arrows);
@@ -201,7 +201,7 @@ namespace Comet.Game.Combat
             var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
             await Pking.OnAttackAsync(client, target);
-            int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinAttack, stats.MaxAttack, Random.Shared), now);
+            int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared), now);
             bool sure = Buffs.HasAccuracy(client.Effects, now);
             if (shooting)
                 await UseArrowAsync(client, arrows);
@@ -220,7 +220,7 @@ namespace Comet.Game.Combat
             var stats = Stats.Of(target);
             int defense = Buffs.Defense(target.Effects, stats.Defense, DateTime.UtcNow);
             uint damage = !sure && !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
-                shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense);
+                stats.Taken(shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense));
             if (!shooting)
                 await FacePlayerTowardAsync(target, attackerCharacter.X, attackerCharacter.Y);
             var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
@@ -278,8 +278,8 @@ namespace Comet.Game.Combat
 
             var stats = Stats.Of(client);
             var type = monster.Type;
-            uint damage = Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared)
-                ? Damage.MonsterMelee(type.AttackMin, type.AttackMax, Buffs.Defense(client.Effects, stats.Defense, now), Random.Shared) : 0;
+            uint damage = Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? stats.Taken(
+                Damage.MonsterMelee(type.AttackMin, type.AttackMax, Buffs.Defense(client.Effects, stats.Defense, now), Random.Shared)) : 0;
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
 
