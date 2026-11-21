@@ -140,6 +140,12 @@ namespace Comet.Game.Packets
                 [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
 
                 // Warehouse silver; the amount in Command
+                // The gear, then the dragonball or meteor dropped on it
+                [ItemActionType.EquipmentImprove] = (msg, client) =>
+                    Upgrading.ImproveAsync(client, msg.CharacterID, msg.Command),
+                [ItemActionType.EquipmentLevelUp] = (msg, client) =>
+                    Upgrading.LevelUpAsync(client, msg.CharacterID, msg.Command),
+
                 [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
                 [ItemActionType.BankDeposit] = (msg, client) => Storing.MoveSilverAsync(client, msg.Command),
                 [ItemActionType.BankWithdraw] = (msg, client) => Storing.MoveSilverAsync(client, -(long)msg.Command),

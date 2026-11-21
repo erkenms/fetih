@@ -237,6 +237,12 @@ namespace Comet.Client
             return packet == null ? null : ItemMessage.Parse(packet);
         }
 
+        public Task ImproveAsync(uint itemId, uint dragonBallId) =>
+            this.SendAsync(ItemMessage.Build(itemId, dragonBallId, ItemMessage.Improve));
+
+        public Task LevelUpAsync(uint itemId, uint meteorId) =>
+            this.SendAsync(ItemMessage.Build(itemId, meteorId, ItemMessage.LevelUp));
+
         public Task DropAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Drop));
 

@@ -39,6 +39,11 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Life, ushort Mana) ManaPotion = (1001000, "Agrypnotic", 0, 70);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
+        // The helmet a level up, then refined: both sure upgrades
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetLevelUp = (111013, "IronHelmet", 3899, 20);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetRefined = (111016, "IronHelmet", 3899, 20);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) DragonBall = (1088000, "DragonBall", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Meteor = (1088001, "Meteor", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050000, "LuckyArrow", 3, 0);
         // Teleports to Twin City's portal, 430,380 in Data/maps.json
@@ -289,7 +294,8 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed, Crop,
-                    SmallPrayingStone, PrayingStone, Necklace }, new[] { Potion, ManaPotion, Bottle },
+                    SmallPrayingStone, PrayingStone, Necklace,
+                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));

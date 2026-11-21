@@ -71,6 +71,18 @@ namespace Comet.Game.Database.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
         }
 
+        // An upgrade's type, durability and sockets
+        public static async Task SetUpgradeAsync(DbItem item)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == item.ItemID).ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.TypeID, item.TypeID)
+                .SetProperty(x => x.Amount, item.Amount)
+                .SetProperty(x => x.AmountLimit, item.AmountLimit)
+                .SetProperty(x => x.Gem1, item.Gem1)
+                .SetProperty(x => x.Gem2, item.Gem2));
+        }
+
         public static async Task DeleteAsync(uint itemID)
         {
             using var db = new ServerDbContext();

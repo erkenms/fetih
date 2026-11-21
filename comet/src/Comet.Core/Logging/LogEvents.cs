@@ -66,6 +66,8 @@ namespace Comet.Core.Logging
         public const string ItemUnlockStarted = "item.unlock_started";
         public const string ItemUnlocked = "item.unlocked";
         public const string ItemLockRejected = "item.lock_rejected";
+        public const string ItemUpgraded = "item.upgraded";
+        public const string ItemUpgradeRejected = "item.upgrade_rejected";
 
         public const string SecondPasswordSet = "second_password.set";
         public const string SecondPasswordVerified = "second_password.verified";
