@@ -19,6 +19,9 @@ namespace Comet.Game
 
         public static PlayerRegistry<Client> Players = new PlayerRegistry<Client>();
 
+        // Logouts still saving, by account: a new login for the account waits for its own
+        public static ConcurrentDictionary<uint, Task> Logouts = new ConcurrentDictionary<uint, Task>();
+
         public static MapStore Maps;
 
         public static WorldMaps<Client> World;

@@ -104,6 +104,11 @@ namespace Comet.Game.Packets
                 previous.Disconnect(DisconnectReasons.Replaced);
                 await previous.LogoutAsync();
             }
+            else if (Kernel.Logouts.TryGetValue(auth.AccountID, out var logout))
+            {
+                // The last connection closed, but its logout save may still be running
+                await logout;
+            }
 
             var character = await CharactersRepository.FindAsync(auth.AccountID);
             if (character == null)

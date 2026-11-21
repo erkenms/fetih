@@ -1,6 +1,7 @@
 namespace Comet.Game
 {
     using System;
+    using System.Collections.Generic;
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
@@ -149,6 +150,13 @@ namespace Comet.Game
         {
             if (actor == null) return;
             this.Processor.DeselectPartition(actor.Partition);
+
+            // Registered before the client leaves Kernel.Clients, so a login for this account
+            // finds either the client or its logout, and loads the character after the save
+            var logout = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            if (actor.AccountID != 0)
+                Kernel.Logouts[actor.AccountID] = logout.Task;
+
             // Only removes the registry entry if it still belongs to this client; a
             // replacing login for the same account keeps its entry.
             Kernel.Clients.Remove(actor.AccountID, actor);
@@ -156,12 +164,13 @@ namespace Comet.Game
             if (actor.Creation != null)
                 Kernel.Registration.TryRemove(actor.Creation.Token, out _);
 
+            Task leaving = Task.CompletedTask;
             if (actor.Character != null && actor.LoggedInAt.HasValue)
             {
                 var character = actor.Character;
                 Visibility.Leave(actor);
                 Kernel.Players.Remove(character.CharacterID, character.Name, actor);
-                _ = LeaveOthersAsync(actor);
+                leaving = LeaveOthersAsync(actor);
                 LogEvents.For<Server>(LogEvents.SessionLogout).Information(
                     "{Name} logged out: {Reason} after {DurationSec}s " +
                     "(connection {ConnId}, account {AccountId}, character {CharacterId}, " +
@@ -172,10 +181,22 @@ namespace Comet.Game
                     character.MapID, character.X, character.Y, Kernel.Players.Count);
             }
 
-            actor.LogoutAsync().ContinueWith(
-                t => LogEvents.For<Server>(LogEvents.SessionLogout).Error(t.Exception,
-                    "Logout save failed for character {CharacterId}", actor.ID),
-                TaskContinuationOptions.OnlyOnFaulted);
+            _ = FinishLogoutAsync(actor, leaving, logout);
+        }
+
+        private static async Task FinishLogoutAsync(Client actor, Task leaving, TaskCompletionSource logout)
+        {
+            try { await Task.WhenAll(leaving, actor.LogoutAsync()); }
+            catch (Exception e)
+            {
+                LogEvents.For<Server>(LogEvents.SessionLogout).Error(e,
+                    "Logout save failed for character {CharacterId}", actor.ID);
+            }
+            finally
+            {
+                Kernel.Logouts.TryRemove(new KeyValuePair<uint, Task>(actor.AccountID, logout.Task));
+                logout.SetResult();
+            }
         }
     }
 }
