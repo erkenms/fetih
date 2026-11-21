@@ -52,6 +52,7 @@ namespace Comet.Client
         public const ushort MsgPlayer = 10014;
         public const ushort MsgUserAttrib = 10017;
         public const ushort MsgGodExp = 1036;
+        public const ushort MsgPlayerAttribInfo = 1040;
         public const ushort MsgTrainingInfo = 2043;
         public const ushort MsgTraining = 2044;
         public const ushort MsgTradeBuddy = 2046;
@@ -811,6 +812,19 @@ namespace Comet.Client
         public static ArenaScore Parse(byte[] packet) => new ArenaScore(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 24),
             BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt32(packet, 48));
+    }
+
+    // The stat window: ID at 4, then u32s: max life, max mana, max attack, min attack,
+    // defense, magic attack, magic defense, dodge and agility
+    public sealed record StatWindow(uint Id, uint MaxHealth, uint MaxMana, uint MaxAttack, uint MinAttack,
+        uint Defense, uint MagicAttack, uint MagicDefense, uint Dodge, uint Agility)
+    {
+        public static StatWindow Parse(byte[] packet) => new StatWindow(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt32(packet, 20), BitConverter.ToUInt32(packet, 24),
+            BitConverter.ToUInt32(packet, 28), BitConverter.ToUInt32(packet, 32),
+            BitConverter.ToUInt32(packet, 36), BitConverter.ToUInt32(packet, 40));
     }
 
     public sealed record DataMessage(uint Action, uint Value)

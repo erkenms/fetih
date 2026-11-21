@@ -22,6 +22,7 @@ namespace Comet.Network.Packets
         MsgData = 1033,
         MsgGodExp = 1036,
         MsgPing,
+        MsgPlayerAttribInfo = 1040,
         MsgEnemyList = 1041,
         MsgMonsterTransform,
         MsgTeamRoll,
