@@ -53,6 +53,8 @@ namespace Comet.Integration.Tests
         {
             var (player, email) = await this.PlayingAtAsync(1002, 640, 600, GameMaster);
             await PrayAsync(player);
+            await player.Game.TrainingAsync(TrainingMessage.Query);
+            Assert.Equal(900u, (await player.Game.WaitForTrainingAsync(TrainingMessage.Query))?.Data);
             await player.Game.TrainingAsync(TrainingMessage.Enter);
             var moved = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
             Assert.Equal((601u, (ushort)65, (ushort)55), (moved?.Command, moved?.X, moved?.Y));

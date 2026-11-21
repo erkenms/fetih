@@ -6,9 +6,9 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // Offline training (5619 client's CMsgTraining), 12 bytes: action u16 at 4, data u32 at 8.
-    // Client: 0 asks the price (the client skips it when blessed), 1 enters, 3 asks for the
-    // result, 4 claims it. Server: 0 the minutes for the dialog, 1 shows the dialog that
-    // follows entering, 2 makes the client ask for the result (3).
+    // Client: 0 asks before opening the dialog (also when blessed, seen in the VM), 1 enters,
+    // 3 asks for the result, 4 claims it. Server: 0 the minutes for the dialog, 1 shows the
+    // dialog that follows entering, 2 makes the client ask for the result (3).
     public sealed class MsgTraining : MsgBase<Client>
     {
         public TrainingAction Action { get; set; }

@@ -44,9 +44,9 @@ namespace Comet.Game.Training
             switch (msg.Action)
             {
                 case TrainingAction.Query:
-                    // Only reached by the unblessed, who would buy training time with CPs
-                    await Talk.NoticeAsync(client, "Offline training is only for the blessed.");
-                    Reject(client, "query", "not_blessed");
+                    // The VM showed the client asking even when blessed; the answer's minutes
+                    // go to the dialog it opens, whose OK enters
+                    await client.SendAsync(new MsgTraining(TrainingAction.Query, (uint)MaxMinutes(client.Character)));
                     break;
                 case TrainingAction.Enter:
                     await EnterAsync(client);
