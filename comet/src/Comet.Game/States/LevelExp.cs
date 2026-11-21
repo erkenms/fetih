@@ -5,7 +5,7 @@ namespace Comet.Game.States
         public byte Level { get; init; }
         public ulong Experience { get; init; }
 
-        // TQ's time to level up; an EXP ball is worth 600 of it
+        // The time a level is meant to take; an EXP ball is worth 600 of it
         public uint UpLevTime { get; init; }
     }
 }

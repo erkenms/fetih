@@ -4,7 +4,7 @@ namespace Comet.Game.Packets
     using Comet.Game.World;
     using Comet.Network.Packets;
 
-    // Sent after each map change (Albetros 5517): map ID at 4, the map's file (doc) ID at 8,
+    // Sent after each map change: map ID at 4, the map's file (doc) ID at 8,
     // the map type flags as a u64 at 12. Without it the 5619 client says path-finding
     // isn't available on the map.
     public sealed class MsgMapInfo : MsgBase<Client>

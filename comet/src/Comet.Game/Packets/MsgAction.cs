@@ -56,7 +56,7 @@ namespace Comet.Game.Packets
             Action = ActionType.CharacterLevelUp
         };
 
-        // Albetros (5517): the window in Command and the player's position in the arguments
+        // The window in Command and the player's position in the arguments
         public static MsgAction OpenWindow(uint identity, Window window, ushort x, ushort y) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -67,7 +67,7 @@ namespace Comet.Game.Packets
             Action = ActionType.ClientDialog,
         };
 
-        // Albetros (5517): Command 32 opens a shop, with the shop's NPC in the timestamp field
+        // Command 32 opens a shop, with the shop's NPC in the timestamp field
         public static MsgAction OpenShop(uint identity, uint npcID, ushort x, ushort y) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -217,7 +217,7 @@ namespace Comet.Game.Packets
                     ? Task.CompletedTask
                     : client.SendAsync(MsgPlayerAttribInfo.Of(client)),
 
-                // Albetros (5517): the client asks for a booth and opens its window on the
+                // The client asks for a booth and opens its window on the
                 // echo. The 5619 client sends 114 after each map load (login, teleport); a
                 // booth doesn't outlive that.
                 [ActionType.BoothSpawn] = (msg, client) => Items.Vending.OpenAsync(client, msg),
@@ -229,7 +229,7 @@ namespace Comet.Game.Packets
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
-                // WCO (5808): non-zero Command asks to revive where the player lies
+                // Non-zero Command asks to revive where the player lies
                 [ActionType.CharacterRevive] = (msg, client) =>
                     Combat.Death.ReviveAsync(client, "button", here: msg.Command != 0),
                 [ActionType.CharacterDead] = (msg, client) => Combat.Death.BecomeGhostAsync(client),
@@ -244,7 +244,7 @@ namespace Comet.Game.Packets
                     msg.CharacterID = client.ID;
                     return Movement.SendToViewAsync(client, msg);
                 },
-                // Albetros (5517): the target's ID in Command; answered with the target's spawn,
+                // The target's ID in Command; answered with the target's spawn,
                 // each worn item and the spouse's name, not echoed
                 [ActionType.CharacterObservation] = async (msg, client) =>
                 {

@@ -47,7 +47,7 @@ namespace Comet.Game.Magic
         public const int PercentBase = 30000;
     }
 
-    // How a spell picks its targets (TQ's MAGICSORT)
+    // How a spell picks its targets (magictype's sort)
     public enum MagicSort : ushort
     {
         Attack = 1,
@@ -95,7 +95,7 @@ namespace Comet.Game.Magic
         }
 
         // Decrypted, one spell level per line, fields ending in "@@". The 5619 client's
-        // 50 fields follow TQ's cq_magictype with one unknown field after need_exp (19):
+        // 50 fields follow cq_magictype with one unknown field after need_exp (19):
         // 0 id, 1 type, 2 sort, 3 name, 4 crime, 5 ground, 6 multi, 7 target, 8 level,
         // 9 use_mp, 10 power, 11 intone, 12 percent, 13 step_secs, 14 range, 15 distance,
         // 16 status, 17 need_prof, 18 need_exp, 20 need_level, 21 use_xp, 22 weapon_subtype,

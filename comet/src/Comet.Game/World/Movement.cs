@@ -15,7 +15,7 @@ namespace Comet.Game.World
         public static readonly int[] DeltaX = { 0, -1, -1, -1, 0, 1, 1, 1 };
         public static readonly int[] DeltaY = { 1, 1, 0, -1, -1, -1, 0, 1 };
 
-        // A ride step (MsgWalk mode 9) by its direction modulo 24 (Albetros, 5808)
+        // A ride step (MsgWalk mode 9) by its direction modulo 24
         public static readonly int[] RideDeltaX = { 0, -2, -2, -2, 0, 2, 2, 2, 1, 0, -2, 0, 1, 0, 2, 0, 0, -2, 0, -1, 0, 2, 0, 1 };
         public static readonly int[] RideDeltaY = { 2, 2, 0, -2, -2, -2, 0, 2, 2, 0, -1, 0, -2, 0, 1, 0, 0, 1, 0, -2, 0, -1, 0, 2 };
 

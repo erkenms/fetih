@@ -5,7 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // WCO (5808), 32 bytes: the other player's ID at 4, action byte at 8, online byte at 9,
+    // 32 bytes: the other player's ID at 4, action byte at 8, online byte at 9,
     // minutes left of the trial at 10, the name (16 bytes) at 16
     public sealed class MsgTradeBuddy : MsgBase<Client>
     {
@@ -58,7 +58,7 @@ namespace Comet.Game.Packets
             // Asking back accepts.
             Request = 0,
             Reject = 1,
-            // Between Reject and Break in TQ's numbering; WCO never sends them
+            // Never sent; they keep Break at 4
             Online = 2,
             Offline = 3,
             Break = 4,

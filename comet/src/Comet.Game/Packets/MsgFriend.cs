@@ -5,7 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros), 40 bytes: the other player's ID at 4, action byte at 8,
+    // 40 bytes: the other player's ID at 4, action byte at 8,
     // online byte at 9, two ranks at 12 and 16 (left 0), the name (16 bytes) at 20
     public sealed class MsgFriend : MsgBase<Client>
     {

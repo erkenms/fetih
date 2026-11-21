@@ -167,8 +167,8 @@ namespace Comet.Game.Combat
                 await Loot.DropAsync(client, monster, x, y, Random.Shared);
         }
 
-        // TQ's (WCO): the killer's living teammates on the map within this many cells get the
-        // kill bonus as if the kill were theirs, up to 360 per level of theirs
+        // The killer's living teammates on the map within this many cells get the kill bonus as
+        // if the kill were theirs, up to 360 per level of theirs
         public const int TeamShareDistance = 32;
         public const int TeamShareMaxPerLevel = 360;
 

@@ -1,6 +1,6 @@
 // Experience needed to go from a level to the next. The highest level listed is one below
-// the level cap; a level missing from the list caps levelling there. upLevTime is TQ's
-// time to level (Albetros levexp); an EXP ball is worth 600 of it at the player's level.
+// the level cap; a level missing from the list caps levelling there. upLevTime is the time
+// a level is meant to take; an EXP ball is worth 600 of it at the player's level.
 {
   "levels": [
     { "level": 1, "experience": 59, "upLevTime": 2 },

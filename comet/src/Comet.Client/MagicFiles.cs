@@ -20,7 +20,7 @@ namespace Comet.Client
         }
 
         // An encrypted magictype.dat as the 5619 client has it: per spell level one line of 50
-        // fields, each ending in "@@" (field numbers as in TQ's cq_magictype, with one more at 19)
+        // fields, each ending in "@@" (field numbers as in cq_magictype, with one more at 19)
         public static byte[] MagicTypeDat(params Spell[] spells)
         {
             var text = new StringBuilder();

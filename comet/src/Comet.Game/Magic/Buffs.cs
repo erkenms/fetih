@@ -7,11 +7,11 @@ namespace Comet.Game.Magic
     // on a percentage (Superman 31000 is 1000%, Shield 30300 is 300%).
     public static class Buffs
     {
-        // Each kill during Superman or Cyclone adds this while less than the cap is left (Albetros)
+        // Each kill during Superman or Cyclone adds this while less than the cap is left
         public static readonly TimeSpan KillExtension = TimeSpan.FromMilliseconds(700);
         public static readonly TimeSpan KillExtensionCap = TimeSpan.FromSeconds(25);
 
-        // Superman against players: Albetros's 1.9 times
+        // Superman against players: 1.9 times
         public const int SupermanAgainstPlayers = 190;
 
         public static ulong StatusOf(ushort magicType) => magicType switch
@@ -43,7 +43,7 @@ namespace Comet.Game.Magic
             (int)Scale((uint)Math.Max(0, defense), effects.Power(StatusFlags.Shield, now));
 
         // The kill's data for MsgInteract: 1, with the KO count in the high half during
-        // Superman or Cyclone (Albetros)
+        // Superman or Cyclone
         public static uint CountKill(Client client, DateTime now)
         {
             bool superman = client.Effects.Extend(StatusFlags.Superman, KillExtension, KillExtensionCap, now) ||

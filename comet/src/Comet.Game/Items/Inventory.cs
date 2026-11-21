@@ -73,7 +73,7 @@ namespace Comet.Game.Items
         Boots = 8,
         Garment = 9,
         Steed = 12,
-        // The riding crop (Albetros 5517: SteedTalisman)
+        // The riding crop
         Crop = 18,
         Warehouse = 230,
         Ground = 254,

@@ -202,7 +202,7 @@ namespace Comet.Client
         public const uint Attack = 2, Kill = 14, MagicAttack = 24, Shoot = 28;
 
         // A spell cast: the magic type in the low half of data and the level in the high half;
-        // type, target, cell and level are hidden with the sender's ID (TQ's ENCODE_MAGICATTACK)
+        // type, target, cell and level are hidden with the sender's ID
         public static byte[] BuildMagic(uint sender, ushort magicType, ushort level, uint target, int x, int y)
         {
             uint timestamp = (uint)Environment.TickCount;
@@ -747,7 +747,7 @@ namespace Comet.Client
         }
     }
 
-    // Nobility (5517 wiki). Action u16 at 4. Asked with a donation u64 at 8 and the currency
+    // Nobility. Action u16 at 4. Asked with a donation u64 at 8 and the currency
     // u16 at 16 (0 silver, 1 CPs), a board page at 8, or a rank at 8 for its minimum.
     // Answered with "id 0 amount total position" (donation) or "id total rank position"
     // (the player's rank) as strings at 32; the board's page u16 at 8, pages u16 at 10,

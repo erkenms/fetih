@@ -20,7 +20,7 @@ namespace Comet.Game.Packets
         public ItemActionType Action { get; set; }
 
         // Item IDs worn, for DisplayGears: slots 1 to 9, then the right and left accessories,
-        // the steed armor and the crop (5808 source). The steed isn't in it.
+        // the steed armor and the crop. The steed isn't in it.
         public uint[] Gears { get; set; }
 
         private const int GearCount = 13;
@@ -38,7 +38,7 @@ namespace Comet.Game.Packets
         public static MsgItem Removed(uint itemID) =>
             Create(itemID, 0, ItemActionType.InventoryRemove);
 
-        // Albetros (5517): tells a booth's owner that an item left the booth; booth ID in Command
+        // Tells a booth's owner that an item left the booth; booth ID in Command
         public static MsgItem BoothUnlisted(uint itemID, uint boothID) =>
             Create(itemID, boothID, ItemActionType.BoothRemove);
 

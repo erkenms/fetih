@@ -4,7 +4,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // WCO (5808), 16 bytes: the request at 4, the password at 8 and the new one at 12. To
+    // 16 bytes: the request at 4, the password at 8 and the new one at 12. To
     // the client, Correct carries flags at 8 instead: HasPassword, and Verified once given.
     public sealed class Msg2ndPsw : MsgBase<Client>
     {

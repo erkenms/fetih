@@ -9,14 +9,14 @@ namespace Comet.Game.States
     using static Comet.Game.Packets.MsgUserAttrib;
 
     // Praying stones add days to it. While it lasts, as the client's tooltip says: stamina up
-    // to 150, reviving where the player died (allowed as in WCO 5808), online and offline
+    // to 150, reviving where the player died, online and offline
     // training, and 20% extra EXP from monsters to claim (Training.GodExp). Changed on the
     // player's own queue.
     public static class HeavenBlessing
     {
         public const byte BlessedStamina = 150;
 
-        // Maps where the dead go back to their reborn point anyway (WCO 5808)
+        // Maps where the dead go back to their reborn point anyway
         private const MapFlags NoReviveHere = MapFlags.PrisonMap | MapFlags.PkField | MapFlags.PkGame | MapFlags.GuildMap;
 
         // PrayingStone(S), (M) and (L), by their itemtype descriptions

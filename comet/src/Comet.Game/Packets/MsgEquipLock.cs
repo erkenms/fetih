@@ -5,7 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // WCO (5808), 16 bytes: item ID at 4, mode byte at 8, a byte at 9 (3 on the unlock
+    // 16 bytes: item ID at 4, mode byte at 8, a byte at 9 (3 on the unlock
     // date), a value at 12: the unlock date as yyyymmdd
     public sealed class MsgEquipLock : MsgBase<Client>
     {

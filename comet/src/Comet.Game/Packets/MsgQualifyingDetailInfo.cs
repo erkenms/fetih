@@ -8,7 +8,7 @@ namespace Comet.Game.Packets
     // The player's own arena details. 44 bytes, as the 5619 client asks with it: rank at 4,
     // activity points at 8 (left 0), status at 12 (0 not joined, 1 waiting, 2 waiting
     // inactive, 3 in combat), total wins at 16, total losses at 20, wins today at 24,
-    // losses today at 28, total honor at 32, current honor at 36, arena points at 40 (5808).
+    // losses today at 28, total honor at 32, current honor at 36, arena points at 40.
     public sealed class MsgQualifyingDetailInfo : MsgBase<Client>
     {
         public const int Size = 44;

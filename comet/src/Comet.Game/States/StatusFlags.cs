@@ -4,8 +4,8 @@ namespace Comet.Game.States
     using System.Collections.Generic;
     using System.Linq;
 
-    // Status bits (MsgUserAttrib 25, MsgPlayer 22), as Albetros (5517) names them. The client
-    // draws each from ini/statuseffect.ini.
+    // Status bits (MsgUserAttrib 25, MsgPlayer 22). The client draws each from
+    // ini/statuseffect.ini.
     public static class StatusFlags
     {
         public const ulong Flashing = 0x1;

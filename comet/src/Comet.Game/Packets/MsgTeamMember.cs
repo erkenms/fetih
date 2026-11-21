@@ -3,9 +3,8 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros): action byte at 4 (0 add), count at 5, then from 8 per member
-    // the name (16 bytes), ID, look, max health and health (ushorts). Albetros always sent
-    // 152 bytes with one member.
+    // Action byte at 4 (0 add), count at 5, then from 8 per member the name (16 bytes), ID,
+    // look, max health and health (ushorts). Always 152 bytes, with room for one member.
     public sealed class MsgTeamMember : MsgBase<Client>
     {
         public const int Size = 152;

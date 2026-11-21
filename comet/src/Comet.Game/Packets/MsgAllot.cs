@@ -4,9 +4,8 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // The player adds attribute points from the status window. 24 bytes (VM-seen, offsets as
-    // Albetros reads them): 4 unknown (0), then u32 each for strength at 8, agility at 12,
-    // vitality at 16 and spirit at 20.
+    // The player adds attribute points from the status window. 24 bytes (VM-seen): 4 unknown
+    // (0), then u32 each for strength at 8, agility at 12, vitality at 16 and spirit at 20.
     public sealed class MsgAllot : MsgBase<Client>
     {
         public uint Strength { get; set; }

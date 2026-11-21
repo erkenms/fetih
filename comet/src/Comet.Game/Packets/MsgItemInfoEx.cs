@@ -5,8 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // An item on sale in a booth, as a buyer sees it, or one worn by another player.
-    // Albetros (5517) layout, 84 bytes.
+    // An item on sale in a booth, as a buyer sees it, or one worn by another player. 84 bytes.
     public sealed class MsgItemInfoEx : MsgBase<Client>
     {
         public const int Size = 84;

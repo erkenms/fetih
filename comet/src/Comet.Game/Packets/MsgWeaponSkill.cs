@@ -3,7 +3,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // A weapon proficiency, sent on login and when it changes. 5517 layout (Albetros), 20 bytes:
+    // A weapon proficiency, sent on login and when it changes. 20 bytes:
     // 4 weapon type (item type / 1000), 8 level, 12 experience, 16 experience the level needs.
     public sealed class MsgWeaponSkill : MsgBase<Client>
     {

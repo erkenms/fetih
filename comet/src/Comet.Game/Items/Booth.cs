@@ -11,7 +11,7 @@ namespace Comet.Game.Items
     // Vending's gate.
     public sealed class Booth
     {
-        // Albetros (5517): flags are role 16; an open booth is role 14 with look 406, three
+        // Flags are role 16; an open booth is role 14 with look 406, three
         // cells east of its flag (where the 5619 client asks for it), named after its owner.
         public const byte FlagRole = 16;
         public const uint IdOffset = 100000;

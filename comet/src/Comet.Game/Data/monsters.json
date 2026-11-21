@@ -1,8 +1,7 @@
-// Monster types. Life, attack, defense and dodge are as in TQ's monster table; attackRange and
-// viewRange are in cells, attackSpeed and moveSpeed in milliseconds between attacks and steps.
-// attackUser holds TQ's flags: 2 attacks players on sight, 8 guard (attacks monsters and
-// flashing or black-named players). dropMoney is the most silver one drop pays; dropHp and dropMp
-// are the potion types it drops. IDs must be unique.
+// Monster types. attackRange and viewRange are in cells, attackSpeed and moveSpeed in
+// milliseconds between attacks and steps. attackUser holds flags: 2 attacks players on sight,
+// 8 guard (attacks monsters and flashing or black-named players). dropMoney is the most silver
+// one drop pays; dropHp and dropMp are the potion types it drops. IDs must be unique.
 {
   "monsters": [
     {"id": 1, "name": "Pheasant", "lookface": 104, "level": 1, "life": 33, "attackMin": 5, "attackMax": 6, "defense": 0, "dexterity": 0, "dodge": 36, "attackRange": 1, "viewRange": 1, "attackSpeed": 500, "moveSpeed": 500, "attackUser": 3, "dropMoney": 5, "dropHp": 1000000, "dropMp": 1001000, "boss": false},

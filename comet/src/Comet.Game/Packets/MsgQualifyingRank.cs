@@ -7,8 +7,8 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // The arena ranking pages. The 5619 client asks with 52 bytes: kind u16 at 4 (0 arena
-    // points, 1 honor), page u16 at 6 (from 1). 5808: kind at 4, page at 6, players ranked at
-    // 8, players on this page at 12, then 36 bytes per player from 16: rank u16, name (16
+    // points, 1 honor), page u16 at 6 (from 1). Answered with kind at 4, page at 6, players
+    // ranked at 8, players on this page at 12, then 36 bytes per player from 16: rank u16, name (16
     // bytes), kind u16, points (or honor), class, level, 0. Always room for one player.
     public sealed class MsgQualifyingRank : MsgBase<Client>
     {

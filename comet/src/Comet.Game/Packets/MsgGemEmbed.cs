@@ -6,7 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // 20 bytes: the player's ID at 4, the item at 8, the gem at 12, the socket (1 or 2) as a
-    // ushort at 16 and the action as a ushort at 18. Echoed once done, as WCO (5808) does.
+    // ushort at 16 and the action as a ushort at 18. Echoed once done.
     public sealed class MsgGemEmbed : MsgBase<Client>
     {
         public uint CharacterID { get; set; }

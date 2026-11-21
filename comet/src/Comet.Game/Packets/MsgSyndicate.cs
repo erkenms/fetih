@@ -6,7 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros): action at 4, a player, guild or amount at 8, the join
+    // Action at 4, a player, guild or amount at 8, the join
     // requirements (level, rebirths, professions) at 12, 16 and 20, strings at 24
     public sealed class MsgSyndicate : MsgBase<Client>
     {

@@ -10,7 +10,6 @@ namespace Comet.Game.Combat
     using Comet.Game.States;
     using Comet.Game.World;
 
-    // Meteor and dragonball drop rates are Albetros's
     public static class Loot
     {
         public const int SilverChance = 30;

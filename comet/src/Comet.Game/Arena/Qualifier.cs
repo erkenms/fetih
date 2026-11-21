@@ -34,7 +34,7 @@ namespace Comet.Game.Arena
     {
         public const uint MapID = 900000;
 
-        // The client offers to raise the arena points to 1500; Albetros and 5808 charge 9M
+        // The client offers to raise the arena points to 1500
         public const uint PointsForSale = 1500;
         public const uint PointsPrice = 9_000_000;
 
@@ -81,7 +81,7 @@ namespace Comet.Game.Arena
                 case QualifierAction.Rejoin:
                     await SignUpAsync(client, new MsgQualifyingInteractive(QualifierAction.SignUp));
                     break;
-                // Albetros signs up again on this from the win/lose dialog
+                // From the win/lose dialog: sign up again
                 case QualifierAction.EndDialog when msg.Option == 0:
                     await SignUpAsync(client, new MsgQualifyingInteractive(QualifierAction.SignUp));
                     break;
@@ -259,7 +259,7 @@ namespace Comet.Game.Arena
                 return;
             }
 
-            // The arena icon (Albetros echoes the sign-up)
+            // The arena icon: the sign-up echoed
             echo.Option = 0;
             await client.SendAsync(echo);
             await SendDetailsAsync(client);

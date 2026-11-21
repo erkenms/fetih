@@ -2,7 +2,6 @@ namespace Comet.Game.Combat
 {
     using System;
 
-    // Formulas as in Albetros, which follows TQ's: no TQ source for 5619 is public.
     public static class Damage
     {
         public static double LevelBonus(int attackerLevel, int targetLevel)
@@ -13,7 +12,7 @@ namespace Comet.Game.Combat
             return delta <= 5 ? 1.5 : 1 + 0.7 * delta / 5;
         }
 
-        // Spells: 0.6 more for every 5 levels instead of 0.7 (Albetros)
+        // Spells: 0.6 more for every 5 levels instead of 0.7
         public static double MagicLevelBonus(int attackerLevel, int targetLevel)
         {
             int delta = attackerLevel - targetLevel;
@@ -72,10 +71,10 @@ namespace Comet.Game.Combat
 
         public static ulong KillBonus(uint monsterLife) => monsterLife * 5UL / 100;
 
-        // Against players there's no level bonus (Albetros)
+        // Against players there's no level bonus
         public static uint PlayerMelee(int attack, int targetDefense) => AtLeastOne(attack - targetDefense);
 
-        // Dodge takes its percentage off, and of the rest arrows do 45% to players (Albetros)
+        // Dodge takes its percentage off, and of the rest arrows do 45% to players
         public static uint PlayerArchery(int attack, int targetDodge) =>
             AtLeastOne(attack * (100 - Math.Clamp(targetDodge, 0, 100)) / 100.0 * 0.45);
 

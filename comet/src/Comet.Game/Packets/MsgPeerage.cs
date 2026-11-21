@@ -6,9 +6,9 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // Nobility, as the wiki has it for 5517. Action u16 at 4, data
-    // from 8. Client: donation u64 at 8 with the currency u16 at 16 (0 silver, 1 CPs,
-    // 2 bound CPs), board page u32 at 8, rank u32 at 8 to ask the minimum for it.
+    // Nobility. Action u16 at 4, data from 8. Client: donation u64 at 8 with the currency
+    // u16 at 16 (0 silver, 1 CPs, 2 bound CPs), board page u32 at 8, rank u32 at 8 to ask the
+    // minimum for it.
     // Server: donation and rank strings at 32 ("id 0 amount total position" and "id total
     // rank position", positions from 0, -1 off the board); the board's page u16 at 8, pages
     // u16 at 10, count at 12 and 48-byte entries from 32 (ID, online byte at 4, look at 8,

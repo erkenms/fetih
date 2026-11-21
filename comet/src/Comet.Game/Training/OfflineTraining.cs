@@ -24,7 +24,7 @@ namespace Comet.Game.Training
         private static readonly int[] HoursByVip = { 15, 16, 17, 18, 19, 21, 24 };
 
         // Level-up time a minute's training is worth: an EXP ball for five hours, so 15 hours
-        // make the three balls Hybrid's 5165 server gave
+        // make three
         public const double TimePerMinute = 2;
 
         public static int MaxMinutes(DbCharacter character) =>

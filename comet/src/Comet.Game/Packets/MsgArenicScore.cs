@@ -3,7 +3,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // The match score: damage each fighter dealt. Albetros 5517 / 5808, 56 bytes: first
+    // The match score: damage each fighter dealt. 56 bytes: first
     // fighter's ID at 4, name (16 bytes) at 8, damage at 24, second fighter's ID at 28, name
     // at 32, damage at 48. All zero clears the score window.
     public sealed class MsgArenicScore : MsgBase<Client>

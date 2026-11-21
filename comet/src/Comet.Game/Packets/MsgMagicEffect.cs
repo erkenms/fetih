@@ -4,7 +4,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // A spell's effect as others see it. 5517 layout (Albetros):
+    // A spell's effect as others see it:
     // 4 caster, 8 x, 10 y, 12 magic type u16, 14 magic level u16, 16 target count, then 32 bytes
     // per target: 0 ID, 4 damage, 8 hit (1), 12 activation type, 16 activation value; and
     // 32 bytes of zeros at the end.

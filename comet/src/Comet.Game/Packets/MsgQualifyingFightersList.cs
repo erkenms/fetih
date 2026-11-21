@@ -7,9 +7,9 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // Matches being fought. The 5619 client asks with 148 bytes (page 1 at 4, 6 at 8, room
-    // for one match). Albetros 5517 / 5808: page at 4, 6 per page at 8, matches at 12,
-    // players waiting at 16, 0 at 20, matches in this packet at 24, then 120 bytes per match
-    // from 28, 60 per player: ID, look, name (16 bytes), level, class, 0, rank, arena points,
+    // for one match). Answered with the page at 4, 6 per page at 8, matches at 12, players
+    // waiting at 16, 0 at 20, matches in this packet at 24, then 120 bytes per match from 28,
+    // 60 per player: ID, look, name (16 bytes), level, class, 0, rank, arena points,
     // wins today, losses today, current honor, total honor. Always room for one match.
     public sealed class MsgQualifyingFightersList : MsgBase<Client>
     {

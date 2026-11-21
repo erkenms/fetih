@@ -30,7 +30,7 @@ namespace Comet.Game.Packets
 
         // One packet per attribute. The 5619 client misreads the entries after the first (the
         // VM showed an empty health bar after Health with Mana and Stamina in one packet), so
-        // its entries are probably longer than 5517's 20 bytes; single ones are VM-confirmed.
+        // its entries are probably longer than the 20 bytes written here; single ones are VM-confirmed.
         public async Task SendEachAsync(Client client)
         {
             foreach (var (type, value) in this.Attributes)

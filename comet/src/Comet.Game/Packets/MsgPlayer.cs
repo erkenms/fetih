@@ -116,7 +116,7 @@ namespace Comet.Game.Packets
             writer.Write(this.RightHand);           // 56
             writer.Write(this.LeftHand);            // 60
             writer.Write(new byte[8]);              // 64  accessories
-            writer.Write(this.Steed);               // 72  steed type (Albetros 5517, +4 as helmet)
+            writer.Write(this.Steed);               // 72  steed type (+4 as helmet)
             writer.Write(0u);                       // 76
             writer.Write((ushort)0);                // 80
             writer.Write((ushort)0);                // 82
@@ -135,7 +135,7 @@ namespace Comet.Game.Packets
             writer.Write((byte)0);                  // 109 equipment viewable
             writer.Write((byte)(this.Away ? 1 : 0)); // 110
             writer.Write(new byte[16]);             // 111 flowers, ...
-            writer.Write((uint)this.Nobility);      // 127 nobility rank (5517 + 46, as the colors)
+            writer.Write((uint)this.Nobility);      // 127 nobility rank
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133
             writer.Write(this.HelmetColor);         // 135

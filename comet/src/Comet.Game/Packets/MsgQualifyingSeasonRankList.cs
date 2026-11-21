@@ -6,7 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // Last season's top ten. The 5619 client asks with 60 bytes: count at 4, then room for
-    // one 52-byte player (Albetros 5517 / 5808: ID, name (16 bytes), look, level, class, 0,
+    // one 52-byte player (ID, name (16 bytes), look, level, class, 0,
     // rank, points, wins, losses).
     public sealed class MsgQualifyingSeasonRankList : MsgBase<Client>
     {

@@ -10,14 +10,14 @@ namespace Comet.Game.Training
 
     // The heaven blessing's two EXP pools, claimed from the client's blessing panel
     // (MsgGodExp): online training fills while a blessed player is online, blessed hunting
-    // with a share of what monsters give. Amounts are TQ level-up time times 10000, so an
+    // with a share of what monsters give. Amounts are level-up time times 10000, so an
     // EXP ball (600 of that time) is 6,000,000. Runs on the player's own queue.
     public static class GodExp
     {
         public const uint UnitsPerTime = 10000;
         public const uint UnitsPerBall = 600 * UnitsPerTime;
 
-        // Albetros: 40 time every 10 minutes online, an EXP ball every two and a half hours
+        // 40 time every 10 minutes online, an EXP ball every two and a half hours
         public const uint OnlineUnitsPerMinute = 4 * UnitsPerTime;
 
         // The client's heaven blessing tooltip: 20% extra EXP from killing monsters

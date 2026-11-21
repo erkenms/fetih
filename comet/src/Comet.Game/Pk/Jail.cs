@@ -9,12 +9,12 @@ namespace Comet.Game.Pk
     using Comet.Game.World;
 
     // The PK jail, map 6000 (PKerJail in GameMapEx.ini). Black names killed land here. The
-    // warden lets red names and lighter out for free; black names pay bail (Albetros NPC 42).
+    // warden lets red names and lighter out for free; black names pay bail.
     public static class Jail
     {
         public const uint MapID = 6000;
 
-        // Albetros's cq_map: the jail's revive point
+        // The jail's revive point
         public const ushort X = 29, Y = 72;
 
         public const uint WardenID = 42;

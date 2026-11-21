@@ -24,12 +24,12 @@ namespace Comet.Game.Items
         public DateTime MovedAt { get; set; }
     }
 
-    // Steeds, as Albetros (5517) and the 5808 source have them. Casting Riding (7001) with a
-    // steed worn mounts it or gets off; status bit 50 shows the rider on the steed MsgPlayer
-    // carries. Attacking or casting gets the rider off, unless they wear a riding crop, which
-    // also adds its dexterity to the vigor. Mounting fills the vigor. Ride steps cost 2,
-    // walking steps 1, jumps 3 per 4 cells; a move the vigor can't pay for ends the ride. The
-    // vigor comes back while the steed stands still: 2 + its plus every half second (Albetros).
+    // Steeds. Casting Riding (7001) with a steed worn mounts it or gets off; status bit 50 shows
+    // the rider on the steed MsgPlayer carries. Attacking or casting gets the rider off, unless
+    // they wear a riding crop, which also adds its dexterity to the vigor. Mounting fills the
+    // vigor. Ride steps cost 2, walking steps 1, jumps 3 per 4 cells; a move the vigor can't pay
+    // for ends the ride. The vigor comes back while the steed stands still: 2 + its plus every
+    // half second.
     public static class Riding
     {
         public const ushort MagicType = 7001;

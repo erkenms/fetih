@@ -5,7 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros): the action at 4, a player ID at 8
+    // The action at 4, a player ID at 8
     public sealed class MsgTeam : MsgBase<Client>
     {
         public TeamAction Action { get; set; }
@@ -50,7 +50,7 @@ namespace Comet.Game.Packets
             AcceptJoin = 5,
             Dismiss = 6,
             Kick = 7,
-            // Sent before the Create reply in Albetros
+            // Sent before the Create reply
             Leader = 15,
         }
     }

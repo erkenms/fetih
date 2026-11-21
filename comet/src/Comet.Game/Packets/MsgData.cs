@@ -3,8 +3,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // Albetros 5517 ("SteedVigor"), 36 bytes: action at 4 (2 = the steed's vigor), value at 8,
-    // zeros up to 36
+    // 36 bytes: action at 4 (2 = the steed's vigor), value at 8, zeros up to 36
     public sealed class MsgData : MsgBase<Client>
     {
         public const uint VigorAction = 2;

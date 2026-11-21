@@ -7,7 +7,7 @@ namespace Comet.Game.Npcs
     using Comet.Game.Packets;
     using Comet.Game.States;
 
-    // Riding costs 50,000 silver (Albetros)
+    // Riding costs 50,000 silver
     public static class MountTrainer
     {
         public const uint ID = 5600;

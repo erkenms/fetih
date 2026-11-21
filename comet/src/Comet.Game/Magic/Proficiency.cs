@@ -6,7 +6,7 @@ namespace Comet.Game.Magic
     using Comet.Game.Packets;
     using Comet.Game.States;
 
-    // Weapon proficiency: the damage a weapon deals to monsters is its experience (Albetros).
+    // Weapon proficiency: the damage a weapon deals to monsters is its experience.
     // On the player's own queue.
     public static class Proficiency
     {

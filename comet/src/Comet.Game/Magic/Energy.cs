@@ -3,7 +3,7 @@ namespace Comet.Game.Magic
     using System;
 
     // Stamina and the XP bar, kept in memory only and changed on the player's own queue.
-    // A login starts with full stamina and an empty XP bar (Albetros).
+    // A login starts with full stamina and an empty XP bar.
     public sealed class Energy
     {
         public const byte MaxStamina = 100;

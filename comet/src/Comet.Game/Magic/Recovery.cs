@@ -10,7 +10,7 @@ namespace Comet.Game.Magic
     using static Comet.Game.Packets.MsgUserAttrib;
 
     // Each second, on every player's own queue: statuses that ran out end, stamina comes back
-    // and the XP bar fills. Rates as in Albetros: 2 stamina per half second standing, 11
+    // and the XP bar fills. Rates: 2 stamina per half second standing, 11
     // sitting; 1 XP every 3 seconds; a full bar lasts 20 seconds, then empties.
     public static class Recovery
     {

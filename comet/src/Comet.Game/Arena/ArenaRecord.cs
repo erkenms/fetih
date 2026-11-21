@@ -32,8 +32,8 @@ namespace Comet.Game.Arena
         public uint MatchesToday => this.Stored.WinsToday + this.Stored.LossesToday;
         public bool EverPlayed => this.Stored.WinsTotal + this.Stored.LossesTotal > 0;
 
-        // A new player gets points by level (5808); one who reaches level 40 without having
-        // played gets them then
+        // A new player gets points by level; one who reaches level 40 without having played
+        // gets them then
         public static uint StartingPoints(byte level) =>
             level < MinLevel ? 0u :
             level < 90 ? 1500u :
@@ -60,7 +60,7 @@ namespace Comet.Game.Arena
                 this.Stored.Points = StartingPoints(this.Level);
         }
 
-        // The loser gives the winner 3% of their points (Albetros). Each side gets the honor
+        // The loser gives the winner 3% of their points. Each side gets the honor
         // bonuses the match earned; the counts are of the bonuses, for the EXP balls.
         public static (uint Points, int WinnerBonuses, int LoserBonuses) Settle(
             ArenaRecord winner, ArenaRecord loser, DateTime now)
@@ -107,8 +107,7 @@ namespace Comet.Game.Arena
             HonorTotal = this.Stored.HonorTotal,
         };
 
-        // Today's ranking (5808): players who fought today, by points, then wins, then fewest
-        // losses
+        // Today's ranking: players who fought today, by points, then wins, then fewest losses
         public static List<ArenaRecord> RankToday(IEnumerable<ArenaRecord> records, DateTime now)
         {
             uint today = DayOf(now);

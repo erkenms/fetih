@@ -15,19 +15,18 @@ namespace Comet.Game.Items
     // packet queue, like Progress.
     public static class Using
     {
-        // EXP balls, as TQ's cq_action 1086 computes them (WCO): each level has an upLevTime,
-        // how long TQ meant it to take, and a ball is worth 600 of it, carried through level-ups.
-        // So a ball is a fixed slice of levelling, not a fixed amount of experience.
+        // EXP balls: each level has an upLevTime, how long it is meant to take, and a ball is
+        // worth 600 of it, carried through level-ups. So a ball is a fixed slice of levelling,
+        // not a fixed amount of experience.
         public static readonly uint[] ExpBalls = { 723700, 723834, 723911 };
         public const byte ExpBallMaxLevel = 130;
 
-        // Ten a day, counted by the server's local date (WCO's CanUseExpBall)
+        // Ten a day, counted by the server's local date
         public const int ExpBallsPerDay = 10;
 
         public static int ExpBallsUsedOn(DbCharacter character, DateTime today) =>
             character.ExpBallDay == today.Date ? character.ExpBallsUsed : 0;
 
-        // MeteorScroll and DragonBallScroll (Albetros)
         public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
         public const int ScrollGems = 10;
 

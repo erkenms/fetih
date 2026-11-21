@@ -21,7 +21,7 @@ namespace Comet.Game.Magic
     {
         private const int DistanceSlack = 1;
 
-        // As many targets as one MsgMagicEffect shows (Albetros)
+        // As many targets as one MsgMagicEffect shows
         private const int MaxTargets = 28;
 
         private const double FanHalfAngle = 45;
@@ -379,7 +379,7 @@ namespace Comet.Game.Magic
         }
 
         // Experience from damage or healing, toward the spell's next level once the character
-        // is high enough (Albetros)
+        // is high enough
         public static async Task GainExperienceAsync(Client client, MagicType spell, uint amount)
         {
             if (amount == 0 || spell.NeedExperience == 0 || client.Character.Level < spell.NeedLevel ||

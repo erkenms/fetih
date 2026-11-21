@@ -5,7 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros): a player ID, item ID or amount at 4, the action at 8
+    // A player ID, item ID or amount at 4, the action at 8
     public sealed class MsgTrade : MsgBase<Client>
     {
         public uint Data { get; set; }

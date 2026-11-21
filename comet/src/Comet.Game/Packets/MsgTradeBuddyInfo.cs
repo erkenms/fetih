@@ -3,7 +3,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // WCO (5808): a partner's ID at 4, mesh at 8, level byte at 12, class byte at 13, PK
+    // A partner's ID at 4, mesh at 8, level byte at 12, class byte at 13, PK
     // points at 14, guild ID at 16 and rank at 20, the spouse's name (16 bytes) at 26
     public sealed class MsgTradeBuddyInfo : MsgBase<Client>
     {

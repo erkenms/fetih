@@ -6,7 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // 5517 layout (Albetros): the client asks with the index of the first member it wants
+    // The client asks with the index of the first member it wants
     // at 8; the reply has the count at 12 and 48-byte entries from 16: name (16 bytes),
     // level at 24, rank at 28, total donation at 36, online at 40
     public sealed class MsgSynMemberList : MsgBase<Client>

@@ -45,7 +45,7 @@ namespace Comet.Game.States
         }
 
         // The experience worth this much level-up time (BallTime per EXP ball), counted from
-        // the level and experience given, through the levels it would gain (TQ's exp balls)
+        // the level and experience given, through the levels it would gain
         public ulong ExperienceOfTime(byte level, ulong experience, double time)
         {
             ulong amount = 0;

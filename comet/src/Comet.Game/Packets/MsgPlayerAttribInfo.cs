@@ -5,8 +5,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // The stat window, 136 bytes of u32s as the wiki has it for 5615 and Albetros (5517) sends
-    // it: ID at 4, max life 8, max mana 12, max attack 16, min attack 20, defense 24, magic
+    // The stat window, 136 bytes of u32s: ID at 4, max life 8, max mana 12, max attack 16, min attack 20, defense 24, magic
     // attack 28, magic defense 32, dodge 36, agility 40, accuracy 44. From 48 percentages:
     // dragon and phoenix gems, magic defense, curse, bless, critical strike, skill critical
     // strike, immunity, penetration, block, breakthrough, counteraction, detoxication; from 100

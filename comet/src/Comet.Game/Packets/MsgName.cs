@@ -79,7 +79,7 @@ namespace Comet.Game.Packets
                     msg.Strings = new List<string> { target.Character.Name, WhisperDetails(target.Character) };
                     return client.SendAsync(msg);
                 },
-                // Albetros (5517): asked about a player in view, for the gear window
+                // Asked about a player in view, for the gear window
                 [NameAction.QuerySpouse] = (msg, client) => client.SendAsync(SpouseOf(msg.Data)),
                 // The guild member list's kick button, with the member's name
                 [NameAction.GuildKick] = (msg, client) =>

@@ -3,7 +3,7 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // A learned spell, sent on login and when it changes. 5517 layout (Albetros), 20 bytes:
+    // A learned spell, sent on login and when it changes. 20 bytes:
     // 4 experience, 8 magic type u16, 10 level u16, 8 bytes of zeros.
     public sealed class MsgMagicInfo : MsgBase<Client>
     {

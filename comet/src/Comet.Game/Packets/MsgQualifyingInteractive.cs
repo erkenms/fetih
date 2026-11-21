@@ -7,13 +7,13 @@ namespace Comet.Game.Packets
 
     // The arena window's buttons and the server's arena dialogs. 52 bytes, as the 5619 client
     // sends it: action at 4, option at 8, then a player: ID at 12, name (16 bytes) at 16,
-    // rank at 32, class at 36, 1 at 40 (Albetros), arena points at 44, level at 48.
+    // rank at 32, class at 36, 1 at 40, arena points at 44, level at 48.
     public sealed class MsgQualifyingInteractive : MsgBase<Client>
     {
         public const int Size = 52;
 
-        // Dialog options: Answer 1 accepts, 2 gives up; Dialog 1 won, 3 lost (5808);
-        // EndDialog 1 won, 0 lost; Match 5 shows the match window (Albetros MatchOn)
+        // Dialog options: Answer 1 accepts, 2 gives up; Dialog 1 won, 3 lost;
+        // EndDialog 1 won, 0 lost; Match 5 shows the match window
         public const uint Accept = 1, GiveUp = 2;
         public const uint Won = 1, Lost = 3;
         public const uint MatchOn = 5;
@@ -59,7 +59,6 @@ namespace Comet.Game.Packets
 
         public override Task ProcessAsync(Client client) => Qualifier.HandleAsync(client, this);
 
-        // 5808's ArenaType; the 5619 client sent 0 for its sign-up button
         public enum QualifierAction : uint
         {
             // From the client: sign up / from the server: the arena icon on
@@ -79,7 +78,7 @@ namespace Comet.Game.Packets
             StartFight = 8,
             Dialog = 9,
             EndDialog = 10,
-            // The end dialog's button to join again (5808)
+            // The end dialog's button to join again
             Rejoin = 11,
         }
     }

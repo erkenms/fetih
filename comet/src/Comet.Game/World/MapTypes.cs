@@ -6,7 +6,7 @@ namespace Comet.Game.World
     using System.Linq;
     using System.Text.Json.Serialization;
 
-    // cq_map "type" bits (Albetros 5517), sent to the client in MsgMapInfo
+    // cq_map "type" bits, sent to the client in MsgMapInfo
     [Flags]
     public enum MapFlags : ulong
     {

@@ -9,14 +9,13 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // Warehouse contents. Layout from Albetros (5517): NPC ID @4, action byte @8, kind byte
+    // Warehouse contents: NPC ID @4, action byte @8, kind byte
     // @9, capacity u32 @12, item ID @16, item count byte @20, then 52 bytes per item: ID @0,
     // type @4, gems @9/10, plus @17, bless @18, enchant @20, locked @26, color @27.
     public sealed class MsgPackage : MsgBase<Client>
     {
         public const int ItemSize = 52;
 
-        // Albetros sends ten at a time
         public const int ItemsPerPacket = 10;
 
         public uint NpcID { get; set; }

@@ -9,7 +9,6 @@ namespace Comet.Game.Items
 
         public const byte NoSocket = 0, EmptySocket = 255;
 
-        // World Conquer Online caps the damage tortoise gems take off
         public const int MaxTortoisePercent = 54;
 
         public static bool IsGemItem(uint typeID) => typeID / 10000 == 70;

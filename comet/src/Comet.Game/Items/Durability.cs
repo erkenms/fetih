@@ -10,11 +10,10 @@ namespace Comet.Game.Items
     using Comet.Game.Packets;
     using Comet.Game.States;
 
-    // Gear wears by one point a use, as TQ's does in WCO: a hit taken wears the headwear, necklace
-    // and armor; a swing or cast wears the weapons, ring and boots. The client shows durability in
-    // hundreds, so a change is sent and saved when the hundreds change. Broken gear (no durability
-    // left) adds nothing until repaired: by silver for the share worn, or by five meteors once
-    // broken. Each runs on the gear owner's packet queue.
+    // Gear wears by one point a use: a hit taken wears the headwear, necklace and armor; a swing
+    // or cast wears the weapons, ring and boots. The client shows durability in hundreds, so a
+    // change is sent and saved when the hundreds change. Broken gear (no durability left) adds
+    // nothing until repaired: by silver for the share worn, or by five meteors once broken. Each runs on the gear owner's packet queue.
     public static class Durability
     {
         public const int BrokenRepairMeteors = 5;
@@ -63,7 +62,7 @@ namespace Comet.Game.Items
             }
         }
 
-        // TQ's, as WCO has it: the item's price for the share worn, less for lower qualities
+        // The item's price for the share worn, less for lower qualities
         public static uint RepairCost(uint price, ushort durability, ushort maxDurability, uint typeID)
         {
             if (maxDurability == 0 || durability >= maxDurability)

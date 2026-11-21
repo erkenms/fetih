@@ -14,7 +14,7 @@ namespace Comet.Game.Pk
     // Who may attack whom, flashing names, PK points and the name colors they give.
     // Combat asks CanAttack before a hit on a player and calls OnAttackAsync and OnKillAsync after.
     // Guards hunt the guilty, and attacking a guard is allowed in free PK mode only and makes
-    // the attacker flash (Albetros).
+    // the attacker flash.
     public static class Pking
     {
         public const ulong FlashingStatus = StatusFlags.Flashing;
@@ -24,7 +24,7 @@ namespace Comet.Game.Pk
         public const ushort RedNamePoints = 30;
         public const ushort BlackNamePoints = 100;
 
-        // Killing an innocent player; a red name counts for less (Albetros)
+        // Killing an innocent player; a red name counts for less
         public const int PointsPerKill = 10;
         public const int PointsPerRedKill = 3;
 

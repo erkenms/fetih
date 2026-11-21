@@ -163,7 +163,7 @@ namespace Comet.Network.Sockets
                     return;
                 }
 
-                // TQ's exchange: 7 bytes of padding, then its length counted from 7. Only the
+                // The key exchange: 7 bytes of padding, then its length counted from 7. Only the
                 // exchange is decrypted with the initial key; what follows it in the buffer is
                 // under the exchanged key.
                 actor.Cipher.Decrypt(

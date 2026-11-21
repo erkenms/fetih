@@ -8,7 +8,6 @@ namespace Comet.Game.World
 
     public sealed class MonsterType
     {
-        // TQ's attack_user flags
         public const uint AttacksOnSight = 0x02;
         public const uint GuardFlag = 0x08;
 
