@@ -202,5 +202,27 @@ namespace Comet.Integration.Tests
                 ("@id", player.User.Id), ("@type", ServerFixture.Meteor.Id));
             Assert.Equal(10L, (long)meteors);
         }
+
+        [Fact]
+        public async Task OnlyTenExpBallsADay()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 780, 940, GameMaster);
+            var name = first.User.Name;
+            await this.LogOutAsync(first);
+            await this.Servers.ExecuteGameSqlAsync(
+                "UPDATE `character` SET ExpBallDay = @today, ExpBallsUsed = 9 WHERE Name = @name",
+                ("@today", System.DateTime.Now.Date), ("@name", name));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+
+            var tenth = await GiveAsync(player, ServerFixture.ExpBall.Id);
+            await player.Game.UseAsync(tenth.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, tenth.Id));
+
+            var eleventh = await GiveAsync(player, ServerFixture.ExpBall.Id);
+            await player.Game.UseAsync(eleventh.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", name);
+            Assert.Equal("daily_limit", refused.GetProperty("reason").GetString());
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("10 EXP balls a day")));
+        }
     }
 }

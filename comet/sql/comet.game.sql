@@ -62,6 +62,8 @@ CREATE TABLE `character` (
   `OfflineReturnMapID` int(10) unsigned NOT NULL DEFAULT '0',
   `OfflineReturnX` smallint(5) unsigned NOT NULL DEFAULT '0',
   `OfflineReturnY` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `ExpBallDay` date DEFAULT NULL,
+  `ExpBallsUsed` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),

@@ -21,6 +21,12 @@ namespace Comet.Game.Items
         public static readonly uint[] ExpBalls = { 723700, 723834, 723911 };
         public const byte ExpBallMaxLevel = 130;
 
+        // Ten a day, counted by the server's local date (WCO's CanUseExpBall)
+        public const int ExpBallsPerDay = 10;
+
+        public static int ExpBallsUsedOn(DbCharacter character, DateTime today) =>
+            character.ExpBallDay == today.Date ? character.ExpBallsUsed : 0;
+
         // MeteorScroll and DragonBallScroll (Albetros)
         public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
         public const int ScrollGems = 10;
@@ -98,11 +104,20 @@ namespace Comet.Game.Items
                 await Talk.NoticeAsync(client, $"EXP balls can't be used from level {ExpBallMaxLevel}.");
                 return Reject(client, ball.ItemID, ball.TypeID, "level");
             }
+            var today = DateTime.Now.Date;
+            int used = ExpBallsUsedOn(character, today);
+            if (used >= ExpBallsPerDay)
+            {
+                await Talk.NoticeAsync(client, $"You can use only {ExpBallsPerDay} EXP balls a day.");
+                return Reject(client, ball.ItemID, ball.TypeID, "daily_limit");
+            }
             ulong experience = Kernel.Experience.ExperienceOfTime(character.Level, character.Experience, ExperienceTable.BallTime);
             if (experience == 0)
                 return Reject(client, ball.ItemID, ball.TypeID, "max_level");
 
             await UseUpAsync(client, ball);
+            character.ExpBallDay = today;
+            character.ExpBallsUsed = (byte)(used + 1);
             await Progress.AwardExperienceAsync(client, experience, "exp_ball");
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) for {Experience} experience",
