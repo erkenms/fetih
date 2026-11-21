@@ -29,17 +29,18 @@ namespace Comet.Network.Packets
             this.Channels = new Channel<Message>[count];
             this.Partitions = new Partition[count];
             this.Process = process;
+            for (int i = 0; i < count; i++)
+            {
+                this.Partitions[i] = new Partition { ID = (uint)i };
+                this.Channels[i] = Channel.CreateUnbounded<Message>();
+            }
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             for (int i = 0; i < this.BackgroundTasks.Length; i++)
-            {
-                this.Partitions[i] = new Partition { ID = (uint)i };
-                this.Channels[i] = Channel.CreateUnbounded<Message>();
                 this.BackgroundTasks[i] = DequeueAsync(this.Channels[i]);
-            }
-            
+
             return Task.WhenAll(this.BackgroundTasks);
         }
 
@@ -53,7 +54,7 @@ namespace Comet.Network.Packets
         }
 
         // Work for the actor that runs in order with its packets, so it never runs alongside
-        // them. The caller handles the work's exceptions.
+        // them. The caller should catch the work's exceptions to log them with its context.
         public void Queue(TClient actor, Func<Task> work)
         {
             if (!this.CancelWrites.IsCancellationRequested)
@@ -68,11 +69,22 @@ namespace Comet.Network.Packets
             while (!this.CancelReads.IsCancellationRequested)
             {
                 var msg = await channel.Reader.ReadAsync(this.CancelReads);
-                if (msg?.Work != null)
-                    await msg.Work().ConfigureAwait(false);
-                else if (msg != null) 
-                { 
-                    await this.Process(msg.Actor, msg.Packet).ConfigureAwait(false); 
+                if (msg == null)
+                    continue;
+
+                // Every player on this partition shares the loop, so one escaped exception
+                // must not end it
+                try
+                {
+                    if (msg.Work != null)
+                        await msg.Work().ConfigureAwait(false);
+                    else
+                        await this.Process(msg.Actor, msg.Packet).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    Serilog.Log.ForContext(this.GetType()).Error(e,
+                        "Queued message for connection {ConnId} threw", msg.Actor?.ConnId);
                 }
             }
         }
