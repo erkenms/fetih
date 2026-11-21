@@ -21,6 +21,9 @@ namespace Comet.Game.Items
 
         public static bool IsSteed(uint type) => Sort(type) == 300;
 
+        // RidingCrop: 203003 normal to 203009 super
+        public static bool IsCrop(uint type) => Sort(type) == 203;
+
         // The last digit of a type ID: 3 to 5 normal, 6 refined, 7 unique, 8 elite, 9 super
         public static int Quality(uint type) => (int)(type % 10);
 
@@ -46,6 +49,7 @@ namespace Comet.Game.Items
             ItemPosition.Boots => Sort(type) == 160,
             ItemPosition.Garment => Sort(type) is >= 181 and <= 194,
             ItemPosition.Steed => IsSteed(type),
+            ItemPosition.Crop => IsCrop(type),
             _ => false,
         };
     }

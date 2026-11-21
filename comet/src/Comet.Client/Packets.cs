@@ -395,7 +395,8 @@ namespace Comet.Client
 
     // An item or character ID, a value (a slot when equipping), the action, a timestamp and
     // an argument at 20 (the amount when buying; shops put their NPC ID in the first field).
-    // DisplayGears carries the item IDs worn in slots 1 to 9 from offset 32
+    // DisplayGears carries the item IDs worn from offset 32: slots 1 to 9, the right and left
+    // accessories, the steed armor and the crop
     public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
     {
         public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
@@ -409,7 +410,7 @@ namespace Comet.Client
         public static ItemMessage Parse(byte[] packet) => new ItemMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12),
-            Enumerable.Range(0, 9).Select(i => BitConverter.ToUInt32(packet, 32 + 4 * i)).ToArray());
+            Enumerable.Range(0, 13).Select(i => BitConverter.ToUInt32(packet, 32 + 4 * i)).ToArray());
 
         public static byte[] Build(uint id, uint data, uint action, uint argument = 0)
         {

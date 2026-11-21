@@ -20,6 +20,16 @@ namespace Comet.Game.Tests.Items
         }
 
         [Fact]
+        public void CropsGoInSlotEighteenOnly()
+        {
+            Assert.True(ItemSlots.Fits(203009, ItemPosition.Crop));
+            Assert.False(ItemSlots.Fits(203009, ItemPosition.Steed));
+            Assert.False(ItemSlots.Fits(300000, ItemPosition.Crop));
+            Assert.True(Equipment.IsEquipped(18));
+            Assert.False(ItemSlots.IsMonsterDrop(203009));
+        }
+
+        [Fact]
         public void ItemAdditionsAreReadByTypeAndPlus()
         {
             var table = ItemAdditionTable.Parse(

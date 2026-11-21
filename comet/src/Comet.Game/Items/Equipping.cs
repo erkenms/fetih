@@ -69,6 +69,8 @@ namespace Comet.Game.Items
             await client.SendAsync(MsgItem.Equipped(item.ItemID, position));
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
+            if (position == ItemPosition.Crop)
+                await Riding.FollowCropAsync(client);
             await ShowLookAsync(client);
             await FollowMaximumsAsync(client);
 
@@ -95,6 +97,8 @@ namespace Comet.Game.Items
             await client.SendAsync(MsgItem.Unequipped(item.ItemID, position));
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
+            if (position == ItemPosition.Crop)
+                await Riding.FollowCropAsync(client);
             await ShowLookAsync(client);
             await FollowMaximumsAsync(client);
 

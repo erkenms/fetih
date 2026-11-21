@@ -69,7 +69,7 @@ namespace Comet.Game.Magic
 
             Attacks.Stop(client);
             if (spell.Sort != MagicSort.Riding)
-                await Riding.DismountAsync(client, "magic");
+                await Riding.DismountToFightAsync(client, "magic");
             switch (spell.Sort)
             {
                 case MagicSort.Riding:

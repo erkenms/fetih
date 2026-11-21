@@ -1,6 +1,7 @@
 namespace Comet.Game.Tests.Items
 {
     using System;
+    using System.Linq;
     using Comet.Game.Database.Models;
     using Comet.Game.Items;
     using Comet.Game.Packets;
@@ -99,6 +100,8 @@ namespace Comet.Game.Tests.Items
                 new DbItem { ItemID = 11, Position = 1 },
                 new DbItem { ItemID = 14, Position = 4 },
                 new DbItem { ItemID = 19, Position = 9 },
+                new DbItem { ItemID = 20, Position = 12 },
+                new DbItem { ItemID = 21, Position = 18 },
             });
             var bytes = MsgItem.DisplayGears(1000001, equipment).Encode();
             Assert.Equal(MsgItem.Size, bytes.Length);
@@ -106,6 +109,9 @@ namespace Comet.Game.Tests.Items
                 BitConverter.ToUInt32(bytes, 12)));
             Assert.Equal((11u, 0u, 14u, 19u), (BitConverter.ToUInt32(bytes, 32), BitConverter.ToUInt32(bytes, 36),
                 BitConverter.ToUInt32(bytes, 44), BitConverter.ToUInt32(bytes, 64)));
+            // The crop after the accessories and steed armor; the steed has no place
+            Assert.Equal(21u, BitConverter.ToUInt32(bytes, 80));
+            Assert.DoesNotContain(20u, Enumerable.Range(0, 14).Select(i => BitConverter.ToUInt32(bytes, 32 + 4 * i)));
         }
 
         [Fact]

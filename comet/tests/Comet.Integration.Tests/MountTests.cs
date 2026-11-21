@@ -9,7 +9,7 @@ namespace Comet.Integration.Tests
     public class MountTests : IntegrationTest
     {
         private const ushort GameMaster = 3;
-        private const uint SteedSlot = 12;
+        private const uint SteedSlot = 12, CropSlot = 18;
         private const ushort RidingSkill = 7001;
         private const ulong RidingStatus = 1UL << 50;
         private const uint MountTrainer = 5600;
@@ -88,6 +88,40 @@ namespace Comet.Integration.Tests
             await rider.Game.UnequipAsync(steed.Id, SteedSlot);
             Assert.NotNull(await RidingAsync(watcher, rider.User.Id, false));
             await this.DismountedAsync(rider, "steed_changed");
+        }
+
+        [Fact]
+        public async Task ARiderWithACropAttacksWithoutGettingOff()
+        {
+            await using var target = (await this.PlayingAtAsync(ServerFixture.PkField, 30, 81)).Player;
+            await using var rider = (await this.PlayingAtAsync(ServerFixture.PkField, 30, 80, GameMaster)).Player;
+            await CommandAsync(rider, "/learn 7001");
+            Assert.NotNull(await rider.Game.WaitForMagicInfoAsync(m => m.Type == RidingSkill));
+            await EquipSteedAsync(rider, 1);
+            await CommandAsync(rider, $"/item {ServerFixture.Crop.Id}");
+            var crop = await rider.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Crop.Id);
+            rider.Game.ForgetKept();    // the steed's DisplayGears
+            await rider.Game.EquipAsync(crop.Id, CropSlot);
+            Assert.NotNull(await rider.Game.WaitForItemActionAsync(ItemMessage.Equipped, crop.Id));
+            var gears = await rider.Game.WaitForItemActionAsync(ItemMessage.DisplayGears, rider.User.Id);
+            Assert.Equal(crop.Id, gears?.Gears[12]);
+
+            await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
+            Assert.NotNull(await rider.Game.WaitForVigorAsync(v => v == ServerFixture.SteedVigor + ServerFixture.CropVigor));
+            await rider.Game.AttackAsync(rider.User.Id, target.User.Id, 30, 81);
+            await Task.Delay(MinimumCastDelay);
+            await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
+            var ended = await this.Servers.WaitForEventAsync("game", "mount.ended", "name", rider.User.Name);
+            Assert.Equal("magic", ended.GetProperty("reason").GetString());
+
+            // Taking the crop off brings the vigor down to the steed's
+            await Task.Delay(MinimumCastDelay);
+            await rider.Game.CastAsync(rider.User.Id, RidingSkill, 0, 30, 80);
+            Assert.NotNull(await RidingAsync(rider, rider.User.Id, true));
+            await rider.Game.UnequipAsync(crop.Id, CropSlot);
+            Assert.NotNull(await rider.Game.WaitForVigorAsync(v => v == ServerFixture.SteedVigor));
+            await rider.Game.AttackAsync(rider.User.Id, target.User.Id, 30, 81);
+            await this.DismountedAsync(rider, "attack");
         }
 
         [Fact]

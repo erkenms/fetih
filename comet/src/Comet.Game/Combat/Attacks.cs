@@ -48,7 +48,7 @@ namespace Comet.Game.Combat
                 return;
             }
 
-            await Riding.DismountAsync(client, "attack");
+            await Riding.DismountToFightAsync(client, "attack");
             client.AttackTarget = request.TargetID;
             client.AttackShooting = request.Action == InteractionType.Shoot;
             await SwingAsync(client, client.AttackRun);

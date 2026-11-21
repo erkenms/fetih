@@ -19,8 +19,18 @@ namespace Comet.Game.Packets
         public uint Argument { get; set; }
         public ItemActionType Action { get; set; }
 
-        // Item IDs worn in slots 1 to 9, for DisplayGears
+        // Item IDs worn, for DisplayGears: slots 1 to 9, then the right and left accessories,
+        // the steed armor and the crop (5808 source). The steed isn't in it.
         public uint[] Gears { get; set; }
+
+        private const int GearCount = 13;
+
+        private static int GearIndex(byte position) => position switch
+        {
+            >= (byte)ItemPosition.Headwear and <= (byte)ItemPosition.Garment => position - 1,
+            (byte)ItemPosition.Crop => 12,
+            _ => -1,
+        };
 
         // The server's answers to equipping: the item now in a slot, or back in the inventory
         public static MsgItem Equipped(uint itemID, ItemPosition position) =>
@@ -41,10 +51,10 @@ namespace Comet.Game.Packets
         public static MsgItem DisplayGears(uint characterID, Equipment equipment)
         {
             var msg = Create(characterID, 255, ItemActionType.DisplayGears);
-            msg.Gears = new uint[9];
+            msg.Gears = new uint[GearCount];
             foreach (var item in equipment?.Items ?? Enumerable.Empty<Database.Models.DbItem>())
-                if (item.Position <= msg.Gears.Length)
-                    msg.Gears[item.Position - 1] = item.ItemID;
+                if (GearIndex(item.Position) is var index and >= 0)
+                    msg.Gears[index] = item.ItemID;
             return msg;
         }
 
@@ -79,9 +89,9 @@ namespace Comet.Game.Packets
             writer.Write(this.Timestamp);
             writer.Write(this.Argument);
             writer.Write(new byte[8]);                      // 24
-            for (int i = 0; i < 9; i++)                     // 32 item IDs in slots 1 to 9
+            for (int i = 0; i < GearCount; i++)             // 32 gears; the crop at 80
                 writer.Write(this.Gears?[i] ?? 0u);
-            writer.Write(new byte[MsgItem.Size - 68]);
+            writer.Write(new byte[MsgItem.Size - 32 - 4 * GearCount]);
             return writer.ToArray();
         }
 

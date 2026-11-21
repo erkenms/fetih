@@ -58,7 +58,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await observer.Game.WaitForSpawnAsync(player.User.Id,
                 s => s.RightHand == 0));
             gears = await again.Game.WaitForItemActionAsync(ItemMessage.DisplayGears, player.User.Id);
-            Assert.Equal(new uint[9], gears?.Gears);
+            Assert.Equal(new uint[13], gears?.Gears);
             Assert.Equal(0, System.Convert.ToInt32(await this.PositionAsync(blade.Id)));
         }
 

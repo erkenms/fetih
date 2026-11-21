@@ -29,6 +29,6 @@ namespace Comet.Game.Items
 
         public static bool IsEquipped(byte position) =>
             position >= (byte)ItemPosition.Headwear && position <= (byte)ItemPosition.Garment ||
-            position == (byte)ItemPosition.Steed;
+            position == (byte)ItemPosition.Steed || position == (byte)ItemPosition.Crop;
     }
 }

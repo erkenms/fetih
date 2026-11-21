@@ -26,7 +26,8 @@ namespace Comet.Game.Items
 
     // Steeds, as Albetros (5517) and the 5808 source have them. Casting Riding (7001) with a
     // steed worn mounts it or gets off; status bit 50 shows the rider on the steed MsgPlayer
-    // carries. Mounting fills the vigor. Ride steps cost 2, walking steps 1, jumps 3 per 4
+    // carries. Attacking or casting gets the rider off, unless they wear a riding crop, which
+    // also adds its dexterity to the vigor. Mounting fills the vigor. Ride steps cost 2, walking steps 1, jumps 3 per 4
     // cells; a move the vigor can't pay for ends the ride. The vigor comes back while the
     // steed stands still: 2 + its plus every half second (Albetros).
     public static class Riding
@@ -38,13 +39,38 @@ namespace Comet.Game.Items
 
         public static DbItem Steed(Client client) => client.Equipment?[ItemPosition.Steed];
 
-        // The steed type's dexterity plus what its plus adds (itemadd.ini)
-        public static uint MaxVigor(DbItem steed)
+        public static DbItem Crop(Client client) => client.Equipment?[ItemPosition.Crop];
+
+        // Whether the rider can fight without getting off
+        public static bool FightsMounted(Client client) => Crop(client) != null;
+
+        // The steed type's dexterity plus what its plus adds (itemadd.ini), plus the crop's
+        public static uint MaxVigor(DbItem steed, DbItem crop)
         {
             if (steed == null)
                 return 0;
-            uint vigor = Kernel.ItemTypes.TryGet(steed.TypeID, out var type) ? type.Dexterity : 0u;
-            return vigor + (Kernel.ItemAdditions.Find(steed.TypeID, steed.Plus)?.Dexterity ?? 0u);
+            uint vigor = Dexterity(steed) + (Kernel.ItemAdditions.Find(steed.TypeID, steed.Plus)?.Dexterity ?? 0u);
+            return crop == null ? vigor : vigor + Dexterity(crop);
+        }
+
+        public static uint MaxVigor(Client client) => MaxVigor(Steed(client), Crop(client));
+
+        private static uint Dexterity(DbItem item) =>
+            Kernel.ItemTypes.TryGet(item.TypeID, out var type) ? type.Dexterity : 0u;
+
+        // Getting off to attack or cast, without a crop
+        public static Task DismountToFightAsync(Client client, string reason) =>
+            FightsMounted(client) ? Task.CompletedTask : DismountAsync(client, reason);
+
+        // After the crop is put on or taken off: vigor above the new maximum comes down to it
+        public static async Task FollowCropAsync(Client client)
+        {
+            var mount = client.Mount;
+            uint max = MaxVigor(client);
+            if (!mount.Riding || mount.Vigor <= max)
+                return;
+            mount.Vigor = max;
+            await client.SendAsync(MsgData.Vigor(mount.Vigor));
         }
 
         public static uint JumpCost(int distance) => (uint)(distance * 3 / 4);
@@ -61,7 +87,7 @@ namespace Comet.Game.Items
         public static async Task MountAsync(Client client)
         {
             var mount = client.Mount;
-            mount.Vigor = MaxVigor(Steed(client));
+            mount.Vigor = MaxVigor(client);
             mount.Riding = true;
             await client.SendAsync(MsgData.Vigor(mount.Vigor));
             await Pking.SendStatusAsync(client);
@@ -103,7 +129,7 @@ namespace Comet.Game.Items
             var steed = Steed(client);
             if (!mount.Riding || steed == null || now - mount.MovedAt < RestTime)
                 return;
-            uint max = MaxVigor(steed);
+            uint max = MaxVigor(steed, Crop(client));
             if (mount.Vigor >= max)
                 return;
             mount.Vigor = Math.Min(max, mount.Vigor + 2 * (2u + steed.Plus));
