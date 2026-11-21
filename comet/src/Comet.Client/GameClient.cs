@@ -240,12 +240,6 @@ namespace Comet.Client
         public Task RepairAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Repair));
 
-        public Task ImproveAsync(uint itemId, uint dragonBallId) =>
-            this.SendAsync(ItemMessage.Build(itemId, dragonBallId, ItemMessage.Improve));
-
-        public Task LevelUpAsync(uint itemId, uint meteorId) =>
-            this.SendAsync(ItemMessage.Build(itemId, meteorId, ItemMessage.LevelUp));
-
         public Task EmbedAsync(uint characterId, uint itemId, uint gemId, ushort socket) =>
             this.SendAsync(GemEmbedMessage.Build(characterId, itemId, gemId, socket, GemEmbedMessage.Embed));
 

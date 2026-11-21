@@ -6,49 +6,75 @@ namespace Comet.Integration.Tests
 
     public class UpgradeTests : IntegrationTest
     {
+        private const uint Artisan = 10062, DragonBallUpgrader = 7050;
+        private const byte HeadgearSlot = 1;
+
         public UpgradeTests(ServerFixture servers) : base(servers) { }
 
-        [Fact]
-        public async Task MeteorsRaiseLevelsAndDragonballsQualityAndAreUsedUp()
+        // A game master in the market wearing the level-15 helmet, with gems
+        private async Task<(Player Player, ItemInfo Helmet)> WearingHelmetAsync(int x, byte level, uint gemType, int gems)
         {
-            await using var player = (await this.PlayingAtAsync(1002, 600, 940, GameMaster)).Player;
+            var player = (await this.PlayingAtAsync(ServerFixture.Market, x, 205, GameMaster, level)).Player;
             var helmet = await GiveAsync(player, ServerFixture.Helmet.Id);
-            var meteor = await GiveAsync(player, ServerFixture.Meteor.Id);
+            await player.Game.EquipAsync(helmet.Id, HeadgearSlot);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, helmet.Id));
+            for (int i = 0; i < gems; i++)
+                await GiveAsync(player, gemType);
+            return (player, helmet);
+        }
 
-            await player.Game.LevelUpAsync(helmet.Id, meteor.Id);
-            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, meteor.Id));
+        private static async Task<string> AnswerAsync(Player player, byte option)
+        {
+            await player.Game.AnswerNpcAsync(option);
+            return (await player.Game.ReadDialogAsync())?[0].Text;
+        }
+
+        [Fact]
+        public async Task TheArtisanRaisesWornGearsLevelForMeteorsAndQualityForDragonballs()
+        {
+            var (player, helmet) = await WearingHelmetAsync(178, 20, ServerFixture.Meteor.Id, 2);
+            await using var _ = player;
+
+            await player.Game.TalkToNpcAsync(Artisan);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            Assert.NotNull(await AnswerAsync(player, 1));                        // upgrade level
+            Assert.Contains("2 meteors", await AnswerAsync(player, 20 + HeadgearSlot));
+            Assert.Contains("done", await AnswerAsync(player, 10 + HeadgearSlot));
             Assert.NotNull(await player.Game.WaitForItemAsync(i =>
                 i.Id == helmet.Id && i.TypeId == ServerFixture.HelmetLevelUp.Id));
-            var upgraded = await this.Servers.WaitForEventAsync("game", "item.upgraded", "name", player.User.Name);
-            Assert.Equal(("level", "success", ServerFixture.HelmetLevelUp.Id), (upgraded.GetProperty("upgrade").GetString(),
-                upgraded.GetProperty("result").GetString(), upgraded.GetProperty("typeId").GetUInt32()));
 
-            var dragonBall = await GiveAsync(player, ServerFixture.DragonBall.Id);
-            await player.Game.ImproveAsync(helmet.Id, dragonBall.Id);
-            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, dragonBall.Id));
+            for (int i = 0; i < 2; i++)
+                await GiveAsync(player, ServerFixture.DragonBall.Id);
+            await player.Game.TalkToNpcAsync(Artisan);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            Assert.NotNull(await AnswerAsync(player, 3));                        // upgrade quality
+            Assert.Contains("2 dragonballs", await AnswerAsync(player, 30 + HeadgearSlot));
+            Assert.Contains("done", await AnswerAsync(player, 40 + HeadgearSlot));
             Assert.NotNull(await player.Game.WaitForItemAsync(i =>
                 i.Id == helmet.Id && i.TypeId == ServerFixture.HelmetRefined.Id));
 
-            var kept = await this.Servers.QueryGameScalarAsync(
-                "SELECT TypeID FROM item WHERE ItemID = @id", ("@id", helmet.Id));
-            Assert.Equal(ServerFixture.HelmetRefined.Id, (uint)kept);
+            var upgraded = await this.Servers.WaitForEventAsync("game", "item.upgraded", e =>
+                e.GetProperty("name").GetString() == player.User.Name && e.GetProperty("upgrade").GetString() == "quality");
+            Assert.Equal(ServerFixture.HelmetRefined.Id, upgraded.GetProperty("typeId").GetUInt32());
             var count = await this.Servers.QueryGameScalarAsync(
                 "SELECT COUNT(*) FROM item WHERE CharacterID = @id", ("@id", player.User.Id));
             Assert.Equal(1L, (long)count);
         }
 
         [Fact]
-        public async Task OnlyDragonballsRaiseQuality()
+        public async Task GearIsntUpgradedPastThePlayersLevel()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 640, 940, GameMaster)).Player;
-            var helmet = await GiveAsync(player, ServerFixture.Helmet.Id);
-            var meteor = await GiveAsync(player, ServerFixture.Meteor.Id);
+            var (player, helmet) = await WearingHelmetAsync(182, 15, ServerFixture.DragonBall.Id, 1);
+            await using var _ = player;
 
-            await player.Game.ImproveAsync(helmet.Id, meteor.Id);
+            await player.Game.TalkToNpcAsync(DragonBallUpgrader);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            Assert.Contains("past your own level", await AnswerAsync(player, 20 + HeadgearSlot));
             var refused = await this.Servers.WaitForEventAsync("game", "item.upgrade_rejected", "name", player.User.Name);
-            Assert.Equal("wrong_gem", refused.GetProperty("reason").GetString());
+            Assert.Equal("above_level", refused.GetProperty("reason").GetString());
             Assert.NotNull(await this.Servers.QueryGameScalarAsync(
-                "SELECT ItemID FROM item WHERE ItemID = @id", ("@id", meteor.Id)));
+                "SELECT ItemID FROM item WHERE CharacterID = @id AND TypeID = @type",
+                ("@id", player.User.Id), ("@type", ServerFixture.DragonBall.Id)));
         }
     }
 }

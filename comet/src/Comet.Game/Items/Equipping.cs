@@ -107,7 +107,7 @@ namespace Comet.Game.Items
             return true;
         }
 
-        private static async Task ShowLookAsync(Client client)
+        public static async Task ShowLookAsync(Client client)
         {
             await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
             await Movement.SendToViewAsync(client, new MsgPlayer(client));
@@ -116,7 +116,7 @@ namespace Comet.Game.Items
         // Worn items change only the maximums, or putting them on would refill health and
         // mana; health and mana above a lower maximum come down to it. Maximums go first, so
         // the client doesn't cut to an older one.
-        private static async Task FollowMaximumsAsync(Client client)
+        public static async Task FollowMaximumsAsync(Client client)
         {
             var character = client.Character;
             ushort maxHealth = Attributes.MaxHealth(client), maxMana = Attributes.MaxMana(client);

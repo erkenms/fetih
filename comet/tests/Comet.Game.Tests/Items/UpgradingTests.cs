@@ -16,11 +16,11 @@ namespace Comet.Game.Tests.Items
             Assert.Equal(next, Upgrading.NextLevelID(type));
 
         [Theory]
-        [InlineData(111013u, 100)]  // low armor always succeeds
-        [InlineData(111063u, 40)]
-        [InlineData(410125u, 90)]   // weapons by their level
-        [InlineData(410229u, 4)]    // a super level-22 weapon: 40% of a tenth
-        public void LevelChancesFallWithLevelAndQuality(uint next, double chance) =>
-            Assert.Equal(chance, Upgrading.LevelChance(next), 3);
+        [InlineData(111003u, 2)]   // low armor: 80%
+        [InlineData(111063u, 3)]   // level 6 armor: 50%
+        [InlineData(410125u, 2)]   // a level-12 blade: 85%
+        [InlineData(410229u, 11)]  // a super level-22 blade: a fifth of 40% is 8%, raised to 10%
+        public void MeteorCostsRiseWithLevelAndQuality(uint type, int meteors) =>
+            Assert.Equal(meteors, Upgrading.MeteorCost(type));
     }
 }
