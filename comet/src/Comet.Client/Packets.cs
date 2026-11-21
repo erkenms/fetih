@@ -17,6 +17,7 @@ namespace Comet.Client
         public const ushort MsgTeam = 1023;
         public const ushort MsgTeamMember = 1026;
         public const ushort MsgData = 1033;
+        public const ushort MsgGemEmbed = 1027;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
@@ -372,10 +373,12 @@ namespace Comet.Client
     }
 
     // Item ID, type, amount and its limit, then the action and position as ushorts
-    // Locked is the byte at 46
+    // The sockets are the bytes at 24 and 25, Locked the byte at 46
     public sealed record ItemInfo(uint Id, uint TypeId, ushort Amount, ushort AmountLimit, ushort Action, ushort Position)
     {
         public bool Locked { get; init; }
+        public byte Gem1 { get; init; }
+        public byte Gem2 { get; init; }
 
         public static ItemInfo Parse(byte[] packet) => new ItemInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -383,7 +386,31 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18))
         {
             Locked = packet.Length > 46 && packet[46] != 0,
+            Gem1 = packet.Length > 25 ? packet[24] : (byte)0,
+            Gem2 = packet.Length > 25 ? packet[25] : (byte)0,
         };
+    }
+
+    // Gems in and out of sockets, 20 bytes: player ID at 4, item at 8, gem at 12, then the
+    // socket (1 or 2) and the action (0 embed, 1 remove) as ushorts
+    public sealed record GemEmbedMessage(uint CharacterId, uint ItemId, uint GemId, ushort Socket, ushort Action)
+    {
+        public const ushort Embed = 0, Remove = 1;
+
+        public static byte[] Build(uint characterId, uint itemId, uint gemId, ushort socket, ushort action)
+        {
+            var packet = Packet.Create(PacketTypes.MsgGemEmbed, 20);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), characterId);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), itemId);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), gemId);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), socket);
+            BitConverter.TryWriteBytes(packet.AsSpan(18), action);
+            return packet;
+        }
+
+        public static GemEmbedMessage Parse(byte[] packet) => new GemEmbedMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12),
+            BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
     }
 
     // Item locks, 16 bytes: item ID at 4, mode byte at 8, a byte at 9, a value at 12 (the

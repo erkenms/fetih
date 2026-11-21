@@ -243,6 +243,19 @@ namespace Comet.Client
         public Task LevelUpAsync(uint itemId, uint meteorId) =>
             this.SendAsync(ItemMessage.Build(itemId, meteorId, ItemMessage.LevelUp));
 
+        public Task EmbedAsync(uint characterId, uint itemId, uint gemId, ushort socket) =>
+            this.SendAsync(GemEmbedMessage.Build(characterId, itemId, gemId, socket, GemEmbedMessage.Embed));
+
+        public Task RemoveGemAsync(uint characterId, uint itemId, ushort socket) =>
+            this.SendAsync(GemEmbedMessage.Build(characterId, itemId, 0, socket, GemEmbedMessage.Remove));
+
+        public async Task<GemEmbedMessage> WaitForGemEmbedAsync(Func<GemEmbedMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgGemEmbed && match(GemEmbedMessage.Parse(p)), timeout);
+            return packet == null ? null : GemEmbedMessage.Parse(packet);
+        }
+
         public Task DropAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Drop));
 
