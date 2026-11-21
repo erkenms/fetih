@@ -18,7 +18,8 @@ namespace Comet.Integration.Tests
             await player.Game.SayAsync(TalkChannels.Talk, player.User.Name, "ALLUSERS", "/item " + stoneType);
             var stone = await player.Game.WaitForItemAsync(i => i.TypeId == stoneType);
             Assert.NotNull(stone);
-            await player.Game.UseAsync(stone.Id);
+            // The 5619 client sends slot 17 for a praying stone
+            await player.Game.EquipAsync(stone.Id, 17);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, stone.Id));
         }
 

@@ -1,5 +1,8 @@
 namespace Comet.Game.Items
 {
+    using System;
+    using System.Linq;
+
     // Where an item type can be worn, from its type ID's thousands (ID / 1000)
     public static class ItemSlots
     {
@@ -26,6 +29,9 @@ namespace Comet.Game.Items
             Fits(type, ItemPosition.Headwear) || Fits(type, ItemPosition.Necklace) ||
             Fits(type, ItemPosition.Armor) || Fits(type, ItemPosition.RightHand) ||
             IsShield(type) || Fits(type, ItemPosition.Ring) || Fits(type, ItemPosition.Boots);
+
+        public static bool IsWearable(uint type) =>
+            Enum.GetValues<ItemPosition>().Any(position => Fits(type, position));
 
         public static bool Fits(uint type, ItemPosition position) => position switch
         {

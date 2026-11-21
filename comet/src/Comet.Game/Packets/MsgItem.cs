@@ -102,14 +102,19 @@ namespace Comet.Game.Packets
                 this.Type, this.Action, this.Length, Convert.ToHexString(this.Encode()));
         }
 
+        private static bool IsUse(Client client, MsgItem msg) =>
+            msg.Command == (uint)ItemPosition.Inventory ||
+            client.Inventory?.Find(msg.CharacterID) is { } item && !ItemSlots.IsWearable(item.TypeID);
+
         private static readonly Dictionary<ItemActionType, Func<MsgItem, Client, Task>> Handlers =
             new Dictionary<ItemActionType, Func<MsgItem, Client, Task>>
             {
                 // The client checks the connection with pings; the reply is the echo
                 [ItemActionType.ClientPing] = (msg, client) => client.SendAsync(msg),
 
-                // The item ID, and the slot in Command; slot 0 uses the item
-                [ItemActionType.InventoryEquip] = (msg, client) => msg.Command == (uint)ItemPosition.Inventory
+                // The item ID, and the slot in Command; slot 0 uses the item. The 5619 client
+                // also sends a slot for items that can't be worn (17 for praying stones).
+                [ItemActionType.InventoryEquip] = (msg, client) => IsUse(client, msg)
                     ? Using.UseAsync(client, msg.CharacterID)
                     : Equipping.EquipAsync(client, msg.CharacterID, (ItemPosition)msg.Command),
                 [ItemActionType.EquipmentRemove] = (msg, client) =>
