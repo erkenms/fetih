@@ -62,6 +62,14 @@ namespace Comet.Core.Logging
         public const string ItemTakenOut = "item.taken_out";
         public const string ItemWarehouseRejected = "item.warehouse_rejected";
         public const string ShopsLoaded = "item.shops_loaded";
+        public const string ItemLocked = "item.locked";
+        public const string ItemUnlockStarted = "item.unlock_started";
+        public const string ItemUnlocked = "item.unlocked";
+        public const string ItemLockRejected = "item.lock_rejected";
+
+        public const string SecondPasswordSet = "second_password.set";
+        public const string SecondPasswordVerified = "second_password.verified";
+        public const string SecondPasswordRejected = "second_password.rejected";
 
         public const string TradeRequested = "trade.requested";
         public const string TradeOpened = "trade.opened";
@@ -87,6 +95,11 @@ namespace Comet.Core.Logging
         public const string FriendRemoved = "friend.removed";
         public const string FriendRejected = "friend.rejected";
         public const string EnemyRemoved = "enemy.removed";
+
+        public const string TradePartnerRequested = "trade_partner.requested";
+        public const string TradePartnerAdded = "trade_partner.added";
+        public const string TradePartnerRemoved = "trade_partner.removed";
+        public const string TradePartnerRejected = "trade_partner.rejected";
 
         public const string GuildsLoaded = "guild.loaded";
         public const string GuildCreated = "guild.created";

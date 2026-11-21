@@ -17,6 +17,8 @@ namespace Comet.Game.Items
             this.ByNpc = items.GroupBy(i => i.Package).ToDictionary(g => g.Key, g => g.ToList());
         }
 
+        public IEnumerable<DbItem> Items => this.ByNpc.Values.SelectMany(items => items);
+
         public IReadOnlyList<DbItem> In(uint npcID) =>
             this.ByNpc.TryGetValue(npcID, out var items) ? items : new List<DbItem>();
 

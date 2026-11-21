@@ -38,7 +38,8 @@ namespace Comet.Game.Packets
             body[34] = this.Item.Bless;
             // 35: bound
             body[36] = this.Item.Enchant;
-            // 44: suspicious, 46: locked
+            // 44: suspicious
+            body[46] = (byte)(this.Item.Locked ? 1 : 0);
             BitConverter.TryWriteBytes(span[48..], (uint)this.Item.Color);
             // 52: plus progress, 56: inscribed, 60: time left (uint each)
 

@@ -1,5 +1,6 @@
 namespace Comet.Game.Database.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("item")]
@@ -20,5 +21,9 @@ namespace Comet.Game.Database.Models
 
         // The warehouse NPC holding the item, when its position is Warehouse
         public uint Package { get; set; }
+
+        // Locked items go only to trade partners; UnlocksAt is set while an unlock waits
+        public bool Locked { get; set; }
+        public DateTime? UnlocksAt { get; set; }
     }
 }

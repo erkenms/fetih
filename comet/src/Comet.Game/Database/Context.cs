@@ -11,6 +11,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbItem> Items { get; set; }
         public virtual DbSet<DbFriend> Friends { get; set; }
         public virtual DbSet<DbEnemy> Enemies { get; set; }
+        public virtual DbSet<DbTradePartner> TradePartners { get; set; }
         public virtual DbSet<DbMagic> Magics { get; set; }
         public virtual DbSet<DbProficiency> Proficiencies { get; set; }
         public virtual DbSet<DbSyndicate> Syndicates { get; set; }
@@ -39,6 +40,7 @@ namespace Comet.Game.Database
             builder.Entity<DbItem>(e => e.HasKey(x => x.ItemID));
             builder.Entity<DbFriend>(e => e.HasKey(x => new { x.CharacterID, x.FriendID }));
             builder.Entity<DbEnemy>(e => e.HasKey(x => new { x.CharacterID, x.EnemyID }));
+            builder.Entity<DbTradePartner>(e => e.HasKey(x => new { x.CharacterID, x.PartnerID }));
             builder.Entity<DbMagic>(e => e.HasKey(x => new { x.CharacterID, x.Type }));
             builder.Entity<DbProficiency>(e => e.HasKey(x => new { x.CharacterID, x.Type }));
             builder.Entity<DbSyndicate>(e => e.HasKey(x => x.SyndicateID));

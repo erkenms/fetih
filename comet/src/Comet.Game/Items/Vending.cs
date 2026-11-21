@@ -97,10 +97,13 @@ namespace Comet.Game.Items
                     item == null ? "not_in_inventory" :
                     booth.Items.ContainsKey(item.ItemID) ? "listed" :
                     msg.Command == 0 ? "no_price" :
+                    Locking.IsLocked(item, DateTime.UtcNow) ? "locked" :
                     null;
                 if (reason != null)
                 {
                     Reject(client, "list", msg.CharacterID, item?.TypeID ?? 0, reason);
+                    if (reason == "locked")
+                        await Talk.NoticeAsync(client, "This equipment is locked. It can't be sold in the booth.");
                     return;
                 }
 
@@ -178,7 +181,7 @@ namespace Comet.Game.Items
                 booth == null ? "no_booth" :
                 owner == buyer ? "own_booth" :
                 !booth.Items.TryGetValue(itemID, out goods) ? "not_listed" :
-                !Owns(owner, goods) ? "item_gone" :
+                !Owns(owner, goods) || Locking.IsLocked(goods.Item, DateTime.UtcNow) ? "item_gone" :
                 !Near(buyer, booth) ? "not_near" :
                 buyer.Inventory.FreeSlots < 1 ? "inventory_full" :
                 goods.Price > Balance(buyer, goods.ConquerPoints) ? "not_enough_money" :

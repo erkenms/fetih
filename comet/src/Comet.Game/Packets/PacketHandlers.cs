@@ -38,6 +38,9 @@ namespace Comet.Game.Packets
                 [PacketType.MsgQualifyingRank] = () => new MsgQualifyingRank(),
                 [PacketType.MsgQualifyingSeasonRankList] = () => new MsgQualifyingSeasonRankList(),
                 [PacketType.MsgQualifyingDetailInfo] = () => new MsgQualifyingDetailInfo(),
+                [PacketType.MsgEquipLock] = () => new MsgEquipLock(),
+                [PacketType.Msg2ndPsw] = () => new Msg2ndPsw(),
+                [PacketType.MsgTradeBuddy] = () => new MsgTradeBuddy(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

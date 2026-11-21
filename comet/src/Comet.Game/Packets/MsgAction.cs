@@ -167,10 +167,12 @@ namespace Comet.Game.Packets
 
                 [ActionType.LoginInventory] = async (msg, client) =>
                 {
+                    var unlocked = await Items.Locking.FinishUnlocksAsync(client);
                     var items = (client.Inventory?.Items ?? Enumerable.Empty<Database.Models.DbItem>())
                         .Concat(client.Equipment?.Items ?? Enumerable.Empty<Database.Models.DbItem>());
                     foreach (var item in items)
                         await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
+                    await Items.Locking.SendLoginAsync(client, unlocked);
                     await client.SendAsync(msg);
                     await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
                 },
@@ -178,6 +180,7 @@ namespace Comet.Game.Packets
                 [ActionType.LoginRelationships] = async (msg, client) =>
                 {
                     await Social.Relationships.SendListsAsync(client);
+                    await Social.TradePartners.SendListAsync(client);
                     await client.SendAsync(msg);
                 },
 
@@ -206,7 +209,10 @@ namespace Comet.Game.Packets
                     await Visibility.EnterAsync(client);
                     if (Pk.Pking.Status(client) != 0)
                         await Pk.Pking.SendStatusAsync(client);
+                    await SecondPassword.LoginAsync(client);
                 },
+
+                [ActionType.CharacterPartnerInfo] = (msg, client) => Social.TradePartners.InfoAsync(client, msg),
 
                 // Asks for the stat window (1040), sent after login and each equipment
                 // change. Not answered until there are stats to show.

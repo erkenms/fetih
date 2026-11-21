@@ -81,6 +81,7 @@ namespace Comet.Network.Packets
         MsgQualifyingDetailInfo,
         MsgArenicScore,
         MsgArenicWitness,
+        Msg2ndPsw = 2261,
         MsgWalk = 10005,
         MsgAction = 10010,
         MsgPlayer = 10014,
