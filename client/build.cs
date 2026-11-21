@@ -19,8 +19,13 @@ var output = Path.GetFullPath(args.Length > 1 ? args[1] : Path.Combine(root, "_C
 var overlay = Path.Combine(here, "files");
 if (!Directory.Exists(source))
     return Fail($"No client at {source}");
-if (output.StartsWith(source + Path.DirectorySeparatorChar) || output == source)
-    return Fail("The output can't be inside the source client");
+// Through links too: a link from the output to the source would have the build edit it
+var realSource = RealPath(source);
+var realOutput = RealPath(output);
+if (realOutput == realSource || realOutput.StartsWith(realSource + Path.DirectorySeparatorChar))
+    return Fail(output == realOutput
+        ? "The output can't be inside the source client"
+        : $"{output} is a link to the source client; remove the link to build into it");
 
 // Client paths are compared without case, as Windows does
 var comparer = StringComparer.OrdinalIgnoreCase;
@@ -130,6 +135,9 @@ static int Fail(string message)
     Console.Error.WriteLine(message);
     return 1;
 }
+
+static string RealPath(string path) =>
+    Directory.Exists(path) ? new DirectoryInfo(path).ResolveLinkTarget(returnFinalTarget: true)?.FullName ?? path : path;
 
 static string ScriptPath([CallerFilePath] string path = "") => path;
 

@@ -59,7 +59,7 @@
             catch (Exception e)
             {
                 Log.Error(e, "Can't read map data from {Directory}; set Maps:ClientDirectory " +
-                    "to a copy of the 5619 client", config.Maps.ResolveClientDirectory());
+                    "to the client built by client/build.cs", config.Maps.ResolveClientDirectory());
                 Log.CloseAndFlush();
                 return;
             }
