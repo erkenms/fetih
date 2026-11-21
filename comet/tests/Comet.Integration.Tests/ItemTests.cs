@@ -173,6 +173,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ExpBallsGiveLevelUpTimeAndAreKeptAtTheCap()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 740, 940, GameMaster)).Player;
+            var ball = await GiveAsync(player, ServerFixture.ExpBall.Id);
+            await player.Game.UseAsync(ball.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, ball.Id));
+            var used = await this.Servers.WaitForEventAsync("game", "item.used", "name", player.User.Name);
+            Assert.True(used.GetProperty("experience").GetUInt64() > 0);
+
+            await CommandAsync(player, "/level 120");
+            var kept = await GiveAsync(player, ServerFixture.ExpBall.Id);
+            await player.Game.UseAsync(kept.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
+            Assert.Equal("max_level", refused.GetProperty("reason").GetString());
+        }
+
+        [Fact]
         public async Task MeteorScrollsOpenIntoTenMeteors()
         {
             await using var player = (await this.PlayingAtAsync(1002, 760, 940, GameMaster)).Player;

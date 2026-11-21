@@ -11,10 +11,16 @@ namespace Comet.Game.Items
     using Comet.Game.World;
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
-    // and scrolls that open into ten meteors or dragonballs. Runs on the player's own packet
-    // queue, like Progress.
+    // EXP balls, and scrolls that open into ten meteors or dragonballs. Runs on the player's own
+    // packet queue, like Progress.
     public static class Using
     {
+        // EXP balls, as TQ's cq_action 1086 computes them (WCO): each level has an upLevTime,
+        // how long TQ meant it to take, and a ball is worth 600 of it, carried through level-ups.
+        // So a ball is a fixed slice of levelling, not a fixed amount of experience.
+        public static readonly uint[] ExpBalls = { 723700, 723834, 723911 };
+        public const byte ExpBallMaxLevel = 130;
+
         // MeteorScroll and DragonBallScroll (Albetros)
         public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
         public const int ScrollGems = 10;
@@ -30,6 +36,8 @@ namespace Comet.Game.Items
                 return await PrayAsync(client, item, blessing);
             if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && IsPotion(type))
                 return await DrinkAsync(client, item, type);
+            if (System.Array.IndexOf(ExpBalls, item.TypeID) >= 0)
+                return await ExpBallAsync(client, item);
             if (item.TypeID is MeteorScroll or DragonBallScroll)
                 return await OpenScrollAsync(client, item,
                     item.TypeID == MeteorScroll ? Upgrading.Meteor : Upgrading.DragonBall);
@@ -79,6 +87,26 @@ namespace Comet.Game.Items
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) and restored {Health} HP and {Mana} MP",
                 character.Name, potion.ItemID, potion.TypeID, healed, restored);
+            return true;
+        }
+
+        private static async Task<bool> ExpBallAsync(Client client, DbItem ball)
+        {
+            var character = client.Character;
+            if (character.Level >= ExpBallMaxLevel)
+            {
+                await Talk.NoticeAsync(client, $"EXP balls can't be used from level {ExpBallMaxLevel}.");
+                return Reject(client, ball.ItemID, ball.TypeID, "level");
+            }
+            ulong experience = Kernel.Experience.ExperienceOfTime(character.Level, character.Experience, ExperienceTable.BallTime);
+            if (experience == 0)
+                return Reject(client, ball.ItemID, ball.TypeID, "max_level");
+
+            await UseUpAsync(client, ball);
+            await Progress.AwardExperienceAsync(client, experience, "exp_ball");
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Experience} experience",
+                character.Name, ball.ItemID, ball.TypeID, experience);
             return true;
         }
 
