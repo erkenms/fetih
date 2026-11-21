@@ -171,5 +171,19 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == mana));
         }
+
+        [Fact]
+        public async Task MeteorScrollsOpenIntoTenMeteors()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 760, 940, GameMaster)).Player;
+            var scroll = await GiveAsync(player, ServerFixture.MeteorScroll.Id);
+            await player.Game.UseAsync(scroll.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, scroll.Id));
+            await this.Servers.WaitForEventAsync("game", "item.used", "name", player.User.Name);
+            var meteors = await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM item WHERE CharacterID = @id AND TypeID = @type",
+                ("@id", player.User.Id), ("@type", ServerFixture.Meteor.Id));
+            Assert.Equal(10L, (long)meteors);
+        }
     }
 }

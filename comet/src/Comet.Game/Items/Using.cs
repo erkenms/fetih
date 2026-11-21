@@ -10,10 +10,15 @@ namespace Comet.Game.Items
     using Comet.Game.States;
     using Comet.Game.World;
 
-    // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls and praying stones. Runs on the player's own packet
+    // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
+    // and scrolls that open into ten meteors or dragonballs. Runs on the player's own packet
     // queue, like Progress.
     public static class Using
     {
+        // MeteorScroll and DragonBallScroll (Albetros)
+        public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
+        public const int ScrollGems = 10;
+
         public static async Task<bool> UseAsync(Client client, uint itemID)
         {
             var character = client.Character;
@@ -25,6 +30,9 @@ namespace Comet.Game.Items
                 return await PrayAsync(client, item, blessing);
             if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && IsPotion(type))
                 return await DrinkAsync(client, item, type);
+            if (item.TypeID is MeteorScroll or DragonBallScroll)
+                return await OpenScrollAsync(client, item,
+                    item.TypeID == MeteorScroll ? Upgrading.Meteor : Upgrading.DragonBall);
 
             var scroll = Kernel.MapTypes.ScrollPointOf(item.TypeID);
             if (scroll == null)
@@ -71,6 +79,26 @@ namespace Comet.Game.Items
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) and restored {Health} HP and {Mana} MP",
                 character.Name, potion.ItemID, potion.TypeID, healed, restored);
+            return true;
+        }
+
+        // The scroll's own slot holds one of the gems
+        private static async Task<bool> OpenScrollAsync(Client client, DbItem scroll, uint gemType)
+        {
+            if (client.Inventory.FreeSlots < ScrollGems - 1)
+            {
+                await Talk.NoticeAsync(client, $"You need {ScrollGems - 1} free inventory slots for that.");
+                return Reject(client, scroll.ItemID, scroll.TypeID, "inventory_full");
+            }
+            if (!Kernel.ItemTypes.TryGet(gemType, out var type))
+                return Reject(client, scroll.ItemID, scroll.TypeID, "unknown_gem");
+
+            await UseUpAsync(client, scroll);
+            for (int i = 0; i < ScrollGems; i++)
+                await ItemActions.GiveAsync(client, type, "scroll");
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Amount} of {GemTypeId}",
+                client.Character.Name, scroll.ItemID, scroll.TypeID, ScrollGems, gemType);
             return true;
         }
 
