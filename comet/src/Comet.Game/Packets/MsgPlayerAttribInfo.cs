@@ -1,5 +1,6 @@
 namespace Comet.Game.Packets
 {
+    using System.Threading.Tasks;
     using Comet.Game.Combat;
     using Comet.Game.States;
     using Comet.Network.Packets;
@@ -11,15 +12,19 @@ namespace Comet.Game.Packets
     // strike, immunity, penetration, block, breakthrough, counteraction, detoxication; from 100
     // final attack, final magic attack, final defense, final magic defense; from 116 metal,
     // wood, water, fire and earth resistance. Only what the server counts is filled in.
+    // The 5619 client asks for it with the same packet, empty but for an ID: its own when
+    // opening the stat pane, another player's when observing them.
     public sealed class MsgPlayerAttribInfo : MsgBase<Client>
     {
         public const int Size = 136;
 
-        public uint Identity { get; }
+        public uint Identity { get; private set; }
         public uint MaxHealth { get; }
         public uint MaxMana { get; }
         public uint Agility { get; }
         public Stats Stats { get; }
+
+        public MsgPlayerAttribInfo() => base.Type = PacketType.MsgPlayerAttribInfo;
 
         public MsgPlayerAttribInfo(uint identity, uint maxHealth, uint maxMana, uint agility, Stats stats)
         {
@@ -34,6 +39,26 @@ namespace Comet.Game.Packets
         public static MsgPlayerAttribInfo Of(Client client) => new MsgPlayerAttribInfo(
             client.ID, Attributes.MaxHealth(client), Attributes.MaxMana(client),
             client.Character.Agility, Stats.Of(client));
+
+        public override void Decode(byte[] bytes)
+        {
+            var reader = new PacketReader(bytes);
+            this.Length = reader.ReadUInt16();
+            this.Type = (PacketType)reader.ReadUInt16();
+            this.Identity = reader.ReadUInt32();
+        }
+
+        // Answered with the stats of whoever the ID names, if they're online
+        public override Task ProcessAsync(Client client)
+        {
+            if (client.Character == null)
+                return Task.CompletedTask;
+            var target = client;
+            if (this.Identity != client.ID &&
+                (!Kernel.Players.TryGet(this.Identity, out target) || target.Character == null))
+                return Task.CompletedTask;
+            return client.SendAsync(Of(target));
+        }
 
         public override byte[] Encode()
         {

@@ -297,7 +297,7 @@ namespace Comet.Client
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Observe, targetId));
 
         public Task QueryStatsAsync(uint characterId) =>
-            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.QueryStatInfo));
+            this.SendAsync(StatWindow.Build(characterId));
 
         public async Task<StatWindow> WaitForStatsAsync(Func<StatWindow, bool> match, TimeSpan? timeout = null)
         {

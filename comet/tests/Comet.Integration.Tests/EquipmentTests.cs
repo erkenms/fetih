@@ -105,7 +105,7 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task TheStatQueryIsAnsweredWithTheStatWindowNotEchoed()
+        public async Task TheStatPaneAsksForThePlayersOwnStats()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 560, strength: 40)).Player;
             await player.Game.QueryStatsAsync(player.User.Id);
@@ -115,8 +115,32 @@ namespace Comet.Integration.Tests
             Assert.Equal((maxHealth, user.Spirit * 5u, 40u, 40u, 0u, 0u, 0u, 0u, (uint)user.Agility),
                 (stats?.MaxHealth, stats?.MaxMana, stats?.MaxAttack, stats?.MinAttack, stats?.Defense,
                     stats?.MagicAttack, stats?.MagicDefense, stats?.Dodge, stats?.Agility));
+            Assert.Null(await player.Game.WaitForTalkAsync(t => t.Text.StartsWith("Missing packet"),
+                System.TimeSpan.FromMilliseconds(300)));
+        }
+
+        [Fact]
+        public async Task TheStatQueryActionIsAnsweredWithTheStatWindowNotEchoed()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 760, 600)).Player;
+            await player.Game.SendAsync(ActionMessage.Build(player.User.Id, ActionMessage.QueryStatInfo));
+            Assert.NotNull(await player.Game.WaitForStatsAsync(s => s.Id == player.User.Id));
             Assert.Null(await player.Game.WaitForActionAsync(
                 ActionMessage.QueryStatInfo, player.User.Id, System.TimeSpan.FromMilliseconds(300)));
+        }
+
+        [Fact]
+        public async Task AnotherPlayersStatsCanBeAskedFor()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 780, 600, strength: 25)).Player;
+            await using var observer = (await this.PlayingAtAsync(1002, 782, 600)).Player;
+            await observer.Game.QueryStatsAsync(player.User.Id);
+            var stats = await observer.Game.WaitForStatsAsync(s => s.Id == player.User.Id);
+            Assert.Equal((25u, 25u), (stats?.MinAttack, stats?.MaxAttack));
+
+            // Nobody online by that ID: nothing
+            await observer.Game.QueryStatsAsync(999);
+            Assert.Null(await observer.Game.WaitForStatsAsync(s => s.Id == 999, System.TimeSpan.FromMilliseconds(300)));
         }
 
         [Fact]

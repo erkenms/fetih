@@ -815,10 +815,18 @@ namespace Comet.Client
     }
 
     // The stat window: ID at 4, then u32s: max life, max mana, max attack, min attack,
-    // defense, magic attack, magic defense, dodge and agility
+    // defense, magic attack, magic defense, dodge and agility. Asked for with the same
+    // 136 bytes, empty but for the ID of the player whose stats are wanted.
     public sealed record StatWindow(uint Id, uint MaxHealth, uint MaxMana, uint MaxAttack, uint MinAttack,
         uint Defense, uint MagicAttack, uint MagicDefense, uint Dodge, uint Agility)
     {
+        public static byte[] Build(uint id)
+        {
+            var packet = Packet.Create(PacketTypes.MsgPlayerAttribInfo, 136);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), id);
+            return packet;
+        }
+
         public static StatWindow Parse(byte[] packet) => new StatWindow(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
