@@ -106,6 +106,7 @@ namespace Comet.Game.Social
                 item == null ? "not_in_inventory" :
                 trade.Of(client).Items.Contains(item) ? "offered" :
                 trade.PartnerOf(client).Player.Inventory.FreeSlots <= trade.Of(client).Items.Count ? "partner_full" :
+                !MayGive(client, trade.PartnerOf(client).Player, item, DateTime.UtcNow) ? "locked" :
                 null;
             if (reason != null)
             {
@@ -113,6 +114,8 @@ namespace Comet.Game.Social
                 await client.SendAsync(new MsgTrade(TradeAction.AddItemFailed, itemID));
                 if (reason == "partner_full")
                     await Talk.NoticeAsync(client, $"{trade.PartnerOf(client).Player.Character.Name} has no room for more items.");
+                else if (reason == "locked")
+                    await Talk.NoticeAsync(client, "This equipment is locked. You can only trade it to your trade partners.");
                 return;
             }
 
@@ -218,6 +221,11 @@ namespace Comet.Game.Social
             if (first.Player.Inventory.FreeSlots + first.Items.Count < second.Items.Count ||
                 second.Player.Inventory.FreeSlots + second.Items.Count < first.Items.Count)
                 return "inventory_full";
+
+            var now = DateTime.UtcNow;
+            if (first.Items.Any(i => !MayGive(first.Player, second.Player, i, now)) ||
+                second.Items.Any(i => !MayGive(second.Player, first.Player, i, now)))
+                return "locked";
 
             var taken = new List<(Trade.Offer From, DbItem Item)>();
             foreach (var offer in new[] { first, second })
@@ -325,6 +333,9 @@ namespace Comet.Game.Social
                 "Trade of {Name} and {Partner} ended without exchange: {Reason} (by {By})",
                 trade.First.Player.Character?.Name, trade.Second.Player.Character?.Name, reason,
                 by.Character?.Name);
+
+        private static bool MayGive(Client giver, Client receiver, DbItem item, DateTime now) =>
+            !Locking.IsLocked(item, now) || TradePartners.IsFormal(giver, receiver.ID, now);
 
         private static bool InGame(Client client) =>
             client.Character != null && Kernel.Players.TryGet(client.ID, out var online) && online == client;

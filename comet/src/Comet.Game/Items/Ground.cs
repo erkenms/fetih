@@ -30,6 +30,11 @@ namespace Comet.Game.Items
                 return Reject(client, "drop", itemID, "not_in_inventory");
             if (character.MapID == Arena.Qualifier.MapID)
                 return Reject(client, "drop", itemID, "qualifier");
+            if (Locking.IsLocked(item, DateTime.UtcNow))
+            {
+                await Chat.Talk.NoticeAsync(client, "This equipment is locked. It can't be discarded.");
+                return Reject(client, "drop", itemID, "locked");
+            }
             if (!Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "drop", itemID, "no_map");
 

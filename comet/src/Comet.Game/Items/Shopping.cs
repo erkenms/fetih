@@ -1,5 +1,6 @@
 namespace Comet.Game.Items
 {
+    using System;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
@@ -53,6 +54,11 @@ namespace Comet.Game.Items
                 return Reject(client, "sell", npcID, 0, "not_in_inventory");
             if (Find(client, npcID, "sell") == null)
                 return Reject(client, "sell", npcID, item.TypeID, "no_shop");
+            if (Locking.IsLocked(item, DateTime.UtcNow))
+            {
+                await Chat.Talk.NoticeAsync(client, "This equipment is locked. It can't be sold.");
+                return Reject(client, "sell", npcID, item.TypeID, "locked");
+            }
 
             uint price = Kernel.ItemTypes.TryGet(item.TypeID, out var type) ? SellPrice(type.Price, item.Amount, item.AmountLimit) : 0;
             if ((long)character.Silver + price > uint.MaxValue)

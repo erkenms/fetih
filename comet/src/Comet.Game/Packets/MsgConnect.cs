@@ -131,6 +131,7 @@ namespace Comet.Game.Packets
                     client.Character.HealthPoints = maxHealth;
                 client.Character.ManaPoints = Math.Min(client.Character.ManaPoints, maxMana);
                 await Social.Relationships.LoadAsync(client);
+                await Social.TradePartners.LoadAsync(client);
                 client.Skills = await SkillsRepository.LoadAsync(character.CharacterID);
                 client.Warehouses = new Warehouses(items.Where(i => i.Position == (byte)ItemPosition.Warehouse));
                 if (!ResolveMap(client))

@@ -33,6 +33,7 @@ namespace Comet.Game.States
         // The player this one asked to trade with, or to be friends with (0 if none)
         public uint TradeRequest { get; set; }
         public uint FriendRequest { get; set; }
+        public uint PartnerRequest { get; set; }
 
         // The guild recruiter this player asked to join, or the player this recruiter invited
         public uint GuildApply { get; set; }
@@ -45,6 +46,12 @@ namespace Comet.Game.States
         // Names by character ID, loaded at login
         public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
         public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();
+        public ConcurrentDictionary<uint, Social.TradePartner> TradePartners { get; } =
+            new ConcurrentDictionary<uint, Social.TradePartner>();
+
+        // Whether the second password was given this session, and how often it was wrong
+        public bool SecondPasswordVerified { get; set; }
+        public int SecondPasswordFailures { get; set; }
 
         public Life Life { get; } = new Life();
 

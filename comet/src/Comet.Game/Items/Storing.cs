@@ -16,7 +16,7 @@ namespace Comet.Game.Items
     {
         public static async Task<bool> ShowAsync(Client client, uint npcID)
         {
-            if (Reach(client, npcID, "show") == null)
+            if (Reach(client, npcID, "show") == null || !await SecondPassword.EnsureOpenAsync(client, "warehouse"))
                 return false;
             var items = client.Warehouses.In(npcID);
             for (int i = 0; i < items.Count; i += ItemsPerPacket)
@@ -31,7 +31,7 @@ namespace Comet.Game.Items
         {
             var character = client.Character;
             var item = client.Inventory?.Find(itemID);
-            if (Reach(client, npcID, "deposit") == null)
+            if (Reach(client, npcID, "deposit") == null || !await SecondPassword.EnsureOpenAsync(client, "warehouse"))
                 return false;
             if (item == null)
                 return Reject(client, "deposit", npcID, itemID, "not_in_inventory");
@@ -57,7 +57,7 @@ namespace Comet.Game.Items
         public static async Task<bool> WithdrawAsync(Client client, uint npcID, uint itemID)
         {
             var character = client.Character;
-            if (Reach(client, npcID, "withdraw") == null)
+            if (Reach(client, npcID, "withdraw") == null || !await SecondPassword.EnsureOpenAsync(client, "warehouse"))
                 return false;
             var item = client.Warehouses.Find(npcID, itemID);
             if (item == null)
@@ -90,7 +90,7 @@ namespace Comet.Game.Items
         public static async Task<bool> MoveSilverAsync(Client client, long amount)
         {
             var character = client.Character;
-            if (character == null || amount == 0)
+            if (character == null || amount == 0 || !await SecondPassword.EnsureOpenAsync(client, "warehouse"))
                 return false;
             long stored = character.StoredSilver + amount;
             if (stored < 0 || stored > uint.MaxValue || !await Progress.ChangeSilverAsync(client, -amount, "warehouse"))

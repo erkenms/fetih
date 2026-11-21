@@ -1,5 +1,6 @@
 namespace Comet.Game.Database.Repositories
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -53,6 +54,14 @@ namespace Comet.Game.Database.Repositories
             await db.Items.Where(x => x.ItemID == itemID).ExecuteUpdateAsync(s => s
                 .SetProperty(x => x.Position, position)
                 .SetProperty(x => x.Package, package));
+        }
+
+        public static async Task SetLockAsync(uint itemID, bool locked, DateTime? unlocksAt)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == itemID).ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Locked, locked)
+                .SetProperty(x => x.UnlocksAt, unlocksAt));
         }
 
         public static async Task SetAmountAsync(uint itemID, ushort amount)

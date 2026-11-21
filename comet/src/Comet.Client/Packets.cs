@@ -54,6 +54,10 @@ namespace Comet.Client
         public const ushort MsgGodExp = 1036;
         public const ushort MsgTrainingInfo = 2043;
         public const ushort MsgTraining = 2044;
+        public const ushort MsgTradeBuddy = 2046;
+        public const ushort MsgTradeBuddyInfo = 2047;
+        public const ushort MsgEquipLock = 2048;
+        public const ushort Msg2ndPsw = 2261;
     }
 
     public static class TalkChannels
@@ -299,6 +303,7 @@ namespace Comet.Client
         public const ushort OpenWindow = 126, OpenShop = 160;
         public const ushort CharacterAway = 161;
         public const ushort Observe = 117;
+        public const ushort PartnerInfo = 152;
         public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4;
 
@@ -366,12 +371,84 @@ namespace Comet.Client
     }
 
     // Item ID, type, amount and its limit, then the action and position as ushorts
+    // Locked is the byte at 46
     public sealed record ItemInfo(uint Id, uint TypeId, ushort Amount, ushort AmountLimit, ushort Action, ushort Position)
     {
+        public bool Locked { get; init; }
+
         public static ItemInfo Parse(byte[] packet) => new ItemInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
             BitConverter.ToUInt16(packet, 12), BitConverter.ToUInt16(packet, 14),
-            BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18));
+            BitConverter.ToUInt16(packet, 16), BitConverter.ToUInt16(packet, 18))
+        {
+            Locked = packet.Length > 46 && packet[46] != 0,
+        };
+    }
+
+    // Item locks, 16 bytes: item ID at 4, mode byte at 8, a byte at 9, a value at 12 (the
+    // unlock date as yyyymmdd, with 3 at 9)
+    public sealed record EquipLockMessage(uint ItemId, byte Mode, byte Flag, uint Value)
+    {
+        public const byte Lock = 0, Unlock = 1, Unlocked = 3;
+
+        public static EquipLockMessage Parse(byte[] packet) => new EquipLockMessage(
+            BitConverter.ToUInt32(packet, 4), packet[8], packet[9], BitConverter.ToUInt32(packet, 12));
+
+        public static byte[] Build(uint itemId, byte mode)
+        {
+            var packet = Packet.Create(PacketTypes.MsgEquipLock, 16);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), itemId);
+            packet[8] = mode;
+            return packet;
+        }
+    }
+
+    // The second password, 16 bytes: request at 4, password at 8, new password at 12. The
+    // server's Correct carries flags at 8: 0x1 one is set, 0x100 it was given.
+    public sealed record PasswordMessage(uint Request, uint Password, uint NewPassword)
+    {
+        public const uint Verify = 1, Forgot = 2, Set = 3, Correct = 5, Wrong = 6;
+        public const uint HasPassword = 0x1, Verified = 0x100;
+
+        public static PasswordMessage Parse(byte[] packet) => new PasswordMessage(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12));
+
+        public static byte[] Build(uint request, uint password, uint newPassword = 0)
+        {
+            var packet = Packet.Create(PacketTypes.Msg2ndPsw, 16);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), request);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), password);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), newPassword);
+            return packet;
+        }
+    }
+
+    // Trade partners, 32 bytes: the other player's ID at 4, action byte at 8, online byte at
+    // 9, minutes left of the trial at 10, name (16 bytes) at 16
+    public sealed record TradeBuddyMessage(uint Id, byte Action, bool IsOnline, int TrialMinutes, string Name)
+    {
+        public const byte Request = 0, Reject = 1, Online = 2, Offline = 3, Break = 4, Add = 5;
+
+        public static TradeBuddyMessage Parse(byte[] packet) => new TradeBuddyMessage(
+            BitConverter.ToUInt32(packet, 4), packet[8], packet[9] != 0, BitConverter.ToInt32(packet, 10),
+            Packet.ReadText(packet, 16, 16));
+
+        public static byte[] Build(byte action, uint id)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTradeBuddy, 32);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), id);
+            packet[8] = action;
+            return packet;
+        }
+    }
+
+    // A trade partner's details: ID at 4, mesh at 8, level at 12, class at 13, PK points at
+    // 14, guild ID at 16 and rank at 20, spouse (16 bytes) at 26
+    public sealed record TradeBuddyInfo(uint Id, uint Mesh, byte Level, byte Class, ushort PkPoints, uint GuildId, string Spouse)
+    {
+        public static TradeBuddyInfo Parse(byte[] packet) => new TradeBuddyInfo(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8), packet[12], packet[13],
+            BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt32(packet, 16), Packet.ReadText(packet, 26, 16));
     }
 
     // An item in someone's booth: item ID, booth ID, price, type, amount and its limit,

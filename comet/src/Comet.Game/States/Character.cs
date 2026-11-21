@@ -48,6 +48,7 @@ namespace Comet.Game.States
             to.OfflineReturnMapID = from.OfflineReturnMapID;
             to.OfflineReturnX = from.OfflineReturnX;
             to.OfflineReturnY = from.OfflineReturnY;
+            to.SecondPassword = from.SecondPassword;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

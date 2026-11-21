@@ -62,6 +62,7 @@ CREATE TABLE `character` (
   `OfflineReturnMapID` int(10) unsigned NOT NULL DEFAULT '0',
   `OfflineReturnX` smallint(5) unsigned NOT NULL DEFAULT '0',
   `OfflineReturnY` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),
@@ -83,7 +84,8 @@ UNLOCK TABLES;
 -- Table structure for table `item`
 --
 -- Items characters own. Position is where the item is: 0 the inventory, 1 to 9 an
--- equipment slot. Amount is the durability, or the count of a stackable item.
+-- equipment slot. Amount is the durability, or the count of a stackable item. A locked
+-- item can only go to trade partners; UnlocksAt is when a requested unlock takes effect.
 --
 
 DROP TABLE IF EXISTS `item`;
@@ -101,6 +103,8 @@ CREATE TABLE `item` (
   `Enchant` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Color` tinyint(3) unsigned NOT NULL DEFAULT '3',
   `Package` int(10) unsigned NOT NULL DEFAULT '0',
+  `Locked` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `UnlocksAt` datetime DEFAULT NULL,
   PRIMARY KEY (`ItemID`),
   KEY `CharacterID` (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -125,6 +129,21 @@ CREATE TABLE `enemy` (
   `EnemyID` int(10) unsigned NOT NULL,
   PRIMARY KEY (`CharacterID`,`EnemyID`),
   KEY `EnemyID` (`EnemyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+--
+-- Table structure for table `trade_partner`
+--
+-- A partnership is a row for each of the two characters, both with the same Since. It is
+-- a trial for its first three days.
+--
+
+DROP TABLE IF EXISTS `trade_partner`;
+CREATE TABLE `trade_partner` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `PartnerID` int(10) unsigned NOT NULL,
+  `Since` datetime NOT NULL,
+  PRIMARY KEY (`CharacterID`,`PartnerID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 --

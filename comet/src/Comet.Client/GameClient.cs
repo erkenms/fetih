@@ -22,6 +22,7 @@ namespace Comet.Client
 
         // Friends and enemies, proficiencies and spells the server listed while entering the map
         public List<FriendMessage> Relationships { get; } = new List<FriendMessage>();
+        public List<TradeBuddyMessage> TradePartners { get; } = new List<TradeBuddyMessage>();
         public List<WeaponSkill> Proficiencies { get; } = new List<WeaponSkill>();
         public List<MagicInfo> Spells { get; } = new List<MagicInfo>();
 
@@ -156,18 +157,22 @@ namespace Comet.Client
                 inventory.Add(ItemInfo.Parse(packet));
             }
 
-            // Friends and enemies come before the reply to the relationships step
+            // Friends, enemies and trade partners come before the reply to the relationships step
             await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.LoginRelationships));
             while (true)
             {
                 var packet = await this.ReceiveAsync(p =>
                     BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFriend ||
+                    BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTradeBuddy && TradeBuddyMessage.Parse(p).Action == TradeBuddyMessage.Add ||
                     BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAction &&
                     ActionMessage.Parse(p).Action == ActionMessage.LoginRelationships)
                     ?? throw new InvalidOperationException("Game server closed the connection");
                 if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgAction)
                     break;
-                this.Relationships.Add(FriendMessage.Parse(packet));
+                if (BitConverter.ToUInt16(packet, 2) == PacketTypes.MsgTradeBuddy)
+                    this.TradePartners.Add(TradeBuddyMessage.Parse(packet));
+                else
+                    this.Relationships.Add(FriendMessage.Parse(packet));
             }
 
             // Proficiencies, then spells, each before the reply to its step
@@ -570,6 +575,44 @@ namespace Comet.Client
             var packet = await this.TryReceiveAsync(p =>
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFriend && match(FriendMessage.Parse(p)), timeout);
             return packet == null ? null : FriendMessage.Parse(packet);
+        }
+
+        public Task LockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Lock));
+
+        public Task UnlockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Unlock));
+
+        public async Task<EquipLockMessage> WaitForEquipLockAsync(Func<EquipLockMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgEquipLock && match(EquipLockMessage.Parse(p)), timeout);
+            return packet == null ? null : EquipLockMessage.Parse(packet);
+        }
+
+        public Task PasswordAsync(uint request, uint password, uint newPassword = 0) =>
+            this.SendAsync(PasswordMessage.Build(request, password, newPassword));
+
+        public async Task<PasswordMessage> WaitForPasswordAsync(Func<PasswordMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.Msg2ndPsw && match(PasswordMessage.Parse(p)), timeout);
+            return packet == null ? null : PasswordMessage.Parse(packet);
+        }
+
+        public Task TradeBuddyAsync(byte action, uint id) => this.SendAsync(TradeBuddyMessage.Build(action, id));
+
+        public async Task<TradeBuddyMessage> WaitForTradeBuddyAsync(Func<TradeBuddyMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTradeBuddy && match(TradeBuddyMessage.Parse(p)), timeout);
+            return packet == null ? null : TradeBuddyMessage.Parse(packet);
+        }
+
+        // MsgAction 152 with the partner's ID; answered with their details if they're online
+        public async Task<TradeBuddyInfo> AskPartnerInfoAsync(uint characterId, uint partnerId, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.PartnerInfo, partnerId));
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTradeBuddyInfo, timeout);
+            return packet == null ? null : TradeBuddyInfo.Parse(packet);
         }
 
         public Task GodExpAsync(byte action) => this.SendAsync(GodExpMessage.Build(action));

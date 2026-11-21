@@ -64,6 +64,9 @@ namespace Comet.Game.Database.Models
         public virtual uint OfflineReturnMapID { get; set; }
         public virtual ushort OfflineReturnX { get; set; }
         public virtual ushort OfflineReturnY { get; set; }
+
+        // Asked before warehouses and unlocking items; 0 if none is set
+        public virtual uint SecondPassword { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }
