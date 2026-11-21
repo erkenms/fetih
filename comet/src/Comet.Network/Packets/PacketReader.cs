@@ -16,9 +16,19 @@ namespace Comet.Network.Packets
             return base.ReadString().TrimEnd('\0');
         }
 
+        // BinaryReader.ReadBytes returns what is left of a truncated packet; a short field is
+        // as malformed as a short number, so it throws like ReadUInt32 does.
+        public new byte[] ReadBytes(int count)
+        {
+            var bytes = base.ReadBytes(count);
+            if (bytes.Length < count)
+                throw new EndOfStreamException();
+            return bytes;
+        }
+
         public string ReadString(int fixedLength)
         {
-            return Encoding.ASCII.GetString(base.ReadBytes(fixedLength)).TrimEnd('\0');
+            return Encoding.ASCII.GetString(this.ReadBytes(fixedLength)).TrimEnd('\0');
         }
 
         // A count, then each string as a one-byte length and that many bytes in the client's
@@ -30,7 +40,7 @@ namespace Comet.Network.Packets
             for (int i = 0; i < amount; i++)
             {
                 int length = base.ReadByte();
-                strings.Add(Encoding.Latin1.GetString(base.ReadBytes(length)).TrimEnd('\0'));
+                strings.Add(Encoding.Latin1.GetString(this.ReadBytes(length)).TrimEnd('\0'));
             }
             return strings;
         }

@@ -69,18 +69,43 @@ def server_challenge(password, salt_le, b):
     return le(v), le((K_MULT * v + pow(G, b, N)) % N)
 
 
-if __name__ == "__main__":
-    username, password = b"tester", b"secret123"
-    salt = bytes(range(0x41, 0x41 + 32))
-    b = int("1f2e3d4c5b6a79880123456789abcdef00112233445566778899aabbccddeeff", 16)
-    a = int("0badc0ffee0ddf00d5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5e", 16)
+def session_secret(password, salt_le, b_le, a):
+    """S as the client computes it, to find inputs whose S is shorter than 32 bytes."""
+    x = bn(sha1(le(bn(salt_le)), password_block(password)))
+    A = pow(G, a, N)
+    u = bn(sha1(le(A), b_le))
+    return le(A), le(pow((bn(b_le) - K_MULT * pow(G, x, N)) % N, a + u * x, N))
+
+
+def print_vectors(title, username, password, salt, b, a):
     v, B = server_challenge(password, salt, b)
     A, M1, key = client_proof(username, password, salt, B, a)
-    print("PasswordBlock =", password_block(password).hex().upper())
-    print("Salt          =", salt.hex().upper())
-    print("Verifier      =", v.hex().upper())
-    print("ServerPrivate =", format(b, "X"))
-    print("B             =", B.hex().upper())
-    print("A             =", A.hex().upper())
-    print("M1            =", M1.hex().upper())
-    print("K             =", key.hex().upper())
+    print(title)
+    print("  PasswordBlock =", password_block(password).hex().upper())
+    print("  Salt          =", salt.hex().upper())
+    print("  Verifier      =", v.hex().upper())
+    print("  ServerPrivate =", format(b, "X"))
+    print("  B             =", B.hex().upper())
+    print("  A             =", A.hex().upper())
+    print("  M1            =", M1.hex().upper())
+    print("  K             =", key.hex().upper())
+    return B
+
+
+if __name__ == "__main__":
+    username, password = b"tester", b"secret123"
+    print_vectors("Srp6Tests", username, password, bytes(range(0x41, 0x41 + 32)),
+                  int("1f2e3d4c5b6a79880123456789abcdef00112233445566778899aabbccddeeff", 16),
+                  int("0badc0ffee0ddf00d5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5e", 16))
+
+    # The salt's, B's and K's top bytes are zero, so each is hashed one byte short
+    salt = bytes(range(0x41, 0x41 + 31)) + b"\0"
+    B = print_vectors("Srp6Tests, leading zeros", username, password, salt,
+                      int("1f2e3d4c5b6a79880123456789abcdef00112233445566778899aabbccddf009", 16),
+                      int("0badc0ffee0ddf00d5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5eef8c", 16))
+
+    A, S = session_secret(password, salt, B,
+                          int("0badc0ffee0ddf00d5eed5eed5eed5eed5eed5eed5eed5eed5eed5eed5eedec", 16))
+    print("Srp6Tests, short session secret (same salt and b)")
+    print("  A             =", A.hex().upper())
+    print("  S             =", S.hex().upper(), f"({len(S)} bytes)")

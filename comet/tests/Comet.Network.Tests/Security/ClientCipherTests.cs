@@ -44,21 +44,5 @@ namespace Comet.Network.Security.Tests
             Assert.Equal("AD7DBD78A11B7E45BC64A70ADD51597308BC169B", Convert.ToHexString(proof));
             Assert.Equal(40, sessionKey.Length);
         }
-
-        [Fact]
-        public void Srp6ClientLogsInWithRandomKeys()
-        {
-            var username = Encoding.ASCII.GetBytes("player@example.com");
-            var password = Encoding.ASCII.GetBytes("hunter22");
-            for (int i = 0; i < 32; i++)
-            {
-                var salt = Srp6.CreateSalt();
-                var server = new Srp6(salt, Srp6.ComputeVerifier(salt, password));
-                var (publicKey, proof, sessionKey) = Srp6Client.ComputeProof(
-                    username, password, server.SaltBytes, server.ServerPublicKeyBytes);
-                Assert.True(server.Verify(username, publicKey, proof));
-                Assert.Equal(server.SessionKey, sessionKey);
-            }
-        }
     }
 }

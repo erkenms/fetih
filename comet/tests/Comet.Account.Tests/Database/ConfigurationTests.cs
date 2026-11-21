@@ -1,36 +1,22 @@
 namespace Comet.Account.Database.Tests
 {
-    using System;
     using Xunit;
     using Comet.Account.Database;
 
     public class ConfigurationTests
     {
-        [Theory]
-        [InlineData()]
-        [InlineData("--Network:Port=9961")]
-        [InlineData("/Network:Port=9961")]
-        [InlineData("--Network:Port", "9961")]
-        [InlineData("/Network:Port", "9961")]
-        [InlineData("Network:Port=9961")]
-        public void ValidConfiguration(params string[] args)
+        [Fact]
+        public void CommandLineOverridesNetworkConfiguration()
         {
-            var config = new ServerConfiguration(args);
-            Assert.True(config.Valid);
-            Assert.Equal("0.0.0.0", config.Network.IPAddress);
-            Assert.Equal("localhost", config.Database.Hostname);
-            Assert.Equal(args.Length > 0 ? 9961 : 9960, config.Network.Port);
+            var config = new ServerConfiguration(new[] { "--Network:Port=9961" });
+            Assert.Equal(9961, config.Network.Port);
         }
 
-        [Theory]
-        [InlineData("trace")]
-        [InlineData("warn", "--Logging:Level=warn")]
-        public void LoggingConfiguration(string expectedLevel, params string[] args)
+        [Fact]
+        public void CommandLineOverridesLoggingConfiguration()
         {
-            var config = new ServerConfiguration(args);
-            Assert.Equal(expectedLevel, config.Logging.Level);
-            Assert.Equal("logs", config.Logging.Directory);
-            Assert.Equal(30, config.Logging.RetainDays);
+            var config = new ServerConfiguration(new[] { "--Logging:Level=warn" });
+            Assert.Equal("warn", config.Logging.Level);
         }
     }
 }

@@ -133,10 +133,16 @@ namespace Comet.Core.Tests.Logging
             Assert.Throws<ArgumentException>(() => LogLevels.Parse("loud"));
         }
 
-        [Fact]
-        public void FatalIsWrittenAsError()
+        [Theory]
+        [InlineData(LogEventLevel.Verbose, "trace")]
+        [InlineData(LogEventLevel.Debug, "debug")]
+        [InlineData(LogEventLevel.Information, "info")]
+        [InlineData(LogEventLevel.Warning, "warn")]
+        [InlineData(LogEventLevel.Error, "error")]
+        [InlineData(LogEventLevel.Fatal, "error")]
+        public void WritesLevelNames(LogEventLevel level, string expected)
         {
-            Assert.Equal("error", LogLevels.Name(LogEventLevel.Fatal));
+            Assert.Equal(expected, LogLevels.Name(level));
         }
     }
 }

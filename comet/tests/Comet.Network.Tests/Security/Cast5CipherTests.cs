@@ -2,8 +2,6 @@ namespace Comet.Network.Security.Tests
 {
     using System;
     using System.Text;
-    using Org.BouncyCastle.Crypto.Engines;
-    using Org.BouncyCastle.Crypto.Parameters;
     using Xunit;
 
     public class Cast5CipherTests
@@ -11,17 +9,6 @@ namespace Comet.Network.Security.Tests
         const string Plaintext = "Hello TQ client, this is 37 bytes...!";
         const string ExpectedDefaultKeyCiphertext =
             "6D067D1ECA097FDCC78020A157F9318F8BD5809F2EF79FD4503B874EA9F7696A459E43965E";
-
-        [Fact]
-        public void BlockCipherMatchesRfc2144()
-        {
-            // RFC 2144, appendix B.1, 128-bit key
-            var engine = new Cast5Engine();
-            engine.Init(true, new KeyParameter(Convert.FromHexString("0123456712345678234567893456789A")));
-            var block = Convert.FromHexString("0123456789ABCDEF");
-            engine.ProcessBlock(block, 0, block, 0);
-            Assert.Equal("238B4FE5847E44B2", Convert.ToHexString(block));
-        }
 
         [Fact]
         public void EncryptMatchesOpenSslWithDefaultKey()

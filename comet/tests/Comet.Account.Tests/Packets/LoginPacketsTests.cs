@@ -8,6 +8,7 @@ namespace Comet.Account.Tests.Packets
 
     public class LoginPacketsTests
     {
+        // The vectors of Srp6Tests (from Vectors/srp6_client.py); b is little-endian here
         static readonly byte[] Salt = Convert.FromHexString(
             "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F60");
         static readonly byte[] Verifier = Convert.FromHexString(
@@ -52,7 +53,9 @@ namespace Comet.Account.Tests.Packets
             Assert.Equal(520, bytes.Length);
             Assert.Equal(1213, BitConverter.ToUInt16(bytes, 2));
             Assert.Equal(32, bytes[4]);
-            Assert.Equal(srp.ServerPublicKeyBytes, bytes.AsSpan(5, 32).ToArray());
+            Assert.Equal(
+                "E9C761C1FF34B85A92F042C6F09AFF97AB46D07C711B1FF41B27B2DE3B209A51",
+                Convert.ToHexString(bytes, 5, 32));
             Assert.Equal(1, bytes[0x85]);
             Assert.Equal(7, bytes[0x86]);
             Assert.Equal(32, bytes[0x106]);
@@ -62,7 +65,7 @@ namespace Comet.Account.Tests.Packets
         }
 
         [Fact]
-        public void ClientProofFromModelIsAccepted()
+        public void DecodesProofFields()
         {
             var bytes = new byte[262];
             BitConverter.TryWriteBytes(bytes.AsSpan(0), (ushort)262);
@@ -76,10 +79,6 @@ namespace Comet.Account.Tests.Packets
             msg.Decode(WithFooter(bytes));
             Assert.Equal(ClientPublic, msg.ClientPublicKey);
             Assert.Equal(ClientProof, msg.ClientProof);
-
-            var srp = new Srp6(Salt, Verifier, ServerPrivate);
-            Assert.True(srp.Verify(Encoding.ASCII.GetBytes("tester"),
-                msg.ClientPublicKey, msg.ClientProof));
         }
 
         [Fact]

@@ -1,15 +1,15 @@
 namespace Comet.Network.Security.Tests
 {
+    using System;
     using System.Collections.Generic;
     using Comet.Network.Packets;
-    using Org.BouncyCastle.Utilities.Encoders;
     using Xunit;
 
     public class PacketWriterTests
     {
-        const string ExpectedOutput = 
-            "0000e90301020003000000040000000000000004746573746" +
-            "36f6d657400000000000000020568656c6c6f05776f726c64";
+        const string ExpectedOutput =
+            "0000" + "e903" + "01" + "0200" + "03000000" + "0400000000000000" +
+            "636f6d657400000000000000" + "020568656c6c6f05776f726c64";
 
         [Fact]
         public void PacketWriteTest()
@@ -20,17 +20,23 @@ namespace Comet.Network.Security.Tests
             packet.Write((ushort)2);
             packet.Write((uint)3);
             packet.Write((ulong)4);
-            packet.Write("test");
             packet.Write("comet", 12);
             packet.Write(new List<string> { "hello", "world" });
-            Assert.Equal(ExpectedOutput, Hex.ToHexString(packet.ToArray()));
+            Assert.Equal(ExpectedOutput, Convert.ToHexString(packet.ToArray()).ToLowerInvariant());
+        }
+
+        [Fact]
+        public void FixedLengthStringLongerThanItsFieldThrows()
+        {
+            var packet = new PacketWriter();
+            Assert.Throws<ArgumentException>(() => packet.Write("comet", 4));
         }
 
         [Fact]
         public void StringListLengthsAreOneByteAndTextKeepsItsBytes()
         {
             var packet = new PacketWriter();
-            packet.Write(new List<string> { new string('\u00E7', 200), new string('a', 300) });
+            packet.Write(new List<string> { new string('ç', 200), new string('a', 300) });
             var bytes = packet.ToArray();
             Assert.Equal(2, bytes[2]);
             Assert.Equal(200, bytes[3]);

@@ -78,12 +78,60 @@ namespace Comet.Network.Security.Tests
                 Convert.FromHexString(ClientPublic), Convert.FromHexString(ClientProof)));
         }
 
-        [Fact]
-        public void RejectsZeroOrModulusPublicKey()
+        public static TheoryData<byte[]> ZeroModuloN => new TheoryData<byte[]>
         {
-            var proof = Convert.FromHexString(ClientProof);
-            Assert.False(NewSession().Verify(Username, Array.Empty<byte>(), proof));
-            Assert.False(NewSession().Verify(Username, Srp6.ToBytes(Srp6.N), proof));
+            Array.Empty<byte>(),
+            Srp6.ToBytes(Srp6.N),
+        };
+
+        [Theory]
+        [MemberData(nameof(ZeroModuloN))]
+        public void RejectsPublicKeyThatIsZeroModuloN(byte[] clientPublic)
+        {
+            Assert.False(NewSession().Verify(Username, clientPublic,
+                Convert.FromHexString(ClientProof)));
+        }
+
+        [Fact]
+        public void HashesNumbersWithLeadingZerosShort()
+        {
+            // "leading zeros" in Vectors/srp6_client.py: the top byte of the salt, B and K is
+            // zero, so each is hashed one byte shorter than its field
+            var salt = Convert.FromHexString(
+                "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F00");
+            var verifier = Srp6.ComputeVerifier(salt, Password);
+            Assert.Equal("4B474E3361EAD2FFAB158C69A65F67F4D445113C363E849FA2F96256861D1204",
+                Convert.ToHexString(verifier));
+
+            var srp = new Srp6(salt, verifier, Reverse(Convert.FromHexString(
+                "1F2E3D4C5B6A79880123456789ABCDEF00112233445566778899AABBCCDDF009")));
+            Assert.Equal("712FCA75F1B4DC1429A6523E0D6BBB024C847BB9FD1D574667E5FCF8D9EB44",
+                Convert.ToHexString(srp.ServerPublicKeyBytes));
+
+            Assert.True(srp.Verify(Username,
+                Convert.FromHexString("BE3714AF088F0D1E1230F0A83DD758CF03B14A17EFCCBA317626C387D36F5350"),
+                Convert.FromHexString("9097CBA309D307DB034CCC8280A6C88C091458EC")));
+            Assert.Equal(
+                "7C9A3A6A3776712879DD7C5BA90AC2214F870FEB1EF52081407944114A52141E" +
+                "0EB4F28B87529400",
+                Convert.ToHexString(srp.SessionKey));
+            Assert.False(srp.ShortSessionSecret);
+        }
+
+        [Fact]
+        public void FlagsShortSessionSecret()
+        {
+            // "short session secret" in Vectors/srp6_client.py: S is 31 bytes. The client then
+            // hashes a byte past S, so its proof can't be known and isn't checked here.
+            var salt = Convert.FromHexString(
+                "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F00");
+            var srp = new Srp6(salt, Srp6.ComputeVerifier(salt, Password),
+                Reverse(Convert.FromHexString(
+                    "1F2E3D4C5B6A79880123456789ABCDEF00112233445566778899AABBCCDDF009")));
+            srp.Verify(Username,
+                Convert.FromHexString("E69908798891F89A5B25DD62A3F12E3478F651EA664DA9887EE6819FDE035E40"),
+                Convert.FromHexString(ClientProof));
+            Assert.True(srp.ShortSessionSecret);
         }
 
         [Fact]
