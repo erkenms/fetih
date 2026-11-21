@@ -259,9 +259,10 @@ namespace Comet.Game.Combat
 
             if (character.HealthPoints > 0)
                 return;
+            bool guilty = Pking.IsGuilty(target, DateTime.UtcNow);
             await Death.DieAsync(target, attacker.ID, attackerCharacter.Name);
             if (!await Arena.Qualifier.OnKillAsync(attacker, target))
-                await Pking.OnKillAsync(attacker, target);
+                await Pking.OnKillAsync(attacker, target, guilty);
         }
 
         // Runs on the player's queue, posted by the monster loop

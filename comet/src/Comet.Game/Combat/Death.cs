@@ -4,6 +4,7 @@ namespace Comet.Game.Combat
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Packets;
+    using Comet.Game.Pk;
     using Comet.Game.States;
     using Comet.Game.World;
     using static Comet.Game.Packets.MsgUserAttrib;
@@ -33,6 +34,7 @@ namespace Comet.Game.Combat
             await Items.Riding.DismountAsync(client, "died");
             character.HealthPoints = 0;
             client.Effects.Clear();
+            Pking.OnDeath(client);
             client.Energy.KoCount = 0;
             await Magic.Recovery.SetXpAsync(client, 0);
             life.Dead = true;

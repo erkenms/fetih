@@ -79,12 +79,12 @@ namespace Comet.Game.Pk
             await FlashAsync(attacker, FlashTime, "attack");
         }
 
-        // A black name killed goes to jail; killing an innocent player costs PK points
-        public static async Task OnKillAsync(Client killer, Client victim)
+        // A black name killed goes to jail; killing an innocent player costs PK points. Death
+        // ends flashing, so whether the victim was guilty is asked before they die.
+        public static async Task OnKillAsync(Client killer, Client victim, bool victimGuilty)
         {
-            var now = DateTime.UtcNow;
             ushort victimPoints = victim.Character.KillPoints;
-            bool crime = !IsFree(killer.Character.MapID) && !IsGuilty(victim, now);
+            bool crime = !IsFree(killer.Character.MapID) && !victimGuilty;
             LogEvents.For(typeof(Pking), LogEvents.PkKill).Information(
                 "{Name} killed {Victim} on map {MapId} ({Crime})",
                 killer.Character.Name, victim.Character.Name, killer.Character.MapID,
@@ -97,6 +97,15 @@ namespace Comet.Game.Pk
             await ChangePointsAsync(killer,
                 victimPoints >= RedNamePoints ? PointsPerRedKill : PointsPerKill, "kill");
             await FlashAsync(killer, FlashTime, "kill");
+        }
+
+        // The dead don't flash: guards would hunt the ghost and capture mode could target it.
+        // The caller sends the status.
+        public static void OnDeath(Client client)
+        {
+            if (client.Pk.ClearFlashing(DateTime.UtcNow))
+                LogEvents.For(typeof(Pking), LogEvents.PkFlashing).Information(
+                    "{Name} stopped flashing ({Reason})", client.Character.Name, "died");
         }
 
         // Guards send black names to jail too

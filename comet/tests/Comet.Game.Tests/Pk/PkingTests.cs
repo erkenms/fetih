@@ -49,6 +49,19 @@ namespace Comet.Game.Tests.Pk
         }
 
         [Fact]
+        public void DyingEndsFlashingButKeepsTheNameColor()
+        {
+            var state = new PkState();
+            var hero = Hero(30);
+            state.Flash(Now, TimeSpan.FromSeconds(30));
+            Assert.True(state.ClearFlashing(Now.AddSeconds(5)));
+            Assert.False(state.IsFlashing(Now.AddSeconds(5)));
+            Assert.Equal(Pking.RedNameStatus, state.Status(hero, Now.AddSeconds(5)));
+            Assert.False(state.ClearFlashing(Now.AddSeconds(6)));
+            Assert.False(state.StopFlashing(Now.AddSeconds(40)));
+        }
+
+        [Fact]
         public void PointsDecayOncePerIntervalAndStopAtZero()
         {
             var state = new PkState();

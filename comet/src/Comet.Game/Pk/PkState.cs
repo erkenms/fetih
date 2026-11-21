@@ -59,6 +59,17 @@ namespace Comet.Game.Pk
             }
         }
 
+        // True if the player was flashing
+        public bool ClearFlashing(DateTime now)
+        {
+            lock (this.Sync)
+            {
+                bool was = this.FlashingUntil > now;
+                this.FlashingUntil = default;
+                return was;
+            }
+        }
+
         public ulong Status(Character character, DateTime now)
         {
             lock (this.Sync)
