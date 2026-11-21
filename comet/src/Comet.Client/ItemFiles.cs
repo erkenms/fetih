@@ -37,21 +37,34 @@ namespace Comet.Client
         // An encrypted itemtype.dat: per item one line of 61 fields, each ending in "@@".
         // Each item sets ID, name, required level, durability and its limit, and costs
         // TestPrice silver; other fields are 0.
-        public static byte[] ItemTypeDat(params (uint Id, string Name, ushort Amount, byte Level)[] items)
+        public static byte[] ItemTypeDat(params (uint Id, string Name, ushort Amount, byte Level)[] items) =>
+            ItemTypeDat(items, new (uint, string, ushort, ushort)[0]);
+
+        // Potions also set the HP (life) and MP (mana) they restore, with durability 1
+        public static byte[] ItemTypeDat(
+            (uint Id, string Name, ushort Amount, byte Level)[] items,
+            (uint Id, string Name, ushort Life, ushort Mana)[] potions)
         {
             var text = new StringBuilder();
             foreach (var (id, name, amount, level) in items)
-            {
-                var fields = Enumerable.Repeat("0", 61).ToArray();
-                fields[0] = id.ToString();
-                fields[1] = name.Replace(' ', '~');
-                fields[4] = level.ToString();
-                fields[12] = TestPrice.ToString();
-                fields[21] = fields[22] = amount.ToString();
-                fields[53] = fields[54] = "None";
-                text.Append(string.Join("@@", fields)).Append("@@\r\n");
-            }
+                text.Append(Record(id, name, amount, level, 0, 0));
+            foreach (var (id, name, life, mana) in potions)
+                text.Append(Record(id, name, 1, 0, life, mana));
             return Encrypt(Encoding.Latin1.GetBytes(text.ToString()));
+        }
+
+        private static string Record(uint id, string name, ushort amount, byte level, ushort life, ushort mana)
+        {
+            var fields = Enumerable.Repeat("0", 61).ToArray();
+            fields[0] = id.ToString();
+            fields[1] = name.Replace(' ', '~');
+            fields[4] = level.ToString();
+            fields[12] = TestPrice.ToString();
+            fields[19] = life.ToString();
+            fields[20] = mana.ToString();
+            fields[21] = fields[22] = amount.ToString();
+            fields[53] = fields[54] = "None";
+            return string.Join("@@", fields) + "@@\r\n";
         }
 
         // XOR with a 128-byte key from MSVC rand() seeded with 0x2537, after rotating each

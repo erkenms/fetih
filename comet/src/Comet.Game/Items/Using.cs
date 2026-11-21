@@ -10,7 +10,7 @@ namespace Comet.Game.Items
     using Comet.Game.States;
     using Comet.Game.World;
 
-    // Items used from the inventory (MsgItem 4 with slot 0): city scrolls and praying stones. Runs on the player's own packet
+    // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls and praying stones. Runs on the player's own packet
     // queue, like Progress.
     public static class Using
     {
@@ -23,6 +23,8 @@ namespace Comet.Game.Items
 
             if (HeavenBlessing.StoneDuration(item.TypeID) is TimeSpan blessing)
                 return await PrayAsync(client, item, blessing);
+            if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && IsPotion(type))
+                return await DrinkAsync(client, item, type);
 
             var scroll = Kernel.MapTypes.ScrollPointOf(item.TypeID);
             if (scroll == null)
@@ -42,6 +44,33 @@ namespace Comet.Game.Items
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) on map {FromMapId} and went to map {MapId}",
                 character.Name, item.ItemID, item.TypeID, fromMap, scroll.MapID);
+            return true;
+        }
+
+        // Stancher to Mil.Ginseng (1000000 to 1002050): their life and mana fields are the HP and MP they restore
+        public static bool IsPotion(ItemType type) => type.ID / 10000 == 100 && (type.Life > 0 || type.Mana > 0);
+
+        // Up to full HP and MP; a potion that would restore nothing is kept
+        private static async Task<bool> DrinkAsync(Client client, DbItem potion, ItemType type)
+        {
+            var character = client.Character;
+            if (client.Life.Dead)
+                return Reject(client, potion.ItemID, potion.TypeID, "dead");
+            ushort health = (ushort)Math.Min(Attributes.MaxHealth(character), character.HealthPoints + type.Life);
+            ushort mana = (ushort)Math.Min(Attributes.MaxMana(character), character.ManaPoints + type.Mana);
+            int healed = health - character.HealthPoints, restored = mana - character.ManaPoints;
+            if (healed <= 0 && restored <= 0)
+                return Reject(client, potion.ItemID, potion.TypeID, "full");
+
+            await UseUpAsync(client, potion);
+            character.HealthPoints = health;
+            character.ManaPoints = mana;
+            await new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints)
+                .Append(MsgUserAttrib.AttributeType.Mana, character.ManaPoints)
+                .SendEachAsync(client);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) and restored {Health} HP and {Mana} MP",
+                character.Name, potion.ItemID, potion.TypeID, healed, restored);
             return true;
         }
 

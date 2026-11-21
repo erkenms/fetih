@@ -34,7 +34,9 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
         // Item types in the test itemtype.dat
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Blade = (410301, "LuckyBlade", 1099, 0);
-        public static readonly (uint Id, string Name, ushort Amount, byte Level) Potion = (1000000, "Stancher", 1, 0);
+        // Their HP and MP, as in the 5619 client's itemtype.dat
+        public static readonly (uint Id, string Name, ushort Life, ushort Mana) Potion = (1000000, "Stancher", 70, 0);
+        public static readonly (uint Id, string Name, ushort Life, ushort Mana) ManaPotion = (1001000, "Agrypnotic", 0, 70);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
@@ -246,8 +248,8 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "offlinetg.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(Blade, Potion, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed,
-                    SmallPrayingStone, PrayingStone));
+                ItemFiles.ItemTypeDat(new[] { Blade, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed,
+                    SmallPrayingStone, PrayingStone }, new[] { Potion, ManaPotion }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, SteedVigor)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),

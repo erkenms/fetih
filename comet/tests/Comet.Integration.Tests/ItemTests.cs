@@ -90,5 +90,51 @@ namespace Comet.Integration.Tests
             Assert.Equal("teleport_disabled", refused.GetProperty("reason").GetString());
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("can't teleport")));
         }
+
+        [Fact]
+        public async Task PotionsRestoreHealthAndManaAndAreUsedUp()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 680, 540, GameMaster);
+            var name = first.User.Name;
+            await first.DisposeAsync();
+            await this.Servers.WaitForLogoutSaveAsync(name, 1002, 680);
+            await this.Servers.ExecuteGameSqlAsync(
+                "UPDATE `character` SET HealthPoints = 10, ManaPoints = 0, Spirit = 100 WHERE Name = @name", ("@name", name));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+
+            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
+            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+            await player.Game.UseAsync(potion.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Health, out var hp) && hp == 10u + ServerFixture.Potion.Life));
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, potion.Id));
+            var used = await this.Servers.WaitForEventAsync("game", "item.used", "name", name);
+            Assert.Equal((potion.Id, 70, 0), (used.GetProperty("itemId").GetUInt32(),
+                used.GetProperty("health").GetInt32(), used.GetProperty("mana").GetInt32()));
+
+            await CommandAsync(player, "/item " + ServerFixture.ManaPotion.Id);
+            var manaPotion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.ManaPotion.Id);
+            await player.Game.UseAsync(manaPotion.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Mana, out var mp) && mp == ServerFixture.ManaPotion.Mana));
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, manaPotion.Id));
+            var count = await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM item WHERE CharacterID = @id", ("@id", player.User.Id));
+            Assert.Equal(0L, (long)count);
+        }
+
+        [Fact]
+        public async Task PotionsThatWouldRestoreNothingAreKept()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 700, 540, GameMaster)).Player;
+            await CommandAsync(player, "/item " + ServerFixture.Potion.Id);
+            var potion = await player.Game.WaitForItemAsync(i => i.TypeId == ServerFixture.Potion.Id);
+
+            await player.Game.UseAsync(potion.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
+            Assert.Equal("full", refused.GetProperty("reason").GetString());
+            Assert.NotNull(await this.Servers.QueryGameScalarAsync(
+                "SELECT ItemID FROM item WHERE ItemID = @id", ("@id", potion.Id)));
+        }
     }
 }
