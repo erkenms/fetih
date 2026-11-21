@@ -43,7 +43,6 @@ namespace Comet.Game.States
 
         public static ushort MaxMana(Client client) => MaxMana(client.Character, client.Equipment);
 
-        // Level and nobility; equipment doesn't count yet
         public static uint BattlePower(DbCharacter character) =>
             character.Level + (uint)Nobility.Peerage.RankOf(character.CharacterID);
 

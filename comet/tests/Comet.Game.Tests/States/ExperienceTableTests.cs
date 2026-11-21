@@ -6,7 +6,7 @@ namespace Comet.Game.Tests.States
 
     public class ExperienceTableTests
     {
-        // Levels 1 to 3 need 10, 20 and 30: the cap is level 4
+        // The cap is level 4
         private static readonly ExperienceTable Table = new ExperienceTable(
             new ulong[] { 10, 20, 30 }.Select((e, i) => new LevelExp { Level = (byte)(i + 1), Experience = e }));
 

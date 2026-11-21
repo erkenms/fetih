@@ -26,14 +26,12 @@ namespace Comet.Game.Npcs
         [JsonPropertyName("destinations")] public List<Destination> Destinations { get; init; }
     }
 
-    // NPCs from Data/teleporters.json: a greeting with one choice per destination
     public sealed class Teleporters
     {
         private readonly Dictionary<uint, Teleporter> ByNpc;
 
         private sealed record TeleporterFile(List<Teleporter> Teleporters);
 
-        // An NPC listed twice, no destinations, or more than a dialog has options is an error
         public static List<Teleporter> Load(string path)
         {
             var teleporters = DataFiles.Read<TeleporterFile>(path).Teleporters ?? new List<Teleporter>();

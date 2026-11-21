@@ -48,7 +48,6 @@ namespace Comet.Game.Social
             finally { Gate.Release(); }
         }
 
-        // When a player leaves the game or the map
         public static async Task CancelAsync(Client client, string reason)
         {
             if (client.Trade == null && client.TradeRequest == 0)

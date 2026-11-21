@@ -20,7 +20,7 @@ namespace Comet.Client
     {
         private volatile bool HandshakeReceived;
 
-        // Friends and enemies, proficiencies and spells the server listed while entering the map
+        // What the server listed while entering the map
         public List<FriendMessage> Relationships { get; } = new List<FriendMessage>();
         public List<TradeBuddyMessage> TradePartners { get; } = new List<TradeBuddyMessage>();
         public List<WeaponSkill> Proficiencies { get; } = new List<WeaponSkill>();
@@ -277,7 +277,6 @@ namespace Comet.Client
         public Task TakeSilverAsync(uint npcId, uint amount) =>
             this.SendAsync(ItemMessage.Build(npcId, amount, ItemMessage.TakeSilver));
 
-        // The silver kept in the warehouses, or null if no answer comes
         public async Task<uint?> AskStoredSilverAsync(uint npcId, TimeSpan? timeout = null)
         {
             await this.SendAsync(ItemMessage.Build(npcId, 0, ItemMessage.StoredSilver));
@@ -639,7 +638,7 @@ namespace Comet.Client
             return packet == null ? null : TradeBuddyMessage.Parse(packet);
         }
 
-        // MsgAction 152 with the partner's ID; answered with their details if they're online
+        // Answered only while the partner is online
         public async Task<TradeBuddyInfo> AskPartnerInfoAsync(uint characterId, uint partnerId, TimeSpan? timeout = null)
         {
             await this.SendAsync(ActionMessage.Build(characterId, ActionMessage.PartnerInfo, partnerId));

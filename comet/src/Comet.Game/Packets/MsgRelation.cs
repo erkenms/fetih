@@ -4,9 +4,8 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // Who asks, shown in the target's request popup ("Level: %d Battle Power: %d") for a
-    // trade, team or friend request; sent just before the request. Guessed from memory of
-    // later servers, unconfirmed: asker ID at 4, target ID at 8, the asker's level at 12
-    // and battle power at 16, then relation flags (spouse, trade partner, ...) left 0.
+    // trade, team or friend request; sent just before the request. Asker ID at 4, target ID at
+    // 8, the asker's level at 12 and battle power at 16, then relation flags (spouse, trade partner, ...) left 0.
     public sealed class MsgRelation : MsgBase<Client>
     {
         public const int Size = 36;

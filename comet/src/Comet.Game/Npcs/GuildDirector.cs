@@ -5,7 +5,6 @@ namespace Comet.Game.Npcs
     using Comet.Game.Packets;
     using Comet.Game.Social;
 
-    // Twin City's guild director: creates and disbands guilds and passes on the leadership
     public static class GuildDirector
     {
         public const uint ID = 10003;

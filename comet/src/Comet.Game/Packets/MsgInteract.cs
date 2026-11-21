@@ -9,7 +9,7 @@ namespace Comet.Game.Packets
     // 5517 layout (Albetros), 40 bytes:
     // 4 timestamp, 8 sender, 12 target, 16 x, 18 y, 20 action u32, 24 data (damage; for a kill the
     // kill count), 28 unknown, 32 activation type (crit, block, ...), 36 activation value.
-    // Magic attacks (24) are obfuscated, but magic isn't handled yet.
+    // Magic attacks (24) arrive with target, x, y and the magic type obfuscated by the sender's ID.
     public sealed class MsgInteract : MsgBase<Client>
     {
         public uint Timestamp { get; set; }

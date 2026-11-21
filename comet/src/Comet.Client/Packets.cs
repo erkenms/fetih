@@ -357,7 +357,6 @@ namespace Comet.Client
             Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27;
         public const ulong DeadStatus = 0x400;
 
-        // Status flags
         public const ulong Flashing = 0x1, RedName = 0x4000, BlackName = 0x8000;
         public const ulong XpFull = 0x10, Superman = 0x40000, Cyclone = 0x800000;
         public const ulong Blessed = 1UL << 33;
@@ -511,7 +510,6 @@ namespace Comet.Client
         // Upgrades: the gear, then the dragonball (quality) or meteor (level) dropped on it
         public const uint Improve = 19, LevelUp = 20;
 
-        // The item to repair
         public const uint Repair = 14;
 
         // Booths: viewing has the booth's ID first; adding has the item and its price,
@@ -581,7 +579,6 @@ namespace Comet.Client
         }
     }
 
-    // An NPC's ID, cell, look and role
     // ID, position, look and role, then strings from 22: none, or a booth's owner
     public sealed record NpcSpawn(uint Id, ushort X, ushort Y, ushort Lookface, ushort Role, string Name)
     {
@@ -630,7 +627,6 @@ namespace Comet.Client
         }
     }
 
-    // Points to add to strength, agility, vitality and spirit
     public static class AllotMessage
     {
         // 24 bytes: 0 at 4, then u32 each for strength, agility, vitality and spirit from 8
@@ -720,7 +716,6 @@ namespace Comet.Client
             BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16));
     }
 
-    // Action at 4 (2 = the steed's vigor), value at 8; 36 bytes
     // The arena window's buttons and dialogs, 52 bytes: action at 4, option at 8, then a
     // player: ID at 12, name (16 bytes) at 16, rank at 32, class at 36, arena points at 44,
     // level at 48
@@ -769,7 +764,6 @@ namespace Comet.Client
             BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt64(packet, 8),
             BitConverter.ToUInt16(packet, 4) is Donate or Info ? Packet.ReadStrings(packet, 32) : new List<string>());
 
-        // Info: ID, total donation, rank, position
         public (uint Id, ulong Total, uint Rank, int Position) Standing =>
             this.Strings[0].Split(' ') is var f
                 ? (uint.Parse(f[0]), ulong.Parse(f[1]), uint.Parse(f[2]), int.Parse(f[3]))
@@ -880,6 +874,7 @@ namespace Comet.Client
         };
     }
 
+    // Action at 4 (2 = the steed's vigor), value at 8; 36 bytes
     public sealed record DataMessage(uint Action, uint Value)
     {
         public const uint Vigor = 2;

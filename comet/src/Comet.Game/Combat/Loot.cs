@@ -10,10 +10,7 @@ namespace Comet.Game.Combat
     using Comet.Game.States;
     using Comet.Game.World;
 
-    // What a monster leaves when a player kills it: sometimes silver up to its dropMoney, one of
-    // its potions, a piece of equipment near its level, a meteor or a dragonball. TQ's real
-    // rates aren't known; meteor and dragonball rates are Albetros's, the rest are ours. Loot is
-    // the killer's alone for OwnerTime.
+    // Meteor and dragonball drop rates are Albetros's
     public static class Loot
     {
         public const int SilverChance = 30;
@@ -30,8 +27,8 @@ namespace Comet.Game.Combat
         // Equipment drops reach this many levels below the monster
         private const int EquipmentLevels = 20;
 
-        // Out of 100, a roll below 0.5 makes dropped equipment super, below 1.5 elite, below 4
-        // unique and below 10 refined
+        // Out of 100, the roll below which dropped equipment becomes super (9), elite (8),
+        // unique (7) or refined (6)
         private static readonly (int Quality, double Below)[] Upgrades =
         {
             (9, 0.5), (8, 1.5), (7, 4), (6, 10),
@@ -45,7 +42,6 @@ namespace Comet.Game.Combat
                 await PlaceAsync(killer, monster, x, y, drop);
         }
 
-        // Silver amounts and item types, rolled
         public static List<(uint Silver, uint TypeID)> Roll(MonsterType type, ItemTypeTable items, Random random)
         {
             var drops = new List<(uint, uint)>();
@@ -63,8 +59,7 @@ namespace Comet.Game.Combat
             return drops;
         }
 
-        // A normal-quality weapon, armor, helmet, necklace, ring or boots a player of the
-        // monster's level could wear, sometimes of a better quality. Null if none fits.
+        // Qualities 3 to 5 are the normal ones
         public static uint? Equipment(int monsterLevel, ItemTypeTable items, Random random)
         {
             var candidates = items.All.Where(t => ItemSlots.IsMonsterDrop(t.ID) &&

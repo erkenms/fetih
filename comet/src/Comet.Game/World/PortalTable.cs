@@ -13,7 +13,6 @@ namespace Comet.Game.World
 
         private sealed record PortalFile(List<Portal> Portals);
 
-        // Data/portals.json; a map and portal pair listed twice is an error
         public static List<Portal> Load(string path)
         {
             var portals = DataFiles.Read<PortalFile>(path).Portals ?? new List<Portal>();

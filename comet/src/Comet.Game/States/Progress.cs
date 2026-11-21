@@ -123,8 +123,6 @@ namespace Comet.Game.States
 
         public enum Stat { Strength, Agility, Vitality, Spirit, Points }
 
-        // Sets a stat, or changes it by the amount, within 0 to 65535. Health and mana above
-        // their new maximums come down to them.
         public static async Task SetStatAsync(Client client, Stat stat, int amount, bool relative, string reason)
         {
             var character = client.Character;

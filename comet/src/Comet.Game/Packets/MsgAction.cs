@@ -67,8 +67,7 @@ namespace Comet.Game.Packets
             Action = ActionType.ClientDialog,
         };
 
-        // Albetros (5517): action 160 with 32 in Command opens a shop; the shop's NPC goes in
-        // the timestamp field and the player's position in X and Y
+        // Albetros (5517): Command 32 opens a shop, with the shop's NPC in the timestamp field
         public static MsgAction OpenShop(uint identity, uint npcID, ushort x, ushort y) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -140,8 +139,6 @@ namespace Comet.Game.Packets
                 return;
             }
 
-            // Not handled yet: echo it, since the client waits for the reply to each
-            // login step (75 to 78, 96, 97) before sending the next
             await client.SendAsync(this);
             await client.SendAsync(new MsgTalk(client.ID, MsgTalk.TalkChannel.Service,
                 String.Format("Missing packet {0}, Action {1}, Length {2}",
@@ -232,8 +229,7 @@ namespace Comet.Game.Packets
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
-                // The Revive button; refused until the player has been dead long enough.
-                // Non-zero Command asks to revive where the player lies (WCO 5808).
+                // WCO (5808): non-zero Command asks to revive where the player lies
                 [ActionType.CharacterRevive] = (msg, client) =>
                     Combat.Death.ReviveAsync(client, "button", here: msg.Command != 0),
                 [ActionType.CharacterDead] = (msg, client) => Combat.Death.BecomeGhostAsync(client),
@@ -336,7 +332,6 @@ namespace Comet.Game.Packets
             QueryStatInfo = 408
         }
 
-        // Windows opened with ClientDialog
         public enum Window : uint
         {
             Warehouse = 4,

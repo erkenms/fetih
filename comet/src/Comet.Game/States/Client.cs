@@ -23,16 +23,15 @@ namespace Comet.Game.States
         public Equipment Equipment = null;
         public Warehouses Warehouses = null;
 
-        // Trades, teams and friends are changed by other players' packets too
+        // Other players' packets change these too
         public Social.Trade Trade { get; set; }
         public Social.Team Team { get; set; }
 
-        // The player's open booth in the market; buyers' packets read it too
+        // Buyers' packets read it too
         public Booth Booth { get; set; }
 
         public bool Away { get; set; }
 
-        // The player this one asked to trade with, or to be friends with (0 if none)
         public uint TradeRequest { get; set; }
         public uint FriendRequest { get; set; }
         public uint PartnerRequest { get; set; }
@@ -45,13 +44,11 @@ namespace Comet.Game.States
         public uint ClanApply { get; set; }
         public uint ClanInvite { get; set; }
 
-        // Names by character ID, loaded at login
         public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
         public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();
         public ConcurrentDictionary<uint, Social.TradePartner> TradePartners { get; } =
             new ConcurrentDictionary<uint, Social.TradePartner>();
 
-        // Whether the second password was given this session, and how often it was wrong
         public bool SecondPasswordVerified { get; set; }
         public int SecondPasswordFailures { get; set; }
 
@@ -72,7 +69,7 @@ namespace Comet.Game.States
         // Statuses that run out: XP full and what spells give
         public TimedStatus Effects { get; } = new TimedStatus();
 
-        // Stamina, the XP bar and learned skills, changed on the player's own queue
+        // Energy and Skills change only on the player's own queue
         public Magic.Energy Energy { get; } = new Magic.Energy();
         public Magic.Skills Skills { get; set; } = new Magic.Skills();
         public Mount Mount { get; } = new Mount();
@@ -83,17 +80,14 @@ namespace Comet.Game.States
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
             (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0);
 
-        // The NPC the player is talking to, so dialog answers reach it
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }
         public DiffieHellman DiffieHellman = null;
 
-        // Login token this connection authenticated with, and what it was issued for.
         // Kept so the client can repeat MsgConnect on the same connection.
         public ulong AuthenticationToken { get; set; }
         public TransferAuthArgs Authentication { get; set; }
 
-        // When the character entered the game (set on session.login)
         public DateTime? LoggedInAt { get; set; }
 
         public Authority Authority => (Authority)(this.Authentication?.AuthorityID ?? 1);
@@ -103,7 +97,6 @@ namespace Comet.Game.States
         public uint ID => Character?.CharacterID ?? 0;
         public uint Identity => this.ID;
 
-        // The map the character stands on (set when entering the game)
         public GameMap<Client> Map { get; set; }
 
         // Saves run one after another in the order asked for; none starts after the logout save

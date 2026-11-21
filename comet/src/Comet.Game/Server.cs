@@ -96,7 +96,6 @@ namespace Comet.Game
             var length = BitConverter.ToUInt16(packet, 0);
             PacketType type = (PacketType)BitConverter.ToUInt16(packet, 2);
 
-            // Every log written while processing carries the connection and player
             using var connScope = LogContext.PushProperty("ConnId", actor.ConnId);
             using var accountScope = actor.AccountID != 0
                 ? LogContext.PushProperty("AccountId", actor.AccountID) : null;
@@ -127,7 +126,6 @@ namespace Comet.Game
             }
         }
 
-        // Trade partners, team mates, friends and the market learn the player is gone
         private static async Task LeaveOthersAsync(Client actor)
         {
             try

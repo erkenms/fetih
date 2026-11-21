@@ -22,7 +22,6 @@ namespace Comet.Game.Database.Repositories
             return (guilds, members.Select(x => new MemberRow(x.m, x.Name, x.Level)).ToList(), relations);
         }
 
-        // The new guild's ID
         public static async Task<uint> CreateAsync(DbSyndicate guild, DbSyndicateMember leader)
         {
             using var db = new ServerDbContext();

@@ -4,8 +4,7 @@ namespace Comet.Game.Items
 
     public static class Requirements
     {
-        // Why the character can't wear the type, or null. Weapon skill levels aren't checked
-        // until proficiencies exist.
+        // Why the character can't wear the type, or null
         public static string Unmet(DbCharacter character, ItemType type)
         {
             if (character.Level < type.RequiredLevel)

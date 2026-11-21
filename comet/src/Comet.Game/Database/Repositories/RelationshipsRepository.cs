@@ -8,7 +8,6 @@ namespace Comet.Game.Database.Repositories
 
     public static class RelationshipsRepository
     {
-        // IDs and names of the character's friends and enemies
         public static async Task<(List<(uint ID, string Name)> Friends, List<(uint ID, string Name)> Enemies)>
             LoadAsync(uint characterID)
         {

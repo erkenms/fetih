@@ -151,7 +151,6 @@ namespace Comet.Game.Social
         public static Task SendDonationsAsync(Client client) =>
             client.SendAsync(new MsgSynpOffer(Of(client.ID)?.Member));
 
-        // Online members other than the player, for guild chat
         public static List<Client> OthersOf(Client client)
         {
             var guild = Of(client.ID)?.Guild;
@@ -253,7 +252,6 @@ namespace Comet.Game.Social
             finally { Gate.Release(); }
         }
 
-        // The leader hands the guild to another member and becomes a plain member
         public static async Task<string> TransferAsync(Client client, string name)
         {
             await Gate.WaitAsync();
@@ -679,7 +677,6 @@ namespace Comet.Game.Social
                     await client.SendAsync(RelationEntry(MsgName.NameAction.SetEnemy, enemy));
         }
 
-        // After joining, leaving or a new rank: the player's guild window, and how others see them
         private static async Task RefreshAsync(Client client)
         {
             await SendInfoAsync(client);

@@ -5,8 +5,6 @@ namespace Comet.Game.Combat
     // Formulas as in Albetros, which follows TQ's: no TQ source for 5619 is public.
     public static class Damage
     {
-        // Attacking a monster 4 or more levels below: 4 and 5 levels 1.5 times, then 0.7 more
-        // for every 5 levels
         public static double LevelBonus(int attackerLevel, int targetLevel)
         {
             int delta = attackerLevel - targetLevel;
@@ -24,7 +22,7 @@ namespace Comet.Game.Combat
             return delta <= 5 ? 1.5 : 1 + 0.6 * delta / 5;
         }
 
-        // The caster's magic attack and the spell's power; monsters have no magic defense
+        // Monsters have no magic defense
         public static uint Magic(int magicAttack, int power, int attackerLevel, int targetLevel) =>
             AtLeastOne((magicAttack + power) * MagicLevelBonus(attackerLevel, targetLevel));
 
@@ -49,14 +47,12 @@ namespace Comet.Game.Combat
         public static uint MonsterMelee(int minAttack, int maxAttack, int targetDefense, Random random) =>
             AtLeastOne(Roll(minAttack, maxAttack, random) - targetDefense);
 
-        // The chance in percent that an attack lands: monsters' dodge counts a quarter
         public static int HitChance(int targetDodge, bool targetIsMonster) =>
             Math.Clamp(110 - (targetIsMonster ? targetDodge / 4 : targetDodge), 0, 100);
 
         public static bool Hits(int targetDodge, bool targetIsMonster, Random random) =>
             random.Next(100) < HitChance(targetDodge, targetIsMonster);
 
-        // Experience for damage dealt to a monster, by how many levels the attacker is above it
         public static ulong Experience(uint dealt, int attackerLevel, int monsterLevel)
         {
             int percent = (attackerLevel - monsterLevel) switch
@@ -74,7 +70,6 @@ namespace Comet.Game.Combat
             return dealt == 0 ? 0 : Math.Max(1, dealt * (ulong)percent / 100);
         }
 
-        // Extra experience for the kill: 5% of the monster's life
         public static ulong KillBonus(uint monsterLife) => monsterLife * 5UL / 100;
 
         // Against players there's no level bonus (Albetros)

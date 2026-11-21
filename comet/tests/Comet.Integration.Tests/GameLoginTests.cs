@@ -36,7 +36,6 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task OnlineCountGoesUpAndDownWithPlayers()
         {
-            // Other tests' players may still be leaving, so compare two of ours
             var (first, _) = await this.PlayingAsync();
             await using var firstGuard = first;
             var (second, _) = await this.PlayingAsync();

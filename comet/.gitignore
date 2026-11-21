@@ -5,13 +5,11 @@ project.lock.json
 *.pyc
 nupkg/
 
-# User-specific files
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
 
-# Build results
 Debug/
 DebugPublic/
 [Rr]elease/
@@ -27,11 +25,9 @@ msbuild.log
 msbuild.err
 msbuild.wrn
 
-# Visual Studio 2015
 .vs/
 
-# Docker volumes
+# The database volume from compose.yaml
 sql/data
 
-# Server logs
 logs/

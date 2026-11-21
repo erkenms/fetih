@@ -129,7 +129,6 @@ namespace Comet.Game.Packets
             }
             catch (DbUpdateException e) when (CharactersRepository.IsDuplicateName(e))
             {
-                // Another player took the name since the check above
                 LogEvents.For<MsgRegister>(LogEvents.CharacterCreateFailed).Information(
                     "Character creation for account {AccountId} failed: {Reason} ({Name})",
                     client.Creation.AccountID, "name_taken", this.CharacterName);

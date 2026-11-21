@@ -75,7 +75,6 @@ namespace Comet.Game.Items
             return true;
         }
 
-        // Durability is the item's amount out of its limit
         public static uint SellPrice(uint price, ushort durability, ushort maxDurability)
         {
             ulong value = price / SellDivisor;

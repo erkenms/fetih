@@ -12,7 +12,6 @@ namespace Comet.Game.Tests.World
     {
         private static IReadOnlyList<ScenePart> Scenes(string path) => path switch
         {
-            // 3 wide, 2 high, offset (1, 0): cell (0,0) is walkable, (2,1) blocked
             "map\\Scene\\stand.scene" => SceneFile.Parse(MapFiles.Scene(3, 2, offsetX: 1,
                 walkable: (x, y) => (x, y) != (2, 1), altitude: (x, y) => 10 * x + y)),
             _ => throw new InvalidDataException($"No scene {path}")
@@ -21,7 +20,6 @@ namespace Comet.Game.Tests.World
         [Fact]
         public void TerrainSceneCellsReplaceTheBaseCellsBackwardsFromTheObject()
         {
-            // Base grid all blocked; one terrain object at (10, 20)
             var grid = MapGrid.Parse(MapFiles.DMap(40, 40, walkable: (x, y) => false,
                 terrain: new[] { ("map\\Scene\\stand.scene", 10, 20) }, covers: 2), Scenes);
 

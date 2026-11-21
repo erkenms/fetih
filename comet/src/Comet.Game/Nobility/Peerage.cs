@@ -152,7 +152,7 @@ namespace Comet.Game.Nobility
             }
         }
 
-        // Pages count from 0; the board shows the top 50, ten to a page
+        // Pages count from 0
         private static Task SendBoardAsync(Client client, int page)
         {
             var reply = new MsgPeerage { Action = PeerageAction.Board, Data = (ulong)Math.Max(0, page) };

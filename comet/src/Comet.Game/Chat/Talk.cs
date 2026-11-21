@@ -125,7 +125,6 @@ namespace Comet.Game.Chat
             }
         }
 
-        // Server replies to one player: command output, refusals
         public static Task NoticeAsync(Client client, string text) =>
             client.SendAsync(new MsgTalk(client.ID, TalkChannel.Service, text));
 

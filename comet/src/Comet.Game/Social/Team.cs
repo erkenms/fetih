@@ -13,7 +13,6 @@ namespace Comet.Game.Social
         // The leader first
         public List<Client> Members { get; } = new List<Client>();
 
-        // Players the leader invited, and players who asked to join
         public HashSet<uint> Invited { get; } = new HashSet<uint>();
         public HashSet<uint> Applicants { get; } = new HashSet<uint>();
 

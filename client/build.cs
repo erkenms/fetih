@@ -2,7 +2,7 @@
 //
 //   dotnet run client/build.cs [source] [output]
 //
-// Defaults: _CLIENT/5619 into _CLIENT/fetih, both next to this folder's parent. The
+// Defaults: _CLIENT/5619 into _CLIENT/fetih, both in this folder's parent. The
 // output mirrors the source, minus the paths in delete.txt, plus everything under files/
 // (added or replacing), with the byte patches in patches.json applied last. Patches name
 // the bytes they expect, so a patch that no longer fits its file fails the build instead

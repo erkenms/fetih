@@ -4,7 +4,6 @@ namespace Comet.Game.World
 
     public sealed class Npc
     {
-        // The role of warehousemen
         public const byte StorageRole = 3;
 
         [JsonPropertyName("id")] public uint NpcID { get; init; }

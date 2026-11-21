@@ -4,7 +4,6 @@ namespace Comet.Game
     using System.IO;
     using System.Text.Json;
 
-    // Static game data in Data/*.json next to the server: comments and trailing commas allowed
     public static class DataFiles
     {
         private static readonly JsonSerializerOptions Options = new JsonSerializerOptions

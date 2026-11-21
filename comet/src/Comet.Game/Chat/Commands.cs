@@ -104,7 +104,6 @@ namespace Comet.Game.Chat
             return false;
         }
 
-        // The full name, or the start of exactly one online player's name
         public static bool TryFind(string name, out Client player)
         {
             if (Kernel.Players.TryGet(name, out player) && player.Character != null)
@@ -123,8 +122,8 @@ namespace Comet.Game.Chat
             return true;
         }
 
-        // The client shows no button to close a booth yet. It won't move while it thinks it's
-        // vending; a teleport onto its own cell ends that (seen in the VM).
+        // The client won't move while it thinks it's vending; a teleport onto its own cell ends
+        // that (seen in the VM).
         private static async Task<bool> CloseBoothAsync(Client client, string[] args, string rest)
         {
             if (client.Booth == null)
@@ -289,7 +288,6 @@ namespace Comet.Game.Chat
             ["points"] = Progress.Stat.Points,
         };
 
-        // Sets a stat (/attr spi 0), or adds to it or takes from it (/attr vit +5, /attr str -2)
         private static async Task<bool> StatAsync(Client client, string[] args, string rest)
         {
             const string usage = "/attr <str|agi|vit|spi|points> <value|+n|-n>";
@@ -301,8 +299,7 @@ namespace Comet.Game.Chat
             return true;
         }
 
-        // Sends any MsgUserAttrib as is, for finding out what the client does with a value.
-        // Values may be hex (0x...). Nothing is saved.
+        // Sends any MsgUserAttrib as is, to find out what the client does with a value. Nothing is saved.
         private static async Task<bool> AttributeAsync(Client client, string[] args, string rest)
         {
             if (args.Length != 2 || !uint.TryParse(args[0], out var type) || !TryParseNumber(args[1], out var value))

@@ -50,7 +50,6 @@ namespace Comet.Game.World
                     await ThinkAsync(monster, now, random);
         }
 
-        // Monsters in view of some player
         private static HashSet<Monster> Awake()
         {
             var awake = new HashSet<Monster>();
@@ -92,7 +91,6 @@ namespace Comet.Game.World
                 return;
             }
 
-            // Guards stand their post
             if (monster.IsGuard || now < monster.NextMoveAt)
                 return;
             monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);

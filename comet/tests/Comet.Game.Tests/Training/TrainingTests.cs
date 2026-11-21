@@ -8,7 +8,7 @@ namespace Comet.Game.Tests.Training
 
     public class TrainingTests
     {
-        // Level 1 needs 100 experience and 10 time, level 2 needs 1000 and 100; the cap is 3
+        // The cap is level 3
         private static readonly ExperienceTable Table = new ExperienceTable(new[]
         {
             new LevelExp { Level = 1, Experience = 100, UpLevTime = 10 },

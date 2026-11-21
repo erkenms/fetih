@@ -71,15 +71,14 @@ namespace Comet.Game.Database
             public int IntervalSeconds { get; set; } = 300;
         }
 
-        // How long a dropped item stays on the ground
         public class GroundConfiguration
         {
             public int ExpireSeconds { get; set; } = 60;
         }
 
-        // Where monsters spawn: a file in Data/ or a full path
         public class MonstersConfiguration
         {
+            // A file in Data/ or a full path
             public string SpawnsFile { get; set; } = "spawns.json";
 
             // Chance in percent that an idle monster takes a random step, ten times a second

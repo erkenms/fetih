@@ -12,7 +12,6 @@ namespace Comet.Game.World
 
         private sealed record NpcFile(List<Npc> Npcs);
 
-        // Data/npcs.json; an NPC ID listed twice is an error
         public static List<Npc> Load(string path)
         {
             var npcs = DataFiles.Read<NpcFile>(path).Npcs ?? new List<Npc>();

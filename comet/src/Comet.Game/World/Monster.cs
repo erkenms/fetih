@@ -67,8 +67,8 @@ namespace Comet.Game.World
                     this.target = attackerID;
         }
 
-        // Takes up to amount from its health. Only the hit that empties it reports the kill, so
-        // of many attackers at once exactly one kills it. The first attacker becomes its target.
+        // Only the hit that empties its health reports the kill, so of many attackers at once
+        // exactly one kills it. The first attacker becomes its target.
         public (uint Dealt, bool Killed) Damage(uint amount, uint attackerID, DateTime now)
         {
             lock (this.Lock)

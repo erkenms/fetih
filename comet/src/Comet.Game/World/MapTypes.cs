@@ -53,7 +53,7 @@ namespace Comet.Game.World
 
     public sealed record MapPoint(uint MapID, ushort X, ushort Y);
 
-    // Data/maps.json; maps not listed have no flags, no portal and no reborn point
+    // Maps not listed have no flags, portal or reborn point
     public sealed class MapTypes
     {
         private readonly Dictionary<uint, MapType> Maps;
@@ -112,12 +112,10 @@ namespace Comet.Game.World
         // The steed plus needed to ride on the map
         public byte RidePlusOf(uint mapID) => this.Maps.TryGetValue(mapID, out var map) ? map.RidePlus : (byte)0;
 
-        // The map's own portal, or null
         public MapPoint PortalOf(uint mapID) =>
             this.Maps.TryGetValue(mapID, out var map) && map.Portal != null
                 ? new MapPoint(mapID, map.Portal.X, map.Portal.Y) : null;
 
-        // Where a player who died on this map revives, or null if the map has no reborn map
         public MapPoint RebornPointOf(uint mapID) =>
             this.Maps.TryGetValue(mapID, out var map) && map.RebornMapID is uint reborn ? this.PortalOf(reborn) : null;
 
@@ -125,7 +123,6 @@ namespace Comet.Game.World
         public MapPoint LoginPointOf(uint mapID) =>
             this.Of(mapID).HasFlag(MapFlags.RecordDisable) ? this.RebornPointOf(mapID) : null;
 
-        // Where a teleport scroll of this item type goes, or null
         public MapPoint ScrollPointOf(uint itemTypeID) =>
             this.ByScroll.TryGetValue(itemTypeID, out var map) ? this.PortalOf(map.MapID) : null;
 

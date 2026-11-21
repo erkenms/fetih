@@ -81,7 +81,6 @@ namespace Comet.Game.Database.Repositories
                     .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
         }
 
-        // An upgrade's or embedding's type, durability and sockets
         public static async Task SetUpgradeAsync(DbItem item)
         {
             using var db = new ServerDbContext();

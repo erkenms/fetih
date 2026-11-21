@@ -124,8 +124,7 @@ namespace Comet.Game.Packets
             }
             else
             {
-                // Character already exists: check where it stands, then add it to the
-                // world (it appears on the map when the client finishes logging in)
+                // It appears on the map only once the client finishes logging in
                 client.Character = new Character(character);
                 var items = await ItemsRepository.LoadAsync(character.CharacterID);
                 client.Inventory = new Inventory(items.Where(i => i.Position == (byte)ItemPosition.Inventory));

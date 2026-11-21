@@ -21,8 +21,6 @@
             Console.WriteLine("  Patch 5619");
             Console.WriteLine();
 
-            // "create-account <email> <password>" and "set-password <email> <password>"
-            // change the database and exit instead of starting the server
             string command = args.Length > 0 &&
                 (args[0] == "create-account" || args[0] == "set-password") ? args[0] : null;
             if (command != null && args.Length < 3)

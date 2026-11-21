@@ -16,7 +16,7 @@ namespace Comet.Game.Magic
     // Spells, cast with MsgInteract 24 on the caster's queue. Spells that hurt (attack, bomb,
     // line, fan) hit monsters and the players the caster's PK mode allows; heals and status
     // spells go to a player in view or the caster. Damage to a player is applied on their
-    // queue, as for melee. Other sorts (revive, transform, ...) aren't cast yet.
+    // queue, as for melee.
     public static class Casting
     {
         private const int DistanceSlack = 1;
@@ -24,10 +24,8 @@ namespace Comet.Game.Magic
         // As many targets as one MsgMagicEffect shows (Albetros)
         private const int MaxTargets = 28;
 
-        // Half the width of a fan, in degrees
         private const double FanHalfAngle = 45;
 
-        // The shortest time between casts, whatever the spell's delay says
         public static TimeSpan MinimumDelay { get; set; } = TimeSpan.FromMilliseconds(500);
 
         private static readonly HashSet<MagicSort> Supported = new HashSet<MagicSort>
@@ -207,8 +205,7 @@ namespace Comet.Game.Magic
             return (victim, reason);
         }
 
-        // Living monsters and the players the caster may attack, in the caster's view. Guards
-        // only in free PK mode, so an area spell doesn't make the caster flash by accident.
+        // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident
         private static IEnumerable<Victim> Around(Client client, DateTime now)
         {
             var character = client.Character;
@@ -224,8 +221,6 @@ namespace Comet.Game.Magic
                     yield return new Victim(null, player, px, py);
         }
 
-        // Bombs hit around the caster, lines from the caster toward the aim, fans in a wedge
-        // toward it; each as far as the spell's range
         public static bool InShape(MagicType spell, int x, int y, int aimX, int aimY, int tx, int ty)
         {
             int range = (int)spell.Range;
@@ -293,8 +288,7 @@ namespace Comet.Game.Magic
                 : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
 
-        // Heals by the spell's power, up to full health; the caster if the target isn't a
-        // living player in reach
+        // Heals the caster if the target isn't a living player in reach
         private static async Task HealAsync(Client client, MagicType spell, uint targetID, DateTime now)
         {
             var target = Friendly(client, spell, targetID);
@@ -317,8 +311,6 @@ namespace Comet.Game.Magic
             await GainExperienceAsync(client, spell, amount);
         }
 
-        // Superman, Cyclone, Accuracy, Shield and Stigma: the status for the spell's time.
-        // XP skills only ever go on the caster.
         private static async Task AttachAsync(Client client, MagicType spell, uint targetID, DateTime now)
         {
             ulong status = Buffs.StatusOf(spell.Type);
@@ -368,7 +360,6 @@ namespace Comet.Game.Magic
             return target;
         }
 
-        // Mana, stamina and the full XP bar, and the time until the next cast
         private static async Task PayAsync(Client client, MagicType spell, DateTime now)
         {
             var character = client.Character;
@@ -415,7 +406,6 @@ namespace Comet.Game.Magic
                     client.Character.Name, magicType, fromLevel, spell.Level, reason);
         }
 
-        // A GM gives a spell; also how spells are learned until NPCs and books teach them
         public static async Task<bool> LearnAsync(Client client, ushort magicType, ushort level, string reason)
         {
             if (client.Character == null || !Kernel.Magics.TryGet(magicType, level, out var spell))
@@ -428,7 +418,6 @@ namespace Comet.Game.Magic
             return true;
         }
 
-        // Login step 78: all spells, then the echo
         public static async Task SendAllAsync(Client client)
         {
             foreach (var (type, spell) in client.Skills.AllSpells())

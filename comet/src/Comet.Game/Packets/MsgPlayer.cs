@@ -98,7 +98,6 @@ namespace Comet.Game.Packets
             this.Nobility = Comet.Game.Nobility.Peerage.RankOf(character.CharacterID);
         }
 
-        // Fields other than look, position, level and name stay zero until their features exist.
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
@@ -108,7 +107,7 @@ namespace Comet.Game.Packets
             writer.Write(this.GuildID);             // 12
             writer.Write((uint)this.GuildRank);     // 16
             writer.Write((ushort)0);                // 20
-            writer.Write(this.Status);              // 22  status flags
+            writer.Write(this.Status);              // 22
             writer.Write(new byte[12]);             // 30
             writer.Write((ushort)0);                // 42  appearance type
             writer.Write(this.Helmet);              // 44  item types worn
@@ -121,9 +120,9 @@ namespace Comet.Game.Packets
             writer.Write(0u);                       // 76
             writer.Write((ushort)0);                // 80
             writer.Write((ushort)0);                // 82
-            writer.Write(this.MonsterHealth);       // 84  monster health
+            writer.Write(this.MonsterHealth);       // 84
             writer.Write((ushort)0);                // 88
-            writer.Write(this.MonsterLevel);        // 90  monster level
+            writer.Write(this.MonsterLevel);        // 90
             writer.Write(this.X);                   // 92
             writer.Write(this.Y);                   // 94
             writer.Write(this.Hairstyle);           // 96
@@ -134,14 +133,14 @@ namespace Comet.Game.Packets
             writer.Write(this.Rebirths);            // 106
             writer.Write(this.Level);               // 107
             writer.Write((byte)0);                  // 109 equipment viewable
-            writer.Write((byte)(this.Away ? 1 : 0)); // 110 away
+            writer.Write((byte)(this.Away ? 1 : 0)); // 110
             writer.Write(new byte[16]);             // 111 flowers, ...
             writer.Write((uint)this.Nobility);      // 127 nobility rank (5517 + 46, as the colors)
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133
             writer.Write(this.HelmetColor);         // 135
             writer.Write(0u);                       // 137 quiz points
-            writer.Write(this.SteedPlus);           // 141 steed plus
+            writer.Write(this.SteedPlus);           // 141
             writer.Write((byte)0);                  // 142
             writer.Write(0u);                       // 143
             writer.Write(0u);                       // 147 steed color
@@ -165,7 +164,7 @@ namespace Comet.Game.Packets
             writer.Write(0u);                       // 211
             writer.Write((ushort)0);                // 215 first class
             writer.Write((ushort)0);                // 217 second class
-            writer.Write(this.CurrentClass);        // 219 class
+            writer.Write(this.CurrentClass);        // 219
             writer.Write(0u);                       // 221
             writer.Write((byte)0);                  // 225 must be 0 for the client to
                                                     //     place the player at X, Y

@@ -50,7 +50,6 @@ namespace Comet.Game.Arena
         private static readonly List<uint> Waiting = new List<uint>();
         private static readonly List<ArenaMatch> Matches = new List<ArenaMatch>();
 
-        // A decided match, with what it did to both records
         private sealed record Result(ArenaMatch Match, MatchState Before, Fighter Winner, Fighter Loser,
             uint Points, int WinnerBonuses, int LoserBonuses, DbArena WinnerSave, DbArena LoserSave);
 
@@ -211,14 +210,12 @@ namespace Comet.Game.Arena
             return true;
         }
 
-        // Signed up or in a match; booths can't open then
         public static bool IsSignedUp(Client client)
         {
             lock (Sync)
                 return Waiting.Contains(client.ID) || MatchOf(client.ID) != null;
         }
 
-        // A player who logs out leaves the queue and loses their match
         public static async Task LeaveAsync(Client client, string reason)
         {
             if (client.Character == null)
@@ -388,8 +385,7 @@ namespace Comet.Game.Arena
                 character.Name, before, save.Points, PointsPrice);
         }
 
-        // On the fighter's queue: from where they stand into the match's arena, alive and
-        // at full health and mana
+        // On the fighter's queue
         private static async Task EnterAsync(Client client, ArenaMatch match)
         {
             var character = client.Character;
@@ -437,7 +433,7 @@ namespace Comet.Game.Arena
             await SendDetailsAsync(client);
         }
 
-        // On the fighter's queue once a match is over: back to where they came from, alive
+        // On the fighter's queue once a match is over
         private static async Task LeaveArenaAsync(Client client, ArenaMatch match)
         {
             var character = client.Character;
@@ -499,8 +495,6 @@ namespace Comet.Game.Arena
             }
         }
 
-        // Pairs waiting players and moves matches on: unanswered invitations, the end of the
-        // countdown, fighters who left, time up, and fighters going home after a match
         public static async Task TickAsync(DateTime now)
         {
             var invited = new List<ArenaMatch>();
@@ -565,7 +559,6 @@ namespace Comet.Game.Arena
                 await InviteAsync(match);
         }
 
-        // The first player waiting with the one whose points are closest to theirs, and so on
         public static List<(uint A, uint B)> Pairs(IReadOnlyList<(uint ID, uint Points)> waiting)
         {
             var left = waiting.ToList();
@@ -630,9 +623,6 @@ namespace Comet.Game.Arena
             }
         }
 
-        // What the result means for both players: their records are saved; an unanswered
-        // invitation ends with the dialogs at once, a fight shows who won and sends the
-        // fighters home after EndTime
         private static async Task FinishAsync(Result result)
         {
             var match = result.Match;
@@ -751,8 +741,6 @@ namespace Comet.Game.Arena
             return 0;
         }
 
-        // The player's record, made when they first open the arena, with their name and look
-        // as they are now
         private static ArenaRecord RecordOf(Character character, DateTime now)
         {
             if (!Records.TryGetValue(character.CharacterID, out var record))

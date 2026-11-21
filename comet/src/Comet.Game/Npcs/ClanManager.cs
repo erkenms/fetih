@@ -5,7 +5,6 @@ namespace Comet.Game.Npcs
     using Comet.Game.Packets;
     using Comet.Game.Social;
 
-    // Twin City's clan manager: creates and disbands clans
     public static class ClanManager
     {
         public const uint ID = 5533;

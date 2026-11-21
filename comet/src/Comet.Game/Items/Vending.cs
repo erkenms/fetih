@@ -17,10 +17,8 @@ namespace Comet.Game.Items
     // every booth step runs under one gate, as trades do.
     public static class Vending
     {
-        // How far from a flag a player may set up their booth
         public const int FlagReach = 3;
 
-        // The stance of a vendor
         public const uint SitStance = 250;
 
         private static readonly SemaphoreSlim Gate = new SemaphoreSlim(1, 1);
@@ -74,7 +72,6 @@ namespace Comet.Game.Items
             finally { Gate.Release(); }
         }
 
-        // When the player closes the booth, moves, or leaves the game
         public static async Task CloseAsync(Client client, string reason)
         {
             if (client.Booth == null)
@@ -135,7 +132,6 @@ namespace Comet.Game.Items
             finally { Gate.Release(); }
         }
 
-        // A player opens someone's booth: each item for sale, with its price
         public static async Task ShowAsync(Client client, uint boothID)
         {
             await Gate.WaitAsync();
@@ -263,7 +259,6 @@ namespace Comet.Game.Items
                 await other.SendAsync(msg);
         }
 
-        // What a player sees of an NPC: a flag, and the booth open at it
         public static async Task ShowNpcAsync(Client client, Npc npc)
         {
             await client.SendAsync(new MsgNpcInfo(npc));

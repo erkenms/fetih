@@ -5,7 +5,6 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // An NPC standing on the map
     public sealed class MsgNpcInfo : MsgBase<Client>
     {
         public uint NpcID { get; }

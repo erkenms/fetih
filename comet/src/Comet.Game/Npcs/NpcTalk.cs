@@ -61,7 +61,7 @@ namespace Comet.Game.Npcs
             this.Page.Clear();
         }
 
-        // Ends the conversation and opens the NPC's shop window, drawn from the client's Shop.dat
+        // The client draws the shop window from its own Shop.dat
         public Task OpenShopAsync()
         {
             this.Client.ActiveNpc = 0;
@@ -69,7 +69,6 @@ namespace Comet.Game.Npcs
             return this.Client.SendAsync(MsgAction.OpenShop(this.Client.ID, this.Npc.NpcID, character.X, character.Y));
         }
 
-        // Ends the conversation and opens a client window, like the warehouse
         public Task OpenWindowAsync(MsgAction.Window window)
         {
             this.Client.ActiveNpc = 0;

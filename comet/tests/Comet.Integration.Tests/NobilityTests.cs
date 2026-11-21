@@ -28,7 +28,6 @@ namespace Comet.Integration.Tests
             return entries;
         }
 
-        // The top 3 are kings, the next 12 princes, the rest of the top 50 dukes
         private static uint RankAt(int position) => position < 3 ? King : position < 15 ? Prince : position < 50 ? Duke : Knight;
 
         [Fact]

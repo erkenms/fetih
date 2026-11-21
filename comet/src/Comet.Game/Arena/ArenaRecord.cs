@@ -10,8 +10,8 @@ namespace Comet.Game.Arena
         uint Points, uint WinsToday, uint LossesToday, uint WinsTotal, uint LossesTotal,
         uint HonorPoints, uint HonorTotal);
 
-    // A player's arena points, wins and losses and honor, with their name, look, level and
-    // class for the rankings (also of players offline). Changed under the qualifier's lock.
+    // Name, look, level and class are kept for the rankings of players offline too. Changed
+    // under the qualifier's lock.
     public sealed class ArenaRecord
     {
         public const byte MinLevel = 40;

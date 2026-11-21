@@ -51,7 +51,7 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForQualifierAsync(q => q.Action == SignUp));
         }
 
-        // Both sign up, are asked and accept; true once both are in the arena
+        // Both sign up, are asked and accept, and enter the arena
         private static async Task MatchAsync(Player a, Player b)
         {
             await SignUpAsync(a);

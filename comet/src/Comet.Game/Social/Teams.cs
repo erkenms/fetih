@@ -257,7 +257,6 @@ namespace Comet.Game.Social
                 kicked.Character.Name, client.Character.Name, "kicked");
         }
 
-        // The other members, for team chat
         public static List<Client> OthersOf(Client client)
         {
             lock (Lock)

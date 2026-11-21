@@ -22,7 +22,6 @@ namespace Comet.Game.Database.Repositories
             return (clans, members.Select(x => new MemberRow(x.m, x.Name, x.Level, x.CurrentClass, x.Mesh + x.Avatar * 10000u)).ToList(), relations);
         }
 
-        // The new clan's ID
         public static async Task<uint> CreateAsync(DbFamily clan, DbFamilyMember leader)
         {
             using var db = new ServerDbContext();

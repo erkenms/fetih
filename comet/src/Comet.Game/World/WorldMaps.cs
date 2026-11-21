@@ -13,7 +13,6 @@ namespace Comet.Game.World
 
         public WorldMaps(MapStore store) => this.Store = store;
 
-        // Maps that have been opened so far
         public System.Collections.Generic.IEnumerable<GameMap<T>> Loaded =>
             this.Maps.Values.Where(m => m.IsValueCreated).Select(m => m.Value);
 

@@ -60,7 +60,6 @@ namespace Comet.Game.Packets
             $"{(uint)Nobility.Peerage.RankOf(character.CharacterID)} " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
-        // No marriages yet: everyone's spouse is "None", as in MsgUserInfo
         public static MsgName SpouseOf(uint characterID) => new MsgName
         {
             Data = characterID,

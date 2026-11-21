@@ -42,7 +42,6 @@ namespace Comet.Game.World
 
         private sealed record MonsterFile(List<MonsterType> Monsters);
 
-        // Data/monsters.json; an ID listed twice or a type without life is an error
         public static List<MonsterType> Load(string path)
         {
             var types = DataFiles.Read<MonsterFile>(path).Monsters ?? new List<MonsterType>();

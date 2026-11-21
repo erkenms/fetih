@@ -13,7 +13,6 @@ namespace Comet.Game.States
 
         private sealed record LevelFile(List<LevelExp> Levels);
 
-        // Data/levels.json; a level listed twice is an error
         public static List<LevelExp> Load(string path)
         {
             var levels = DataFiles.Read<LevelFile>(path).Levels ?? new List<LevelExp>();
@@ -65,14 +64,12 @@ namespace Comet.Game.States
             return amount;
         }
 
-        // The level-up time this much experience is worth at the level
         public double TimeOfExperience(byte level, ulong amount) =>
             this.TryGetRequired(level, out var required) && this.UpLevTime.TryGetValue(level, out var upLevTime)
                 ? (double)amount / required * upLevTime
                 : 0;
 
-        // Adds experience, levelling up while it reaches the next level. At the cap the
-        // experience stays at zero, since there is no next level for it to count toward.
+        // At the cap the experience stays at zero: there is no next level for it to count toward
         public (byte Level, ulong Experience) Gain(byte level, ulong experience, ulong amount)
         {
             experience = ulong.MaxValue - experience < amount ? ulong.MaxValue : experience + amount;

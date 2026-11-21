@@ -4,7 +4,6 @@ namespace Comet.Game.World
     using System.Threading;
     using Comet.Game.Database.Models;
 
-    // An item or a pile of silver lying on a map
     public sealed class GroundItem : IMapObject
     {
         private static int LastID;

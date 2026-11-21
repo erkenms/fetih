@@ -39,7 +39,6 @@ namespace Comet.Game.States
 
         public bool Has(ulong flag, DateTime now) => this.Power(flag, now) != null;
 
-        // The power the status was given with, or null if it isn't on
         public int? Power(ulong flag, DateTime now)
         {
             lock (this.Sync)
@@ -81,7 +80,7 @@ namespace Comet.Game.States
                 return this.Until.Remove(flag);
         }
 
-        // Takes away the statuses that have run out and returns them
+        // Returns the statuses it took away
         public ulong Expire(DateTime now)
         {
             lock (this.Sync)

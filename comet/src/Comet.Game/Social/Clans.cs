@@ -123,7 +123,6 @@ namespace Comet.Game.Social
             finally { Gate.Release(); }
         }
 
-        // Online members other than the player, for clan chat
         public static List<Client> OthersOf(Client client)
         {
             var clan = Of(client.ID)?.Clan;
@@ -387,7 +386,6 @@ namespace Comet.Game.Social
                 member.Name, clan.Name, clan.ID, reason, by);
         }
 
-        // The leader hands the clan to an online member of level 50 or more
         private static async Task AbdicateAsync(Client client, ClanMember target)
         {
             var clan = LedBy(client);
@@ -676,7 +674,6 @@ namespace Comet.Game.Social
                     await SendRelationsAsync(player);
         }
 
-        // After joining or a new leader: the clan window, and how others see the player
         private static async Task RefreshAsync(Client client)
         {
             await SendInfoAsync(client);

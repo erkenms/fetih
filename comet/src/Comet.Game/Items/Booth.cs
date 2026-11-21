@@ -13,7 +13,6 @@ namespace Comet.Game.Items
     {
         // Albetros (5517): flags are role 16; an open booth is role 14 with look 406, three
         // cells east of its flag (where the 5619 client asks for it), named after its owner.
-        // Its ID is the flag's in the dynamic NPC range (a guess).
         public const byte FlagRole = 16;
         public const uint IdOffset = 100000;
         public const byte Role = 14;

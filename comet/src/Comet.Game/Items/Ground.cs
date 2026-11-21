@@ -144,7 +144,6 @@ namespace Comet.Game.Items
             return true;
         }
 
-        // Ground items in view of the player, for when they arrive somewhere
         public static async Task ShowAroundAsync(Client client, ushort x, ushort y, ushort? fromX = null, ushort? fromY = null)
         {
             var character = client.Character;

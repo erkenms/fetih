@@ -63,7 +63,7 @@ namespace Comet.Integration.Tests
 
             await player.Game.RepairAsync(blade.Id);
             Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == blade.Id && i.Amount == ServerFixture.Blade.Amount));
-            // 30 silver for the 599 of 1099 worn, at 75% for its quality
+            // 30 silver x 599/1099 worn x 75% for its quality, rounded up
             Assert.NotNull(await SilverAsync(player, 1000 - 13));
             var repaired = await this.Servers.WaitForEventAsync("game", "item.repaired", "name", player.User.Name);
             Assert.Equal("13 silver", repaired.GetProperty("paid").GetString());

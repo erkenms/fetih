@@ -16,7 +16,7 @@ namespace Comet.Game.Packets
     {
         public const int ItemSize = 52;
 
-        // Items per packet; Albetros sends ten at a time
+        // Albetros sends ten at a time
         public const int ItemsPerPacket = 10;
 
         public uint NpcID { get; set; }

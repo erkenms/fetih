@@ -50,7 +50,6 @@ namespace Comet.Game.Npcs
             return RunAsync(client, client.ActiveNpc, option, input);
         }
 
-        // The NPC if it stands on the player's map within view; logs why not otherwise
         public static Npc Reach(Client client, uint npcID, string use)
         {
             var character = client.Character;

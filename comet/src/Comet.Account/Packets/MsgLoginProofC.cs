@@ -63,8 +63,8 @@ namespace Comet.Account.Packets
                 return;
             }
 
-            // Refuse banned and locked accounts. This is checked after the proof, so the
-            // account's standing is only revealed to someone who knows the password.
+            // Checked after the proof, so an account's standing is only revealed to someone
+            // who knows the password.
             var status = (AccountStatus)client.Account.StatusID;
             if (status == AccountStatus.Banned || status == AccountStatus.Locked)
             {

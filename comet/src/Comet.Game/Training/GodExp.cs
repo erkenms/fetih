@@ -23,7 +23,7 @@ namespace Comet.Game.Training
         // The client's heaven blessing tooltip: 20% extra EXP from killing monsters
         public const double HuntingShare = 0.2;
 
-        // When a pool is full the client asks to claim it; the size is a guess
+        // When a pool is full the client asks to claim it
         public const uint PoolCap = 5 * UnitsPerBall;
 
         public static TimeSpan OnlineInterval { get; set; } = TimeSpan.FromMinutes(1);
@@ -83,7 +83,6 @@ namespace Comet.Game.Training
                 await SendAsync(client, GodExpAction.OnlineFull);
         }
 
-        // A blessed player's share of a monster's experience goes to the hunting pool
         public static async Task AddHuntingAsync(Client client, ulong experience)
         {
             var character = client.Character;

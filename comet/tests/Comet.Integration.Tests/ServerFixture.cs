@@ -128,7 +128,6 @@ namespace Comet.Integration.Tests
 
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(30);
 
-        // Database connection (override with environment variables)
         private static readonly string DbHost = Env("COMET_TEST_DB_HOST", "localhost");
         private static readonly string DbUser = Env("COMET_TEST_DB_USER", "root");
         private static readonly string DbPassword = Env("COMET_TEST_DB_PASSWORD", "password");
@@ -232,7 +231,6 @@ namespace Comet.Integration.Tests
 
         private async Task StartAsync()
         {
-            // Fresh databases from the default SQL files
             await this.LoadSchemaAsync("comet.account.sql", "comet.account", this.AccountSchema);
             await this.LoadSchemaAsync("comet.game.sql", "comet.game", this.GameSchema);
             this.AccountPort = FreePort();

@@ -69,9 +69,8 @@ namespace Comet.Network.Sockets
         {
             while (this.Socket.IsBound && !this.ShutdownToken.IsCancellationRequested)
             {
-                // Block if the maximum connections has been reached. Holds all connection
-                // attempts in the backlog of the server socket until a client disconnects
-                // and a new client can be accepted. Check shutdown every 5 seconds.
+                // At the connection limit, new attempts wait in the socket's backlog until a
+                // client disconnects; the timeout only rechecks for shutdown.
                 if (this.AcceptanceSemaphore.WaitOne(TimeSpan.FromSeconds(5)))
                 {
                     var socket = await this.Socket.AcceptAsync();
@@ -164,9 +163,9 @@ namespace Comet.Network.Sockets
                     return;
                 }
 
-                // Decrypt traffic by first discarding the first 7 bytes, as per TQ Digital's
-                // exchange protocol, then decrypting only what is necessary for the exchange.
-                // This is to prevent the next packet from being decrypted with the wrong key.
+                // TQ's exchange: 7 bytes of padding, then its length counted from 7. Only the
+                // exchange is decrypted with the initial key; what follows it in the buffer is
+                // under the exchanged key.
                 actor.Cipher.Decrypt(
                     actor.Buffer[..9].Span,
                     actor.Buffer[..9].Span);
@@ -190,8 +189,7 @@ namespace Comet.Network.Sockets
                     return;
                 }
 
-                // Now that the key has changed, decrypt the rest of the bytes in the buffer
-                // and prepare to start receiving packets on a standard receive loop.
+                // Exchanged has rekeyed the cipher, so the rest is decrypted only now
                 if (consumed < examined)
                 {
                     actor.Cipher.Decrypt(
@@ -239,8 +237,7 @@ namespace Comet.Network.Sockets
             {
                 try
                 {
-                    // Receive data from the client socket. Until the client logs in, the
-                    // login deadline can cancel the wait; after that it never fires.
+                    // The login deadline can cancel the wait until the client logs in
                     using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
                         actor.LoginDeadline.Token, this.ShutdownToken.Token);
                     examined = await actor.Socket.ReceiveAsync(
@@ -339,7 +336,6 @@ namespace Comet.Network.Sockets
 
         private void Disconnecting(TActor actor)
         {
-            // Close the socket so the client sees the disconnect
             try { actor.Socket.Shutdown(SocketShutdown.Both); }
             catch (SocketException) { }
             catch (ObjectDisposedException) { }

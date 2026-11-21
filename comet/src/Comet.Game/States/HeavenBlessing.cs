@@ -30,7 +30,6 @@ namespace Comet.Game.States
 
         public static bool IsBlessed(DbCharacter character, DateTime now) => character?.HeavenBlessing > now;
 
-        // More time adds to what's left
         public static DateTime Extend(DateTime? until, TimeSpan by, DateTime now) =>
             (until > now ? until.Value : now) + by;
 

@@ -59,7 +59,6 @@ namespace Comet.Game.Pk
             }
         }
 
-        // True if the player was flashing
         public bool ClearFlashing(DateTime now)
         {
             lock (this.Sync)

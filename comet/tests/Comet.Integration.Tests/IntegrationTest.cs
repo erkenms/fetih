@@ -86,7 +86,6 @@ namespace Comet.Integration.Tests
             return await this.Servers.WaitForLogoutSaveAsync(player.User.Name, mark);
         }
 
-        // Where the logout saved the player
         protected async Task<(uint Map, int X, int Y)> SavedPositionAsync(Player player)
         {
             var save = await this.LogOutAsync(player);
@@ -125,7 +124,6 @@ namespace Comet.Integration.Tests
         protected static Task<UserAttribMessage> SilverAsync(Player player, ulong silver) =>
             player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == silver);
 
-        // Gives the game master a praying stone and uses it
         protected static async Task PrayAsync(Player player, uint stoneType)
         {
             var stone = await GiveAsync(player, stoneType);
@@ -140,7 +138,6 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.PkMode, player.User.Id));
         }
 
-        // Asks and is answered; both see the trade table
         protected static async Task OpenTradeAsync(Player asker, Player other)
         {
             // Both must be on the map, which each one's last login step does in parallel

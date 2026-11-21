@@ -27,9 +27,9 @@ namespace Comet.Game.Items
     // Steeds, as Albetros (5517) and the 5808 source have them. Casting Riding (7001) with a
     // steed worn mounts it or gets off; status bit 50 shows the rider on the steed MsgPlayer
     // carries. Attacking or casting gets the rider off, unless they wear a riding crop, which
-    // also adds its dexterity to the vigor. Mounting fills the vigor. Ride steps cost 2, walking steps 1, jumps 3 per 4
-    // cells; a move the vigor can't pay for ends the ride. The vigor comes back while the
-    // steed stands still: 2 + its plus every half second (Albetros).
+    // also adds its dexterity to the vigor. Mounting fills the vigor. Ride steps cost 2,
+    // walking steps 1, jumps 3 per 4 cells; a move the vigor can't pay for ends the ride. The
+    // vigor comes back while the steed stands still: 2 + its plus every half second (Albetros).
     public static class Riding
     {
         public const ushort MagicType = 7001;
@@ -41,7 +41,6 @@ namespace Comet.Game.Items
 
         public static DbItem Crop(Client client) => client.Equipment?[ItemPosition.Crop];
 
-        // Whether the rider can fight without getting off
         public static bool FightsMounted(Client client) => Crop(client) != null;
 
         // The steed type's dexterity plus what its plus adds (itemadd.ini), plus the crop's
@@ -58,7 +57,6 @@ namespace Comet.Game.Items
         private static uint Dexterity(DbItem item) =>
             Kernel.ItemTypes.TryGet(item.TypeID, out var type) ? type.Dexterity : 0u;
 
-        // Getting off to attack or cast, without a crop
         public static Task DismountToFightAsync(Client client, string reason) =>
             FightsMounted(client) ? Task.CompletedTask : DismountAsync(client, reason);
 
@@ -106,7 +104,6 @@ namespace Comet.Game.Items
                 "{Name} got off their steed ({Reason})", client.Character.Name, reason);
         }
 
-        // After each move
         public static async Task SpendAsync(Client client, uint cost, DateTime now)
         {
             var mount = client.Mount;

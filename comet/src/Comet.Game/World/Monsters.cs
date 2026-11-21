@@ -9,8 +9,7 @@ namespace Comet.Game.World
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // Placing monsters from their generators, bringing dead ones back, and showing them to
-    // players. Placing and moving run on the monster loop only.
+    // Placing and moving run on the monster loop only
     public static class Monsters
     {
         // A dead monster lies for this long before it's taken off players' screens
@@ -50,7 +49,6 @@ namespace Comet.Game.World
             return (monsters.Count(m => m.Alive), skipped);
         }
 
-        // Clears off corpses and brings back monsters whose respawn time has come
         public static async Task RespawnAsync(DateTime now, Random random)
         {
             foreach (var monster in all)
@@ -99,7 +97,6 @@ namespace Comet.Game.World
                     await client.SendAsync(MsgAction.RemoveEntity(monster.Identity));
         }
 
-        // Takes the monsters around a cell off the player's screen, for leaving the map
         public static async Task HideAroundAsync(Client client, uint mapID, ushort x, ushort y)
         {
             if (Kernel.Monsters == null || !Kernel.Monsters.TryGet(mapID, out var map))
@@ -118,8 +115,6 @@ namespace Comet.Game.World
                 await player.SendAsync(packet);
         }
 
-        // One step to a next cell. Players who saw it see it walk; players it walks into view
-        // of see it appear, and players it leaves lose it.
         public static async Task<bool> StepAsync(Monster monster, byte direction, bool run)
         {
             int toX = monster.X + Movement.DeltaX[direction];
@@ -152,7 +147,6 @@ namespace Comet.Game.World
             return true;
         }
 
-        // A free walkable cell in the generator's area, tried a few times at random
         private static bool TryPlace(Monster monster, Random random)
         {
             var generator = monster.Generator;

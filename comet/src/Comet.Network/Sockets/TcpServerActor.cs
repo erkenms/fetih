@@ -20,10 +20,9 @@ namespace Comet.Network.Sockets
         public readonly uint Partition;
         private readonly object SendLock;
 
-        // Account the connection logged in as (0 until known); used by the packet trace
+        // 0 until the connection logs in
         public uint AccountID { get; set; }
 
-        // Connection identity and lifetime, used to correlate log events
         private static long NextConnId;
         public readonly long ConnId;
         public readonly DateTime ConnectedAt;
@@ -89,7 +88,6 @@ namespace Comet.Network.Sockets
                 }
                 catch (ObjectDisposedException)
                 {
-                    // The connection was already closed; nothing to send to
                     Log.ForContext<TcpServerActor>().Debug(
                         "Dropped {Length} byte send to closed connection {ConnId}",
                         packet.Length, this.ConnId);

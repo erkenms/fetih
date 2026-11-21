@@ -48,7 +48,6 @@ namespace Comet.Game.Packets
             this.Identity = reader.ReadUInt32();
         }
 
-        // Answered with the stats of whoever the ID names, if they're online
         public override Task ProcessAsync(Client client)
         {
             if (client.Character == null)

@@ -47,7 +47,7 @@ namespace Comet.Game.Magic
         public const int PercentBase = 30000;
     }
 
-    // How a spell picks its targets (TQ's MAGICSORT); only some are cast so far
+    // How a spell picks its targets (TQ's MAGICSORT)
     public enum MagicSort : ushort
     {
         Attack = 1,

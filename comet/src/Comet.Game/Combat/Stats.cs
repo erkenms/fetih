@@ -4,10 +4,8 @@ namespace Comet.Game.Combat
     using Comet.Game.Items;
     using Comet.Game.States;
 
-    // A player's fighting numbers: strength adds to attack, worn items add their own and their
-    // plus levels'. Arrows are ammunition and broken gear adds nothing. Gems and blessings are percentages kept
-    // apart, as the stat window shows them: dragon gems raise attack, phoenix gems magic attack,
-    // tortoise gems and blessed items cut damage taken.
+    // Gems and blessings are percentages kept apart from the flat numbers, as the client's stat
+    // window shows them
     public sealed record Stats(int MinAttack, int MaxAttack, int Defense, int Dodge, int Range,
         int AttackSpeed, bool Bow, int MagicAttack = 0, int MagicDefense = 0)
     {
@@ -22,7 +20,7 @@ namespace Comet.Game.Combat
         public int MaxDamage => this.MaxAttack * (100 + this.AttackPercent) / 100;
         public int MagicDamage => this.MagicAttack * (100 + this.MagicPercent) / 100;
 
-        // What's left of a hit on this player; a hit that landed still does at least 1
+        // 0 is a miss; a hit that landed still does at least 1
         public uint Taken(uint damage) => damage == 0 ? 0 : Math.Max(1u,
             (uint)(damage * (100L - this.TortoisePercent) * (100L - this.BlessPercent) / 10000));
 

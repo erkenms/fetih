@@ -139,8 +139,6 @@ namespace Comet.Game.Combat
                 Schedule(client, run, interval);
         }
 
-        // After a player's hit on a monster: experience, and for a kill the kill message (with
-        // the XP skill's KO count) and the loot. Hitting guards teaches nothing.
         public static async Task AfterMonsterHitAsync(Client client, Monster monster, ushort x, ushort y,
             uint dealt, bool killed)
         {
@@ -202,7 +200,6 @@ namespace Comet.Game.Combat
             Math.Clamp(Damage.Experience((uint)Math.Min(bonus, uint.MaxValue), memberLevel, monsterLevel),
                 1UL, (ulong)(memberLevel * TeamShareMaxPerLevel));
 
-        // Cyclone swings three times as fast
         private static TimeSpan Interval(Client client, Stats stats, DateTime now)
         {
             var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
@@ -364,7 +361,6 @@ namespace Comet.Game.Combat
                 victim.Map.Id, victim.X, victim.Y);
         }
 
-        // Each shot takes an arrow; the last one leaves the quiver empty and gone
         private static async Task UseArrowAsync(Client client, Database.Models.DbItem arrows)
         {
             arrows.Amount--;
@@ -395,7 +391,6 @@ namespace Comet.Game.Combat
             _ = Task.Delay(delay).ContinueWith(_ => Kernel.Post(client, () => SwingAsync(client, run)),
                 TaskScheduler.Default);
 
-        // The attacker and everyone who sees the monster
         public static async Task SendAroundAsync(Client client, Monster monster, IPacket packet)
         {
             await client.SendAsync(packet);

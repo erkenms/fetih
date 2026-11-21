@@ -96,12 +96,10 @@ namespace Comet.Game.World
                 await RejectAsync(client, map, x, y, x, y, "portal", reason);
         }
 
-        // Moves the character to a cell on any map. Players around the old cell lose them;
-        // players around the new one see them.
         public static async Task<bool> TeleportAsync(Client client, uint mapID, ushort x, ushort y) =>
             Kernel.World.TryGet(mapID, out var to) && await TeleportAsync(client, to, x, y);
 
-        // Also to a map of its own, such as a qualifier arena: the client is told the map's ID
+        // Works for a map of its own too, such as a qualifier arena: the client is told the map's ID
         public static async Task<bool> TeleportAsync(Client client, GameMap<Client> to, ushort x, ushort y)
         {
             uint mapID = to.Id;

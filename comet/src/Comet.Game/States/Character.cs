@@ -5,11 +5,10 @@ namespace Comet.Game.States
 
     public sealed class Character : DbCharacter
     {
-        // Direction the character faces (0 to 7), kept in memory only
         [NotMapped]
         public byte Direction { get; set; }
 
-        // What the character is doing (standing, sitting, an emote), kept in memory only
+        // Standing, sitting or an emote
         [NotMapped]
         public uint Stance { get; set; }
 

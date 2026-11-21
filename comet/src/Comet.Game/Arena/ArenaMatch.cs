@@ -6,7 +6,6 @@ namespace Comet.Game.Arena
 
     public enum MatchState
     {
-        // Both players were asked to accept
         Invited,
         // Both accepted and are moved into the arena; no attacks yet
         Countdown,
@@ -30,10 +29,9 @@ namespace Comet.Game.Arena
         public uint Winner { get; private set; }
         public string Reason { get; private set; }
 
-        // The arena both fight in, a copy of the qualifier map of their own
+        // Their own copy of the qualifier map
         public GameMap<Client> Map { get; set; }
 
-        // Where each fighter was before the arena
         public MapPoint ReturnA { get; private set; }
         public MapPoint ReturnB { get; private set; }
 
@@ -53,7 +51,6 @@ namespace Comet.Game.Arena
         public MapPoint ReturnOf(uint id) => id == this.A ? this.ReturnA : this.ReturnB;
         public uint ScoreOf(uint id) => id == this.A ? this.ScoreA : this.ScoreB;
 
-        // In the arena or about to be: from both accepting until the end
         public bool InArena => this.State == MatchState.Countdown || this.State == MatchState.Fighting;
 
         // True when this answer is the second acceptance; the match then counts down
@@ -80,7 +77,6 @@ namespace Comet.Game.Arena
                 this.ReturnB = returnTo;
         }
 
-        // The fighter stands in the arena
         public void Enter(uint id)
         {
             if (id == this.A)
@@ -113,13 +109,11 @@ namespace Comet.Game.Arena
             this.acceptedA && !this.acceptedB ? this.A :
             this.acceptedB && !this.acceptedA ? this.B : 0;
 
-        // More damage wins when time is up; a tie is decided by the coin
         public uint WinnerByScore(bool coin) =>
             this.ScoreA > this.ScoreB ? this.A :
             this.ScoreB > this.ScoreA ? this.B :
             coin ? this.A : this.B;
 
-        // False if the match was already decided
         public bool End(uint winner, string reason, DateTime now)
         {
             if (this.State == MatchState.Ended || !this.Has(winner))

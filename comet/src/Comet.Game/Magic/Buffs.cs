@@ -14,7 +14,6 @@ namespace Comet.Game.Magic
         // Superman against players: Albetros's 1.9 times
         public const int SupermanAgainstPlayers = 190;
 
-        // The status each status spell gives, by magic type
         public static ulong StatusOf(ushort magicType) => magicType switch
         {
             1015 => StatusFlags.Accuracy,

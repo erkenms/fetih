@@ -7,9 +7,8 @@ namespace Comet.Game.Packets
 
     // Heaven blessing EXP waiting to be claimed (5619 client's CMsgGodExp), 16 bytes:
     // action byte at 4, online training EXP u32 at 8, blessed hunting EXP u32 at 12. The
-    // client shows them as value / 10000 / 600 EXP balls. Client: 0 query, 1 claim online
-    // training, 2 claim blessed hunting. Server: 0 the amounts, 3 and 4 ask to claim a full
-    // online or hunting pool.
+    // client shows them as value / 10000 / 600 EXP balls. The server answers Query with the
+    // amounts, and sends 3 and 4 to ask the player to claim a full online or hunting pool.
     public sealed class MsgGodExp : MsgBase<Client>
     {
         public GodExpAction Action { get; set; }

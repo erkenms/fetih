@@ -5,7 +5,6 @@ namespace Comet.Game.Packets
     using Comet.Game.States;
     using Comet.Network.Packets;
 
-    // Changes to one or more of a character's attributes, shown by the client at once
     public sealed class MsgUserAttrib : MsgBase<Client>
     {
         public uint Identity { get; set; }
@@ -38,7 +37,6 @@ namespace Comet.Game.Packets
                 await client.SendAsync(new MsgUserAttrib(this.Identity, type, value));
         }
 
-        // Identity, a count, then per attribute its type and value, padded to 20 bytes
         public override byte[] Encode()
         {
             var writer = new PacketWriter();

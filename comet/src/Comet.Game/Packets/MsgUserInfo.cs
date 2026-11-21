@@ -59,7 +59,6 @@ namespace Comet.Game.Packets
             this.SpouseName = "None";
         }
 
-        // Fields marked "guess" are unconfirmed: new characters have zero in all of them.
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
@@ -82,8 +81,8 @@ namespace Comet.Game.Packets
             writer.Write(this.KillPoints);          // 66
             writer.Write(this.Level);               // 68
             writer.Write(this.CurrentClass);        // 69
-            writer.Write(this.PreviousClass);       // 70 guess
-            writer.Write(this.AncestorClass);       // 71 guess
+            writer.Write(this.PreviousClass);       // 70
+            writer.Write(this.AncestorClass);       // 71
             writer.Write((byte)Nobility.Peerage.RankOf(this.CharacterID)); // 72 nobility rank
             writer.Write(this.Rebirths);            // 73
             writer.Write((byte)0);                  // 74

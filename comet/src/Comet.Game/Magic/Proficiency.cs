@@ -51,7 +51,6 @@ namespace Comet.Game.Magic
                     client.Character.Name, weaponType, fromLevel, proficiency.Level, reason);
         }
 
-        // Login step 77: all proficiencies, then the echo
         public static async Task SendAllAsync(Client client)
         {
             foreach (var (type, proficiency) in client.Skills.AllProficiencies())

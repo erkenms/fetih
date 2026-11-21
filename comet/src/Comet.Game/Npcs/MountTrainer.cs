@@ -7,7 +7,7 @@ namespace Comet.Game.Npcs
     using Comet.Game.Packets;
     using Comet.Game.States;
 
-    // Twin City's mount trainer teaches Riding for 50,000 silver (Albetros)
+    // Riding costs 50,000 silver (Albetros)
     public static class MountTrainer
     {
         public const uint ID = 5600;

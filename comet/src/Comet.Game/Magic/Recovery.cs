@@ -71,7 +71,6 @@ namespace Comet.Game.Magic
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Stamina, stamina));
             }
 
-            // The bar doesn't fill while it's full or an XP skill runs
             if (now < energy.NextXpAt ||
                 client.Effects.Has(StatusFlags.XpFull, now) ||
                 client.Effects.Has(StatusFlags.Superman, now) ||

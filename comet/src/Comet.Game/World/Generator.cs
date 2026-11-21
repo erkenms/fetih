@@ -5,7 +5,6 @@ namespace Comet.Game.World
     using System.Linq;
     using System.Text.Json.Serialization;
 
-    // Keeps up to Amount monsters of one type within Spread cells of X, Y
     public sealed class Generator
     {
         [JsonPropertyName("id")] public uint ID { get; init; }
@@ -19,7 +18,6 @@ namespace Comet.Game.World
 
         private sealed record SpawnFile(List<Generator> Spawns);
 
-        // Data/spawns.json; an ID listed twice or an unknown monster type is an error
         public static List<Generator> Load(string path, MonsterTypeTable types)
         {
             var generators = DataFiles.Read<SpawnFile>(path).Spawns ?? new List<Generator>();

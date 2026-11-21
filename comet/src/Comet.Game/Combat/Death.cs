@@ -16,7 +16,6 @@ namespace Comet.Game.Combat
     {
         public static TimeSpan ReviveDelay = TimeSpan.FromSeconds(20);
 
-        // Monsters leave a revived player alone for this long
         public static readonly TimeSpan Protection = TimeSpan.FromSeconds(5);
 
         // The client asks for the ghost (MsgAction 145) only sometimes; past this it's sent anyway
@@ -94,7 +93,6 @@ namespace Comet.Game.Combat
             return true;
         }
 
-        // Where the player lies, as the arena does after a match
         public static async Task ReviveHereAsync(Client client, string reason)
         {
             if (client.Character == null || !client.Life.Dead)
@@ -127,8 +125,7 @@ namespace Comet.Game.Combat
                 character.Name, character.MapID, character.X, character.Y, reason);
         }
 
-        // Status and body, to the player and everyone who sees them. One packet each, as the
-        // VM showed the ghost body for a Mesh attribute sent on its own.
+        // One packet each, as the VM showed the ghost body for a Mesh attribute sent on its own
         private static async Task SendLookAsync(Client client)
         {
             foreach (var look in new[]

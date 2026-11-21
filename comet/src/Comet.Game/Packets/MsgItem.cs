@@ -32,7 +32,6 @@ namespace Comet.Game.Packets
             _ => -1,
         };
 
-        // The server's answers to equipping: the item now in a slot, or back in the inventory
         public static MsgItem Equipped(uint itemID, ItemPosition position) =>
             Create(itemID, (uint)position, ItemActionType.EquipmentWear);
 
@@ -139,7 +138,6 @@ namespace Comet.Game.Packets
                     Shopping.BuyAsync(client, msg.CharacterID, msg.Command, msg.Argument),
                 [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
 
-                // Warehouse silver; the amount in Command
                 // The item to repair, at a shopkeeper
                 [ItemActionType.EquipmentRepair] = (msg, client) => Durability.RepairAsync(client, msg.CharacterID),
 
@@ -149,6 +147,7 @@ namespace Comet.Game.Packets
                 [ItemActionType.EquipmentLevelUp] = (msg, client) =>
                     Upgrading.LevelUpAsync(client, msg.CharacterID, msg.Command),
 
+                // Warehouse silver; the amount in Command
                 [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
                 [ItemActionType.BankDeposit] = (msg, client) => Storing.MoveSilverAsync(client, msg.Command),
                 [ItemActionType.BankWithdraw] = (msg, client) => Storing.MoveSilverAsync(client, -(long)msg.Command),

@@ -71,7 +71,6 @@ namespace Comet.Game.Pk
             return Permits(attacker.Pk.Mode, IsGuilty(target, DateTime.UtcNow), ally);
         }
 
-        // Attacking an innocent player makes the attacker flash
         public static async Task OnAttackAsync(Client attacker, Client target)
         {
             if (IsFree(attacker.Character.MapID) || IsGuilty(target, DateTime.UtcNow))
@@ -79,8 +78,7 @@ namespace Comet.Game.Pk
             await FlashAsync(attacker, FlashTime, "attack");
         }
 
-        // A black name killed goes to jail; killing an innocent player costs PK points. Death
-        // ends flashing, so whether the victim was guilty is asked before they die.
+        // Death ends flashing, so whether the victim was guilty is asked before they die
         public static async Task OnKillAsync(Client killer, Client victim, bool victimGuilty)
         {
             ushort victimPoints = victim.Character.KillPoints;
@@ -108,7 +106,6 @@ namespace Comet.Game.Pk
                     "{Name} stopped flashing ({Reason})", client.Character.Name, "died");
         }
 
-        // Guards send black names to jail too
         public static async Task OnKilledByGuardAsync(Client victim)
         {
             if (victim.Character?.KillPoints >= BlackNamePoints)
@@ -162,7 +159,6 @@ namespace Comet.Game.Pk
                 client.Character.Name, duration.TotalSeconds, reason);
         }
 
-        // To the player and everyone in view
         public static async Task SendStatusAsync(Client client)
         {
             var update = new MsgUserAttrib(client.ID, AttributeType.Status, client.Status);
@@ -183,7 +179,6 @@ namespace Comet.Game.Pk
             }
         }
 
-        // Ends flashing that has run out and takes PK points away over time
         public static async Task TickAsync(DateTime now)
         {
             foreach (var client in Kernel.Players.Values.ToList())

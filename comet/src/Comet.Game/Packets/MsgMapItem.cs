@@ -7,7 +7,6 @@ namespace Comet.Game.Packets
     using Comet.Game.World;
     using Comet.Network.Packets;
 
-    // An item on the ground: shown, removed, or asked for by a player picking it up
     public sealed class MsgMapItem : MsgBase<Client>
     {
         public uint ID { get; set; }

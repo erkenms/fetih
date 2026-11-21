@@ -86,12 +86,9 @@ namespace Comet.Game.Nobility
             return others.Count < places ? MinDonation : others[places - 1].Donation + 1;
         }
 
-        // What a donor still has to give to reach the total: nothing once there, and never
-        // less than one donation
         public static ulong Remaining(ulong total, ulong donation) =>
             donation >= total ? 0 : Math.Max(MinDonation, total - donation);
 
-        // The place the donor would take with the total, or -1 off the board
         public static int PositionWith(ulong total, IReadOnlyList<Donor> ordered, uint id)
         {
             int above = ordered.Count(d => d.ID != id && d.Donation >= total);
@@ -100,7 +97,6 @@ namespace Comet.Game.Nobility
 
         public static int Pages(int donors) => (int)Math.Ceiling(Math.Min(donors, Size) / (double)PageSize);
 
-        // CPs paid instead of silver, rounded up
         public static ulong ConquerPointsFor(ulong silver) =>
             (silver + SilverPerConquerPoint - 1) / SilverPerConquerPoint;
     }
