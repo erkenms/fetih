@@ -70,6 +70,9 @@ namespace Comet.Core.Logging
         public const string ItemUpgradeRejected = "item.upgrade_rejected";
         public const string ItemEmbedded = "item.embedded";
         public const string ItemEmbedRejected = "item.embed_rejected";
+        public const string ItemBroken = "item.broken";
+        public const string ItemRepaired = "item.repaired";
+        public const string ItemRepairRejected = "item.repair_rejected";
 
         public const string SecondPasswordSet = "second_password.set";
         public const string SecondPasswordVerified = "second_password.verified";

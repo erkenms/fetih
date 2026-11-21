@@ -237,6 +237,9 @@ namespace Comet.Client
             return packet == null ? null : ItemMessage.Parse(packet);
         }
 
+        public Task RepairAsync(uint itemId) =>
+            this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Repair));
+
         public Task ImproveAsync(uint itemId, uint dragonBallId) =>
             this.SendAsync(ItemMessage.Build(itemId, dragonBallId, ItemMessage.Improve));
 

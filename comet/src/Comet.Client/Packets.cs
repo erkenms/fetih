@@ -511,6 +511,9 @@ namespace Comet.Client
         // Upgrades: the gear, then the dragonball (quality) or meteor (level) dropped on it
         public const uint Improve = 19, LevelUp = 20;
 
+        // The item to repair
+        public const uint Repair = 14;
+
         // Booths: viewing has the booth's ID first; adding has the item and its price,
         // removing and buying the item and the booth's ID
         public const uint BoothView = 21, BoothAdd = 22, BoothRemove = 23, BoothBuy = 24, BoothAddCps = 29;

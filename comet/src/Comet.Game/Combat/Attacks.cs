@@ -101,6 +101,7 @@ namespace Comet.Game.Combat
 
             var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
+            await Durability.WearOnAttackAsync(client);
             var type = monster.Type;
             uint damage = 0;
             if (Buffs.HasAccuracy(client.Effects, now) || Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
@@ -235,6 +236,7 @@ namespace Comet.Game.Combat
 
             var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
+            await Durability.WearOnAttackAsync(client);
             await Pking.OnAttackAsync(client, target);
             int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared), now);
             bool sure = Buffs.HasAccuracy(client.Effects, now);
@@ -287,6 +289,8 @@ namespace Comet.Game.Combat
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
             await target.SendAsync(new MsgUserAttrib(target.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
+            if (damage > 0)
+                await Durability.WearOnHitAsync(target);
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
                 attackerCharacter.Name, character.Name, damage, character.HealthPoints, kind);
@@ -323,6 +327,8 @@ namespace Comet.Game.Combat
             await client.SendAsync(hit);
             await Movement.SendToViewAsync(client, hit);
             await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
+            if (damage > 0)
+                await Durability.WearOnHitAsync(client);
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{MonsterName} {MonsterId} hit {Name} for {Damage}; {Health} health left",
                 type.Name, monster.Identity, character.Name, damage, character.HealthPoints);

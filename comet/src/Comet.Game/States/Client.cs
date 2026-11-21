@@ -2,6 +2,8 @@ namespace Comet.Game.States
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Net.Sockets;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
@@ -137,6 +139,21 @@ namespace Comet.Game.States
             }
         }
 
+        // Wear is only saved as it crosses a hundred, so the rest is saved with the character.
+        // The packet queue may change the equipment meanwhile; that save then skips it.
+        private List<(uint ItemID, ushort Amount)> WornDurability()
+        {
+            try
+            {
+                return this.Equipment?.Items.Where(i => Durability.Wears(i.TypeID))
+                    .Select(i => (i.ItemID, i.Amount)).ToList() ?? new List<(uint, ushort)>();
+            }
+            catch (InvalidOperationException)
+            {
+                return new List<(uint, ushort)>();
+            }
+        }
+
         private async Task ChainSave(Task previous, string reason)
         {
             try { await previous; }
@@ -150,6 +167,7 @@ namespace Comet.Game.States
             {
                 await CharactersRepository.SaveAsync(character.Snapshot());
                 await SkillsRepository.SaveAsync(character.CharacterID, this.Skills.Snapshot());
+                await ItemsRepository.SetAmountsAsync(this.WornDurability());
             }
             catch (Exception e)
             {

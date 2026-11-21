@@ -5,7 +5,7 @@ namespace Comet.Game.Combat
     using Comet.Game.States;
 
     // A player's fighting numbers: strength adds to attack, worn items add their own and their
-    // plus levels'. Arrows are ammunition and add nothing. Gems and blessings are percentages kept
+    // plus levels'. Arrows are ammunition and broken gear adds nothing. Gems and blessings are percentages kept
     // apart, as the stat window shows them: dragon gems raise attack, phoenix gems magic attack,
     // tortoise gems and blessed items cut damage taken.
     public sealed record Stats(int MinAttack, int MaxAttack, int Defense, int Dodge, int Range,
@@ -36,7 +36,7 @@ namespace Comet.Game.Combat
                 foreach (var item in client.Equipment.Items)
                 {
                     if (ItemSlots.IsArrow(item.TypeID) || ItemSlots.IsSteed(item.TypeID) ||
-                        !Kernel.ItemTypes.TryGet(item.TypeID, out var type))
+                        Durability.IsBroken(item) || !Kernel.ItemTypes.TryGet(item.TypeID, out var type))
                         continue;
                     min += type.MinAttack;
                     max += type.MaxAttack;

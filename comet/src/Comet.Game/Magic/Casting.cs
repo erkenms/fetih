@@ -132,6 +132,7 @@ namespace Comet.Game.Magic
                     : AgainstPlayer(client, stats, spell, victim.Player, now);
 
             await PayAsync(client, spell, now);
+            await Durability.WearOnAttackAsync(client);
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
             foreach (var victim in victims)
                 effect.Targets.Add((victim.ID, victim.Damage));

@@ -140,6 +140,9 @@ namespace Comet.Game.Packets
                 [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
 
                 // Warehouse silver; the amount in Command
+                // The item to repair, at a shopkeeper
+                [ItemActionType.EquipmentRepair] = (msg, client) => Durability.RepairAsync(client, msg.CharacterID),
+
                 // The gear, then the dragonball or meteor dropped on it
                 [ItemActionType.EquipmentImprove] = (msg, client) =>
                     Upgrading.ImproveAsync(client, msg.CharacterID, msg.Command),

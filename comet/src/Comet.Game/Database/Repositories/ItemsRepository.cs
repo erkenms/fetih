@@ -71,6 +71,16 @@ namespace Comet.Game.Database.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
         }
 
+        public static async Task SetAmountsAsync(IReadOnlyCollection<(uint ItemID, ushort Amount)> amounts)
+        {
+            if (amounts.Count == 0)
+                return;
+            using var db = new ServerDbContext();
+            foreach (var (itemID, amount) in amounts)
+                await db.Items.Where(x => x.ItemID == itemID)
+                    .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
+        }
+
         // An upgrade's or embedding's type, durability and sockets
         public static async Task SetUpgradeAsync(DbItem item)
         {
