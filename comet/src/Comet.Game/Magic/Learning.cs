@@ -33,7 +33,10 @@ namespace Comet.Game.Magic
             Snow = 5010, StrandedMonster = 5020, Phoenix = 5030, Boom = 5040, Boreas = 5050,
             TwofoldBlades = 6000, ToxicFog = 6001, ArcherBane = 6004, Invisibility = 1075, Fly = 8002, Seizer = 7000, Earthquake = 7010, Rage = 7020, Celestial = 7030,
             Roamer = 7040, RapidFire = 8000, ScatterFire = 8001, ArrowRain = 8030, DragonTail = 11000,
-            ViperFang = 11005, EagleEye = 11030;
+            ViperFang = 11005, EagleEye = 11030, RadiantPalm = 10381, Oblivion = 10390, TyrantAura = 10395,
+            Serenity = 10400, SoulShackle = 10405, FendAura = 10410, WhirlwindKick = 10415, MetalAura = 10420,
+            WoodAura = 10421, WaterAura = 10422, FireAura = 10423, EarthAura = 10424, Tranquility = 10425,
+            Compassion = 10430, TripleAttack = 10490;
 
         // In the order masters list them
         private static readonly Rule[] Rules =
@@ -53,6 +56,21 @@ namespace Comet.Game.Magic
             new Rule(TwofoldBlades, new[] { Ninja }),
             new Rule(ArcherBane, new[] { Ninja }),
             new Rule(ToxicFog, new[] { Ninja }),
+            new Rule(TripleAttack, new[] { Monk }),
+            new Rule(Oblivion, new[] { Monk }),
+            new Rule(WhirlwindKick, new[] { Monk }),
+            new Rule(TyrantAura, new[] { Monk }),
+            new Rule(FendAura, new[] { Monk }),
+            new Rule(Serenity, new[] { Monk }),
+            new Rule(RadiantPalm, new[] { Monk }),
+            new Rule(Tranquility, new[] { Monk }),
+            new Rule(SoulShackle, new[] { Monk }),
+            new Rule(Compassion, new[] { Monk }),
+            new Rule(MetalAura, new[] { Monk }),
+            new Rule(WoodAura, new[] { Monk }),
+            new Rule(WaterAura, new[] { Monk }),
+            new Rule(FireAura, new[] { Monk }),
+            new Rule(EarthAura, new[] { Monk }),
             new Rule(EagleEye, new[] { Pirate }),
             new Rule(Meditation, new[] { Taoist }),
             new Rule(Thunder, new[] { Taoist }, FromMaster: false),

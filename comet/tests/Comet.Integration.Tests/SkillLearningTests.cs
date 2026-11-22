@@ -9,7 +9,7 @@ namespace Comet.Integration.Tests
     // Skills from class masters and books, and the spells of ServerFixture they lead to
     public class SkillLearningTests : IntegrationTest
     {
-        private const uint TrojanStar = 10022;
+        private const uint TrojanStar = 10022, HeadAbbot = 8314;
         private const byte Teach = 4, Cyclone = 10, Hercules = 12;
 
         public SkillLearningTests(ServerFixture servers) : base(servers) { }
@@ -57,6 +57,18 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await TalkAsync(player, TrojanStar, Teach));
             Assert.Contains("learned Hercules", await AnswerAsync(player, Hercules));
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1115));
+        }
+
+        [Fact]
+        public async Task TheHeadAbbotTeachesMonkSkills()
+        {
+            await using var player = await this.AtJobCenterAsync(36, 100, 60);
+
+            var page = await TalkAsync(player, HeadAbbot, Teach);
+            Assert.Equal(new[] { "TripleAttack", "Oblivion", "WhirlwindKick", "TyrantAura", "FendAura", "Serenity" },
+                page.Where(p => p.Action == DialogMessage.Choice && p.Option != DialogMessage.NoOption).Select(p => p.Text));
+            Assert.Contains("learned TripleAttack", await AnswerAsync(player, 10));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 10490 && m.Level == 0));
         }
 
         [Fact]

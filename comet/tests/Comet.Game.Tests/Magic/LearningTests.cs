@@ -75,7 +75,12 @@ namespace Comet.Game.Tests.Magic
                 TaughtBy(Learning.Trojan));
             Assert.Contains(Learning.Accuracy, TaughtBy(Learning.Warrior));
             Assert.DoesNotContain(Learning.Thunder, TaughtBy(Learning.Taoist));
-            Assert.Empty(TaughtBy(Learning.Monk));
+            Assert.Equal(new ushort[]
+            {
+                Learning.TripleAttack, Learning.Oblivion, Learning.WhirlwindKick, Learning.TyrantAura, Learning.FendAura,
+                Learning.Serenity, Learning.RadiantPalm, Learning.Tranquility, Learning.SoulShackle, Learning.Compassion,
+                Learning.MetalAura, Learning.WoodAura, Learning.WaterAura, Learning.FireAura, Learning.EarthAura,
+            }, TaughtBy(Learning.Monk));
             Assert.Equal(new ushort[] { Learning.TwofoldBlades, Learning.ArcherBane, Learning.ToxicFog }, TaughtBy(Learning.Ninja));
         }
 
