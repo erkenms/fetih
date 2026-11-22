@@ -184,5 +184,30 @@ namespace Comet.Integration.Tests
             await monk.Game.CastAsync(monk.User.Id, 10430, 0, 740, 880);
             Assert.Equal("too_soon", (await RejectedAsync(monk)).GetProperty("reason").GetString());
         }
+
+        private const ulong OblivionStatus = 1UL << (112 - 64);
+
+        [Fact]
+        public async Task OblivionCountsItsKillsOnTheBeads()
+        {
+            var at = ServerFixture.PheasantForOblivion;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100, strength: 5000)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(player, 10390);
+            await CommandAsync(player, "/xp");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+
+            await player.Game.CastAsync(player.User.Id, 10390, 0, (ushort)(at.X + 1), at.Y);
+            Assert.NotNull(await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10390));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                (a.StatusHigh & OblivionStatus) != 0 && a.Values.TryGetValue(Status, out var s) && (s & XpFull) == 0));
+            var started = await this.Servers.WaitForEventAsync("game", "status.started", "name", player.User.Name);
+            Assert.Equal(30, started.GetProperty("seconds").GetInt32());
+
+            await player.Game.AttackAsync(player.User.Id, pheasant.Id, at.X, at.Y);
+            var kill = await player.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Kill && i.Target == pheasant.Id);
+            Assert.Equal((1u << 16) | 1, kill?.Data);
+        }
     }
 }

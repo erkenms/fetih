@@ -26,6 +26,7 @@ namespace Comet.Game.Magic
             1075 => StatusFlags.Invisible,
             8002 or 8003 => StatusFlags.Fly,
             10405 => StatusFlags.SoulShackle,
+            10390 => StatusFlags.Oblivion,
             _ => 0,
         };
 
@@ -58,33 +59,56 @@ namespace Comet.Game.Magic
         public static bool HasAccuracy(TimedStatus effects, DateTime now) =>
             effects.Has(StatusFlags.Accuracy, now);
 
+        // As the client describes Oblivion: 200% damage, kills worth half again their experience,
+        // over at the 32nd kill
+        public const int OblivionDamage = 2;
+        public const int OblivionKills = 32;
+
         public static uint AgainstMonster(TimedStatus effects, uint damage, DateTime now)
         {
             damage = Scale(damage, effects.Power(StatusFlags.Stigma, now));
+            if (effects.Has(StatusFlags.Oblivion, now))
+                damage = (uint)Math.Min(uint.MaxValue, (ulong)damage * OblivionDamage);
             return Scale(damage, effects.Power(StatusFlags.Superman, now));
         }
 
         public static int AgainstPlayer(TimedStatus effects, int attack, DateTime now)
         {
             attack = (int)Scale((uint)Math.Max(0, attack), effects.Power(StatusFlags.Stigma, now));
+            if (effects.Has(StatusFlags.Oblivion, now))
+                attack *= OblivionDamage;
             return effects.Has(StatusFlags.Superman, now) ? attack * SupermanAgainstPlayers / 100 : attack;
         }
+
+        public static ulong KillExperience(TimedStatus effects, ulong experience, DateTime now) =>
+            effects.Has(StatusFlags.Oblivion, now) ? experience + experience / 2 : experience;
 
         public static int Defense(TimedStatus effects, int defense, DateTime now) =>
             (int)Scale((uint)Math.Max(0, defense), effects.Power(StatusFlags.Shield, now));
 
         // The kill's data for MsgInteract: 1, with the KO count in the high half during
-        // Superman or Cyclone
+        // Superman, Cyclone or Oblivion (the beads that change color)
         public static uint CountKill(Client client, DateTime now)
         {
             bool superman = client.Effects.Extend(StatusFlags.Superman, KillExtension, KillExtensionCap, now) ||
                 client.Effects.Has(StatusFlags.Superman, now);
             bool cyclone = client.Effects.Extend(StatusFlags.Cyclone, KillExtension, KillExtensionCap, now) ||
                 client.Effects.Has(StatusFlags.Cyclone, now);
-            if (!superman && !cyclone)
+            bool oblivion = client.Effects.Has(StatusFlags.Oblivion, now);
+            if (!superman && !cyclone && !oblivion)
                 return 1;
             client.Energy.KoCount++;
             return (client.Energy.KoCount << 16) | 1;
+        }
+
+        // Ends Oblivion at its last kill; true if it did
+        public static bool EndOblivion(Client client, DateTime now)
+        {
+            if (!client.Effects.Has(StatusFlags.Oblivion, now) || client.Energy.KoCount < OblivionKills)
+                return false;
+            client.Effects.Remove(StatusFlags.Oblivion);
+            client.Energy.KoCount = 0;
+            return true;
         }
 
         private static uint Scale(uint value, int? power) =>

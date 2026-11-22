@@ -32,6 +32,7 @@ namespace Comet.Game.States
         public static readonly UInt128 FireAura = UInt128.One << 108;
         public static readonly UInt128 EarthAura = UInt128.One << 110;
         public static readonly UInt128 SoulShackle = UInt128.One << 111;
+        public static readonly UInt128 Oblivion = UInt128.One << 112;
     }
 
     // Statuses that last a while: XP full, and those spells give, with the spell's power.

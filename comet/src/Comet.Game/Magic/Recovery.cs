@@ -49,7 +49,7 @@ namespace Comet.Game.Magic
             {
                 if ((ended & StatusFlags.XpFull) != 0)
                     await SetXpAsync(client, 0);
-                if ((ended & (StatusFlags.Superman | StatusFlags.Cyclone)) != 0)
+                if ((ended & (StatusFlags.Superman | StatusFlags.Cyclone | StatusFlags.Oblivion)) != 0)
                     energy.KoCount = 0;
                 await Pk.Pking.SendStatusAsync(client);
                 LogEvents.For(typeof(Recovery), LogEvents.StatusEnded).Debug(

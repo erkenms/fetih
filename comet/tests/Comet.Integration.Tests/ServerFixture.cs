@@ -96,6 +96,7 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForPalm = (780, 960);
         public static readonly (ushort X, ushort Y) PheasantForKick = (740, 960);
         public static readonly (ushort X, ushort Y) PheasantForTripleAttack = (780, 920);
+        public static readonly (ushort X, ushort Y) PheasantForOblivion = (740, 920);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -149,6 +150,8 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(10425, 0, 47, "Tranquility") { Distance = 20, StepSeconds = 2 };
         public static readonly MagicFiles.Spell Compassion =
             new MagicFiles.Spell(10430, 0, 50, "Compassion") { Range = 20, Distance = 20 };
+        public static readonly MagicFiles.Spell Oblivion =
+            new MagicFiles.Spell(10390, 0, 53, "Oblivion") { Power = 33, StepSeconds = 30, XpSkill = true };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -372,7 +375,7 @@ namespace Comet.Integration.Tests
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
                     RadiantPalm, WhirlwindKick, TripleAttack, TyrantAura, FendAura,
-                    SoulShackle, Serenity, Tranquility, Compassion));
+                    SoulShackle, Serenity, Tranquility, Compassion, Oblivion));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
@@ -387,7 +390,7 @@ namespace Comet.Integration.Tests
                 (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
-                (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u),
+                (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

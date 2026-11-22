@@ -85,6 +85,7 @@ namespace Comet.Game.Magic
         RadiantPalm = 48,
         Compassion = 50,
         Aura = 51,
+        Oblivion = 53,
         WhirlwindKick = 54,
         TripleAttack = 55,
     }

@@ -34,7 +34,7 @@ namespace Comet.Game.Magic
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick, MagicSort.TripleAttack,
-            MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion,
+            MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion, MagicSort.Oblivion,
         };
 
         // Serenity, Tranquility and Compassion, as the client describes them
@@ -87,6 +87,7 @@ namespace Comet.Game.Magic
                     await ShackleAsync(client, spell, targetID, now);
                     break;
                 case MagicSort.AttachStatus:
+                case MagicSort.Oblivion:
                     await AttachAsync(client, spell, targetID, now);
                     break;
                 case MagicSort.DetachStatus when spell.Status > 0:
@@ -604,7 +605,7 @@ namespace Comet.Game.Magic
 
             var target = spell.IsXpSkill ? client : Friendly(client, spell, targetID);
             await PayAsync(client, spell, now);
-            if (status == StatusFlags.Superman || status == StatusFlags.Cyclone)
+            if (status == StatusFlags.Superman || status == StatusFlags.Cyclone || status == StatusFlags.Oblivion)
                 target.Energy.KoCount = 0;
             target.Effects.Set(status, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
 

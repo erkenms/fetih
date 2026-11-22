@@ -153,10 +153,13 @@ namespace Comet.Game.Combat
             ulong experience = type.IsGuard ? 0 : Damage.Experience(dealt, character.Level, type.Level);
             if (killed)
             {
+                var now = DateTime.UtcNow;
                 if (!type.IsGuard)
-                    experience += Damage.KillBonus(type.Life);
-                uint data = Buffs.CountKill(client, DateTime.UtcNow);
+                    experience = Buffs.KillExperience(client.Effects, experience + Damage.KillBonus(type.Life), now);
+                uint data = Buffs.CountKill(client, now);
                 await SendAroundAsync(client, monster, new MsgInteract(InteractionType.Kill, client.ID, monster.Identity, x, y, data));
+                if (Buffs.EndOblivion(client, now))
+                    await Pking.SendStatusAsync(client);
                 LogEvents.For(typeof(Attacks), LogEvents.MonsterKilled).Information(
                     "{Name} killed {MonsterName} {MonsterId} (type {MonsterTypeId}) on map {MapId} at {X},{Y}",
                     character.Name, type.Name, monster.Identity, type.ID, monster.Map.Id, x, y);
