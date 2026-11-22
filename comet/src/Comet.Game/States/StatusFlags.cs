@@ -82,6 +82,13 @@ namespace Comet.Game.States
             }
         }
 
+        public void SetPower(UInt128 flag, int power)
+        {
+            lock (this.Sync)
+                if (this.Until.TryGetValue(flag, out var status))
+                    this.Until[flag] = (status.Until, power);
+        }
+
         // Adds time to a status that's on, while less than the cap is left
         public bool Extend(UInt128 flag, TimeSpan by, TimeSpan cap, DateTime now)
         {

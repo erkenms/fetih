@@ -189,6 +189,30 @@ namespace Comet.Game.Tests.Magic
         }
 
         [Fact]
+        public void IntensifyIronShirtAndDodgeScaleAttackDefenseAndDodge()
+        {
+            var effects = new TimedStatus();
+            effects.Set(StatusFlags.Intensify, Now.AddSeconds(60), Now, 30200);
+            effects.Set(StatusFlags.IronShirt, Now.AddSeconds(20), Now, 30400);
+            effects.Set(StatusFlags.Dodge, Now.AddSeconds(60), Now, 30110);
+            Assert.Equal(100u, Buffs.AgainstMonster(effects, 50, Now));
+            Assert.Equal(100, Buffs.AgainstPlayer(effects, 50, Now));
+            Assert.Equal(40, Buffs.Defense(effects, 10, Now));
+            Assert.Equal(22, Buffs.Dodge(effects, 20, Now));
+        }
+
+        [Fact]
+        public void AzureShieldTakesDamageUntilItsPowerIsSpent()
+        {
+            var effects = new TimedStatus();
+            Assert.Equal(500u, Buffs.Absorb(effects, 500, Now));
+            effects.Set(StatusFlags.AzureShield, Now.AddSeconds(30), Now, 1200);
+            Assert.Equal(0u, Buffs.Absorb(effects, 1000, Now));
+            Assert.Equal(300u, Buffs.Absorb(effects, 500, Now));
+            Assert.False(effects.Has(StatusFlags.AzureShield, Now));
+        }
+
+        [Fact]
         public void MagicAddsPowerToMagicAttack()
         {
             Assert.Equal(26u, Damage.Magic(10, 16, 10, 10));

@@ -72,6 +72,7 @@ namespace Comet.Game.Combat
             int range = weaponType == null ? 1 : Math.Max(1, (int)weaponType.AttackRange);
             int speed = weaponType == null || weaponType.AttackSpeed == 0 ? UnarmedSpeed : weaponType.AttackSpeed;
             bool bow = weapon != null && ItemSlots.IsBow(weapon.TypeID);
+            dodge = Magic.Buffs.Dodge(client.Effects, dodge, DateTime.UtcNow);
             return new Stats(min, max, defense, dodge, range, speed, bow, magicAttack, magicDefense)
             {
                 AttackPercent = attackPercent,

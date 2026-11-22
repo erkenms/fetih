@@ -72,6 +72,7 @@ namespace Comet.Game.Magic
         public static uint AgainstMonster(TimedStatus effects, uint damage, DateTime now)
         {
             damage = Scale(damage, effects.Power(StatusFlags.Stigma, now));
+            damage = Scale(damage, effects.Power(StatusFlags.Intensify, now));
             if (effects.Has(StatusFlags.Oblivion, now))
                 damage = (uint)Math.Min(uint.MaxValue, (ulong)damage * OblivionDamage);
             return Scale(damage, effects.Power(StatusFlags.Superman, now));
@@ -80,6 +81,7 @@ namespace Comet.Game.Magic
         public static int AgainstPlayer(TimedStatus effects, int attack, DateTime now)
         {
             attack = (int)Scale((uint)Math.Max(0, attack), effects.Power(StatusFlags.Stigma, now));
+            attack = (int)Scale((uint)attack, effects.Power(StatusFlags.Intensify, now));
             if (effects.Has(StatusFlags.Oblivion, now))
                 attack *= OblivionDamage;
             return effects.Has(StatusFlags.Superman, now) ? attack * SupermanAgainstPlayers / 100 : attack;
@@ -89,7 +91,24 @@ namespace Comet.Game.Magic
             effects.Has(StatusFlags.Oblivion, now) ? experience + experience / 2 : experience;
 
         public static int Defense(TimedStatus effects, int defense, DateTime now) =>
-            (int)Scale((uint)Math.Max(0, defense), effects.Power(StatusFlags.Shield, now));
+            (int)Scale(Scale((uint)Math.Max(0, defense), effects.Power(StatusFlags.Shield, now)),
+                effects.Power(StatusFlags.IronShirt, now));
+
+        public static int Dodge(TimedStatus effects, int dodge, DateTime now) =>
+            (int)Scale((uint)Math.Max(0, dodge), effects.Power(StatusFlags.Dodge, now));
+
+        // Azure Shield takes damage until it has taken as much as its power; it ends then
+        public static uint Absorb(TimedStatus effects, uint damage, DateTime now)
+        {
+            if (damage == 0 || effects.Power(StatusFlags.AzureShield, now) is not int left || left <= 0)
+                return damage;
+            uint taken = Math.Min(damage, (uint)left);
+            if (taken == (uint)left)
+                effects.Remove(StatusFlags.AzureShield);
+            else
+                effects.SetPower(StatusFlags.AzureShield, left - (int)taken);
+            return damage - taken;
+        }
 
         // The kill's data for MsgInteract: 1, with the KO count in the high half during
         // Superman, Cyclone or Oblivion (the beads that change color)

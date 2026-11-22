@@ -302,6 +302,7 @@ namespace Comet.Game.Combat
             var attackerCharacter = attacker.Character;
             if (character == null || attackerCharacter == null || target.Life.Dead || target.Map != attacker.Map)
                 return;
+            damage = await AbsorbAsync(target, damage, DateTime.UtcNow);
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
             await target.SendAsync(new MsgUserAttrib(target.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
@@ -324,6 +325,16 @@ namespace Comet.Game.Combat
                 await Pking.OnKillAsync(attacker, target, guilty);
         }
 
+        // What's left of the damage after the player's Azure Shield, which may end
+        private static async Task<uint> AbsorbAsync(Client client, uint damage, DateTime now)
+        {
+            bool shielded = client.Effects.Has(StatusFlags.AzureShield, now);
+            uint left = Buffs.Absorb(client.Effects, damage, now);
+            if (shielded && !client.Effects.Has(StatusFlags.AzureShield, now))
+                await Pking.SendStatusAsync(client);
+            return left;
+        }
+
         // Runs on the player's queue, posted by the monster loop
         public static async Task MonsterHitsPlayerAsync(Monster monster, Client client)
         {
@@ -340,6 +351,7 @@ namespace Comet.Game.Combat
             bool flownOver = Buffs.Flying(client.Effects, now) && type.AttackRange <= Buffs.MeleeRange;
             uint damage = !flownOver && Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? stats.Taken(
                 Damage.MonsterMelee(type.AttackMin, type.AttackMax, Buffs.Defense(client.Effects, stats.Defense, now), Random.Shared)) : 0;
+            damage = await AbsorbAsync(client, damage, now);
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;
 
