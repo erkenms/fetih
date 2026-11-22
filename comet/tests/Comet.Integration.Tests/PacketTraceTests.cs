@@ -52,6 +52,7 @@ namespace Comet.Integration.Tests
                     "in MsgConnect", "out MsgTalk",             // NEW_ROLE
                     "in MsgRegister", "out MsgTalk",            // ANSWER_OK
                     "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
+                    "out MsgData",                              // server time
                     "out MsgPeerage",                           // nobility rank
                     "out MsgUserAttrib",                        // Stamina
                     "in MsgAction 74", "out MsgAction 74",      // LoginSpawn
