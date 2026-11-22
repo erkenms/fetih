@@ -79,7 +79,7 @@ namespace Comet.Game.States
         public DateTime NextCastAt { get; set; }
 
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
-        public ulong Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
+        public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
             (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0);
 

@@ -44,7 +44,7 @@ namespace Comet.Game.Magic
                 return;
             var energy = client.Energy;
 
-            ulong ended = client.Effects.Expire(now);
+            var ended = client.Effects.Expire(now);
             if (ended != 0)
             {
                 if ((ended & StatusFlags.XpFull) != 0)

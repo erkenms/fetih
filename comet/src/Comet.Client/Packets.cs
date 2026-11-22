@@ -168,6 +168,9 @@ namespace Comet.Client
         public byte SteedPlus { get; init; }
         public uint Nobility { get; init; }
 
+        // Status bits 64-127, at 30
+        public ulong StatusHigh { get; init; }
+
         public const uint FirstMonsterId = 400001, LastMonsterId = 499999;
 
         public bool IsMonster => this.Id >= FirstMonsterId && this.Id <= LastMonsterId;
@@ -192,6 +195,7 @@ namespace Comet.Client
             Steed = BitConverter.ToUInt32(packet, 72),
             SteedPlus = packet[141],
             Nobility = BitConverter.ToUInt32(packet, 127),
+            StatusHigh = BitConverter.ToUInt64(packet, 30),
         };
     }
 
@@ -349,9 +353,12 @@ namespace Comet.Client
         }
     }
 
-    // An identity, a count, then per attribute a type (uint) and value (ulong) in 20 bytes
+    // An identity, a count, then per attribute a type (uint) and value (ulong) in 24 bytes;
+    // status bits 64-127 follow the value
     public sealed record UserAttribMessage(uint Id, Dictionary<uint, ulong> Values)
     {
+        public ulong StatusHigh { get; init; }
+
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, Class = 7, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
             Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27;
@@ -364,10 +371,16 @@ namespace Comet.Client
         public static UserAttribMessage Parse(byte[] packet)
         {
             var values = new Dictionary<uint, ulong>();
+            ulong high = 0;
             uint count = BitConverter.ToUInt32(packet, 8);
-            for (int i = 0, offset = 12; i < count && offset + 12 <= packet.Length; i++, offset += 24)
-                values[BitConverter.ToUInt32(packet, offset)] = BitConverter.ToUInt64(packet, offset + 4);
-            return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values);
+            for (int i = 0, offset = 12; i < count && offset + 20 <= packet.Length; i++, offset += 24)
+            {
+                uint type = BitConverter.ToUInt32(packet, offset);
+                values[type] = BitConverter.ToUInt64(packet, offset + 4);
+                if (type == Status)
+                    high = BitConverter.ToUInt64(packet, offset + 12);
+            }
+            return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values) { StatusHigh = high };
         }
     }
 

@@ -4,8 +4,8 @@ namespace Comet.Game.States
     using System.Collections.Generic;
     using System.Linq;
 
-    // Status bits (MsgUserAttrib 25, MsgPlayer 22). The client draws each from
-    // ini/statuseffect.ini.
+    // Status bits (MsgUserAttrib 25, MsgPlayer 22), 128 of them. The client draws each from
+    // ini/statuseffect.ini, whose first column is the bit.
     public static class StatusFlags
     {
         public const ulong Flashing = 0x1;
@@ -30,25 +30,25 @@ namespace Comet.Game.States
     public sealed class TimedStatus
     {
         private readonly object Sync = new object();
-        private readonly Dictionary<ulong, (DateTime Until, int Power)> Until =
-            new Dictionary<ulong, (DateTime, int)>();
+        private readonly Dictionary<UInt128, (DateTime Until, int Power)> Until =
+            new Dictionary<UInt128, (DateTime, int)>();
 
-        public ulong Status(DateTime now)
+        public UInt128 Status(DateTime now)
         {
             lock (this.Sync)
-                return this.Until.Where(x => x.Value.Until > now).Aggregate(0UL, (all, x) => all | x.Key);
+                return this.Until.Where(x => x.Value.Until > now).Aggregate(UInt128.Zero, (all, x) => all | x.Key);
         }
 
-        public bool Has(ulong flag, DateTime now) => this.Power(flag, now) != null;
+        public bool Has(UInt128 flag, DateTime now) => this.Power(flag, now) != null;
 
-        public int? Power(ulong flag, DateTime now)
+        public int? Power(UInt128 flag, DateTime now)
         {
             lock (this.Sync)
                 return this.Until.TryGetValue(flag, out var status) && status.Until > now ? status.Power : null;
         }
 
         // True if the status wasn't on before
-        public bool Set(ulong flag, DateTime until, DateTime now, int power = 0)
+        public bool Set(UInt128 flag, DateTime until, DateTime now, int power = 0)
         {
             lock (this.Sync)
             {
@@ -59,7 +59,7 @@ namespace Comet.Game.States
         }
 
         // Adds time to a status that's on, while less than the cap is left
-        public bool Extend(ulong flag, TimeSpan by, TimeSpan cap, DateTime now)
+        public bool Extend(UInt128 flag, TimeSpan by, TimeSpan cap, DateTime now)
         {
             lock (this.Sync)
             {
@@ -76,18 +76,18 @@ namespace Comet.Game.States
                 this.Until.Clear();
         }
 
-        public bool Remove(ulong flag)
+        public bool Remove(UInt128 flag)
         {
             lock (this.Sync)
                 return this.Until.Remove(flag);
         }
 
         // Returns the statuses it took away
-        public ulong Expire(DateTime now)
+        public UInt128 Expire(DateTime now)
         {
             lock (this.Sync)
             {
-                ulong ended = 0;
+                UInt128 ended = 0;
                 foreach (var (flag, status) in this.Until.ToList())
                 {
                     if (status.Until > now)

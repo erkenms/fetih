@@ -1,5 +1,6 @@
 namespace Comet.Game.Packets
 {
+    using System;
     using System.Collections.Generic;
     using Comet.Game.Items;
     using Comet.Game.States;
@@ -24,7 +25,7 @@ namespace Comet.Game.Packets
         public ushort ArmorColor, ShieldColor, HelmetColor;
         public uint Steed;
         public byte SteedPlus;
-        public ulong Status { get; set; }
+        public UInt128 Status { get; set; }
         public uint MonsterHealth { get; set; }
         public ushort MonsterLevel { get; set; }
         public uint GuildID { get; set; }
@@ -107,8 +108,9 @@ namespace Comet.Game.Packets
             writer.Write(this.GuildID);             // 12
             writer.Write((uint)this.GuildRank);     // 16
             writer.Write((ushort)0);                // 20
-            writer.Write(this.Status);              // 22
-            writer.Write(new byte[12]);             // 30
+            writer.Write((ulong)this.Status);       // 22  status bits 0-63
+            writer.Write((ulong)(this.Status >> 64)); // 30  64-127
+            writer.Write(0u);                       // 38  128-159
             writer.Write((ushort)0);                // 42  appearance type
             writer.Write(this.Helmet);              // 44  item types worn
             writer.Write(this.Garment);             // 48
