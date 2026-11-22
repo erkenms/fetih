@@ -431,5 +431,51 @@ namespace Comet.Integration.Tests
             await ninja.Game.CastAsync(ninja.User.Id, 6003, 0, 66, 80);
             Assert.NotNull(await ninja.Game.WaitForInteractAsync(i => i.Action == InteractMessage.CounterKillSwitch && i.Data == 0));
         }
+            private static async Task HoldBowAsync(Player player)
+        {
+            foreach (var (type, hand) in new[] { (ServerFixture.Bow.Id, (byte)4), (ServerFixture.Arrows.Id, (byte)5) })
+            {
+                var item = await GiveAsync(player, type);
+                await player.Game.EquipAsync(item.Id, hand);
+                Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, item.Id));
+            }
+        }
+
+        private const ulong Stunned = 1UL << 58;
+
+        [Fact]
+        public async Task FreezingArrowStunsWhatTheShotHit()
+        {
+            var at = ServerFixture.PheasantForFreezingArrow;
+            await using var archer = (await this.PlayingAtAsync(1002, at.X + 2, at.Y, GameMaster)).Player;
+            var pheasant = await archer.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(archer, "/learn 5000");
+            Assert.NotNull(await archer.Game.WaitForMagicInfoAsync(m => m.Type == 5000));
+            await HoldBowAsync(archer);
+
+            await archer.Game.ShootAsync(archer.User.Id, pheasant.Id, at.X, at.Y);
+            var effect = await archer.Game.WaitForEffectAsync(e => e.Caster == archer.User.Id && e.Type == 5000);
+            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+            Assert.NotNull(await archer.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & Stunned) != 0));
+        }
+
+        [Fact]
+        public async Task PoisonousArrowsPoisonWhatTheShotHit()
+        {
+            var at = ServerFixture.PheasantForPoisonousArrows;
+            await using var archer = (await this.PlayingAtAsync(1002, at.X + 2, at.Y, GameMaster)).Player;
+            var pheasant = await archer.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(archer, "/learn 5002");
+            Assert.NotNull(await archer.Game.WaitForMagicInfoAsync(m => m.Type == 5002));
+            await HoldBowAsync(archer);
+
+            await archer.Game.ShootAsync(archer.User.Id, pheasant.Id, at.X, at.Y);
+            Assert.NotNull(await archer.Game.WaitForEffectAsync(e => e.Caster == archer.User.Id && e.Type == 5002));
+            Assert.NotNull(await archer.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & Poisoned) != 0));
+        }
     }
 }

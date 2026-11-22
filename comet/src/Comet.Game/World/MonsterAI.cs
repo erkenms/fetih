@@ -49,6 +49,9 @@ namespace Comet.Game.World
                 if (monster.Alive)
                 {
                     await Magic.Poison.TickAsync(monster, now);
+                    if (monster.EndStun(now))
+                        foreach (var player in Monsters.PlayersInView(monster))
+                            await player.SendAsync(new Packets.MsgUserAttrib(monster.Identity, Packets.MsgUserAttrib.AttributeType.Status, 0));
                     await ThinkAsync(monster, now, random);
                 }
         }
@@ -83,7 +86,7 @@ namespace Comet.Game.World
 
             if (Distance(monster.X, monster.Y, x, y) <= Math.Max(1, monster.Type.AttackRange))
             {
-                if (now < monster.NextAttackAt)
+                if (now < monster.NextAttackAt || monster.Stunned(now))
                     return;
                 monster.NextAttackAt = now + TimeSpan.FromMilliseconds(
                     Math.Max(monster.Type.AttackSpeed, AttackInterval.TotalMilliseconds));

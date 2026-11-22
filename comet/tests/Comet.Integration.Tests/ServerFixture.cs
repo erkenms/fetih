@@ -104,6 +104,8 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForWindstorm = (960, 900);
         public static readonly (ushort X, ushort Y) PheasantForFatalStrike = (940, 780);
         public static readonly (ushort X, ushort Y) PheasantForGapingWounds = (880, 780);
+        public static readonly (ushort X, ushort Y) PheasantForFreezingArrow = (860, 780);
+        public static readonly (ushort X, ushort Y) PheasantForPoisonousArrows = (900, 740);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -202,6 +204,11 @@ namespace Comet.Integration.Tests
         // Every hit, where the client's is 30%
         public static readonly MagicFiles.Spell CounterKill =
             new MagicFiles.Spell(6003, 0, 29, "Counter-Kill") { Power = 30020, Percent = 100, Distance = 20, Target = 16 };
+        // Every hit, where the client's are 5% and 10%
+        public static readonly MagicFiles.Spell FreezingArrow =
+            new MagicFiles.Spell(5000, 0, 16, "FreezingArrow") { Power = 8000, Percent = 100, Distance = 9, WeaponSubtype = 500, AutoActive = 4, Target = 8, Status = 16 };
+        public static readonly MagicFiles.Spell PoisonousArrows =
+            new MagicFiles.Spell(5002, 0, 16, "PoisonousArrows") { Power = 30002, Percent = 100, StepSeconds = 2, ActiveTimes = 15, Distance = 15, WeaponSubtype = 500, AutoActive = 4, Target = 8, Status = 2 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -429,7 +436,7 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
@@ -445,7 +452,7 @@ namespace Comet.Integration.Tests
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
                 (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
-                (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u),
+                (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u), (PheasantForFreezingArrow, 1u), (PheasantForPoisonousArrows, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

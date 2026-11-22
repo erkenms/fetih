@@ -67,6 +67,12 @@ namespace Comet.Game.Combat
             if (run != client.AttackRun || client.Character == null || client.Life.Dead)
                 return;
             var now = DateTime.UtcNow;
+            if (client.Effects.Has(StatusFlags.Stun, now))
+            {
+                Stop(client);
+                Reject(client, client.AttackTarget, "stunned");
+                return;
+            }
             if (now < client.NextAttackAt)
             {
                 Schedule(client, run, client.NextAttackAt - now);
@@ -139,7 +145,10 @@ namespace Comet.Game.Combat
             if (killed)
                 Stop(client);
             else if (damage > 0)
+            {
                 await Pirates.AfterDamageAsync(client, monster.Identity, x, y, now);
+                await Casting.AfterHitAsync(client, monster.Identity, now);
+            }
             if (!type.IsGuard)
                 await Proficiency.GainAsync(client, dealt);
             await AfterMonsterHitAsync(client, monster, x, y, dealt, killed);
@@ -281,7 +290,10 @@ namespace Comet.Game.Combat
             await target.SendAsync(hit);
             await Movement.SendToViewAsync(target, hit);
             if (damage > 0)
+            {
                 await Pirates.AfterDamageAsync(attacker, target.ID, character.X, character.Y, DateTime.UtcNow);
+                await Casting.AfterHitAsync(attacker, target.ID, DateTime.UtcNow);
+            }
             await DamagePlayerAsync(attacker, target, damage, shooting ? "shoot" : "melee");
         }
 

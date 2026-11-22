@@ -165,6 +165,7 @@ namespace Comet.Game.Magic
             !Supported.Contains(spell.Sort) ? "unsupported_sort" :
             spell.IsPassive ? "passive" :
             now < client.NextCastAt ? "too_soon" :
+            client.Effects.Has(StatusFlags.Stun, now) ? "stunned" :
             spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) && !InXpStatus(client, spell, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
             client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
@@ -215,11 +216,77 @@ namespace Comet.Game.Magic
                     var swing = spell with { Power = MagicType.PercentBase + 100 };
                     return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
                 }
-                if (!spell.IsPercent || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
+                if (!spell.IsPercent || GoesWithHit(spell) || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
                     continue;
                 return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
             }
             return false;
+        }
+
+        // Weapon skills that go with a hit rather than in place of a swing, at their percent: a
+        // stun for the power's milliseconds (magictype's status 16; Earthquake's description:
+        // the target can't attack), or poison (status 2)
+        private const int StunStatus = 16, PoisonStatus = 2;
+
+        private static bool GoesWithHit(MagicType spell) =>
+            spell.Sort == MagicSort.AttackStatus && spell.Status is StunStatus or PoisonStatus;
+
+        // After the caster's swing or shot hurt the target
+        public static async Task AfterHitAsync(Client client, uint targetID, DateTime now)
+        {
+            foreach (var (type, learned) in client.Skills.AllSpells())
+                if (Kernel.Magics.TryGet(type, learned.Level, out var spell) && spell.IsPassive && GoesWithHit(spell) &&
+                    spell.WeaponSubtype != 0 && Holds(client, spell.WeaponSubtype) && Random.Shared.Next(100) < spell.Percent)
+                    await AfflictAsync(client, spell, targetID, now);
+        }
+
+        private static async Task AfflictAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var character = client.Character;
+            Monster monster = null;
+            Client player = null;
+            ushort x = 0, y = 0;
+            bool found = Attacks.IsMonster(targetID)
+                ? Kernel.Monsters.TryGet(character.MapID, out var map) && map.TryGet(targetID, out monster, out x, out y) && monster.Alive
+                : Kernel.Players.TryGet(targetID, out player) && player.Map == client.Map && player.Map.TryGetPosition(player, out x, out y);
+            if (!found)
+                return;
+
+            var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((targetID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            if (spell.Status == PoisonStatus)
+            {
+                var poison = Poison.From(spell, now);
+                if (player != null)
+                    Kernel.Post(player, () => Poison.StartAsync(player, poison, DateTime.UtcNow));
+                else
+                    await Poison.StartAsync(monster, poison);
+            }
+            else
+            {
+                var until = now + TimeSpan.FromMilliseconds(Math.Max(0, spell.Power));
+                if (player != null)
+                    Kernel.Post(player, () => StunAsync(player, until));
+                else if (monster.Stun(until))
+                    foreach (var other in Monsters.PlayersInView(monster))
+                        await other.SendAsync(new MsgUserAttrib(monster.Identity, AttributeType.Status, StatusFlags.Stun));
+            }
+            LogCast(client, spell, x, y, 1);
+        }
+
+        // On the player's queue
+        private static async Task StunAsync(Client target, DateTime until)
+        {
+            if (target.Character == null || target.Life.Dead)
+                return;
+            Attacks.Stop(target);
+            target.Effects.Set(StatusFlags.Stun, until, DateTime.UtcNow);
+            await Pking.SendStatusAsync(target);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} got status 0x{Status:X} for {Seconds}s from a stun",
+                target.Character.Name, StatusFlags.Stun, (int)(until - DateTime.UtcNow).TotalSeconds);
         }
 
         // Gaping Wounds goes off twice as often with its weapons in both hands, as its

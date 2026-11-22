@@ -57,10 +57,44 @@ namespace Comet.Game.World
                 this.CorpseRemoved = false;
                 this.Target = 0;
                 this.poison = null;
+                this.stunned = false;
             }
         }
 
         private Magic.Poisoning poison;
+        private DateTime stunnedUntil;
+        private bool stunned;
+
+        // Can't attack until then; false if it's dead
+        public bool Stun(DateTime until)
+        {
+            lock (this.Lock)
+            {
+                if (!this.alive)
+                    return false;
+                this.stunnedUntil = until;
+                this.stunned = true;
+                return true;
+            }
+        }
+
+        public bool Stunned(DateTime now)
+        {
+            lock (this.Lock)
+                return this.stunned && now < this.stunnedUntil;
+        }
+
+        // True once, when a stun has run out
+        public bool EndStun(DateTime now)
+        {
+            lock (this.Lock)
+            {
+                if (!this.stunned || now < this.stunnedUntil)
+                    return false;
+                this.stunned = false;
+                return true;
+            }
+        }
 
         // False if it's dead
         public bool Poison(Magic.Poisoning poison)
