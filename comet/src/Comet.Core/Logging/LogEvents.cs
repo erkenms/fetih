@@ -22,6 +22,7 @@ namespace Comet.Core.Logging
         public const string SessionLogin = "session.login";
         public const string SessionLogout = "session.logout";
         public const string SessionReplaced = "session.replaced";
+        public const string SessionPing = "session.ping";
         public const string CharacterCreated = "character.created";
         public const string CharacterCreateFailed = "character.create_failed";
         public const string CharacterRelocated = "character.relocated";

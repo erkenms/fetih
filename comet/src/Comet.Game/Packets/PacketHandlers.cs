@@ -32,6 +32,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgFamily] = () => new MsgFamily(),
                 [PacketType.MsgPeerage] = () => new MsgPeerage(),
                 [PacketType.MsgGodExp] = () => new MsgGodExp(),
+                [PacketType.MsgPing] = () => new MsgPing(),
                 [PacketType.MsgPlayerAttribInfo] = () => new MsgPlayerAttribInfo(),
                 [PacketType.MsgTraining] = () => new MsgTraining(),
                 [PacketType.MsgQualifyingInteractive] = () => new MsgQualifyingInteractive(),
