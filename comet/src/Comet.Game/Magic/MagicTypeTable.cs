@@ -80,6 +80,7 @@ namespace Comet.Game.Magic
         GroundSting = 27,
         Riding = 32,
         RadiantPalm = 48,
+        WhirlwindKick = 54,
     }
 
     public sealed class MagicTypeTable

@@ -45,5 +45,20 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
                 a.Values.TryGetValue(Stamina, out var s) && s == 80));
         }
+
+        [Fact]
+        public async Task WhirlwindKickHitsAroundTheCasterWithinThreePaces()
+        {
+            var at = ServerFixture.PheasantForKick;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 3, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(player, 10415);
+            await HoldBeadsAsync(player);
+
+            await player.Game.CastAsync(player.User.Id, 10415, 0, (ushort)(at.X + 3), at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10415);
+            Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
+        }
     }
 }

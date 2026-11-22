@@ -33,7 +33,7 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
-            MagicSort.GroundSting, MagicSort.RadiantPalm,
+            MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -143,7 +143,7 @@ namespace Comet.Game.Magic
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
-            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm;
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm or MagicSort.WhirlwindKick;
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
             DateTime now, bool passive = false)
@@ -276,6 +276,7 @@ namespace Comet.Game.Magic
             switch (spell.Sort)
             {
                 case MagicSort.Bomb:
+                case MagicSort.WhirlwindKick:
                     return true;
                 case MagicSort.Line:
                     return OnLine(x, y, aimX, aimY, tx, ty, range);
@@ -336,7 +337,8 @@ namespace Comet.Game.Magic
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
-            if (!stats.Bow && Buffs.Flying(target.Effects, now))
+            // Whirlwind Kick reaches flyers, as the client's description says
+            if (!stats.Bow && spell.Sort != MagicSort.WhirlwindKick && Buffs.Flying(target.Effects, now))
                 return 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(targetStats.Dodge, targetIsMonster: false, Random.Shared))
                 return 0;
