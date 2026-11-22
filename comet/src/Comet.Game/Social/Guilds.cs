@@ -593,7 +593,7 @@ namespace Comet.Game.Social
             }
             guild.RequiredLevel = Math.Clamp(msg.RequiredLevel, 1, 140);
             guild.RequiredRebirths = Math.Min(msg.RequiredRebirths, 2);
-            guild.RequiredProfessions = msg.RequiredProfessions & 0x3F;
+            guild.RequiredProfessions = msg.RequiredProfessions & 0x7F;
             await GuildsRepository.SaveAsync(guild.ToRow());
             await client.SendAsync(new MsgSyndicateAttributeInfo(guild, Of(client.ID)?.Member));
         }

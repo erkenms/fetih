@@ -53,7 +53,8 @@ namespace Comet.Game.Social
         public const int MaxAllies = 5, MaxEnemies = 5, MaxDeputies = 5;
         public const byte RelationAlly = 1, RelationEnemy = 2;
 
-        // Bits of the profession requirement: classes the guild turns away
+        // Bits of the profession requirement: classes the guild turns away, in the order of
+        // the client's checkboxes
         public static uint ProfessionBit(ushort currentClass) => (currentClass / 10) switch
         {
             1 => 0x01,
@@ -61,6 +62,7 @@ namespace Comet.Game.Social
             4 => 0x08,
             5 => 0x10,
             6 => 0x20,
+            7 => 0x40,
             _ => currentClass >= 100 ? 0x04u : 0u,
         };
 
