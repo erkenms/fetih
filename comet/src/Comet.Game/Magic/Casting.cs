@@ -37,7 +37,10 @@ namespace Comet.Game.Magic
             MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion, MagicSort.Oblivion,
             MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
             MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
+            MagicSort.ShurikenVortex,
         };
+
+        public const ushort FatalStrike = 6011;
 
         // Serenity, Tranquility and Compassion, as the client describes them
         public static readonly TimeSpan DispelInterval = TimeSpan.FromSeconds(3);
@@ -99,6 +102,12 @@ namespace Comet.Game.Magic
                 case MagicSort.Recruit:
                     await HealAsync(client, spell, targetID, now);
                     break;
+                case MagicSort.AttachStatus when spell.Type == FatalStrike && !InXpStatus(client, spell, now):
+                    await StartXpStatusAsync(client, spell, now);
+                    break;
+                case MagicSort.AttachStatus when spell.Type == FatalStrike:
+                    await AttackAsync(client, spell, targetID, x, y, now);
+                    break;
                 case MagicSort.AttachStatus when Buffs.StatusOf(spell.Type) == StatusFlags.SoulShackle:
                     await ShackleAsync(client, spell, targetID, now);
                     break;
@@ -136,7 +145,8 @@ namespace Comet.Game.Magic
                 case MagicSort.KrakensRevenge:
                     await KrakenAsync(client, spell, targetID, now);
                     break;
-                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage when !InXpStatus(client, spell, now):
+                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage or MagicSort.ShurikenVortex
+                    when !InXpStatus(client, spell, now):
                     await StartXpStatusAsync(client, spell, now);
                     break;
                 default:
@@ -155,6 +165,10 @@ namespace Comet.Game.Magic
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
             spell.UseItem != 0 && ItemToUse(client, spell) == null ? "no_item" :
             spell.Sort == MagicSort.Riding ? Riding.Problem(client) :
+            XpStatusOf(spell) is var xp && (xp == StatusFlags.ShurikenVortex || xp == StatusFlags.FatalStrike) &&
+                Buffs.Flying(client.Effects, now) ? "flying" :
+            Buffs.StatusOf(spell.Type) == StatusFlags.Fly &&
+                (client.Effects.Has(StatusFlags.ShurikenVortex, now) || client.Effects.Has(StatusFlags.FatalStrike, now)) ? "xp_status" :
             null;
 
         // The left hand's item a spell takes from, if it holds enough
@@ -168,7 +182,13 @@ namespace Comet.Game.Magic
         public static bool Holds(Client client, uint weaponSubtype) =>
             new[] { ItemPosition.RightHand, ItemPosition.LeftHand }
                 .Select(p => client.Equipment?[p])
-                .Any(item => item != null && Proficiency.WeaponType(item.TypeID) == weaponSubtype);
+                .Any(item => item != null && WeaponsOf(weaponSubtype).Contains(Proficiency.WeaponType(item.TypeID)));
+
+        private static IEnumerable<uint> WeaponsOf(uint weaponSubtype)
+        {
+            for (; weaponSubtype > 0; weaponSubtype /= 1000)
+                yield return weaponSubtype % 1000;
+        }
 
         // A learned weapon skill for a weapon in hand may go off instead of a melee swing, at
         // its percent; false if none did
@@ -229,15 +249,21 @@ namespace Comet.Game.Magic
 
         // The status of an XP skill whose first cast only starts it: while it's on, the client
         // casts the skill for each attack
-        private static UInt128 XpStatusOf(MagicSort sort) => sort switch
+        private static UInt128 XpStatusOf(MagicType spell) => spell.Sort switch
         {
             MagicSort.CannonBarrage => StatusFlags.CannonBarrage,
             MagicSort.BlackbeardsRage => StatusFlags.BlackbeardsRage,
+            MagicSort.ShurikenVortex => StatusFlags.ShurikenVortex,
+            _ when spell.Type == FatalStrike => StatusFlags.FatalStrike,
             _ => 0,
         };
 
+        // Shuriken Vortex goes off every step, active times over
+        private static uint XpStatusSeconds(MagicType spell) =>
+            spell.Sort == MagicSort.ShurikenVortex ? spell.StepSeconds * Math.Max(1, spell.ActiveTimes) : spell.StepSeconds;
+
         private static bool InXpStatus(Client client, MagicType spell, DateTime now) =>
-            XpStatusOf(spell.Sort) is var flag && flag != 0 && client.Effects.Has(flag, now);
+            XpStatusOf(spell) is var flag && flag != 0 && client.Effects.Has(flag, now);
 
         // A spell that costs stamina costs more during Scurvy Bomb's fatigue
         private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
@@ -249,7 +275,21 @@ namespace Comet.Game.Magic
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort == MagicSort.BlackbeardsRage)
+            (ushort X, ushort Y)? dashTo = null;
+            if (spell.Type == FatalStrike)
+            {
+                // Monsters only, as its description says; the ninja appears next to the target
+                var (victim, reason) = Attacks.IsMonster(targetID) ? FindTarget(client, spell, targetID, now) : (null, "not_monster");
+                if (victim == null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                victims = new List<Victim> { victim };
+                (x, y) = (victim.X, victim.Y);
+                dashTo = NextTo(client, x, y);
+            }
+            else if (spell.Sort == MagicSort.BlackbeardsRage)
             {
                 // The target and the nearest around it, as many as the spell's active times
                 var (target, reason) = FindTarget(client, spell, targetID, now);
@@ -305,6 +345,8 @@ namespace Comet.Game.Magic
             }
             else
             {
+                if (spell.Sort == MagicSort.ShurikenVortex)
+                    (x, y) = (character.X, character.Y);
                 victims = Around(client, now)
                     .Where(v => InShape(spell, character.X, character.Y, x, y, v.X, v.Y))
                     .Take(MaxTargets)
@@ -333,6 +375,8 @@ namespace Comet.Game.Magic
                     effect.Targets.Add((victim.ID, damage));
             if (spell.Sort == MagicSort.BladeTempest)
                 await Movement.DashAsync(client, x, y, effect);
+            else if (dashTo is var (toX, toY))
+                await Movement.DashAsync(client, toX, toY, effect);
             else
             {
                 await client.SendAsync(effect);
@@ -387,9 +431,9 @@ namespace Comet.Game.Magic
         private static async Task StartXpStatusAsync(Client client, MagicType spell, DateTime now)
         {
             var character = client.Character;
-            var flag = XpStatusOf(spell.Sort);
+            var flag = XpStatusOf(spell);
             await PayAsync(client, spell, now);
-            client.Effects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+            client.Effects.Set(flag, now + TimeSpan.FromSeconds(XpStatusSeconds(spell)), now, spell.Power);
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
             effect.Targets.Add((client.ID, 0));
             await client.SendAsync(effect);
@@ -397,7 +441,7 @@ namespace Comet.Game.Magic
             await Pking.SendStatusAsync(client);
             LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
                 "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
-                character.Name, flag, spell.StepSeconds, character.Name, spell.Name);
+                character.Name, flag, XpStatusSeconds(spell), character.Name, spell.Name);
             LogCast(client, spell, character.X, character.Y, 1);
         }
 
@@ -441,6 +485,17 @@ namespace Comet.Game.Magic
             return (victim, reason);
         }
 
+        // The free cell next to (x, y) on the caster's side, or null when the caster is next to
+        // it already or that cell is blocked
+        private static (ushort X, ushort Y)? NextTo(Client client, ushort x, ushort y)
+        {
+            var character = client.Character;
+            if (MonsterAI.Distance(character.X, character.Y, x, y) <= 1)
+                return null;
+            int toX = x + Math.Sign(character.X - x), toY = y + Math.Sign(character.Y - y);
+            return Movement.CheckDash(client, toX, toY) == null ? ((ushort)toX, (ushort)toY) : null;
+        }
+
         // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident
         private static IEnumerable<Victim> Around(Client client, DateTime now)
         {
@@ -476,6 +531,7 @@ namespace Comet.Game.Magic
             {
                 case MagicSort.Bomb:
                 case MagicSort.WhirlwindKick:
+                case MagicSort.ShurikenVortex:
                     return true;
                 case MagicSort.Line:
                     return OnLine(x, y, aimX, aimY, tx, ty, range);

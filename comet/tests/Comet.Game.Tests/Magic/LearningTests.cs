@@ -90,7 +90,8 @@ namespace Comet.Game.Tests.Magic
                 Learning.Serenity, Learning.RadiantPalm, Learning.Tranquility, Learning.SoulShackle, Learning.Compassion,
                 Learning.MetalAura, Learning.WoodAura, Learning.WaterAura, Learning.FireAura, Learning.EarthAura,
             }, TaughtBy(Learning.Monk));
-            Assert.Equal(new ushort[] { Learning.TwofoldBlades, Learning.ArcherBane, Learning.ToxicFog }, TaughtBy(Learning.Ninja));
+            Assert.Equal(new ushort[] { Learning.TwofoldBlades, Learning.ArcherBane, Learning.ToxicFog, Learning.ShurikenVortex, Learning.FatalStrike },
+                TaughtBy(Learning.Ninja));
             Assert.Equal(new ushort[]
             {
                 Learning.Windstorm, Learning.BladeTempest, Learning.CannonBarrage, Learning.GaleBomb, Learning.EagleEye,

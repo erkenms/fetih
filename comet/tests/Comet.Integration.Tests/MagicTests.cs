@@ -1,5 +1,6 @@
 namespace Comet.Integration.Tests
 {
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -306,6 +307,68 @@ namespace Comet.Integration.Tests
 
             await player.Game.WalkAsync(player.User.Id, 0);
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & (1UL << 30)) == 0));
+        }
+            private async Task FillXpAsync(Player player)
+        {
+            await CommandAsync(player, "/xp");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+        }
+
+        private const ulong ShurikenVortexStatus = 1UL << 46, FatalStrikeStatus = 1UL << 47;
+
+        [Fact]
+        public async Task FatalStrikeStartsOnAFullXpBarThenStrikesMonstersFromBeside()
+        {
+            var at = ServerFixture.PheasantForFatalStrike;
+            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 5, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await ninja.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(ninja, "/learn 6011");
+            Assert.NotNull(await ninja.Game.WaitForMagicInfoAsync(m => m.Type == 6011));
+            var katana = await GiveAsync(ninja, ServerFixture.Katana.Id);
+            await ninja.Game.EquipAsync(katana.Id, 4);
+            Assert.NotNull(await ninja.Game.WaitForItemActionAsync(ItemMessage.Equipped, katana.Id));
+            await FillXpAsync(ninja);
+
+            await ninja.Game.CastAsync(ninja.User.Id, 6011, ninja.User.Id, 0, 0);
+            Assert.NotNull(await ninja.Game.WaitForAttribAsync(a => a.Id == ninja.User.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & FatalStrikeStatus) != 0 && (s & XpFull) == 0));
+
+            await ninja.Game.CastAsync(ninja.User.Id, 6011, pheasant.Id, at.X, at.Y);
+            var effect = await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 6011 &&
+                e.Targets.Any(t => t.Id == pheasant.Id));
+            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+            Assert.Equal((1002u, at.X + 1, (int)at.Y), await this.SavedPositionAsync(ninja));
+        }
+
+        [Fact]
+        public async Task ShurikenVortexLastsItsStepsHitsAroundAndTakesOnlyOneAHit()
+        {
+            await using var ninja = (await this.PlayingAtAsync(ServerFixture.PkField, 60, 90, GameMaster, level: 100)).Player;
+            await using var victim = (await this.PlayingAtAsync(ServerFixture.PkField, 61, 90, GameMaster, strength: 5000)).Player;
+            await FreePkAsync(ninja);
+            await FreePkAsync(victim);
+            await CommandAsync(ninja, "/learn 6010");
+            Assert.NotNull(await ninja.Game.WaitForMagicInfoAsync(m => m.Type == 6010));
+            await FillXpAsync(ninja);
+
+            await ninja.Game.CastAsync(ninja.User.Id, 6010, ninja.User.Id, 60, 90);
+            Assert.NotNull(await ninja.Game.WaitForAttribAsync(a => a.Id == ninja.User.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & ShurikenVortexStatus) != 0));
+            var started = await this.Servers.WaitForEventAsync("game", "status.started", "name", ninja.User.Name);
+            Assert.Equal(20, started.GetProperty("seconds").GetInt32());
+
+            await Task.Delay(600);
+            await ninja.Game.CastAsync(ninja.User.Id, 6010, 0, 60, 90);
+            var effect = await victim.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 6010 &&
+                e.Targets.Any(t => t.Id != ninja.User.Id));
+            Assert.Equal(victim.User.Id, Assert.Single(effect.Targets).Id);
+
+            await victim.Game.AttackAsync(victim.User.Id, ninja.User.Id, 60, 90);
+            var hit = await this.Servers.WaitForEventAsync("game", "combat.hit", e =>
+                e.TryGetProperty("name", out var n) && n.GetString() == ninja.User.Name &&
+                e.TryGetProperty("damage", out var d) && d.GetInt32() > 0, System.TimeSpan.FromSeconds(15));
+            Assert.Equal(1, hit.GetProperty("damage").GetInt32());
         }
     }
 }

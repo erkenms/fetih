@@ -325,9 +325,12 @@ namespace Comet.Game.Combat
                 await Pking.OnKillAsync(attacker, target, guilty);
         }
 
-        // What's left of the damage after the player's Azure Shield, which may end
+        // What's left of the damage after the player's Azure Shield, which may end; during
+        // Shuriken Vortex all damage is 1, as its description says
         private static async Task<uint> AbsorbAsync(Client client, uint damage, DateTime now)
         {
+            if (damage > 0 && client.Effects.Has(StatusFlags.ShurikenVortex, now))
+                return 1;
             bool shielded = client.Effects.Has(StatusFlags.AzureShield, now);
             uint left = Buffs.Absorb(client.Effects, damage, now);
             if (shielded && !client.Effects.Has(StatusFlags.AzureShield, now))

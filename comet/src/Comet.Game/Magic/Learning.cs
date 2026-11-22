@@ -40,7 +40,7 @@ namespace Comet.Game.Magic
             WoodAura = 10421, WaterAura = 10422, FireAura = 10423, EarthAura = 10424, Tranquility = 10425,
             Compassion = 10430, TripleAttack = 10490, ScurvyBomb = 11040, CannonBarrage = 11050, BlackbeardsRage = 11060,
             GaleBomb = 11070, KrakensRevenge = 11100, BladeTempest = 11110, BlackSpot = 11120, AdrenalineRush = 11130,
-            Windstorm = 11140, Intensify = 9000;
+            Windstorm = 11140, Intensify = 9000, ShurikenVortex = 6010, FatalStrike = 6011;
 
         // In the order masters list them
         private static readonly Rule[] Rules =
@@ -61,6 +61,8 @@ namespace Comet.Game.Magic
             new Rule(TwofoldBlades, new[] { Ninja }),
             new Rule(ArcherBane, new[] { Ninja }),
             new Rule(ToxicFog, new[] { Ninja }),
+            new Rule(ShurikenVortex, new[] { Ninja }),
+            new Rule(FatalStrike, new[] { Ninja }),
             new Rule(TripleAttack, new[] { Monk }),
             new Rule(Oblivion, new[] { Monk }),
             new Rule(WhirlwindKick, new[] { Monk }),

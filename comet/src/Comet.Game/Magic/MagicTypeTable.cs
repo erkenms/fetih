@@ -42,7 +42,8 @@ namespace Comet.Game.Magic
         // 1: an XP skill, cast only with the XP bar full
         public uint UseXp { get; init; }
 
-        // The weapon the spell needs, by item type / 1000 (410 blade), or 0
+        // The weapon the spell needs, by item type / 1000 (410 blade), or 0; two of them run
+        // together (601511: a katana or a scythe)
         public uint WeaponSubtype { get; init; }
 
         // Not 0: a weapon skill that goes off by itself, at Percent of the holder's swings
@@ -76,11 +77,15 @@ namespace Comet.Game.Magic
         AttachStatus = 6,
         DetachStatus = 7,
         DispatchXp = 11,
+        Collide = 12,
+        Transform = 19,
         Line = 14,
         AttackStatus = 16,
         AddMana = 20,
         DecLife = 26,
         GroundSting = 27,
+        ShurikenVortex = 28,
+        CounterKill = 29,
         Riding = 32,
         Serenity = 46,
         Tranquility = 47,

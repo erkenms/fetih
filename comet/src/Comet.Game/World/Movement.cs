@@ -56,6 +56,7 @@ namespace Comet.Game.World
             string reason =
                 jump.CharacterID != client.ID ? "wrong_id" :
                 client.Life.Dead ? (client.Life.Ghost ? "ghost" : "dead") :
+                client.Effects.Has(StatusFlags.ShurikenVortex, DateTime.UtcNow) ? "shuriken_vortex" :
                 Math.Max(Math.Abs(toX - x), Math.Abs(toY - y)) > MaxJumpDistance ? "too_far" :
                 CheckCell(map, toX, toY);
             if (reason != null)
