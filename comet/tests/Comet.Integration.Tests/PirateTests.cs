@@ -14,7 +14,7 @@ namespace Comet.Integration.Tests
         private const uint DesertCity = ServerFixture.DesertCity;
 
         // Status bits from 64, as MsgUserAttrib 25's second word has them
-        private const ulong Fatigue = 1UL << (119 - 64);
+        private const ulong Fatigue = 1UL << (119 - 64), Cannon = 1UL << (120 - 64), Blackbeard = 1UL << (121 - 64);
 
         private static async Task LearnAsync(Player player, ushort magicType)
         {
@@ -135,6 +135,65 @@ namespace Comet.Integration.Tests
             var spot = await victim.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11120,
                 System.TimeSpan.FromSeconds(15));
             Assert.Equal(victim.User.Id, Assert.Single(spot.Targets).Id);
+        }
+    
+
+        private Task<System.Text.Json.JsonElement> RejectedAsync(Player player) =>
+            this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name);
+
+        // The first cast, with the XP bar full, starts the status; then each cast is an attack
+        private async Task StartXpStatusAsync(Player pirate, ushort magicType, ulong status)
+        {
+            await pirate.Game.CastAsync(pirate.User.Id, magicType, pirate.User.Id, 0, 0);
+            Assert.Equal("xp_not_full", (await RejectedAsync(pirate)).GetProperty("reason").GetString());
+            await CommandAsync(pirate, "/xp");
+            Assert.NotNull(await pirate.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+            await pirate.Game.CastAsync(pirate.User.Id, magicType, pirate.User.Id, 0, 0);
+            var started = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == magicType);
+            Assert.Equal(pirate.User.Id, Assert.Single(started.Targets).Id);
+            Assert.NotNull(await pirate.Game.WaitForAttribAsync(a => a.Id == pirate.User.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & XpFull) == 0 && (a.HighStatus & status) != 0));
+            await Task.Delay(600);
+        }
+
+        [Fact]
+        public async Task CannonBarrageStartsItsStatusThenFiresAroundTheCell()
+        {
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 240, 100, GameMaster)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 245, 100)).Player;
+            await using var near = (await this.PlayingAtAsync(DesertCity, 247, 102)).Player;
+            await FreePkAsync(pirate);
+            await HoldAsync(pirate, ServerFixture.Rapier.Id);
+            await LearnAsync(pirate, 11050);
+            await StartXpStatusAsync(pirate, 11050, Cannon);
+
+            for (int shot = 0; shot < 2; shot++)
+            {
+                await pirate.Game.CastAsync(pirate.User.Id, 11050, victim.User.Id, 245, 100);
+                var effect = await victim.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11050 &&
+                    e.Targets.Any(t => t.Id == victim.User.Id));
+                Assert.Equal(new[] { victim.User.Id, near.User.Id }, effect.Targets.Select(t => t.Id));
+                await Task.Delay(600);
+            }
+        }
+
+        [Fact]
+        public async Task BlackbeardsRageHitsTheTargetAndTheNearestAroundIt()
+        {
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 260, 100, GameMaster)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 265, 100)).Player;
+            await using var second = (await this.PlayingAtAsync(DesertCity, 266, 100)).Player;
+            await using var third = (await this.PlayingAtAsync(DesertCity, 267, 101)).Player;
+            await using var fourth = (await this.PlayingAtAsync(DesertCity, 269, 102)).Player;
+            await FreePkAsync(pirate);
+            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            await LearnAsync(pirate, 11060);
+            await StartXpStatusAsync(pirate, 11060, Blackbeard);
+
+            await pirate.Game.CastAsync(pirate.User.Id, 11060, victim.User.Id, 265, 100);
+            var effect = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11060 &&
+                e.Targets.Any(t => t.Id == victim.User.Id));
+            Assert.Equal(new[] { victim.User.Id, second.User.Id, third.User.Id }, effect.Targets.Select(t => t.Id));
         }
     }
 }

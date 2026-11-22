@@ -34,7 +34,7 @@ namespace Comet.Game.Magic
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
-            MagicSort.KrakensRevenge,
+            MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
         };
 
         // Scurvy Bomb's fatigue: how much more stamina each of its levels makes spells cost,
@@ -44,6 +44,11 @@ namespace Comet.Game.Magic
         // As many as Gale Bomb's description says it hits, and Kraken's Revenge at each level
         private const int GaleBombTargets = 3;
         private static readonly int[] KrakenTargets = { 3, 3, 4, 4, 5 };
+
+        // What Cannon Barrage and Blackbeard's Rage do to players, by percent of the attack, as
+        // their descriptions have it; magictype's power is for monsters
+        private const int CannonAgainstPlayers = 10;
+        private static readonly int[] BlackbeardAgainstPlayers = { 20, 22, 24, 27, 30 };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
@@ -109,6 +114,9 @@ namespace Comet.Game.Magic
                 case MagicSort.KrakensRevenge:
                     await KrakenAsync(client, spell, targetID, now);
                     break;
+                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage when !InXpStatus(client, spell, now):
+                    await StartXpStatusAsync(client, spell, now);
+                    break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
                     break;
@@ -119,7 +127,7 @@ namespace Comet.Game.Magic
             !Supported.Contains(spell.Sort) ? "unsupported_sort" :
             spell.IsPassive ? "passive" :
             now < client.NextCastAt ? "too_soon" :
-            spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) ? "xp_not_full" :
+            spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) && !InXpStatus(client, spell, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
             client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
@@ -159,7 +167,19 @@ namespace Comet.Game.Magic
             MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.BladeTempest || AtCell(sort);
 
         // Spells that hit around the cell aimed at, within their distance of the caster
-        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb or MagicSort.GaleBomb;
+        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb or MagicSort.GaleBomb or MagicSort.CannonBarrage;
+
+        // The status of an XP skill whose first cast only starts it: while it's on, the client
+        // casts the skill for each attack
+        private static ulong XpStatusOf(MagicSort sort) => sort switch
+        {
+            MagicSort.CannonBarrage => HighStatusFlags.CannonBarrage,
+            MagicSort.BlackbeardsRage => HighStatusFlags.BlackbeardsRage,
+            _ => 0,
+        };
+
+        private static bool InXpStatus(Client client, MagicType spell, DateTime now) =>
+            XpStatusOf(spell.Sort) is var flag && flag != 0 && client.HighEffects.Has(flag, now);
 
         // A spell that costs stamina costs more during Scurvy Bomb's fatigue
         private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
@@ -171,7 +191,24 @@ namespace Comet.Game.Magic
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife)
+            if (spell.Sort == MagicSort.BlackbeardsRage)
+            {
+                // The target and the nearest around it, as many as the spell's active times
+                var (target, reason) = FindTarget(client, spell, targetID, now);
+                if (target == null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                victims = Around(client, now)
+                    .Where(v => v.ID != target.ID && MonsterAI.Distance(target.X, target.Y, v.X, v.Y) <= spell.Range)
+                    .OrderBy(v => MonsterAI.Distance(target.X, target.Y, v.X, v.Y))
+                    .Prepend(target)
+                    .Take((int)Math.Max(1, spell.ActiveTimes))
+                    .ToList();
+                (x, y) = (target.X, target.Y);
+            }
+            else if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
                 if (victim == null)
@@ -281,6 +318,23 @@ namespace Comet.Game.Magic
             LogCast(client, spell, x, y, victims.Count);
             await GainExperienceAsync(client, spell, experience);
             return true;
+        }
+
+        private static async Task StartXpStatusAsync(Client client, MagicType spell, DateTime now)
+        {
+            var character = client.Character;
+            ulong flag = XpStatusOf(spell.Sort);
+            await PayAsync(client, spell, now);
+            client.HighEffects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((client.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Pking.SendStatusAsync(client);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                character.Name, flag, spell.StepSeconds, character.Name, spell.Name);
+            LogCast(client, spell, character.X, character.Y, 1);
         }
 
         private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now)
@@ -442,12 +496,19 @@ namespace Comet.Game.Magic
                 return 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(targetStats.Dodge, targetIsMonster: false, Random.Shared))
                 return 0;
-            int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * spell.PowerPercent / 100;
+            int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * AgainstPlayersPercent(spell) / 100;
             attack = Buffs.AgainstPlayer(client.Effects, attack, now);
             return targetStats.Taken(stats.Bow
                 ? Damage.PlayerArchery(attack, targetStats.Dodge)
                 : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
+
+        private static int AgainstPlayersPercent(MagicType spell) => spell.Sort switch
+        {
+            MagicSort.CannonBarrage => CannonAgainstPlayers,
+            MagicSort.BlackbeardsRage => BlackbeardAgainstPlayers[Math.Min(spell.Level, BlackbeardAgainstPlayers.Length - 1)],
+            _ => spell.PowerPercent,
+        };
 
         // Cruel Shade takes its power's percentage of the target's life left
         private static uint ShareOf(uint health, MagicType spell) =>
@@ -755,7 +816,7 @@ namespace Comet.Game.Magic
             await Recovery.UseStaminaAsync(client, StaminaOf(client, spell, now));
             if (spell.UseItem != 0 && ItemToUse(client, spell) is Database.Models.DbItem item)
                 await Quivers.UseAsync(client, item, spell.UseItemCount);
-            if (spell.IsXpSkill)
+            if (spell.IsXpSkill && !InXpStatus(client, spell, now))
             {
                 client.Effects.Remove(StatusFlags.XpFull);
                 await Recovery.SetXpAsync(client, 0);

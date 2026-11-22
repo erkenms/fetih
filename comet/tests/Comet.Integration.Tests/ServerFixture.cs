@@ -143,6 +143,10 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(11120, 0, 58, "BlackSpot") { Percent = 100, StepSeconds = 8, WeaponSubtype = 612 };
         public static readonly MagicFiles.Spell AdrenalineRush =
             new MagicFiles.Spell(11130, 0, 59, "AdrenalineRush") { Percent = 100, AutoActive = 8 };
+        public static readonly MagicFiles.Spell CannonBarrage =
+            new MagicFiles.Spell(11050, 0, 57, "CannonBarrage") { Power = 30500, Range = 5, Distance = 10, StepSeconds = 60, XpSkill = true, WeaponSubtype = 611 };
+        public static readonly MagicFiles.Spell BlackbeardsRage =
+            new MagicFiles.Spell(11060, 0, 63, "Blackbeard`sRage") { Power = 30025, Range = 5, Distance = 12, StepSeconds = 60, XpSkill = true, WeaponSubtype = 612, ActiveTimes = 3 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -365,7 +369,8 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
-                    ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush));
+                    ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
+                    CannonBarrage, BlackbeardsRage));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
