@@ -45,7 +45,8 @@ namespace Comet.Game.Magic
             var energy = client.Energy;
 
             ulong ended = client.Effects.Expire(now);
-            if (ended != 0)
+            ulong highEnded = client.HighEffects.Expire(now);
+            if (ended != 0 || highEnded != 0)
             {
                 if ((ended & StatusFlags.XpFull) != 0)
                     await SetXpAsync(client, 0);
@@ -53,7 +54,7 @@ namespace Comet.Game.Magic
                     energy.KoCount = 0;
                 await Pk.Pking.SendStatusAsync(client);
                 LogEvents.For(typeof(Recovery), LogEvents.StatusEnded).Debug(
-                    "{Name} status 0x{Status:X} ended", character.Name, ended);
+                    "{Name} status 0x{Status:X} 0x{HighStatus:X} ended", character.Name, ended, highEnded);
             }
 
             await HeavenBlessing.ExpireAsync(client, now);

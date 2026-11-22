@@ -7,8 +7,8 @@ namespace Comet.Game.Packets
     public sealed class MsgUserAttrib : MsgBase<Client>
     {
         public uint Identity { get; set; }
-        public List<(AttributeType Type, ulong Value)> Attributes { get; } =
-            new List<(AttributeType, ulong)>();
+        public List<(AttributeType Type, ulong Value, ulong High)> Attributes { get; } =
+            new List<(AttributeType, ulong, ulong)>();
 
         public MsgUserAttrib(uint identity)
         {
@@ -16,14 +16,14 @@ namespace Comet.Game.Packets
             this.Identity = identity;
         }
 
-        public MsgUserAttrib(uint identity, AttributeType type, ulong value) : this(identity)
+        public MsgUserAttrib(uint identity, AttributeType type, ulong value, ulong high = 0) : this(identity)
         {
-            this.Append(type, value);
+            this.Append(type, value, high);
         }
 
-        public MsgUserAttrib Append(AttributeType type, ulong value)
+        public MsgUserAttrib Append(AttributeType type, ulong value, ulong high = 0)
         {
-            this.Attributes.Add((type, value));
+            this.Attributes.Add((type, value, high));
             return this;
         }
 
@@ -33,13 +33,13 @@ namespace Comet.Game.Packets
             writer.Write((ushort)base.Type);
             writer.Write(this.Identity);                    // 4
             writer.Write((uint)this.Attributes.Count);      // 8
-            // 24 bytes each: the type, the value, then three uints only attribute 49 reads
-            foreach (var (type, value) in this.Attributes)  // 12
+            // 24 bytes each: the type, the value, then 12 more bytes: status bits 64 to 159
+            // for attribute 25, three uints for 49
+            foreach (var (type, value, high) in this.Attributes)  // 12
             {
                 writer.Write((uint)type);
                 writer.Write(value);
-                writer.Write(0u);
-                writer.Write(0u);
+                writer.Write(high);
                 writer.Write(0u);
             }
             return writer.ToArray();

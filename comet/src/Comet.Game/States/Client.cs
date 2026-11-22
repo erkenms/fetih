@@ -68,6 +68,7 @@ namespace Comet.Game.States
 
         // Statuses that run out: XP full and what spells give
         public TimedStatus Effects { get; } = new TimedStatus();
+        public TimedStatus HighEffects { get; } = new TimedStatus();
 
         // Changed on the player's own queue
         public Magic.Poisoning Poison { get; set; }
@@ -82,6 +83,7 @@ namespace Comet.Game.States
         public ulong Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
             (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0);
+        public ulong HighStatus => this.HighEffects.Status(DateTime.UtcNow);
 
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }

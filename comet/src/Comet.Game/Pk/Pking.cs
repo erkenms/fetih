@@ -161,7 +161,7 @@ namespace Comet.Game.Pk
 
         public static async Task SendStatusAsync(Client client)
         {
-            var update = new MsgUserAttrib(client.ID, AttributeType.Status, client.Status);
+            var update = new MsgUserAttrib(client.ID, AttributeType.Status, client.Status, client.HighStatus);
             await client.SendAsync(update);
             await Movement.SendToViewAsync(client, update);
         }

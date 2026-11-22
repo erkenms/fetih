@@ -33,6 +33,7 @@ namespace Comet.Game.Combat
             await Items.Riding.DismountAsync(client, "died");
             character.HealthPoints = 0;
             client.Effects.Clear();
+            client.HighEffects.Clear();
             Pking.OnDeath(client);
             client.Energy.KoCount = 0;
             await Magic.Recovery.SetXpAsync(client, 0);

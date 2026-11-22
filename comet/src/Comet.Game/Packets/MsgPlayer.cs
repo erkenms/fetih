@@ -25,6 +25,7 @@ namespace Comet.Game.Packets
         public uint Steed;
         public byte SteedPlus;
         public ulong Status { get; set; }
+        public ulong HighStatus { get; set; }
         public uint MonsterHealth { get; set; }
         public ushort MonsterLevel { get; set; }
         public uint GuildID { get; set; }
@@ -38,6 +39,7 @@ namespace Comet.Game.Packets
         {
             this.Mesh = client.Life.Mesh(client.Character);
             this.Status = client.Status;
+            this.HighStatus = client.HighStatus;
             this.Away = client.Away;
             if (Social.Guilds.Of(client.ID) is Social.Guilds.Membership guild)
             {
@@ -108,7 +110,8 @@ namespace Comet.Game.Packets
             writer.Write((uint)this.GuildRank);     // 16
             writer.Write((ushort)0);                // 20
             writer.Write(this.Status);              // 22
-            writer.Write(new byte[12]);             // 30
+            writer.Write(this.HighStatus);          // 30  status bits 64 to 127
+            writer.Write(0u);                       // 38  and to 159
             writer.Write((ushort)0);                // 42  appearance type
             writer.Write(this.Helmet);              // 44  item types worn
             writer.Write(this.Garment);             // 48

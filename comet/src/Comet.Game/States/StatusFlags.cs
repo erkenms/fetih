@@ -25,6 +25,16 @@ namespace Comet.Game.States
         public const ulong Riding = 1UL << 50;
     }
 
+    // Status bits 64 to 127, the second word of the client's 160: MsgUserAttrib 25's bytes 12
+    // to 19 and MsgPlayer 30. Magictype's status number n is bit n + 1 here (Cannon Barrage's
+    // 119 is the bit the client turns attacks into the cannon at).
+    public static class HighStatusFlags
+    {
+        public const ulong Fatigue = 1UL << (119 - 64);
+        public const ulong CannonBarrage = 1UL << (120 - 64);
+        public const ulong BlackbeardsRage = 1UL << (121 - 64);
+    }
+
     // Statuses that last a while: XP full, and those spells give, with the spell's power.
     // Read by other players' queues (MsgPlayer), so only changed under the lock.
     public sealed class TimedStatus
