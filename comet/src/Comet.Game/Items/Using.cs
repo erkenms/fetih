@@ -83,6 +83,8 @@ namespace Comet.Game.Items
             var character = client.Character;
             if (client.Life.Dead)
                 return Reject(client, potion.ItemID, potion.TypeID, "dead");
+            if (client.Effects.Has(StatusFlags.NoPotion, DateTime.UtcNow))
+                return Reject(client, potion.ItemID, potion.TypeID, "poison_star");
             ushort health = (ushort)Math.Min(Attributes.MaxHealth(client), character.HealthPoints + type.Life);
             ushort mana = (ushort)Math.Min(Attributes.MaxMana(client), character.ManaPoints + type.Mana);
             int healed = health - character.HealthPoints, restored = mana - character.ManaPoints;

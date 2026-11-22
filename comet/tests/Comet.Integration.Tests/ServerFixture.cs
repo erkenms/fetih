@@ -192,6 +192,9 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(6010, 0, 28, "ShurikenVortex") { Power = 30030, Range = 12, Distance = 15, StepSeconds = 2, ActiveTimes = 10, XpSkill = true, Target = 2, Status = 39 };
         public static readonly MagicFiles.Spell FatalStrike =
             new MagicFiles.Spell(6011, 0, 6, "FatalStrike") { Power = 30500, Distance = 18, StepSeconds = 60, XpSkill = true, WeaponSubtype = 601511, Target = 2, Status = 40 };
+        // Sure, where the client's is 80% at an equal battle power
+        public static readonly MagicFiles.Spell PoisonStar =
+            new MagicFiles.Spell(6002, 0, 6, "PoisonStar") { Power = 1, Percent = 100, StepSeconds = 5, Range = 5, Distance = 10, Stamina = 50, Status = 42 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -419,7 +422,7 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

@@ -28,6 +28,7 @@ namespace Comet.Game.Magic
             10405 => StatusFlags.SoulShackle,
             10390 => StatusFlags.Oblivion,
             3080 => StatusFlags.Dodge,
+            6002 => StatusFlags.NoPotion,
             5100 => StatusFlags.IronShirt,
             9000 => StatusFlags.Intensify,
             9876 => StatusFlags.Bless,

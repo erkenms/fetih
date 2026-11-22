@@ -108,6 +108,9 @@ namespace Comet.Game.Magic
                 case MagicSort.AttachStatus when spell.Type == FatalStrike:
                     await AttackAsync(client, spell, targetID, x, y, now);
                     break;
+                case MagicSort.AttachStatus when Buffs.StatusOf(spell.Type) == StatusFlags.NoPotion:
+                    await PoisonStarAsync(client, spell, targetID, now);
+                    break;
                 case MagicSort.AttachStatus when Buffs.StatusOf(spell.Type) == StatusFlags.SoulShackle:
                     await ShackleAsync(client, spell, targetID, now);
                     break;
@@ -1008,6 +1011,44 @@ namespace Comet.Game.Magic
             }
             LogCast(client, spell, target.Character.X, target.Character.Y, shackled ? 1 : 0);
             await GainExperienceAsync(client, spell, shackled ? 1u : 0u);
+        }
+
+        // Poison Star keeps a player from potions for magictype's step, at its percent: less
+        // against a higher battle power, as the client describes it, 5% less for each point
+        private static async Task PoisonStarAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var (victim, reason) = FindTarget(client, spell, targetID, now);
+            if (victim != null && victim.Player == null)
+                (victim, reason) = (null, "not_player");
+            if (victim == null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            var target = victim.Player;
+            int above = (int)Attributes.BattlePower(target.Character) - (int)Attributes.BattlePower(client.Character);
+            bool hit = Random.Shared.Next(100) < (int)spell.Percent - 5 * Math.Max(0, above);
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, victim.X, victim.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((target.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Pking.OnAttackAsync(client, target);
+            if (hit)
+                Kernel.Post(target, async () =>
+                {
+                    var at = DateTime.UtcNow;
+                    if (target.Character == null || target.Life.Dead)
+                        return;
+                    target.Effects.Set(StatusFlags.NoPotion, at + TimeSpan.FromSeconds(spell.StepSeconds), at);
+                    await Pking.SendStatusAsync(target);
+                    LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                        "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                        target.Character.Name, StatusFlags.NoPotion, spell.StepSeconds, client.Character.Name, spell.Name);
+                });
+            LogCast(client, spell, victim.X, victim.Y, hit ? 1 : 0);
+            await GainExperienceAsync(client, spell, hit ? 1u : 0u);
         }
 
         // Takes poison and Soul Shackle away; Compassion leaves the shackle

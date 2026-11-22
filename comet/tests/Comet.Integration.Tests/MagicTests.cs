@@ -370,5 +370,24 @@ namespace Comet.Integration.Tests
                 e.TryGetProperty("damage", out var d) && d.GetInt32() > 0, System.TimeSpan.FromSeconds(15));
             Assert.Equal(1, hit.GetProperty("damage").GetInt32());
         }
+            [Fact]
+        public async Task PoisonStarKeepsAPlayerFromPotions()
+        {
+            await using var ninja = (await this.PlayingAtAsync(ServerFixture.PkField, 60, 80, GameMaster)).Player;
+            await using var victim = (await this.PlayingAtAsync(ServerFixture.PkField, 63, 80, GameMaster)).Player;
+            await FreePkAsync(ninja);
+            await CommandAsync(ninja, "/learn 6002");
+            Assert.NotNull(await ninja.Game.WaitForMagicInfoAsync(m => m.Type == 6002));
+
+            await ninja.Game.CastAsync(ninja.User.Id, 6002, victim.User.Id, 63, 80);
+            Assert.NotNull(await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 6002));
+            Assert.NotNull(await victim.Game.WaitForAttribAsync(a => a.Id == victim.User.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & (1UL << 44)) != 0));
+
+            var potion = await GiveAsync(victim, ServerFixture.Potion.Id);
+            await victim.Game.UseAsync(potion.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", victim.User.Name);
+            Assert.Equal("poison_star", refused.GetProperty("reason").GetString());
+        }
     }
 }
