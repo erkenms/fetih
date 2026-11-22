@@ -80,6 +80,9 @@ namespace Comet.Game.Magic
                 case MagicSort.AttachStatus:
                     await AttachAsync(client, spell, targetID, now);
                     break;
+                case MagicSort.DetachStatus when spell.Status > 0:
+                    await TakeStatusAsync(client, spell, targetID, now);
+                    break;
                 case MagicSort.DetachStatus:
                     await ReviveAsync(client, spell, targetID, now);
                     break;
@@ -319,6 +322,8 @@ namespace Comet.Game.Magic
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
+            if (!stats.Bow && Buffs.Flying(target.Effects, now))
+                return 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(targetStats.Dodge, targetIsMonster: false, Random.Shared))
                 return 0;
             int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * spell.PowerPercent / 100;
@@ -404,6 +409,39 @@ namespace Comet.Game.Magic
             await Movement.SendToViewAsync(client, effect);
             Kernel.Post(target, () => Death.ReviveHereAsync(target, $"magic {spell.Type} from {character.Name}"));
             LogCast(client, spell, target.Character.X, target.Character.Y, 1);
+        }
+
+        // Archer Bane takes a player's status (Fly) away, at the spell's percent
+        private static async Task TakeStatusAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            ulong flag = Buffs.FlagOf(spell.Status);
+            var (victim, reason) = flag == 0 ? (null, "unknown_status") : FindTarget(client, spell, targetID, now);
+            if (victim != null && victim.Player == null)
+                (victim, reason) = (null, "not_player");
+            if (victim == null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            var target = victim.Player;
+            bool taken = target.Effects.Has(flag, now) && Random.Shared.Next(100) < spell.Percent;
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, victim.X, victim.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((target.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Pking.OnAttackAsync(client, target);
+            if (taken)
+                Kernel.Post(target, async () =>
+                {
+                    target.Effects.Remove(flag);
+                    await Pking.SendStatusAsync(target);
+                    LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
+                        "{Name} lost status 0x{Status:X} to {Caster}'s {MagicName}",
+                        target.Character?.Name, flag, client.Character.Name, spell.Name);
+                });
+            LogCast(client, spell, victim.X, victim.Y, 1);
         }
 
         // Meditation turns the caster's stamina into mana, the spell's power of it

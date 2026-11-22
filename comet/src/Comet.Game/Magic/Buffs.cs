@@ -23,8 +23,22 @@ namespace Comet.Game.Magic
             1025 => StatusFlags.Superman,
             1095 => StatusFlags.Stigma,
             1110 => StatusFlags.Cyclone,
+            1075 => StatusFlags.Invisible,
+            8002 or 8003 => StatusFlags.Fly,
             _ => 0,
         };
+
+        // The flag for magictype's status number, for spells that take a status away
+        public static ulong FlagOf(int status) => status switch
+        {
+            22 => StatusFlags.Fly,
+            _ => 0,
+        };
+
+        // A flying player can't be reached by melee, from players or monsters within this range
+        public const int MeleeRange = 2;
+
+        public static bool Flying(TimedStatus effects, DateTime now) => effects.Has(StatusFlags.Fly, now);
 
         public static bool HasAccuracy(TimedStatus effects, DateTime now) =>
             effects.Has(StatusFlags.Accuracy, now);

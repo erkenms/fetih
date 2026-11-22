@@ -25,6 +25,12 @@ namespace Comet.Game.Magic
         public int Power { get; init; }
         public uint Percent { get; init; }
         public uint StepSeconds { get; init; }
+
+        // The status a spell gives or takes, as magictype numbers it (22 Fly), or -1
+        public int Status { get; init; }
+
+        // How many times a spell that lasts acts, every StepSeconds (Toxic Fog's poison)
+        public uint ActiveTimes { get; init; }
         public uint Range { get; init; }
         public uint Distance { get; init; }
 
@@ -153,10 +159,12 @@ namespace Comet.Game.Magic
                     StepSeconds = UInt(f[13]),
                     Range = UInt(f[14]),
                     Distance = UInt(f[15]),
+                    Status = int.Parse(f[16], CultureInfo.InvariantCulture),
                     NeedExperience = UInt(f[18]),
                     NeedLevel = byte.Parse(f[20], CultureInfo.InvariantCulture),
                     UseXp = UInt(f[21]),
                     WeaponSubtype = UInt(f[22]),
+                    ActiveTimes = UInt(f[23]),
                     AutoActive = UInt(f[24]),
                     UseStamina = byte.Parse(f[29], CultureInfo.InvariantCulture),
                     DelayMilliseconds = UInt(f[33]),

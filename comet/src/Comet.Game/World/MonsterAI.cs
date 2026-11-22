@@ -167,8 +167,10 @@ namespace Comet.Game.World
             return default;
         }
 
+        // Monsters don't see the invisible
         private static bool CanBeAttacked(Client player, DateTime now) =>
-            player.Character != null && !player.Life.Dead && now >= player.Life.ProtectedUntil;
+            player.Character != null && !player.Life.Dead && now >= player.Life.ProtectedUntil &&
+            !player.Effects.Has(StatusFlags.Invisible, now);
 
         public static int Distance(int x1, int y1, int x2, int y2) =>
             Math.Max(Math.Abs(x1 - x2), Math.Abs(y1 - y2));

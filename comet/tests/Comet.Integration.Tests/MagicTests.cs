@@ -131,6 +131,36 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task AFlyingArcherIsOutOfAPheasantsReach()
+        {
+            var at = ServerFixture.PheasantUnderFlyer;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var bow = await GiveAsync(player, ServerFixture.Bow.Id);
+            await player.Game.EquipAsync(bow.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, bow.Id));
+            await CommandAsync(player, "/learn 8002");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 8002));
+            await CommandAsync(player, "/xp");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+
+            await player.Game.CastAsync(player.User.Id, 8002, 0, (ushort)(at.X + 1), at.Y);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & FlyStatus) != 0));
+            var flew = (await this.Servers.WaitForEventAsync("game", "status.started", "name", player.User.Name))
+                .GetProperty("ts").GetString();
+            string since = flew;
+            for (int bites = 0; bites < 2; bites++)
+            {
+                var bite = await this.Servers.WaitForEventAsync("game", "combat.hit", e =>
+                    e.TryGetProperty("monsterName", out _) && e.GetProperty("name").GetString() == player.User.Name &&
+                    string.CompareOrdinal(e.GetProperty("ts").GetString(), since) > 0);
+                Assert.Equal(0u, bite.GetProperty("damage").GetUInt32());
+                since = bite.GetProperty("ts").GetString();
+            }
+        }
+
+        private const ulong FlyStatus = 0x8000000;
+
+        [Fact]
         public async Task RestoreHealsToFull()
         {
             var (first, email) = await this.PlayingAtAsync(1002, 700, 840, GameMaster);
