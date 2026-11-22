@@ -126,6 +126,8 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(6001, 0, 27, "ToxicFog") { Power = 30010, Range = 4, Distance = 10, StepSeconds = 1, ActiveTimes = 3 };
         public static readonly MagicFiles.Spell Scatter =
             new MagicFiles.Spell(8001, 0, 4, "ScatterFire") { Power = 30050, Range = 8, Distance = 15, WeaponSubtype = 500, UseItem = 50, UseItemCount = 2 };
+        public static readonly MagicFiles.Spell ScurvyBomb =
+            new MagicFiles.Spell(11040, 0, 56, "ScurvyBomb") { Power = 30010, Range = 4, Distance = 10, StepSeconds = 10, Stamina = 20 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -347,7 +349,8 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
-                    Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog));
+                    Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
+                    ScurvyBomb));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

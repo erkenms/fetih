@@ -33,12 +33,17 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
-            MagicSort.GroundSting,
+            MagicSort.GroundSting, MagicSort.ScurvyBomb,
         };
+
+        // Scurvy Bomb's fatigue: how much more stamina each of its levels makes spells cost,
+        // as its description in MagicEffect.ini has it
+        private static readonly int[] FatigueStamina = { 5, 6, 6, 8, 8 };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
             public uint Damage { get; set; }
+            public bool Missed { get; set; }
             public uint ID => this.Monster?.Identity ?? this.Player.ID;
         }
 
@@ -108,7 +113,7 @@ namespace Comet.Game.Magic
             now < client.NextCastAt ? "too_soon" :
             spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
-            client.Energy.Stamina < spell.UseStamina ? "no_stamina" :
+            client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
             spell.UseItem != 0 && ItemToUse(client, spell) == null ? "no_item" :
             spell.Sort == MagicSort.Riding ? Riding.Problem(client) :
@@ -143,7 +148,15 @@ namespace Comet.Game.Magic
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
-            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan;
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan || AtCell(sort);
+
+        // Spells that hit around the cell aimed at, within their distance of the caster
+        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb;
+
+        // A spell that costs stamina costs more during Scurvy Bomb's fatigue
+        private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
+            spell.UseStamina == 0 ? (byte)0 :
+            (byte)Math.Min(byte.MaxValue, spell.UseStamina + (client.HighEffects.Power(HighStatusFlags.Fatigue, now) ?? 0));
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
             DateTime now, bool passive = false)
@@ -161,6 +174,19 @@ namespace Comet.Game.Magic
                 victims = new List<Victim> { victim };
                 (x, y) = (victim.X, victim.Y);
             }
+            else if (AtCell(spell.Sort))
+            {
+                if (MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack)
+                {
+                    Reject(client, spell.Type, "too_far");
+                    return false;
+                }
+                victims = Around(client, now)
+                    .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
+                    .OrderBy(v => MonsterAI.Distance(x, y, v.X, v.Y))
+                    .Take(MaxTargets)
+                    .ToList();
+            }
             else
             {
                 victims = Around(client, now)
@@ -171,9 +197,12 @@ namespace Comet.Game.Magic
 
             var stats = Stats.Of(client);
             foreach (var victim in victims)
-                victim.Damage = victim.Monster != null
+            {
+                victim.Missed = victim.Player != null && Resists(client, victim.Player, spell);
+                victim.Damage = victim.Missed ? 0 : victim.Monster != null
                     ? AgainstMonster(client, stats, spell, victim.Monster, now)
                     : AgainstPlayer(client, stats, spell, victim.Player, now);
+            }
 
             await PayAsync(client, spell, now, passive);
             await Durability.WearOnAttackAsync(client);
@@ -191,6 +220,8 @@ namespace Comet.Game.Magic
                     var target = victim.Player;
                     await Pking.OnAttackAsync(client, target);
                     Kernel.Post(target, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
+                    if (spell.Sort == MagicSort.ScurvyBomb && !victim.Missed)
+                        Kernel.Post(target, () => FatigueAsync(client, target, spell));
                     continue;
                 }
 
@@ -301,6 +332,33 @@ namespace Comet.Game.Magic
                 default:
                     return false;
             }
+        }
+
+        // The pirates' bombs miss a player of higher battle power: 2% more often for each point
+        // of it, 20% at most
+        private const int MaxResistPercent = 20;
+
+        private static bool Resists(Client caster, Client target, MagicType spell)
+        {
+            if (spell.Sort != MagicSort.ScurvyBomb)
+                return false;
+            int gap = (int)Attributes.BattlePower(target.Character) - (int)Attributes.BattlePower(caster.Character);
+            return gap > 0 && Random.Shared.Next(100) < Math.Min(MaxResistPercent, gap * 2);
+        }
+
+        // On the target's queue
+        private static async Task FatigueAsync(Client caster, Client target, MagicType spell)
+        {
+            var character = target.Character;
+            if (character == null || target.Life.Dead)
+                return;
+            var now = DateTime.UtcNow;
+            int extra = FatigueStamina[Math.Min(spell.Level, FatigueStamina.Length - 1)];
+            target.HighEffects.Set(HighStatusFlags.Fatigue, now + TimeSpan.FromSeconds(spell.StepSeconds), now, extra);
+            await Pking.SendStatusAsync(target);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                character.Name, HighStatusFlags.Fatigue, spell.StepSeconds, caster.Character?.Name, spell.Name);
         }
 
         // Spells with power from 30000 on hit like the weapon, by that percentage; others are
@@ -607,7 +665,7 @@ namespace Comet.Game.Magic
                 character.ManaPoints -= spell.UseMana;
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, character.ManaPoints));
             }
-            await Recovery.UseStaminaAsync(client, spell.UseStamina);
+            await Recovery.UseStaminaAsync(client, StaminaOf(client, spell, now));
             if (spell.UseItem != 0 && ItemToUse(client, spell) is Database.Models.DbItem item)
                 await Quivers.UseAsync(client, item, spell.UseItemCount);
             if (spell.IsXpSkill)
