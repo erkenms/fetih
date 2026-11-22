@@ -20,6 +20,8 @@ namespace Comet.Client
             public uint Percent { get; init; } = 100;
             public byte NeedLevel { get; init; }
             public uint AutoActive { get; init; }
+            public uint UseItem { get; init; }
+            public ushort UseItemCount { get; init; } = 1;
         }
 
         // An encrypted magictype.dat as the 5619 client has it: per spell level one line of 50
@@ -49,6 +51,8 @@ namespace Comet.Client
                 fields[22] = spell.WeaponSubtype.ToString();
                 fields[24] = spell.AutoActive.ToString();
                 fields[29] = spell.Stamina.ToString();
+                fields[31] = spell.UseItem.ToString();
+                fields[34] = spell.UseItemCount.ToString();
                 text.Append(string.Join("@@", fields)).Append("@@\r\n");
             }
             return ItemFiles.Encrypt(Encoding.Latin1.GetBytes(text.ToString()));

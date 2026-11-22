@@ -103,8 +103,17 @@ namespace Comet.Game.Magic
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
             client.Energy.Stamina < spell.UseStamina ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
+            spell.UseItem != 0 && ItemToUse(client, spell) == null ? "no_item" :
             spell.Sort == MagicSort.Riding ? Riding.Problem(client) :
             null;
+
+        // The left hand's item a spell takes from, if it holds enough
+        private static Database.Models.DbItem ItemToUse(Client client, MagicType spell)
+        {
+            var item = client.Equipment?[ItemPosition.LeftHand];
+            return item != null && item.TypeID / 1000 % 1000 == spell.UseItem && item.Amount >= spell.UseItemCount
+                ? item : null;
+        }
 
         private static bool Holds(Client client, uint weaponSubtype) =>
             new[] { ItemPosition.RightHand, ItemPosition.LeftHand }
@@ -496,6 +505,8 @@ namespace Comet.Game.Magic
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, character.ManaPoints));
             }
             await Recovery.UseStaminaAsync(client, spell.UseStamina);
+            if (spell.UseItem != 0 && ItemToUse(client, spell) is Database.Models.DbItem item)
+                await Quivers.UseAsync(client, item, spell.UseItemCount);
             if (spell.IsXpSkill)
             {
                 client.Effects.Remove(StatusFlags.XpFull);

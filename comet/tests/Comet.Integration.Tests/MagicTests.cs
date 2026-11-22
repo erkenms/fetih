@@ -103,6 +103,34 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ScatterTakesItsArrowsFromTheQuiverAndNeedsEnoughOfThem()
+        {
+            var at = ServerFixture.PheasantForScatter;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 3, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(player, "/learn 8001");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 8001));
+            var bow = await GiveAsync(player, ServerFixture.Bow.Id);
+            await player.Game.EquipAsync(bow.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, bow.Id));
+
+            await player.Game.CastAsync(player.User.Id, 8001, 0, at.X, at.Y);
+            Assert.Equal("no_item", (await RejectedAsync(player)).GetProperty("reason").GetString());
+
+            var arrows = await GiveAsync(player, ServerFixture.Arrows.Id);
+            await player.Game.EquipAsync(arrows.Id, 5);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, arrows.Id));
+            await player.Game.CastAsync(player.User.Id, 8001, 0, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 8001);
+            Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
+            Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == arrows.Id && i.Amount == ServerFixture.Arrows.Amount - 2));
+
+            await player.Game.CastAsync(player.User.Id, 8001, 0, at.X, at.Y);
+            Assert.Equal("no_item", (await RejectedAsync(player)).GetProperty("reason").GetString());
+        }
+
+        [Fact]
         public async Task AttrSetsAddsAndTakesAwayStats()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 820, GameMaster)).Player;

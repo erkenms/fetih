@@ -41,6 +41,11 @@ namespace Comet.Game.Magic
         // Not 0: a weapon skill that goes off by itself, at Percent of the holder's swings
         public uint AutoActive { get; init; }
         public byte UseStamina { get; init; }
+
+        // What each cast takes from the left hand: the item's type / 1000 % 1000 (50 for the
+        // 1050xxx arrows) and how many; nothing when UseItem is 0
+        public uint UseItem { get; init; }
+        public ushort UseItemCount { get; init; }
         public uint DelayMilliseconds { get; init; }
 
         public bool IsXpSkill => this.UseXp == 1;
@@ -106,7 +111,7 @@ namespace Comet.Game.Magic
         // 0 id, 1 type, 2 sort, 3 name, 4 crime, 5 ground, 6 multi, 7 target, 8 level,
         // 9 use_mp, 10 power, 11 intone, 12 percent, 13 step_secs, 14 range, 15 distance,
         // 16 status, 17 need_prof, 18 need_exp, 20 need_level, 21 use_xp, 22 weapon_subtype,
-        // 23 active_times, 24 auto_active, 29 use_ep, 33 delay_ms
+        // 23 active_times, 24 auto_active, 29 use_ep, 31 use_item, 33 delay_ms, 34 use_item_num
         public static MagicTypeTable Parse(byte[] decrypted)
         {
             var types = new List<MagicType>();
@@ -155,6 +160,8 @@ namespace Comet.Game.Magic
                     AutoActive = UInt(f[24]),
                     UseStamina = byte.Parse(f[29], CultureInfo.InvariantCulture),
                     DelayMilliseconds = UInt(f[33]),
+                    UseItem = UInt(f[31]),
+                    UseItemCount = ushort.Parse(f[34], CultureInfo.InvariantCulture),
                 };
             }
             catch (Exception e) when (e is FormatException || e is OverflowException)

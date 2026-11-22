@@ -88,6 +88,7 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForWear = (960, 820);
         public static readonly (ushort X, ushort Y) PheasantForSavedWear = (960, 860);
         public static readonly (ushort X, ushort Y) PheasantForPassive = (900, 860);
+        public static readonly (ushort X, ushort Y) PheasantForScatter = (940, 860);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -111,6 +112,8 @@ namespace Comet.Integration.Tests
         // A weapon skill that always goes off, for the test blade
         public static readonly MagicFiles.Spell Phoenix =
             new MagicFiles.Spell(5030, 0, 16, "Phoenix") { Power = 30125, Distance = 9, WeaponSubtype = 410, AutoActive = 4, NeedLevel = 15 };
+        public static readonly MagicFiles.Spell Scatter =
+            new MagicFiles.Spell(8001, 0, 4, "ScatterFire") { Power = 30050, Range = 8, Distance = 15, WeaponSubtype = 500, UseItem = 50, UseItemCount = 2 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -332,7 +335,7 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
-                    Cyclone, Hercules, Revive, Meditation, Phoenix));
+                    Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
@@ -346,7 +349,7 @@ namespace Comet.Integration.Tests
                 (PheasantToKill, 1u), (PheasantToShoot, 1u), (PheasantThatBites, 1u),
                 (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
-                (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u),
+                (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),
