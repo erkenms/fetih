@@ -205,6 +205,22 @@ namespace Comet.Integration.Tests
         private const ulong Poisoned = 0x2, ToxicFog = 1UL << 45;
 
         [Fact]
+        public async Task ToxicFogMissesGuards()
+        {
+            var at = ServerFixture.GuardToProvoke;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 2, at.Y, GameMaster, level: 100)).Player;
+            var guard = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(guard);
+            await CommandAsync(player, "/learn 6001");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 6001));
+            await FreePkAsync(player);
+
+            await player.Game.CastAsync(player.User.Id, 6001, 0, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 6001);
+            Assert.Equal((guard.Id, 0u), (Assert.Single(effect.Targets).Id, effect.Targets[0].Damage));
+        }
+
+        [Fact]
         public async Task RestoreHealsToFull()
         {
             var (first, email) = await this.PlayingAtAsync(1002, 700, 840, GameMaster);

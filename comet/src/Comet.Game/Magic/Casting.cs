@@ -220,8 +220,8 @@ namespace Comet.Game.Magic
                     var swing = spell with { Power = MagicType.PercentBase + 100 };
                     return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
                 }
-                // Gaping Wounds leaves bosses to the plain swing
-                if (spell.Sort == MagicSort.DecLife && IsBoss(client, targetID))
+                // Gaping Wounds leaves bosses and guards to the plain swing
+                if (spell.Sort == MagicSort.DecLife && IsBossOrGuard(client, targetID))
                     continue;
                 if (!spell.IsPercent || GoesWithHit(spell) || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
                     continue;
@@ -296,9 +296,9 @@ namespace Comet.Game.Magic
                 target.Character.Name, StatusFlags.Stun, (int)(until - DateTime.UtcNow).TotalSeconds);
         }
 
-        private static bool IsBoss(Client client, uint targetID) =>
+        private static bool IsBossOrGuard(Client client, uint targetID) =>
             Attacks.IsMonster(targetID) && Kernel.Monsters.TryGet(client.Character.MapID, out var map) &&
-            map.TryGet(targetID, out var monster, out _, out _) && monster.Type.Boss;
+            map.TryGet(targetID, out var monster, out _, out _) && (monster.Type.Boss || monster.IsGuard);
 
         // Gaping Wounds goes off twice as often with its weapons in both hands, as its
         // description says
@@ -883,9 +883,10 @@ namespace Comet.Game.Magic
                 .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
                 .Take(MaxTargets)
                 .ToList();
-            // Bosses shrug the fog off
+            // Bosses and guards shrug the fog off
             foreach (var victim in victims)
-                victim.Missed = victim.Monster?.Type.Boss == true || Random.Shared.Next(100) >= spell.Percent;
+                victim.Missed = victim.Monster is { } monster && (monster.Type.Boss || monster.IsGuard) ||
+                    Random.Shared.Next(100) >= spell.Percent;
             await PayAsync(client, spell, now);
             // Damage 1 marks a target the fog poisoned, 0 one it missed
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
