@@ -54,6 +54,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) NormalTortoiseGem = (700071, "NormalTortoiseGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperThunderGem = (700103, "SuperThunderGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Shield = (900301, "Shield", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Katana = (601301, "Katana", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Rapier = (611301, "Rapier", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Pistol = (612301, "Pistol", 1099, 0);
@@ -209,6 +210,8 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(5000, 0, 16, "FreezingArrow") { Power = 8000, Percent = 100, Distance = 9, WeaponSubtype = 500, AutoActive = 4, Target = 8, Status = 16 };
         public static readonly MagicFiles.Spell PoisonousArrows =
             new MagicFiles.Spell(5002, 0, 16, "PoisonousArrows") { Power = 30002, Percent = 100, StepSeconds = 2, ActiveTimes = 15, Distance = 15, WeaponSubtype = 500, AutoActive = 4, Target = 8, Status = 2 };
+        public static readonly MagicFiles.Spell Dash =
+            new MagicFiles.Spell(1051, 0, 12, "Dash") { Power = 30200, Distance = 1, WeaponSubtype = 900 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -421,7 +424,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "offlinetg.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
+                ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
                     HelmetLevelUp, HelmetRefined, DragonBall, Meteor, Emerald,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook }, new[] { Potion, ManaPotion, Bottle },
@@ -436,7 +439,7 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

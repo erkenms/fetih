@@ -36,8 +36,16 @@ namespace Comet.Game.World
             }
         }
 
+        private static readonly System.Collections.Concurrent.ConcurrentQueue<Func<Task>> Posted =
+            new System.Collections.Concurrent.ConcurrentQueue<Func<Task>>();
+
+        // Work on monsters from players' queues (a knockback), run on the monster loop
+        public static void Post(Func<Task> work) => Posted.Enqueue(work);
+
         public static async Task TickAsync(DateTime now, Random random)
         {
+            while (Posted.TryDequeue(out var work))
+                await work();
             await Monsters.RespawnAsync(now, random);
             var awake = Awake();
 

@@ -150,6 +150,16 @@ namespace Comet.Game.World
                 "{Name} dashed to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
         }
 
+        // A move another's spell makes (Dash's knockback), which that spell's packet shows
+        public static async Task PushAsync(Client client, ushort toX, ushort toY)
+        {
+            if (!TryGetPosition(client, out var map, out var x, out var y) || CheckCell(map, toX, toY) != null)
+                return;
+            await MoveAsync(client, map, x, y, toX, toY, null);
+            LogEvents.For(typeof(Movement), LogEvents.MoveJump).Debug(
+                "{Name} was pushed to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
+        }
+
         public static byte DirectionTo(int x, int y, int toX, int toY, byte current)
         {
             int dx = Math.Sign(toX - x), dy = Math.Sign(toY - y);
@@ -191,9 +201,12 @@ namespace Comet.Game.World
             bool prayed = client.Effects.Remove(StatusFlags.Bless);
             var after = map.InView(toX, toY, except: client);
 
-            await client.SendAsync(move);
-            foreach (var other in before)
-                await other.SendAsync(move);
+            if (move != null)
+            {
+                await client.SendAsync(move);
+                foreach (var other in before)
+                    await other.SendAsync(move);
+            }
 
             var stillInView = new HashSet<Client>(after);
             var wasInView = new HashSet<Client>(before);

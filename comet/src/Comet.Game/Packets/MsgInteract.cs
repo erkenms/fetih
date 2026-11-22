@@ -96,6 +96,7 @@ namespace Comet.Game.Packets
             Attack = 2,
             Kill = 14,
             MagicAttack = 24,
+            Dash = 27,
             Shoot = 28,
             CounterKill = 43,
             CounterKillSwitch = 44,

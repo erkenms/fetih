@@ -37,7 +37,7 @@ namespace Comet.Game.Magic
             MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion, MagicSort.Oblivion,
             MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
             MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
-            MagicSort.ShurikenVortex, MagicSort.CounterKill,
+            MagicSort.ShurikenVortex, MagicSort.CounterKill, MagicSort.Collide,
         };
 
         public const ushort FatalStrike = 6011;
@@ -359,7 +359,36 @@ namespace Comet.Game.Magic
             var character = client.Character;
             List<Victim> victims;
             (ushort X, ushort Y)? dashTo = null;
-            if (spell.Type == FatalStrike)
+            byte direction = 0;
+            (ushort X, ushort Y)? knockTo = null;
+            if (spell.Sort == MagicSort.Collide)
+            {
+                // Dash: a step toward the cell aimed at; who stands there is hit and knocked a
+                // cell on, and the caster takes their cell, unless they can't go
+                if (x == character.X && y == character.Y)
+                {
+                    Reject(client, spell.Type, "no_direction");
+                    return false;
+                }
+                direction = Movement.DirectionTo(character.X, character.Y, x, y, character.Direction);
+                int toX = character.X + Movement.DeltaX[direction], toY = character.Y + Movement.DeltaY[direction];
+                victims = Around(client, now).Where(v => v.X == toX && v.Y == toY).Take(1).ToList();
+                int backX = toX + Movement.DeltaX[direction], backY = toY + Movement.DeltaY[direction];
+                bool canStep = Movement.CheckDash(client, toX, toY) == null;
+                bool canKnock = victims.Count > 0 && Movement.CheckDash(client, backX, backY) == null &&
+                    !Around(client, now).Any(v => v.X == backX && v.Y == backY);
+                if (!canStep && victims.Count == 0)
+                {
+                    Reject(client, spell.Type, "blocked_cell");
+                    return false;
+                }
+                if (canStep && (victims.Count == 0 || canKnock))
+                    dashTo = ((ushort)toX, (ushort)toY);
+                if (canKnock)
+                    knockTo = ((ushort)backX, (ushort)backY);
+                (x, y) = ((ushort)toX, (ushort)toY);
+            }
+            else if (spell.Type == FatalStrike)
             {
                 // Monsters only, as its description says; the ninja appears next to the target
                 var (victim, reason) = Attacks.IsMonster(targetID) ? FindTarget(client, spell, targetID, now) : (null, "not_monster");
@@ -456,15 +485,23 @@ namespace Comet.Game.Magic
             foreach (var victim in victims)
                 foreach (var damage in victim.Hits)
                     effect.Targets.Add((victim.ID, damage));
+            // Dash shows as MsgInteract 27, which the client takes as a move to its cell, with the
+            // direction in the data's high byte and the damage below
+            Network.Packets.IPacket shown = spell.Sort != MagicSort.Collide ? effect : new MsgInteract(
+                MsgInteract.InteractionType.Dash, client.ID, victims.FirstOrDefault()?.ID ?? 0,
+                dashTo?.X ?? character.X, dashTo?.Y ?? character.Y,
+                (uint)direction << 24 | Math.Min(victims.FirstOrDefault()?.Damage ?? 0, 0xFFFFFFu));
             if (spell.Sort == MagicSort.BladeTempest)
                 await Movement.DashAsync(client, x, y, effect);
             else if (dashTo is var (toX, toY))
-                await Movement.DashAsync(client, toX, toY, effect);
+                await Movement.DashAsync(client, toX, toY, shown);
             else
             {
-                await client.SendAsync(effect);
-                await Movement.SendToViewAsync(client, effect);
+                await client.SendAsync(shown);
+                await Movement.SendToViewAsync(client, shown);
             }
+            if (knockTo is var (knockX, knockY))
+                Knock(victims[0], knockX, knockY, direction);
 
             // Blade Tempest spots all it hits, once Black Spot is learned
             MagicType blackSpot = null;
@@ -566,6 +603,14 @@ namespace Comet.Game.Magic
                 MonsterAI.Distance(character.X, character.Y, victim.X, victim.Y) > spell.Distance + DistanceSlack)
                 return (null, "too_far");
             return (victim, reason);
+        }
+
+        private static void Knock(Victim victim, ushort x, ushort y, byte direction)
+        {
+            if (victim.Player is Client player)
+                Kernel.Post(player, () => Movement.PushAsync(player, x, y));
+            else
+                MonsterAI.Post(() => Monsters.StepAsync(victim.Monster, direction, run: false));
         }
 
         // The free cell next to (x, y) on the caster's side, or null when the caster is next to

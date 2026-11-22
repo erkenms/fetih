@@ -477,5 +477,30 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await archer.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
                 a.Values.TryGetValue(Status, out var s) && (s & Poisoned) != 0));
         }
+            [Fact]
+        public async Task DashHitsWhoIsInTheWayAndKnocksThemACellBack()
+        {
+            await using var warrior = (await this.PlayingAtAsync(ServerFixture.PkField, 64, 70, GameMaster, strength: 50)).Player;
+            await using var victim = (await this.PlayingAtAsync(ServerFixture.PkField, 65, 70)).Player;
+            await FreePkAsync(warrior);
+            await CommandAsync(warrior, "/learn 1051");
+            Assert.NotNull(await warrior.Game.WaitForMagicInfoAsync(m => m.Type == 1051));
+            await warrior.Game.CastAsync(warrior.User.Id, 1051, 0, 65, 70);
+            Assert.Equal("wrong_weapon", (await RejectedAsync(warrior)).GetProperty("reason").GetString());
+            foreach (var (type, hand) in new[] { (ServerFixture.Blade.Id, (byte)4), (ServerFixture.Shield.Id, (byte)5) })
+            {
+                var item = await GiveAsync(warrior, type);
+                await warrior.Game.EquipAsync(item.Id, hand);
+                Assert.NotNull(await warrior.Game.WaitForItemActionAsync(ItemMessage.Equipped, item.Id));
+            }
+
+            await warrior.Game.CastAsync(warrior.User.Id, 1051, 0, 65, 70);
+            var bump = await victim.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Dash && i.Sender == warrior.User.Id);
+            Assert.Equal((victim.User.Id, (ushort)65, (ushort)70), (bump?.Target, bump.X, bump.Y));
+            Assert.Equal(6u, bump.Data >> 24);
+            await SyncAsync(victim);
+            Assert.Equal((ServerFixture.PkField, 66, 70), await this.SavedPositionAsync(victim));
+            Assert.Equal((ServerFixture.PkField, 65, 70), await this.SavedPositionAsync(warrior));
+        }
     }
 }
