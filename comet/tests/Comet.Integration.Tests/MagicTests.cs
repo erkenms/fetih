@@ -411,5 +411,25 @@ namespace Comet.Integration.Tests
             var effect = await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 11230);
             Assert.Equal((pheasant.Id, pheasant.MonsterHealth / 5), (Assert.Single(effect.Targets).Id, effect.Targets[0].Damage));
         }
+            [Fact]
+        public async Task CounterKillSwitchedOnTurnsAHitBackOnTheAttacker()
+        {
+            await using var ninja = (await this.PlayingAtAsync(ServerFixture.PkField, 66, 80, GameMaster, strength: 5000)).Player;
+            await using var attacker = (await this.PlayingAtAsync(ServerFixture.PkField, 67, 80, GameMaster, strength: 50)).Player;
+            await FreePkAsync(attacker);
+            await CommandAsync(ninja, "/learn 6003");
+            Assert.NotNull(await ninja.Game.WaitForMagicInfoAsync(m => m.Type == 6003));
+
+            await ninja.Game.CastAsync(ninja.User.Id, 6003, 0, 66, 80);
+            Assert.NotNull(await ninja.Game.WaitForInteractAsync(i => i.Action == InteractMessage.CounterKillSwitch && i.Data == 1));
+
+            await attacker.Game.AttackAsync(attacker.User.Id, ninja.User.Id, 66, 80);
+            var back = await attacker.Game.WaitForInteractAsync(i => i.Action == InteractMessage.CounterKill);
+            Assert.Equal((ninja.User.Id, attacker.User.Id), (back?.Sender, back.Target));
+
+            await Task.Delay(600);
+            await ninja.Game.CastAsync(ninja.User.Id, 6003, 0, 66, 80);
+            Assert.NotNull(await ninja.Game.WaitForInteractAsync(i => i.Action == InteractMessage.CounterKillSwitch && i.Data == 0));
+        }
     }
 }

@@ -267,6 +267,8 @@ namespace Comet.Game.Combat
             if (character == null || attackerCharacter == null || target.Life.Dead || target.Map != attacker.Map)
                 return;
 
+            if (!shooting && await CounterKill.TryAsync(target, attacker, DateTime.UtcNow))
+                return;
             var stats = Stats.Of(target);
             int defense = Buffs.Defense(target.Effects, stats.Defense, DateTime.UtcNow);
             uint damage = !shooting && Buffs.Flying(target.Effects, DateTime.UtcNow) ? 0 :
@@ -349,6 +351,8 @@ namespace Comet.Game.Combat
                 MonsterAI.Distance(monster.X, monster.Y, character.X, character.Y) > Math.Max(1, monster.Type.AttackRange) + RangeSlack)
                 return;
 
+            if (await CounterKill.TryAsync(client, monster, now))
+                return;
             var stats = Stats.Of(client);
             var type = monster.Type;
             bool flownOver = Buffs.Flying(client.Effects, now) && type.AttackRange <= Buffs.MeleeRange;

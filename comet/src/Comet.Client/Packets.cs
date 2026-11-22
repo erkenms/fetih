@@ -202,7 +202,7 @@ namespace Comet.Client
     // for a kill the count) at 24; 40 bytes
     public sealed record InteractMessage(uint Sender, uint Target, ushort X, ushort Y, uint Action, uint Data)
     {
-        public const uint Attack = 2, Kill = 14, MagicAttack = 24, Shoot = 28;
+        public const uint Attack = 2, Kill = 14, MagicAttack = 24, Shoot = 28, CounterKill = 43, CounterKillSwitch = 44;
 
         // A spell cast: the magic type in the low half of data and the level in the high half;
         // type, target, cell and level are hidden with the sender's ID

@@ -199,6 +199,9 @@ namespace Comet.Integration.Tests
         // Half its swings, so every one with a katana in each hand
         public static readonly MagicFiles.Spell GapingWounds =
             new MagicFiles.Spell(11230, 0, 26, "GapingWounds") { Power = 30020, Percent = 50, WeaponSubtype = 601511, Target = 8 };
+        // Every hit, where the client's is 30%
+        public static readonly MagicFiles.Spell CounterKill =
+            new MagicFiles.Spell(6003, 0, 29, "Counter-Kill") { Power = 30020, Percent = 100, Distance = 20, Target = 16 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -426,7 +429,7 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

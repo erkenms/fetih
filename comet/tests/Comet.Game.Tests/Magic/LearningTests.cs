@@ -91,7 +91,7 @@ namespace Comet.Game.Tests.Magic
                 Learning.MetalAura, Learning.WoodAura, Learning.WaterAura, Learning.FireAura, Learning.EarthAura,
             }, TaughtBy(Learning.Monk));
             Assert.Equal(new ushort[] { Learning.TwofoldBlades, Learning.ArcherBane, Learning.ToxicFog, Learning.ShurikenVortex, Learning.FatalStrike,
-                Learning.PoisonStar, Learning.GapingWounds },
+                Learning.PoisonStar, Learning.GapingWounds, Learning.CounterKill },
                 TaughtBy(Learning.Ninja));
             Assert.Equal(new ushort[]
             {

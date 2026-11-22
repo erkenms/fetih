@@ -37,7 +37,7 @@ namespace Comet.Game.Magic
             MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion, MagicSort.Oblivion,
             MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
             MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
-            MagicSort.ShurikenVortex,
+            MagicSort.ShurikenVortex, MagicSort.CounterKill,
         };
 
         public const ushort FatalStrike = 6011;
@@ -144,6 +144,9 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.Compassion:
                     await DispelAsync(client, spell, Teammates(client, spell.Range).Prepend(client).ToList(), now);
+                    break;
+                case MagicSort.CounterKill:
+                    await SwitchCounterKillAsync(client, spell, now);
                     break;
                 case MagicSort.KrakensRevenge:
                     await KrakenAsync(client, spell, targetID, now);
@@ -1059,6 +1062,18 @@ namespace Comet.Game.Magic
                 });
             LogCast(client, spell, victim.X, victim.Y, hit ? 1 : 0);
             await GainExperienceAsync(client, spell, hit ? 1u : 0u);
+        }
+
+        private static async Task SwitchCounterKillAsync(Client client, MagicType spell, DateTime now)
+        {
+            var character = client.Character;
+            await PayAsync(client, spell, now);
+            client.CounterKill = !client.CounterKill;
+            await client.SendAsync(new MsgInteract(MsgInteract.InteractionType.CounterKillSwitch, client.ID, client.ID,
+                character.X, character.Y, client.CounterKill ? 1u : 0u));
+            LogEvents.For(typeof(Casting), client.CounterKill ? LogEvents.StatusStarted : LogEvents.StatusEnded).Information(
+                "{Name} switched {MagicName} {State}", character.Name, spell.Name, client.CounterKill ? "on" : "off");
+            LogCast(client, spell, character.X, character.Y, 0);
         }
 
         // Takes poison and Soul Shackle away; Compassion leaves the shackle
