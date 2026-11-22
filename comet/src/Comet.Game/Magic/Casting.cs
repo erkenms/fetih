@@ -338,17 +338,24 @@ namespace Comet.Game.Magic
                 targets = targets.Append(client).Concat(Teammates(client, spell.Distance)).Distinct().ToList();
             await PayAsync(client, spell, now);
             var character = target.Character;
-            uint amount = (uint)Math.Max(0, spell.Power);
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
             foreach (var healed in targets)
-                effect.Targets.Add((healed.ID, amount));
+                effect.Targets.Add((healed.ID, HealOf(spell, healed)));
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
             foreach (var healed in targets)
+            {
+                uint amount = HealOf(spell, healed);
                 Kernel.Post(healed, () => HealAsync(healed, amount));
+            }
             LogCast(client, spell, character.X, character.Y, targets.Count);
-            await GainExperienceAsync(client, spell, amount);
+            await GainExperienceAsync(client, spell, HealOf(spell, target));
         }
+
+        // A negative power (Restore's -32768) heals to full
+        private static uint HealOf(MagicType spell, Client target) =>
+            spell.Power >= 0 ? (uint)spell.Power
+                : (uint)Math.Max(0, Attributes.MaxHealth(target) - (target.Character?.HealthPoints ?? 0));
 
         private static async Task HealAsync(Client target, uint amount)
         {

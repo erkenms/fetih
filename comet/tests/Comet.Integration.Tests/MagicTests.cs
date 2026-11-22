@@ -131,6 +131,26 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task RestoreHealsToFull()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 700, 840, GameMaster);
+            var name = first.User.Name;
+            ushort full = first.User.HealthPoints;
+            await this.LogOutAsync(first);
+            await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET HealthPoints = 10 WHERE Name = @name", ("@name", name));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+
+            await CommandAsync(player, "/learn 1105");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1105));
+            await CommandAsync(player, "/xp");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+            await player.Game.CastAsync(player.User.Id, 1105, 0, 700, 840);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 1105);
+            Assert.Equal(full - 10, (int)Assert.Single(effect.Targets).Damage);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Health, out var hp) && hp == full));
+        }
+
+        [Fact]
         public async Task AttrSetsAddsAndTakesAwayStats()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 820, GameMaster)).Player;

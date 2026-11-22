@@ -112,6 +112,8 @@ namespace Comet.Integration.Tests
         // A weapon skill that always goes off, for the test blade
         public static readonly MagicFiles.Spell Phoenix =
             new MagicFiles.Spell(5030, 0, 16, "Phoenix") { Power = 30125, Distance = 9, WeaponSubtype = 410, AutoActive = 4, NeedLevel = 15 };
+        public static readonly MagicFiles.Spell Restore =
+            new MagicFiles.Spell(1105, 0, 2, "Restore") { Power = -32768, Distance = 12, XpSkill = true };
         public static readonly MagicFiles.Spell Scatter =
             new MagicFiles.Spell(8001, 0, 4, "ScatterFire") { Power = 30050, Range = 8, Distance = 15, WeaponSubtype = 500, UseItem = 50, UseItemCount = 2 };
         public static readonly MagicFiles.Spell Riding =
@@ -335,7 +337,7 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
-                    Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter));
+                    Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
