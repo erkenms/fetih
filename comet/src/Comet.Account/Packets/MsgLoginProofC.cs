@@ -89,6 +89,16 @@ namespace Comet.Account.Packets
                 return;
             }
 
+            if (client.Account.AuthorityID < server.AuthorityID)
+            {
+                LogEvents.For<MsgLoginProofC>(LogEvents.AccountLoginFailed).Warning(
+                    "Login failed for {Username} from {IP}: {Reason} ({Realm})",
+                    username, client.IPAddress, "realm_authority", client.Realm);
+                await client.SendAsync(new MsgConnectEx(RejectionCode.ServerLocked));
+                client.Disconnect(DisconnectReasons.AuthFailed);
+                return;
+            }
+
             var args = new TransferAuthArgs();
             args.AccountID = client.Account.AccountID;
             args.AuthorityID = client.Account.AuthorityID;

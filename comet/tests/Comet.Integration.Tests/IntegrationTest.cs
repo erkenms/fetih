@@ -23,6 +23,7 @@ namespace Comet.Integration.Tests
         public const uint RealmOffline = 10;
         public const uint Banned = 12;
         public const uint Locked = 22;
+        public const uint RealmLocked = 70;
 
         // Authority as in the account_authority table: 1 player, 2 moderator, 3 game master
         public const ushort Moderator = 2, GameMaster = 3;

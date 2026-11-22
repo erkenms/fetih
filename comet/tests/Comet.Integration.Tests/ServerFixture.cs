@@ -19,6 +19,7 @@ namespace Comet.Integration.Tests
     public sealed class ServerFixture : IAsyncLifetime
     {
         public const string Realm = "Storm";
+        public const string StaffRealm = "Staff";
         public const string Host = "127.0.0.1";
 
         // Short, so tests can idle longer than it without being slow, but long enough
@@ -240,6 +241,10 @@ namespace Comet.Integration.Tests
                 "UPDATE realm SET GameIPAddress = @host, RpcIPAddress = @host, GamePort = @game, " +
                 "RpcPort = @rpc WHERE Name = @realm",
                 ("@host", Host), ("@game", this.GamePort), ("@rpc", rpcPort), ("@realm", Realm));
+            await this.ExecuteAccountSqlAsync(
+                "INSERT INTO realm (Name, AuthorityID, GameIPAddress, RpcIPAddress, GamePort, RpcPort) " +
+                "VALUES (@realm, 3, @host, @host, @game, @rpc)",
+                ("@host", Host), ("@game", this.GamePort), ("@rpc", rpcPort), ("@realm", StaffRealm));
 
             // Test accounts are made with the account server's own code
             ServerDbContext.Configuration = new ServerConfiguration.DatabaseConfiguration

@@ -105,6 +105,26 @@ namespace Comet.Integration.Tests
             await LoginFailedAsync(email, "realm_offline");
         }
 
+        [Fact]
+        public async Task AccountBelowTheRealmsAuthorityIsRefused()
+        {
+            var email = await this.Servers.CreateAccountAsync();
+            var login = await this.Servers.LoginAsync(email, Password, realm: ServerFixture.StaffRealm);
+            Assert.False(login.Accepted);
+            Assert.Equal(RealmLocked, login.RejectCode);
+            await LoginFailedAsync(email, "realm_authority");
+        }
+
+        [Fact]
+        public async Task AccountAtTheRealmsAuthorityCanLogIn()
+        {
+            var email = await this.Servers.CreateAccountAsync();
+            await this.Servers.ExecuteAccountSqlAsync(
+                "UPDATE account SET AuthorityID = 3 WHERE Username = @name", ("@name", email));
+            var login = await this.Servers.LoginAsync(email, Password, realm: ServerFixture.StaffRealm);
+            Assert.True(login.Accepted);
+        }
+
         [Theory]
         [InlineData(5, Banned, "account_banned")]
         [InlineData(4, Locked, "account_locked")]
