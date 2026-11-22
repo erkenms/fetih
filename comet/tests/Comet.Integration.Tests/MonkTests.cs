@@ -60,5 +60,24 @@ namespace Comet.Integration.Tests
             var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10415);
             Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
         }
+
+        [Fact]
+        public async Task TripleAttackGoesOffInPlaceOfASwingAndHitsThreeTimes()
+        {
+            var at = ServerFixture.PheasantForTripleAttack;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(player, 10490);
+
+            await player.Game.CastAsync(player.User.Id, 10490, pheasant.Id, at.X, at.Y);
+            Assert.Equal("passive", (await RejectedAsync(player)).GetProperty("reason").GetString());
+
+            await HoldBeadsAsync(player);
+            await player.Game.AttackAsync(player.User.Id, pheasant.Id, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10490);
+            Assert.Equal(3, effect.Targets.Count);
+            Assert.All(effect.Targets, t => Assert.Equal(pheasant.Id, t.Id));
+        }
     }
 }

@@ -33,12 +33,13 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
-            MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick,
+            MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick, MagicSort.TripleAttack,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
             public uint Damage { get; set; }
+            public List<uint> Hits { get; } = new List<uint>();
             public uint ID => this.Monster?.Identity ?? this.Player.ID;
         }
 
@@ -134,23 +135,35 @@ namespace Comet.Game.Magic
             foreach (var (type, learned) in client.Skills.AllSpells())
             {
                 if (!Kernel.Magics.TryGet(type, learned.Level, out var spell) || !spell.IsPassive ||
-                    !spell.IsPercent || !IsAttack(spell.Sort) || spell.WeaponSubtype == 0 ||
-                    !Holds(client, spell.WeaponSubtype) || Random.Shared.Next(100) >= spell.Percent)
+                    spell.WeaponSubtype == 0 || !Holds(client, spell.WeaponSubtype))
+                    continue;
+                if (spell.Sort == MagicSort.TripleAttack)
+                {
+                    if (Random.Shared.Next(TripleAttackOdds(targetID)) >= spell.Percent)
+                        continue;
+                    var swing = spell with { Power = MagicType.PercentBase + 100 };
+                    return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
+                }
+                if (!spell.IsPercent || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= spell.Percent)
                     continue;
                 return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
             }
             return false;
         }
 
+        // The client's description: Triple Attack's percent against monsters, a third of it
+        // against players
+        private static int TripleAttackOdds(uint targetID) => Attacks.IsMonster(targetID) ? 100 : 300;
+
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
             MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm or MagicSort.WhirlwindKick;
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
-            DateTime now, bool passive = false)
+            DateTime now, bool passive = false, int hits = 1)
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife)
+            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or MagicSort.TripleAttack)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
                 if (victim == null)
@@ -171,15 +184,21 @@ namespace Comet.Game.Magic
 
             var stats = Stats.Of(client);
             foreach (var victim in victims)
-                victim.Damage = victim.Monster != null
-                    ? AgainstMonster(client, stats, spell, victim.Monster, now)
-                    : AgainstPlayer(client, stats, spell, victim.Player, now);
+                for (int hit = 0; hit < hits; hit++)
+                {
+                    uint damage = victim.Monster != null
+                        ? AgainstMonster(client, stats, spell, victim.Monster, now)
+                        : AgainstPlayer(client, stats, spell, victim.Player, now);
+                    victim.Hits.Add(damage);
+                    victim.Damage += damage;
+                }
 
             await PayAsync(client, spell, now, passive);
             await Durability.WearOnAttackAsync(client);
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
             foreach (var victim in victims)
-                effect.Targets.Add((victim.ID, victim.Damage));
+                foreach (var damage in victim.Hits)
+                    effect.Targets.Add((victim.ID, damage));
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
 

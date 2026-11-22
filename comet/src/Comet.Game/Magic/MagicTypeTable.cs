@@ -55,7 +55,8 @@ namespace Comet.Game.Magic
         public uint DelayMilliseconds { get; init; }
 
         public bool IsXpSkill => this.UseXp == 1;
-        public bool IsPassive => this.AutoActive != 0;
+        // Triple Attack goes off by itself too, though magictype gives it no auto_active
+        public bool IsPassive => this.AutoActive != 0 || this.Sort == MagicSort.TripleAttack;
         public bool IsPercent => this.Power >= PercentBase;
         public int PowerPercent => this.Power - PercentBase;
 
@@ -81,6 +82,7 @@ namespace Comet.Game.Magic
         Riding = 32,
         RadiantPalm = 48,
         WhirlwindKick = 54,
+        TripleAttack = 55,
     }
 
     public sealed class MagicTypeTable
