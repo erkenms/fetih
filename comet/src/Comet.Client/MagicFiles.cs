@@ -17,6 +17,7 @@ namespace Comet.Client
             public bool XpSkill { get; init; }
             public byte Stamina { get; init; }
             public uint WeaponSubtype { get; init; }
+            public byte NeedLevel { get; init; }
         }
 
         // An encrypted magictype.dat as the 5619 client has it: per spell level one line of 50
@@ -41,6 +42,7 @@ namespace Comet.Client
                 fields[15] = spell.Distance.ToString();
                 fields[16] = "-1";
                 fields[18] = spell.NeedExperience.ToString();
+                fields[20] = spell.NeedLevel.ToString();
                 fields[21] = spell.XpSkill ? "1" : spell.Stamina > 0 ? "2" : "0";
                 fields[22] = spell.WeaponSubtype.ToString();
                 fields[29] = spell.Stamina.ToString();
