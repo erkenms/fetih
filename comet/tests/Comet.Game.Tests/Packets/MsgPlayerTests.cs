@@ -120,6 +120,29 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
+        public void PointsAndPastClassesAreShown()
+        {
+            var record = new DbCharacter(7, 1000042, "Hero")
+            {
+                QuizPoints = 1234, EnlightenPoints = 300, AncestorClass = 25, PreviousClass = 135, CurrentClass = 41,
+            };
+            var bytes = new MsgPlayer(new Character(record)).Encode();
+            Assert.Equal(1234u, BitConverter.ToUInt32(bytes, 137));
+            Assert.Equal(300, BitConverter.ToUInt16(bytes, 151));
+            Assert.Equal((25, 135, 41), (BitConverter.ToUInt16(bytes, 215), BitConverter.ToUInt16(bytes, 217),
+                BitConverter.ToUInt16(bytes, 219)));
+        }
+
+        [Fact]
+        public void BossesAreMarked()
+        {
+            var type = new MonsterType { ID = 1, Name = "Boss", Life = 1, Lookface = 104, Level = 3, Boss = true };
+            var generator = new Generator { ID = 1, MapID = 1002, X = 10, Y = 10, Amount = 1, MonsterID = 1 };
+            var monster = new Monster(Monster.FirstID, type, generator, null);
+            Assert.Equal(1, new MsgPlayer(monster).Encode()[189]);
+        }
+
+        [Fact]
         public void RemoveEntityIsAction135WithTheId()
         {
             var bytes = MsgAction.RemoveEntity(1000042).Encode();

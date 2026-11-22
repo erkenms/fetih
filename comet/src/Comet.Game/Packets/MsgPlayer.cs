@@ -34,6 +34,11 @@ namespace Comet.Game.Packets
         public ushort ClanRank { get; set; }
         public string ClanName { get; set; } = string.Empty;
         public Nobility.NobilityRank Nobility { get; set; }
+        public uint QuizPoints { get; set; }
+        public ushort EnlightenPoints { get; set; }
+        public bool Boss { get; set; }
+        public ushort FirstClass { get; set; }
+        public ushort SecondClass { get; set; }
 
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
@@ -64,6 +69,7 @@ namespace Comet.Game.Packets
             this.MonsterHealth = monster.Health;
             this.MonsterLevel = monster.Type.Level;
             this.Name = monster.Type.Name;
+            this.Boss = monster.Type.Boss;
         }
 
         public MsgPlayer(Character character, Equipment equipment) : this(character)
@@ -95,6 +101,10 @@ namespace Comet.Game.Packets
             this.Rebirths = character.Rebirths;
             this.Level = character.Level;
             this.CurrentClass = character.CurrentClass;
+            this.FirstClass = character.AncestorClass;
+            this.SecondClass = character.PreviousClass;
+            this.QuizPoints = character.QuizPoints;
+            this.EnlightenPoints = character.EnlightenPoints;
             this.Name = character.Name;
             this.Nobility = Comet.Game.Nobility.Peerage.RankOf(character.CharacterID);
         }
@@ -141,12 +151,12 @@ namespace Comet.Game.Packets
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133
             writer.Write(this.HelmetColor);         // 135
-            writer.Write(0u);                       // 137 quiz points
+            writer.Write(this.QuizPoints);          // 137
             writer.Write(this.SteedPlus);           // 141
             writer.Write((byte)0);                  // 142
             writer.Write(0u);                       // 143
             writer.Write(0u);                       // 147 steed color
-            writer.Write((ushort)0);                // 151 enlighten points
+            writer.Write(this.EnlightenPoints);     // 151
             writer.Write((ushort)0);                // 153 merit points
             writer.Write((ushort)0);                // 155
             writer.Write((ushort)0);                // 157
@@ -159,13 +169,13 @@ namespace Comet.Game.Packets
             writer.Write((byte)0);                  // 181
             writer.Write(0u);                       // 182
             writer.Write(new byte[3]);              // 186
-            writer.Write((byte)0);                  // 189 boss
+            writer.Write((byte)(this.Boss ? 1 : 0)); // 189
             writer.Write(new byte[16]);             // 190 helmet, armor, weapon art
             writer.Write((byte)0);                  // 206 sub-profession
             writer.Write(0u);                       // 207 sub-profession levels
             writer.Write(0u);                       // 211
-            writer.Write((ushort)0);                // 215 first class
-            writer.Write((ushort)0);                // 217 second class
+            writer.Write(this.FirstClass);          // 215
+            writer.Write(this.SecondClass);         // 217
             writer.Write(this.CurrentClass);        // 219
             writer.Write(0u);                       // 221
             writer.Write((byte)0);                  // 225 must be 0 for the client to
