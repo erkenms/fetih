@@ -186,5 +186,24 @@ namespace Comet.Integration.Tests
             var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", blade.Id.ToString());
             Assert.Equal("needs_right_hand", rejected.GetProperty("reason").GetString());
         }
+
+        [Fact]
+        public async Task AQuiverIsWornWhenUsedAndShownAgainWhenTakenOff()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 740, 960, GameMaster)).Player;
+            var bow = await GiveAsync(player, ServerFixture.Bow.Id);
+            await player.Game.EquipAsync(bow.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, bow.Id));
+            var arrows = await GiveAsync(player, ServerFixture.Arrows.Id);
+
+            // The client sends a quiver's right click as a use, slot 0
+            await player.Game.UseAsync(arrows.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, arrows.Id));
+
+            await player.Game.UnequipAsync(arrows.Id, 5);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Unequip, arrows.Id));
+            var shown = await player.Game.WaitForItemAsync(i => i.Id == arrows.Id);
+            Assert.Equal(ServerFixture.Arrows.Amount, shown?.Amount);
+        }
     }
 }

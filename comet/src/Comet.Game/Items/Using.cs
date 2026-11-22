@@ -11,7 +11,8 @@ namespace Comet.Game.Items
     using Comet.Game.World;
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
-    // EXP balls, scrolls that open into ten meteors or dragonballs, and skill books. Runs on the player's own
+    // EXP balls, scrolls that open into ten meteors or dragonballs, skill books, and quivers,
+    // which go on the left hand. Runs on the player's own
     // packet queue, like Progress.
     public static class Using
     {
@@ -37,6 +38,9 @@ namespace Comet.Game.Items
             if (character == null || item == null)
                 return Reject(client, itemID, 0, "not_in_inventory");
 
+            // The client asks to use a quiver it's told to wear
+            if (ItemSlots.IsArrow(item.TypeID))
+                return await Equipping.EquipAsync(client, itemID, ItemPosition.LeftHand);
             if (HeavenBlessing.StoneDuration(item.TypeID) is TimeSpan blessing)
                 return await PrayAsync(client, item, blessing);
             if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && IsPotion(type))

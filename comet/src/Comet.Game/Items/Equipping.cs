@@ -65,7 +65,10 @@ namespace Comet.Game.Items
             await ItemsRepository.SetPositionsAsync(
                 removed.Append(item).Select(i => (i.ItemID, i.Position)).ToList());
             foreach (var (old, from) in moves)
+            {
                 await client.SendAsync(MsgItem.Unequipped(old.ItemID, from));
+                await ShowQuiverAsync(client, old);
+            }
             await client.SendAsync(MsgItem.Equipped(item.ItemID, position));
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
@@ -95,6 +98,7 @@ namespace Comet.Game.Items
 
             await ItemsRepository.SetPositionsAsync(new[] { (item.ItemID, item.Position) });
             await client.SendAsync(MsgItem.Unequipped(item.ItemID, position));
+            await ShowQuiverAsync(client, item);
             if (position == ItemPosition.Steed)
                 await Riding.DismountAsync(client, "steed_changed");
             if (position == ItemPosition.Crop)
@@ -106,6 +110,13 @@ namespace Comet.Game.Items
                 "{Name} took off item {ItemId} from {Position}", character.Name, item.ItemID, position);
             return true;
         }
+
+        // A quiver whose arrows were counted down while worn doesn't show in the 5619 client's
+        // inventory once taken off, until it's sent again
+        private static Task ShowQuiverAsync(Client client, DbItem item) =>
+            ItemSlots.IsArrow(item.TypeID)
+                ? client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add))
+                : Task.CompletedTask;
 
         public static async Task ShowLookAsync(Client client)
         {
