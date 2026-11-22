@@ -134,6 +134,21 @@ namespace Comet.Game.World
             return true;
         }
 
+        // A move a spell makes (Blade Tempest's dash), shown by the spell's effect; null when
+        // the move is allowed, or why not
+        public static string CheckDash(Client client, int toX, int toY) =>
+            client.Map == null ? "no_map" : CheckCell(client.Map, toX, toY);
+
+        public static async Task DashAsync(Client client, ushort toX, ushort toY, IPacket shown)
+        {
+            if (!TryGetPosition(client, out var map, out var x, out var y))
+                return;
+            client.Character.Direction = DirectionTo(x, y, toX, toY, client.Character.Direction);
+            await MoveAsync(client, map, x, y, toX, toY, shown);
+            LogEvents.For(typeof(Movement), LogEvents.MoveJump).Debug(
+                "{Name} dashed to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
+        }
+
         public static byte DirectionTo(int x, int y, int toX, int toY, byte current)
         {
             int dx = Math.Sign(toX - x), dy = Math.Sign(toY - y);

@@ -33,12 +33,15 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
-            MagicSort.GroundSting, MagicSort.ScurvyBomb,
+            MagicSort.GroundSting, MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
         };
 
         // Scurvy Bomb's fatigue: how much more stamina each of its levels makes spells cost,
         // as its description in MagicEffect.ini has it
         private static readonly int[] FatigueStamina = { 5, 6, 6, 8, 8 };
+
+        // As many as Gale Bomb's description says it hits
+        private const int GaleBombTargets = 3;
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
@@ -148,10 +151,10 @@ namespace Comet.Game.Magic
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
-            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan || AtCell(sort);
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.BladeTempest || AtCell(sort);
 
         // Spells that hit around the cell aimed at, within their distance of the caster
-        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb;
+        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb or MagicSort.GaleBomb;
 
         // A spell that costs stamina costs more during Scurvy Bomb's fatigue
         private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
@@ -184,8 +187,21 @@ namespace Comet.Game.Magic
                 victims = Around(client, now)
                     .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
                     .OrderBy(v => MonsterAI.Distance(x, y, v.X, v.Y))
-                    .Take(MaxTargets)
+                    .Take(spell.Sort == MagicSort.GaleBomb ? GaleBombTargets : MaxTargets)
                     .ToList();
+            }
+            else if (spell.Sort == MagicSort.BladeTempest)
+            {
+                // The client sends the cell it dashes to, no farther than the distance
+                string reason = MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack
+                    ? "too_far" : Movement.CheckDash(client, x, y);
+                if (reason != null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                var path = Line(character.X, character.Y, x, y).ToHashSet();
+                victims = Around(client, now).Where(v => path.Contains((v.X, v.Y))).Take(MaxTargets).ToList();
             }
             else
             {
@@ -209,8 +225,13 @@ namespace Comet.Game.Magic
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
             foreach (var victim in victims)
                 effect.Targets.Add((victim.ID, victim.Damage));
-            await client.SendAsync(effect);
-            await Movement.SendToViewAsync(client, effect);
+            if (spell.Sort == MagicSort.BladeTempest)
+                await Movement.DashAsync(client, x, y, effect);
+            else
+            {
+                await client.SendAsync(effect);
+                await Movement.SendToViewAsync(client, effect);
+            }
 
             uint experience = 0;
             foreach (var victim in victims)
@@ -299,6 +320,16 @@ namespace Comet.Game.Magic
                     yield return new Victim(null, player, px, py);
         }
 
+        // The cells from the one after (x, y) to (toX, toY)
+        private static IEnumerable<(ushort X, ushort Y)> Line(int x, int y, int toX, int toY)
+        {
+            int dx = toX - x, dy = toY - y;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            for (int i = 1; i <= steps; i++)
+                yield return ((ushort)(x + (int)Math.Round((double)dx * i / steps)),
+                    (ushort)(y + (int)Math.Round((double)dy * i / steps)));
+        }
+
         public static bool InShape(MagicType spell, int x, int y, int aimX, int aimY, int tx, int ty)
         {
             int range = (int)spell.Range;
@@ -340,7 +371,7 @@ namespace Comet.Game.Magic
 
         private static bool Resists(Client caster, Client target, MagicType spell)
         {
-            if (spell.Sort != MagicSort.ScurvyBomb)
+            if (spell.Sort is not (MagicSort.ScurvyBomb or MagicSort.GaleBomb))
                 return false;
             int gap = (int)Attributes.BattlePower(target.Character) - (int)Attributes.BattlePower(caster.Character);
             return gap > 0 && Random.Shared.Next(100) < Math.Min(MaxResistPercent, gap * 2);

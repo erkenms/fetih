@@ -80,6 +80,8 @@ namespace Comet.Game.Magic
         GroundSting = 27,
         Riding = 32,
         ScurvyBomb = 56,
+        GaleBomb = 60,
+        BladeTempest = 61,
     }
 
     public sealed class MagicTypeTable
