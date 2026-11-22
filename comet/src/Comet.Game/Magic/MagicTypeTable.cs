@@ -58,8 +58,9 @@ namespace Comet.Game.Magic
 
         public bool IsXpSkill => this.UseXp == 1;
         public bool OnSelf => (this.Target & 2) != 0;
-        // Triple Attack goes off by itself too, though magictype gives it no auto_active
-        public bool IsPassive => this.AutoActive != 0 || this.Sort == MagicSort.TripleAttack;
+        // Target 8 marks weapon skills, Gaping Wounds among them though it has no auto_active;
+        // Triple Attack goes off by itself too, with neither
+        public bool IsPassive => (this.Target & 8) != 0 || this.AutoActive != 0 || this.Sort == MagicSort.TripleAttack;
         public bool IsPercent => this.Power >= PercentBase;
         public int PowerPercent => this.Power - PercentBase;
 

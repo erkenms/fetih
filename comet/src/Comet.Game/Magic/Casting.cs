@@ -212,12 +212,22 @@ namespace Comet.Game.Magic
                     var swing = spell with { Power = MagicType.PercentBase + 100 };
                     return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
                 }
-                if (!spell.IsPercent || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= spell.Percent)
+                if (!spell.IsPercent || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
                     continue;
                 return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
             }
             return false;
         }
+
+        // Gaping Wounds goes off twice as often with its weapons in both hands, as its
+        // description says
+        private static uint PassiveOdds(Client client, MagicType spell) =>
+            spell.Sort == MagicSort.DecLife && BothHandsHold(client, spell.WeaponSubtype) ? spell.Percent * 2 : spell.Percent;
+
+        private static bool BothHandsHold(Client client, uint weaponSubtype) =>
+            new[] { ItemPosition.RightHand, ItemPosition.LeftHand }
+                .Select(p => client.Equipment?[p])
+                .All(item => item != null && WeaponsOf(weaponSubtype).Contains(Proficiency.WeaponType(item.TypeID)));
 
         // The client's description: Triple Attack's percent against monsters, a third of it
         // against players
