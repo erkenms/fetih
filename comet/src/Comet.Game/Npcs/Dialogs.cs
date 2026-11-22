@@ -24,6 +24,13 @@ namespace Comet.Game.Npcs
                 [OfflineTrainingAdmin.ID] = OfflineTrainingAdmin.TalkAsync,
                 [Upgraders.ArtisanID] = Upgraders.ArtisanAsync,
                 [Upgraders.DragonBallUpgraderID] = Upgraders.DragonBallUpgraderAsync,
+                [JobCenter.TrojanStarID] = JobCenter.TalkAsync,
+                [JobCenter.WarriorGodID] = JobCenter.TalkAsync,
+                [JobCenter.ArcherGodID] = JobCenter.TalkAsync,
+                [JobCenter.WindSageID] = JobCenter.TalkAsync,
+                [JobCenter.HeadAbbotID] = JobCenter.TalkAsync,
+                [JobCenter.PirateLordID] = JobCenter.TalkAsync,
+                [JobCenter.TaoistMoonID] = JobCenter.TalkAsync,
             };
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

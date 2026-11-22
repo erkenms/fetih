@@ -45,6 +45,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetRefined = (111016, "IronHelmet", 3899, 20);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) DragonBall = (1088000, "DragonBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Meteor = (1088001, "Meteor", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Emerald = (1080001, "Emerald", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExpBall = (723700, "ExpBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) MeteorScroll = (720027, "MeteorScroll", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperDragonGem = (700013, "SuperDragonGem", 1, 0);
@@ -102,6 +103,9 @@ namespace Comet.Integration.Tests
         // Short, so a test can revive a dead player
         public const int ReviveSeconds = 1;
         public const int TrainingOnlineSeconds = 2;
+
+        // The class masters' hall of Data/npcs.json
+        public const uint JobCenter = 1004;
 
         // The market, with the booth flags of Data/npcs.json
         public const uint Market = 1036;
@@ -289,7 +293,7 @@ namespace Comet.Integration.Tests
             Directory.CreateDirectory(Path.Combine(this.MapDirectory, "ini"));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "GameMap.dat"),
                 MapFiles.GameMapDat((1002, "map/map/newplain.7z"), (1006, "map/map/horse.7z"),
-                    (Market, "map/map/market.7z"),
+                    (Market, "map/map/market.7z"), (JobCenter, "map/map/jobcenter.7z"),
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z")));
@@ -298,6 +302,7 @@ namespace Comet.Integration.Tests
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(400, 400));
+            File.WriteAllBytes(Path.Combine(maps, "jobcenter.DMap"), MapFiles.DMap(96, 96));
             File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
@@ -306,7 +311,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
-                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor,
+                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor, Emerald,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),

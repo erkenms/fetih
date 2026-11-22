@@ -353,7 +353,7 @@ namespace Comet.Client
     public sealed record UserAttribMessage(uint Id, Dictionary<uint, ulong> Values)
     {
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
-            Experience = 5, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
+            Experience = 5, Class = 7, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
             Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27;
         public const ulong DeadStatus = 0x400;
 

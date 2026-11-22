@@ -154,6 +154,18 @@ namespace Comet.Game.States
                 character.Name, stat.ToString(), current, value, reason);
         }
 
+        public static async Task SetClassAsync(Client client, byte currentClass)
+        {
+            var character = client.Character;
+            ushort oldMaxHealth = Attributes.MaxHealth(client), oldMaxMana = Attributes.MaxMana(client);
+            character.CurrentClass = currentClass;
+            var change = new MsgUserAttrib(client.ID, AttributeType.Class, currentClass);
+            await client.SendAsync(change);
+            await Movement.SendToViewAsync(client, change);
+            await SendAttributesAsync(client);
+            await FollowMaximumsAsync(client, oldMaxHealth, oldMaxMana);
+        }
+
         private static async Task LevelChangedAsync(Client client, byte from, string reason)
         {
             var character = client.Character;

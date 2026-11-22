@@ -39,6 +39,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "broadcast", "bc" }, Authority.GameMaster, "/bc <text>", BroadcastAsync),
             new Command(new[] { "exp" }, Authority.GameMaster, "/exp <amount>", ExperienceAsync),
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
+            new Command(new[] { "class" }, Authority.GameMaster, "/class <class>", ClassAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
             new Command(new[] { "steed" }, Authority.GameMaster, "/steed [plus]", SteedAsync),
@@ -274,6 +275,19 @@ namespace Comet.Game.Chat
             var action = custom ? MsgAction.ActionType.ClientCustomDialog : MsgAction.ActionType.ClientDialog;
             await client.SendAsync(MsgAction.OpenWindow(client.ID, window, client.Character.X, client.Character.Y, action));
             await Talk.NoticeAsync(client, $"Asked the client to open window {window} ({(int)action}).");
+            return true;
+        }
+
+        private static async Task<bool> ClassAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !byte.TryParse(args[0], out var currentClass))
+                return await UsageAsync(client, "/class <class>");
+            if (!Promotion.Exists(currentClass))
+            {
+                await Talk.NoticeAsync(client, "Classes are 10-15, 20-25, 40-45, 50-55, 60-65, 70-75, 100, 101, 132-135 and 142-145.");
+                return false;
+            }
+            await Progress.SetClassAsync(client, currentClass);
             return true;
         }
 

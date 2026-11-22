@@ -32,6 +32,8 @@ namespace Comet.Core.Logging
         public const string CharacterLevel = "character.level";
         public const string CharacterAllotted = "character.allotted";
         public const string CharacterAllotRejected = "character.allot_rejected";
+        public const string CharacterPromoted = "character.promoted";
+        public const string CharacterPromotionRejected = "character.promotion_rejected";
         public const string CharacterSilver = "character.silver";
         public const string CharacterConquerPoints = "character.conquer_points";
         public const string CharacterStoredSilver = "character.stored_silver";
