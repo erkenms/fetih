@@ -97,22 +97,22 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task AMonkKeepsOneAuraUpOnTheTeamAndCastingItAgainTakesItDown()
         {
-            await using var monk = (await this.PlayingAtAsync(1002, 740, 900, GameMaster, level: 100)).Player;
-            await using var mate = (await this.PlayingAtAsync(1002, 742, 900, GameMaster, level: 100)).Player;
+            await using var monk = (await this.PlayingAtAsync(1002, 920, 760, GameMaster, level: 100)).Player;
+            await using var mate = (await this.PlayingAtAsync(1002, 922, 760, GameMaster, level: 100)).Player;
             await LearnAsync(monk, 10395);
             await LearnAsync(monk, 10410);
             await TeamUpAsync(monk, mate);
 
-            await monk.Game.CastAsync(monk.User.Id, 10395, 0, 740, 900);
+            await monk.Game.CastAsync(monk.User.Id, 10395, 0, 920, 760);
             var effect = await monk.Game.WaitForEffectAsync(e => e.Caster == monk.User.Id && e.Type == 10395);
             Assert.Equal(new[] { monk.User.Id, mate.User.Id }, effect.Targets.Select(t => t.Id).OrderBy(id => id != monk.User.Id));
             Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id && (a.StatusHigh & TyrantAura) != 0));
 
-            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 740, 900);
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
             Assert.NotNull(await monk.Game.WaitForAttribAsync(a => a.Id == monk.User.Id &&
                 (a.StatusHigh & FendAura) != 0 && (a.StatusHigh & TyrantAura) == 0));
 
-            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 740, 900);
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
             Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id &&
                 a.Values.ContainsKey(Status) && (a.StatusHigh & FendAura) == 0));
         }
@@ -171,17 +171,17 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task CompassionReachesTheTeamAndDispelsWaitThreeSeconds()
         {
-            await using var monk = (await this.PlayingAtAsync(1002, 740, 880, GameMaster, level: 100)).Player;
-            await using var mate = (await this.PlayingAtAsync(1002, 745, 880, GameMaster, level: 100)).Player;
+            await using var monk = (await this.PlayingAtAsync(1002, 920, 790, GameMaster, level: 100)).Player;
+            await using var mate = (await this.PlayingAtAsync(1002, 925, 790, GameMaster, level: 100)).Player;
             await LearnAsync(monk, 10430);
             await TeamUpAsync(monk, mate);
 
-            await monk.Game.CastAsync(monk.User.Id, 10430, 0, 740, 880);
+            await monk.Game.CastAsync(monk.User.Id, 10430, 0, 920, 790);
             var effect = await monk.Game.WaitForEffectAsync(e => e.Caster == monk.User.Id && e.Type == 10430);
             Assert.Equal(new[] { monk.User.Id, mate.User.Id }, effect.Targets.Select(t => t.Id).OrderBy(id => id != monk.User.Id));
 
             await Task.Delay(Casting);
-            await monk.Game.CastAsync(monk.User.Id, 10430, 0, 740, 880);
+            await monk.Game.CastAsync(monk.User.Id, 10430, 0, 920, 790);
             Assert.Equal("too_soon", (await RejectedAsync(monk)).GetProperty("reason").GetString());
         }
 

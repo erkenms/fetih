@@ -93,10 +93,10 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantUnderFlyer = (860, 900);
         public static readonly (ushort X, ushort Y) PheasantForCruelShade = (860, 940);
         public static readonly (ushort X, ushort Y) PheasantInFog = (900, 940);
-        public static readonly (ushort X, ushort Y) PheasantForPalm = (780, 960);
-        public static readonly (ushort X, ushort Y) PheasantForKick = (740, 960);
-        public static readonly (ushort X, ushort Y) PheasantForTripleAttack = (780, 920);
-        public static readonly (ushort X, ushort Y) PheasantForOblivion = (740, 920);
+        public static readonly (ushort X, ushort Y) PheasantForPalm = (860, 700);
+        public static readonly (ushort X, ushort Y) PheasantForKick = (900, 700);
+        public static readonly (ushort X, ushort Y) PheasantForTripleAttack = (940, 700);
+        public static readonly (ushort X, ushort Y) PheasantForOblivion = (860, 740);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
