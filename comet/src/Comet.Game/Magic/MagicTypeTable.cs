@@ -79,6 +79,7 @@ namespace Comet.Game.Magic
         DecLife = 26,
         GroundSting = 27,
         Riding = 32,
+        RadiantPalm = 48,
     }
 
     public sealed class MagicTypeTable

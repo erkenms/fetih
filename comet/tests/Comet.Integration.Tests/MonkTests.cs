@@ -1,0 +1,49 @@
+namespace Comet.Integration.Tests
+{
+    using System.Threading.Tasks;
+    using Comet.Client;
+    using Xunit;
+    using static Comet.Client.UserAttribMessage;
+
+    // The monk's skills, with the test magictype.dat of ServerFixture
+    public class MonkTests : IntegrationTest
+    {
+        public MonkTests(ServerFixture servers) : base(servers) { }
+
+        private Task<System.Text.Json.JsonElement> RejectedAsync(Player player) =>
+            this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name);
+
+        private async Task HoldBeadsAsync(Player player)
+        {
+            var beads = await GiveAsync(player, ServerFixture.Beads.Id);
+            await player.Game.EquipAsync(beads.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, beads.Id));
+        }
+
+        private async Task LearnAsync(Player player, ushort magicType)
+        {
+            await CommandAsync(player, $"/learn {magicType}");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == magicType));
+        }
+
+        [Fact]
+        public async Task RadiantPalmNeedsBeadsAndHitsFourPacesInARowForStamina()
+        {
+            var at = ServerFixture.PheasantForPalm;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 4, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(player, 10381);
+
+            await player.Game.CastAsync(player.User.Id, 10381, 0, at.X, at.Y);
+            Assert.Equal("wrong_weapon", (await RejectedAsync(player)).GetProperty("reason").GetString());
+
+            await HoldBeadsAsync(player);
+            await player.Game.CastAsync(player.User.Id, 10381, 0, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10381);
+            Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(Stamina, out var s) && s == 80));
+        }
+    }
+}

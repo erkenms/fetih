@@ -33,7 +33,7 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
-            MagicSort.GroundSting,
+            MagicSort.GroundSting, MagicSort.RadiantPalm,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -143,7 +143,7 @@ namespace Comet.Game.Magic
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
-            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan;
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm;
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
             DateTime now, bool passive = false)
@@ -278,17 +278,10 @@ namespace Comet.Game.Magic
                 case MagicSort.Bomb:
                     return true;
                 case MagicSort.Line:
-                {
-                    int dx = aimX - x, dy = aimY - y;
-                    int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
-                    if (steps == 0)
-                        return false;
-                    for (int i = 1; i <= range; i++)
-                        if (x + (int)Math.Round((double)dx * i / steps) == tx &&
-                            y + (int)Math.Round((double)dy * i / steps) == ty)
-                            return true;
-                    return false;
-                }
+                    return OnLine(x, y, aimX, aimY, tx, ty, range);
+                // The client's description: all targets within 4 paces in a row, magictype's distance
+                case MagicSort.RadiantPalm:
+                    return OnLine(x, y, aimX, aimY, tx, ty, (int)spell.Distance);
                 case MagicSort.Fan:
                 {
                     if (aimX == x && aimY == y)
@@ -301,6 +294,19 @@ namespace Comet.Game.Magic
                 default:
                     return false;
             }
+        }
+
+        private static bool OnLine(int x, int y, int aimX, int aimY, int tx, int ty, int length)
+        {
+            int dx = aimX - x, dy = aimY - y;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            if (steps == 0)
+                return false;
+            for (int i = 1; i <= length; i++)
+                if (x + (int)Math.Round((double)dx * i / steps) == tx &&
+                    y + (int)Math.Round((double)dy * i / steps) == ty)
+                    return true;
+            return false;
         }
 
         // Spells with power from 30000 on hit like the weapon, by that percentage; others are
