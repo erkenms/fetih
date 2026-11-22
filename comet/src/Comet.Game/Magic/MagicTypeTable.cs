@@ -57,7 +57,9 @@ namespace Comet.Game.Magic
         Bomb = 5,
         AttachStatus = 6,
         DetachStatus = 7,
+        DispatchXp = 11,
         Line = 14,
+        AddMana = 20,
         Riding = 32,
     }
 

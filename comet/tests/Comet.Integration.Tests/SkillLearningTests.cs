@@ -89,5 +89,17 @@ namespace Comet.Integration.Tests
             await player.Game.UseAsync(second.Id);
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text == "You have already learned Thunder."));
         }
+
+        [Fact]
+        public async Task MeditationRefusesAFullManaBar()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 780, 960, GameMaster, level: 50)).Player;
+            await CommandAsync(player, "/learn 1195");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1195));
+            await CommandAsync(player, "/restore");
+            await player.Game.CastAsync(player.User.Id, 1195, 0, 780, 960);
+            Assert.Equal("full_mana", (await this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name))
+                .GetProperty("reason").GetString());
+        }
     }
 }

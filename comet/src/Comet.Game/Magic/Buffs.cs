@@ -18,6 +18,8 @@ namespace Comet.Game.Magic
         {
             1015 => StatusFlags.Accuracy,
             1020 => StatusFlags.Shield,
+            1085 => StatusFlags.Accuracy,
+            1090 => StatusFlags.Shield,
             1025 => StatusFlags.Superman,
             1095 => StatusFlags.Stigma,
             1110 => StatusFlags.Cyclone,

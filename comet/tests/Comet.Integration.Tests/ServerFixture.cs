@@ -102,6 +102,10 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(1110, 0, 6, "Cyclone") { Power = 30020, StepSeconds = 20, XpSkill = true, NeedLevel = 3 };
         public static readonly MagicFiles.Spell Hercules =
             new MagicFiles.Spell(1115, 0, 5, "Hercules") { Power = 30085, Range = 3, Distance = 10, Stamina = 30, NeedLevel = 40 };
+        public static readonly MagicFiles.Spell Revive =
+            new MagicFiles.Spell(1050, 0, 7, "Revive") { Distance = 12, XpSkill = true };
+        public static readonly MagicFiles.Spell Meditation =
+            new MagicFiles.Spell(1195, 0, 20, "Meditation") { Power = 310, Distance = 5, Stamina = 100, NeedLevel = 44 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -323,7 +327,7 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
-                    Cyclone, Hercules));
+                    Cyclone, Hercules, Revive, Meditation));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

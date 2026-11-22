@@ -32,6 +32,7 @@ namespace Comet.Game.Magic
         {
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding,
+            MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -78,6 +79,15 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.AttachStatus:
                     await AttachAsync(client, spell, targetID, now);
+                    break;
+                case MagicSort.DetachStatus:
+                    await ReviveAsync(client, spell, targetID, now);
+                    break;
+                case MagicSort.AddMana:
+                    await MeditateAsync(client, spell, now);
+                    break;
+                case MagicSort.DispatchXp:
+                    await RoarAsync(client, spell, now);
                     break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
@@ -288,27 +298,119 @@ namespace Comet.Game.Magic
                 : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
 
-        // Heals the caster if the target isn't a living player in reach
+        // Heals the caster if the target isn't a living player in reach; a spell for many
+        // (Healing Rain) heals the caster and the living teammates in reach too
         private static async Task HealAsync(Client client, MagicType spell, uint targetID, DateTime now)
         {
             var target = Friendly(client, spell, targetID);
+            var targets = new List<Client> { target };
+            if (spell.Multi)
+                targets = targets.Append(client).Concat(Teammates(client, spell.Distance)).Distinct().ToList();
             await PayAsync(client, spell, now);
             var character = target.Character;
             uint amount = (uint)Math.Max(0, spell.Power);
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
-            effect.Targets.Add((target.ID, amount));
+            foreach (var healed in targets)
+                effect.Targets.Add((healed.ID, amount));
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
-            Kernel.Post(target, async () =>
-            {
-                var healed = target.Character;
-                if (healed == null || target.Life.Dead)
-                    return;
-                healed.HealthPoints = (ushort)Math.Min(Attributes.MaxHealth(target), healed.HealthPoints + amount);
-                await target.SendAsync(new MsgUserAttrib(target.ID, AttributeType.Health, healed.HealthPoints));
-            });
-            LogCast(client, spell, character.X, character.Y, 1);
+            foreach (var healed in targets)
+                Kernel.Post(healed, () => HealAsync(healed, amount));
+            LogCast(client, spell, character.X, character.Y, targets.Count);
             await GainExperienceAsync(client, spell, amount);
+        }
+
+        private static async Task HealAsync(Client target, uint amount)
+        {
+            var healed = target.Character;
+            if (healed == null || target.Life.Dead)
+                return;
+            healed.HealthPoints = (ushort)Math.Min(Attributes.MaxHealth(target), healed.HealthPoints + amount);
+            await target.SendAsync(new MsgUserAttrib(target.ID, AttributeType.Health, healed.HealthPoints));
+        }
+
+        // Living teammates on the caster's map within the distance
+        private static IEnumerable<Client> Teammates(Client client, uint distance)
+        {
+            var character = client.Character;
+            foreach (var member in Social.Teams.OthersOf(client))
+            {
+                var other = member.Character;
+                if (other != null && !member.Life.Dead && member.Map == client.Map &&
+                    MonsterAI.Distance(character.X, character.Y, other.X, other.Y) <= distance + DistanceSlack)
+                    yield return member;
+            }
+        }
+
+        // Revive and Pray raise a dead player where they lie
+        private static async Task ReviveAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var character = client.Character;
+            Client target = null;
+            string reason =
+                targetID == client.ID || !Kernel.Players.TryGet(targetID, out target) || target.Character == null ||
+                target.Map != client.Map ? "not_found" :
+                !target.Life.Dead ? "alive_target" :
+                MonsterAI.Distance(character.X, character.Y, target.Character.X, target.Character.Y) >
+                    spell.Distance + DistanceSlack ? "too_far" :
+                null;
+            if (reason != null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, target.Character.X, target.Character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((target.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            Kernel.Post(target, () => Death.ReviveHereAsync(target, $"magic {spell.Type} from {character.Name}"));
+            LogCast(client, spell, target.Character.X, target.Character.Y, 1);
+        }
+
+        // Meditation turns the caster's stamina into mana, the spell's power of it
+        private static async Task MeditateAsync(Client client, MagicType spell, DateTime now)
+        {
+            var character = client.Character;
+            ushort mana = (ushort)Math.Min(Attributes.MaxMana(client), character.ManaPoints + Math.Max(0, spell.Power));
+            uint restored = (uint)(mana - character.ManaPoints);
+            if (restored == 0)
+            {
+                Reject(client, spell.Type, "full_mana");
+                return;
+            }
+
+            await PayAsync(client, spell, now);
+            character.ManaPoints = mana;
+            await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, character.ManaPoints));
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((client.ID, restored));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            LogCast(client, spell, character.X, character.Y, 1);
+            await GainExperienceAsync(client, spell, restored);
+        }
+
+        // Roar fills the XP bars of the caster's teammates in view
+        private static async Task RoarAsync(Client client, MagicType spell, DateTime now)
+        {
+            var character = client.Character;
+            var members = Social.Teams.OthersOf(client)
+                .Where(m => m.Character != null && !m.Life.Dead && m.Map == client.Map &&
+                    GameMap<Client>.InView(character.X, character.Y, m.Character.X, m.Character.Y))
+                .ToList();
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var member in members)
+                effect.Targets.Add((member.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            foreach (var member in members)
+                Kernel.Post(member, () => member.Character == null || member.Life.Dead
+                    ? Task.CompletedTask
+                    : Recovery.AddXpAsync(member, Energy.MaxXp, DateTime.UtcNow));
+            LogCast(client, spell, character.X, character.Y, members.Count);
         }
 
         private static async Task AttachAsync(Client client, MagicType spell, uint targetID, DateTime now)
