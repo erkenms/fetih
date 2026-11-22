@@ -53,7 +53,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) NormalTortoiseGem = (700071, "NormalTortoiseGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperThunderGem = (700103, "SuperThunderGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
-        public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050000, "LuckyArrow", 3, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050020, "DeftArrow", 3, 0);
         // Teleports to Twin City's portal, 430,380 in Data/maps.json
         public static readonly (uint Id, string Name, ushort Amount, byte Level) TwinCityGate = (1060020, "TwinCityGate", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Steed = (300000, "Steed", 100, 0);

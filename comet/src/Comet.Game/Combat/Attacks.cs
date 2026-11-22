@@ -116,7 +116,7 @@ namespace Comet.Game.Combat
                     : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Defense, Random.Shared);
             damage = Buffs.AgainstMonster(client.Effects, damage, now);
             if (shooting)
-                await UseArrowAsync(client, arrows);
+                await Quivers.UseAsync(client, arrows, 1);
             if (type.IsGuard)
                 await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
 
@@ -249,7 +249,7 @@ namespace Comet.Game.Combat
             int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared), now);
             bool sure = Buffs.HasAccuracy(client.Effects, now);
             if (shooting)
-                await UseArrowAsync(client, arrows);
+                await Quivers.UseAsync(client, arrows, 1);
             Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, shooting, sure));
             Schedule(client, run, interval);
         }
@@ -370,24 +370,6 @@ namespace Comet.Game.Combat
                 "{Killer} {KillerId} killed {MonsterName} {MonsterId} (type {MonsterTypeId}) on map {MapId} at {X},{Y}",
                 attacker.Type.Name, attacker.Identity, victim.Type.Name, victim.Identity, victim.Type.ID,
                 victim.Map.Id, victim.X, victim.Y);
-        }
-
-        private static async Task UseArrowAsync(Client client, Database.Models.DbItem arrows)
-        {
-            arrows.Amount--;
-            if (arrows.Amount > 0)
-            {
-                await ItemsRepository.SetAmountAsync(arrows.ItemID, arrows.Amount);
-                await client.SendAsync(new MsgItemInfo(arrows, MsgItemInfo.ItemAction.Update));
-                return;
-            }
-
-            client.Equipment.Clear(ItemPosition.LeftHand);
-            await ItemsRepository.DeleteAsync(arrows.ItemID);
-            await client.SendAsync(MsgItem.Unequipped(arrows.ItemID, ItemPosition.LeftHand));
-            await client.SendAsync(MsgItem.Removed(arrows.ItemID));
-            await client.SendAsync(MsgItem.DisplayGears(client.ID, client.Equipment));
-            await Movement.SendToViewAsync(client, new MsgPlayer(client));
         }
 
         public static bool IsMonster(uint id) => id >= Monster.FirstID && id <= Monster.LastID;

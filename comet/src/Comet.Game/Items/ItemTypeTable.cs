@@ -57,7 +57,7 @@ namespace Comet.Game.Items
                 if (type == null || types.ContainsKey(type.ID))
                     skipped++;
                 else
-                    types[type.ID] = type;
+                    types[type.ID] = Quivers.Resize(type);
             }
             return new ItemTypeTable(types, skipped);
         }

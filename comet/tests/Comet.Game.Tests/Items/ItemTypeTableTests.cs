@@ -1,5 +1,6 @@
 namespace Comet.Game.Tests.Items
 {
+    using System.Linq;
     using System.Text;
     using Comet.Client;
     using Comet.Game.Items;
@@ -60,6 +61,19 @@ namespace Comet.Game.Tests.Items
             Assert.True(table.TryGet(111003, out var helmet));
             Assert.Equal(("Iron Helmet", (ushort)3899, (byte)15), (helmet.Name, helmet.AmountLimit, helmet.RequiredLevel));
             Assert.True(table.TryGet(1000000, out _));
+        }
+
+        [Fact]
+        public void PlainQuiversHoldTwentyAHundredAndFiveHundredArrows()
+        {
+            var data = ItemFiles.ItemTypeDat((1050000, "LuckyArrow", 500, 0), (1050001, "IronArrow", 500, 0),
+                (1050002, "SpeedArrow", 500, 0), (1050020, "DeftArrow", 3, 0));
+            TqFileCipher.Decrypt(data);
+            var table = ItemTypeTable.Parse(data);
+            Assert.Equal(new ushort[] { 20, 100, 500, 3 }, new uint[] { 1050000, 1050001, 1050002, 1050020 }
+                .Select(id => { table.TryGet(id, out var type); return type.Amount; }));
+            Assert.True(table.TryGet(1050001, out var iron));
+            Assert.Equal((ushort)100, iron.AmountLimit);
         }
 
         [Fact]
