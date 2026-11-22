@@ -13,7 +13,7 @@ namespace Comet.Game.Magic
     // that on Adrenaline Rush's effect from its own character.
     public static class Pirates
     {
-        public const ushort EagleEye = 11030, BlackSpot = 11120, AdrenalineRush = 11130;
+        public const ushort EagleEye = 11030, BlackSpot = 11120, AdrenalineRush = 11130, Windstorm = 11140;
 
         private static readonly ConcurrentDictionary<uint, DateTime> Spotted = new ConcurrentDictionary<uint, DateTime>();
 

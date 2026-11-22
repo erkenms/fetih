@@ -195,5 +195,21 @@ namespace Comet.Integration.Tests
                 e.Targets.Any(t => t.Id == victim.User.Id));
             Assert.Equal(new[] { victim.User.Id, second.User.Id, third.User.Id }, effect.Targets.Select(t => t.Id));
         }
+    
+
+        [Fact]
+        public async Task WindstormTurnsARapierSwingIntoACombo()
+        {
+            var at = ServerFixture.PheasantForWindstorm;
+            await using var pirate = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await pirate.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await HoldAsync(pirate, ServerFixture.Rapier.Id);
+            await LearnAsync(pirate, 11140);
+
+            await pirate.Game.AttackAsync(pirate.User.Id, pheasant.Id, at.X, at.Y);
+            var combo = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11140);
+            Assert.Equal(pheasant.Id, Assert.Single(combo.Targets).Id);
+        }
     }
 }

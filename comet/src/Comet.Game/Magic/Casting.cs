@@ -152,6 +152,8 @@ namespace Comet.Game.Magic
         // its percent; false if none did
         public static async Task<bool> TryPassiveAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
         {
+            if (await TryWindstormAsync(client, targetID, x, y, now))
+                return true;
             foreach (var (type, learned) in client.Skills.AllSpells())
             {
                 if (!Kernel.Magics.TryGet(type, learned.Level, out var spell) || !spell.IsPassive ||
@@ -161,6 +163,26 @@ namespace Comet.Game.Magic
                 return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
             }
             return false;
+        }
+
+        // Windstorm: at its percent, a third against players, a rapier swing is a combo of three
+        // hits, shown as the skill
+        private const int WindstormHits = 3, WindstormAgainstPlayersPercent = 33;
+
+        private static async Task<bool> TryWindstormAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
+        {
+            if (!Pirates.TryGetLearned(client, Pirates.Windstorm, out var spell) ||
+                spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ||
+                Random.Shared.Next(100) >= (Attacks.IsMonster(targetID) ? spell.Percent : WindstormAgainstPlayersPercent))
+                return false;
+            // The swing checked the reach
+            var combo = spell with
+            {
+                Sort = MagicSort.Attack,
+                Power = MagicType.PercentBase + 100 * WindstormHits,
+                Distance = ushort.MaxValue,
+            };
+            return await AttackAsync(client, combo, targetID, x, y, now, passive: true);
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
