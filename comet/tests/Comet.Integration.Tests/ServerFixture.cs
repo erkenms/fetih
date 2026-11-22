@@ -212,6 +212,9 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(5002, 0, 16, "PoisonousArrows") { Power = 30002, Percent = 100, StepSeconds = 2, ActiveTimes = 15, Distance = 15, WeaponSubtype = 500, AutoActive = 4, Target = 8, Status = 2 };
         public static readonly MagicFiles.Spell Dash =
             new MagicFiles.Spell(1051, 0, 12, "Dash") { Power = 30200, Distance = 1, WeaponSubtype = 900 };
+        // A Robot of Data/monsters.json, lookface 214 and 50000 life, for two seconds
+        public static readonly MagicFiles.Spell Golem =
+            new MagicFiles.Spell(1270, 0, 19, "Golem") { Power = 2000, StepSeconds = 2, Distance = 5, XpSkill = true, Target = 2 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -439,7 +442,7 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

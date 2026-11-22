@@ -34,6 +34,7 @@ namespace Comet.Game.Combat
             character.HealthPoints = 0;
             await Magic.Casting.DropAuraAsync(client);
             client.CounterKill = false;
+            Magic.Transforming.Revert(client);
             client.Effects.Clear();
             Pking.OnDeath(client);
             client.Energy.KoCount = 0;

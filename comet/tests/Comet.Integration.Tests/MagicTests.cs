@@ -502,5 +502,21 @@ namespace Comet.Integration.Tests
             Assert.Equal((ServerFixture.PkField, 66, 70), await this.SavedPositionAsync(victim));
             Assert.Equal((ServerFixture.PkField, 65, 70), await this.SavedPositionAsync(warrior));
         }
+            [Fact]
+        public async Task GolemTurnsThePlayerIntoItsMonsterForItsStep()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 760, 720, GameMaster, level: 100)).Player;
+            await CommandAsync(player, "/learn 1270");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1270));
+            await FillXpAsync(player);
+
+            await player.Game.CastAsync(player.User.Id, 1270, player.User.Id, 760, 720);
+            var look = await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Mesh, out var m) && m >= 10_000_000);
+            Assert.Equal((214u, player.User.Mesh % 10_000_000), ((uint)(look.Values[Mesh] / 10_000_000), (uint)(look.Values[Mesh] % 10_000_000)));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(MaxHealth, out var h) && h == 50000));
+
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Mesh, out var m) && m < 10_000_000,
+                System.TimeSpan.FromSeconds(10)));
+        }
     }
 }

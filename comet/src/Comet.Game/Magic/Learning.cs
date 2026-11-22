@@ -40,7 +40,7 @@ namespace Comet.Game.Magic
             WoodAura = 10421, WaterAura = 10422, FireAura = 10423, EarthAura = 10424, Tranquility = 10425,
             Compassion = 10430, TripleAttack = 10490, ScurvyBomb = 11040, CannonBarrage = 11050, BlackbeardsRage = 11060,
             GaleBomb = 11070, KrakensRevenge = 11100, BladeTempest = 11110, BlackSpot = 11120, AdrenalineRush = 11130,
-            Windstorm = 11140, Intensify = 9000, ShurikenVortex = 6010, FatalStrike = 6011, PoisonStar = 6002, GapingWounds = 11230, CounterKill = 6003, Dash = 1051;
+            Windstorm = 11140, Intensify = 9000, ShurikenVortex = 6010, FatalStrike = 6011, PoisonStar = 6002, GapingWounds = 11230, CounterKill = 6003, Dash = 1051, WaterElf = 1280;
 
         // In the order masters list them
         private static readonly Rule[] Rules =
@@ -107,6 +107,7 @@ namespace Comet.Game.Magic
             new Rule(Pray, new[] { Taoist }, Element.Water),
             new Rule(AdvancedCure, new[] { Taoist }, Element.Water),
             new Rule(Nectar, new[] { Taoist }, Element.Water),
+            new Rule(WaterElf, new[] { Taoist }, Element.Water, Level: 50),
             new Rule(DivineHare, new[] { Taoist }, Element.Water, FromMaster: false),
             new Rule(Volcano, new[] { Taoist }, Element.Fire),
             new Rule(FireMeteor, new[] { Taoist }, Element.Fire),

@@ -10,13 +10,18 @@ namespace Comet.Game.States
         // buttons. The ghost is only the body.
         public const ulong DeadStatus = StatusFlags.Dead;
 
-        // The ghost look replaces the body with a transformation: 98 for men, 99 for women
+        // The ghost look replaces the body with a transformation: 98 for men, 99 for women;
+        // a spell's transformation shows a monster's lookface the same way
         private const uint TransformFactor = 10_000_000;
 
         private volatile bool dead;
         public bool Dead { get => this.dead; set => this.dead = value; }
         public DateTime DiedAt { get; set; }
         public bool Ghost { get; set; }
+
+        // The monster lookface a transformation shows, or 0
+        private volatile uint transformLook;
+        public uint TransformLook { get => this.transformLook; set => this.transformLook = value; }
         public ulong Status => this.Dead ? DeadStatus : 0;
 
         // Starts after the player last revived; monsters can't hurt them until then
@@ -26,7 +31,7 @@ namespace Comet.Game.States
         {
             uint mesh = (uint)(character.Mesh + character.Avatar * 10000);
             if (!this.Ghost)
-                return mesh;
+                return this.TransformLook * TransformFactor + mesh;
             uint ghost = character.Mesh % 10 < 3 ? 99u : 98u;
             return ghost * TransformFactor + mesh;
         }

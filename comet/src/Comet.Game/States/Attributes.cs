@@ -9,7 +9,10 @@ namespace Comet.Game.States
     {
         public const ushort PointsPerLevel = 3;
 
-        public static ushort MaxHealth(Client client) => MaxHealth(client.Character, client.Equipment);
+        // A transformed player's is the monster's life
+        public static ushort MaxHealth(Client client) => client.Transformation is { } t
+            ? (ushort)Math.Min(t.Type.Life, ushort.MaxValue)
+            : MaxHealth(client.Character, client.Equipment);
 
         // Worn items add their own health after the trojans' bonus
         public static ushort MaxHealth(DbCharacter character, Equipment equipment)

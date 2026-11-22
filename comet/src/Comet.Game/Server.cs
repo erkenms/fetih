@@ -133,6 +133,7 @@ namespace Comet.Game
                 await Social.Trading.CancelAsync(actor, "logout");
                 await Items.Vending.CloseAsync(actor, "logout");
                 await Magic.Casting.DropAuraAsync(actor);
+                Magic.Transforming.Revert(actor);
                 await Social.Teams.LeaveAsync(actor, "logout");
                 await Arena.Qualifier.LeaveAsync(actor, "logout");
                 await Social.Relationships.LogoutAsync(actor);

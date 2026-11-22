@@ -38,6 +38,7 @@ namespace Comet.Game.Magic
             MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
             MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
             MagicSort.ShurikenVortex, MagicSort.CounterKill, MagicSort.Collide,
+            MagicSort.Transform,
         };
 
         public const ushort FatalStrike = 6011;
@@ -144,6 +145,9 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.Compassion:
                     await DispelAsync(client, spell, Teammates(client, spell.Range).Prepend(client).ToList(), now);
+                    break;
+                case MagicSort.Transform:
+                    await TransformAsync(client, spell, now);
                     break;
                 case MagicSort.CounterKill:
                     await SwitchCounterKillAsync(client, spell, now);
@@ -1174,6 +1178,23 @@ namespace Comet.Game.Magic
                 });
             LogCast(client, spell, victim.X, victim.Y, hit ? 1 : 0);
             await GainExperienceAsync(client, spell, hit ? 1u : 0u);
+        }
+
+        private static async Task TransformAsync(Client client, MagicType spell, DateTime now)
+        {
+            if (!Transforming.TryGetType(spell, out var type))
+            {
+                Reject(client, spell.Type, "unknown_monster");
+                return;
+            }
+            var character = client.Character;
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((client.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Transforming.StartAsync(client, type, spell.StepSeconds, now);
+            LogCast(client, spell, character.X, character.Y, 1);
         }
 
         private static async Task SwitchCounterKillAsync(Client client, MagicType spell, DateTime now)

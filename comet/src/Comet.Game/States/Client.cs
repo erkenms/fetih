@@ -81,6 +81,9 @@ namespace Comet.Game.States
         // The aura a monk keeps up, by magic type, or 0; on the monk's own queue
         public ushort Aura { get; set; }
 
+        // A transformation spell's monster, until when; on the player's own queue
+        public Magic.Transformation Transformation { get; set; }
+
         // Counter-Kill switched on; on the player's own queue
         public bool CounterKill { get; set; }
 
