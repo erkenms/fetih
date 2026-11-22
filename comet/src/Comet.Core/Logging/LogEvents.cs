@@ -166,6 +166,7 @@ namespace Comet.Core.Logging
         public const string MagicCast = "magic.cast";
         public const string MagicRejected = "magic.rejected";
         public const string MagicLearned = "magic.learned";
+        public const string MagicLearnRejected = "magic.learn_rejected";
         public const string MagicLevel = "magic.level";
         public const string ProficiencyLevel = "proficiency.level";
         public const string XpFull = "xp.full";

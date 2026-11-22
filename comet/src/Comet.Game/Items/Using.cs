@@ -11,7 +11,7 @@ namespace Comet.Game.Items
     using Comet.Game.World;
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
-    // EXP balls, and scrolls that open into ten meteors or dragonballs. Runs on the player's own
+    // EXP balls, scrolls that open into ten meteors or dragonballs, and skill books. Runs on the player's own
     // packet queue, like Progress.
     public static class Using
     {
@@ -43,6 +43,8 @@ namespace Comet.Game.Items
                 return await DrinkAsync(client, item, type);
             if (System.Array.IndexOf(ExpBalls, item.TypeID) >= 0)
                 return await ExpBallAsync(client, item);
+            if (Magic.Learning.BookOf(item.TypeID) is ushort magic)
+                return await ReadBookAsync(client, item, magic);
             if (item.TypeID is MeteorScroll or DragonBallScroll)
                 return await OpenScrollAsync(client, item,
                     item.TypeID == MeteorScroll ? Upgrading.Meteor : Upgrading.DragonBall);
@@ -141,6 +143,25 @@ namespace Comet.Game.Items
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) for {Amount} of {GemTypeId}",
                 client.Character.Name, scroll.ItemID, scroll.TypeID, ScrollGems, gemType);
+            return true;
+        }
+
+        // A book that can't teach its reader stays in the inventory
+        private static async Task<bool> ReadBookAsync(Client client, DbItem book, ushort magic)
+        {
+            string reason = Magic.Learning.Unmet(client, magic);
+            if (reason != null)
+            {
+                await Talk.NoticeAsync(client, Magic.Learning.Explain(reason, magic));
+                return Reject(client, book.ItemID, book.TypeID, reason);
+            }
+
+            await UseUpAsync(client, book);
+            await Magic.Learning.LearnAsync(client, magic, "book");
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) to learn magic {MagicType}",
+                client.Character.Name, book.ItemID, book.TypeID, magic);
+            await Talk.NoticeAsync(client, $"You have learned {Magic.Learning.NameOf(magic)}.");
             return true;
         }
 
