@@ -77,6 +77,11 @@ namespace Comet.Game.Tests.Magic
             Assert.DoesNotContain(Learning.Thunder, TaughtBy(Learning.Taoist));
             Assert.Empty(TaughtBy(Learning.Monk));
             Assert.Equal(new ushort[] { Learning.TwofoldBlades, Learning.ArcherBane, Learning.ToxicFog }, TaughtBy(Learning.Ninja));
+            Assert.Equal(new ushort[]
+            {
+                Learning.Windstorm, Learning.BladeTempest, Learning.CannonBarrage, Learning.GaleBomb, Learning.EagleEye,
+                Learning.ScurvyBomb, Learning.BlackSpot, Learning.AdrenalineRush, Learning.BlackbeardsRage, Learning.KrakensRevenge,
+            }, TaughtBy(Learning.Pirate));
         }
 
         [Fact]
