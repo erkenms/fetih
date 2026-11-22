@@ -14,7 +14,7 @@ namespace Comet.Game.Magic
         // Superman against players: 1.9 times
         public const int SupermanAgainstPlayers = 190;
 
-        public static ulong StatusOf(ushort magicType) => magicType switch
+        public static UInt128 StatusOf(ushort magicType) => magicType switch
         {
             1015 => StatusFlags.Accuracy,
             1020 => StatusFlags.Shield,
@@ -25,6 +25,7 @@ namespace Comet.Game.Magic
             1110 => StatusFlags.Cyclone,
             1075 => StatusFlags.Invisible,
             8002 or 8003 => StatusFlags.Fly,
+            10405 => StatusFlags.SoulShackle,
             _ => 0,
         };
 
@@ -49,6 +50,8 @@ namespace Comet.Game.Magic
 
         // A flying player can't be reached by melee, from players or monsters within this range
         public const int MeleeRange = 2;
+
+        public static bool Shackled(TimedStatus effects, DateTime now) => effects.Has(StatusFlags.SoulShackle, now);
 
         public static bool Flying(TimedStatus effects, DateTime now) => effects.Has(StatusFlags.Fly, now);
 

@@ -80,6 +80,9 @@ namespace Comet.Game.Magic
                 case MagicSort.Recruit:
                     await HealAsync(client, spell, targetID, now);
                     break;
+                case MagicSort.AttachStatus when Buffs.StatusOf(spell.Type) == StatusFlags.SoulShackle:
+                    await ShackleAsync(client, spell, targetID, now);
+                    break;
                 case MagicSort.AttachStatus:
                     await AttachAsync(client, spell, targetID, now);
                     break;
@@ -436,6 +439,7 @@ namespace Comet.Game.Magic
                 targetID == client.ID || !Kernel.Players.TryGet(targetID, out target) || target.Character == null ||
                 target.Map != client.Map ? "not_found" :
                 !target.Life.Dead ? "alive_target" :
+                Buffs.Shackled(target.Effects, now) ? "shackled" :
                 MonsterAI.Distance(character.X, character.Y, target.Character.X, target.Character.Y) >
                     spell.Distance + DistanceSlack ? "too_far" :
                 null;
@@ -579,8 +583,8 @@ namespace Comet.Game.Magic
 
         private static async Task AttachAsync(Client client, MagicType spell, uint targetID, DateTime now)
         {
-            ulong status = Buffs.StatusOf(spell.Type);
-            if (status == 0)
+            var status = Buffs.StatusOf(spell.Type);
+            if (status == UInt128.Zero)
             {
                 Reject(client, spell.Type, "unknown_status");
                 return;
@@ -653,6 +657,48 @@ namespace Comet.Game.Magic
                     await Pking.SendStatusAsync(member);
             LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
                 "{Name} took down aura 0x{Status:X}", client.Character?.Name, flag);
+        }
+
+        // Soul Shackle keeps a dead player from reviving for magictype's step. As the client
+        // describes it: sure against a lower battle power, 5% less for each point above the
+        // caster's.
+        private static async Task ShackleAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var character = client.Character;
+            Client target = null;
+            string reason =
+                !Kernel.Players.TryGet(targetID, out target) || target == client || target.Character == null ||
+                target.Map != client.Map ? "not_found" :
+                !target.Life.Dead ? "alive_target" :
+                Buffs.Shackled(target.Effects, now) ? "shackled" :
+                !Pking.CanAttack(client, target) ? "pk_mode" :
+                MonsterAI.Distance(character.X, character.Y, target.Character.X, target.Character.Y) >
+                    spell.Distance + DistanceSlack ? "too_far" :
+                null;
+            if (reason != null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            int above = (int)Attributes.BattlePower(target.Character) - (int)Attributes.BattlePower(character);
+            bool shackled = Random.Shared.Next(100) < 100 - 5 * Math.Max(0, above);
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, target.Character.X, target.Character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((target.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Pking.OnAttackAsync(client, target);
+            if (shackled)
+            {
+                target.Effects.Set(StatusFlags.SoulShackle, now + TimeSpan.FromSeconds(spell.StepSeconds), now);
+                await Pking.SendStatusAsync(target);
+                LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                    "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                    target.Character.Name, StatusFlags.SoulShackle, spell.StepSeconds, character.Name, spell.Name);
+            }
+            LogCast(client, spell, target.Character.X, target.Character.Y, shackled ? 1 : 0);
+            await GainExperienceAsync(client, spell, shackled ? 1u : 0u);
         }
 
         private static async Task RideAsync(Client client, MagicType spell, DateTime now)

@@ -73,6 +73,7 @@ namespace Comet.Game.Combat
                 character == null ? "no_character" :
                 !life.Dead ? "alive" :
                 !anyTime && now - life.DiedAt < ReviveDelay ? "too_soon" :
+                Magic.Buffs.Shackled(client.Effects, now) ? "shackled" :
                 null;
             if (refused != null)
             {
@@ -96,7 +97,7 @@ namespace Comet.Game.Combat
 
         public static async Task ReviveHereAsync(Client client, string reason)
         {
-            if (client.Character == null || !client.Life.Dead)
+            if (client.Character == null || !client.Life.Dead || Magic.Buffs.Shackled(client.Effects, DateTime.UtcNow))
                 return;
             await RaiseAsync(client, DateTime.UtcNow);
             await ShowRevivalAsync(client, reason);

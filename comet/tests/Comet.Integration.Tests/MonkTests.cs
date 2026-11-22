@@ -116,5 +116,31 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id &&
                 a.Values.ContainsKey(Status) && (a.StatusHigh & FendAura) == 0));
         }
+
+        private const ulong SoulShackle = 1UL << (111 - 64);
+
+        [Fact]
+        public async Task SoulShackleKeepsTheDeadFromReviving()
+        {
+            await using var monk = (await this.PlayingAtAsync(ServerFixture.PkField, 60, 60, GameMaster, strength: 5000)).Player;
+            await using var victim = (await this.PlayingAtAsync(ServerFixture.PkField, 61, 60)).Player;
+            await LearnAsync(monk, 10405);
+            await FreePkAsync(monk);
+
+            await monk.Game.CastAsync(monk.User.Id, 10405, victim.User.Id, 61, 60);
+            Assert.Equal("alive_target", (await RejectedAsync(monk)).GetProperty("reason").GetString());
+
+            await monk.Game.AttackAsync(monk.User.Id, victim.User.Id, 61, 60);
+            Assert.NotNull(await victim.Game.WaitForInteractAsync(
+                i => i.Action == InteractMessage.Kill && i.Target == victim.User.Id, System.TimeSpan.FromSeconds(15)));
+            await monk.Game.CastAsync(monk.User.Id, 10405, victim.User.Id, 61, 60);
+            Assert.NotNull(await monk.Game.WaitForEffectAsync(e => e.Caster == monk.User.Id && e.Type == 10405));
+            Assert.NotNull(await victim.Game.WaitForAttribAsync(a => a.Id == victim.User.Id && (a.StatusHigh & SoulShackle) != 0));
+
+            await Task.Delay(System.TimeSpan.FromSeconds(ServerFixture.ReviveSeconds));
+            await victim.Game.ReviveAsync(victim.User.Id);
+            var refused = await this.Servers.WaitForEventAsync("game", "character.revive_rejected", "name", victim.User.Name);
+            Assert.Equal("shackled", refused.GetProperty("reason").GetString());
+        }
     }
 }
