@@ -32,6 +32,7 @@ namespace Comet.Game.Combat
             await Social.Trading.CancelAsync(client, "died");
             await Items.Riding.DismountAsync(client, "died");
             character.HealthPoints = 0;
+            await Magic.Casting.DropAuraAsync(client);
             client.Effects.Clear();
             Pking.OnDeath(client);
             client.Energy.KoCount = 0;

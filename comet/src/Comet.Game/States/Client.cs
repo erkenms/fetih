@@ -78,6 +78,9 @@ namespace Comet.Game.States
         public Mount Mount { get; } = new Mount();
         public DateTime NextCastAt { get; set; }
 
+        // The aura a monk keeps up, by magic type, or 0; on the monk's own queue
+        public ushort Aura { get; set; }
+
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |

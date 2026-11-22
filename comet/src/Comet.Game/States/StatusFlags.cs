@@ -23,6 +23,14 @@ namespace Comet.Game.States
         public const ulong Fly = 0x8000000;
         public const ulong HeavenBlessing = 1UL << 33;
         public const ulong Riding = 1UL << 50;
+
+        public static readonly UInt128 TyrantAura = UInt128.One << 98;
+        public static readonly UInt128 FendAura = UInt128.One << 100;
+        public static readonly UInt128 MetalAura = UInt128.One << 102;
+        public static readonly UInt128 WoodAura = UInt128.One << 104;
+        public static readonly UInt128 WaterAura = UInt128.One << 106;
+        public static readonly UInt128 FireAura = UInt128.One << 108;
+        public static readonly UInt128 EarthAura = UInt128.One << 110;
     }
 
     // Statuses that last a while: XP full, and those spells give, with the spell's power.

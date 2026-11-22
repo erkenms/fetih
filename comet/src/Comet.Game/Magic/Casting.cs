@@ -34,6 +34,7 @@ namespace Comet.Game.Magic
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick, MagicSort.TripleAttack,
+            MagicSort.Aura,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -96,6 +97,9 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.GroundSting:
                     await FogAsync(client, spell, x, y, now);
+                    break;
+                case MagicSort.Aura:
+                    await AuraAsync(client, spell, now);
                     break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
@@ -598,6 +602,57 @@ namespace Comet.Game.Magic
                 "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
                 character.Name, status, spell.StepSeconds, client.Character.Name, spell.Name);
             LogCast(client, spell, character.X, character.Y, 1);
+        }
+
+        // A monk keeps one aura up on themself and the teammates within its range, as long as
+        // magictype's step; casting it again takes it down, casting another swaps it
+        private static async Task AuraAsync(Client client, MagicType spell, DateTime now)
+        {
+            var flag = Buffs.AuraOf(spell.Type);
+            if (flag == UInt128.Zero)
+            {
+                Reject(client, spell.Type, "unknown_status");
+                return;
+            }
+            var character = client.Character;
+            bool off = client.Aura == spell.Type;
+            await DropAuraAsync(client);
+            if (off)
+            {
+                LogCast(client, spell, character.X, character.Y, 0);
+                return;
+            }
+
+            var members = Teammates(client, spell.Range).Prepend(client).ToList();
+            await PayAsync(client, spell, now);
+            client.Aura = spell.Type;
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var member in members)
+            {
+                member.Effects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+                effect.Targets.Add((member.ID, 0));
+            }
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            foreach (var member in members)
+                await Pking.SendStatusAsync(member);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} put up {MagicName} on {Count} players", character.Name, spell.Name, members.Count);
+            LogCast(client, spell, character.X, character.Y, members.Count);
+        }
+
+        // Takes the monk's aura off them and their teammates
+        public static async Task DropAuraAsync(Client client)
+        {
+            var flag = Buffs.AuraOf(client.Aura);
+            client.Aura = 0;
+            if (flag == UInt128.Zero)
+                return;
+            foreach (var member in Social.Teams.OthersOf(client).Prepend(client))
+                if (member.Effects.Remove(flag))
+                    await Pking.SendStatusAsync(member);
+            LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
+                "{Name} took down aura 0x{Status:X}", client.Character?.Name, flag);
         }
 
         private static async Task RideAsync(Client client, MagicType spell, DateTime now)

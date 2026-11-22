@@ -81,6 +81,7 @@ namespace Comet.Game.Magic
         GroundSting = 27,
         Riding = 32,
         RadiantPalm = 48,
+        Aura = 51,
         WhirlwindKick = 54,
         TripleAttack = 55,
     }

@@ -1,5 +1,6 @@
 namespace Comet.Integration.Tests
 {
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -24,6 +25,17 @@ namespace Comet.Integration.Tests
         {
             await CommandAsync(player, $"/learn {magicType}");
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == magicType));
+        }
+
+        private static async Task TeamUpAsync(Player leader, Player member)
+        {
+            await leader.Game.TeamAsync(TeamMessage.Create, leader.User.Id);
+            Assert.NotNull(await leader.Game.WaitForTeamAsync(t => t.Action == TeamMessage.Create && t.Data == leader.User.Id));
+            Assert.NotNull(await leader.Game.WaitForSpawnAsync(member.User.Id));
+            await leader.Game.TeamAsync(TeamMessage.Invite, member.User.Id);
+            Assert.NotNull(await member.Game.WaitForTeamAsync(t => t.Action == TeamMessage.Invite && t.Data == leader.User.Id));
+            await member.Game.TeamAsync(TeamMessage.AcceptInvite, leader.User.Id);
+            Assert.NotNull(await leader.Game.WaitForTeamMemberAsync(m => m.Id == member.User.Id));
         }
 
         [Fact]
@@ -78,6 +90,31 @@ namespace Comet.Integration.Tests
             var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10490);
             Assert.Equal(3, effect.Targets.Count);
             Assert.All(effect.Targets, t => Assert.Equal(pheasant.Id, t.Id));
+        }
+
+        private const ulong TyrantAura = 1UL << (98 - 64), FendAura = 1UL << (100 - 64);
+
+        [Fact]
+        public async Task AMonkKeepsOneAuraUpOnTheTeamAndCastingItAgainTakesItDown()
+        {
+            await using var monk = (await this.PlayingAtAsync(1002, 740, 900, GameMaster, level: 100)).Player;
+            await using var mate = (await this.PlayingAtAsync(1002, 742, 900, GameMaster, level: 100)).Player;
+            await LearnAsync(monk, 10395);
+            await LearnAsync(monk, 10410);
+            await TeamUpAsync(monk, mate);
+
+            await monk.Game.CastAsync(monk.User.Id, 10395, 0, 740, 900);
+            var effect = await monk.Game.WaitForEffectAsync(e => e.Caster == monk.User.Id && e.Type == 10395);
+            Assert.Equal(new[] { monk.User.Id, mate.User.Id }, effect.Targets.Select(t => t.Id).OrderBy(id => id != monk.User.Id));
+            Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id && (a.StatusHigh & TyrantAura) != 0));
+
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 740, 900);
+            Assert.NotNull(await monk.Game.WaitForAttribAsync(a => a.Id == monk.User.Id &&
+                (a.StatusHigh & FendAura) != 0 && (a.StatusHigh & TyrantAura) == 0));
+
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 740, 900);
+            Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id &&
+                a.Values.ContainsKey(Status) && (a.StatusHigh & FendAura) == 0));
         }
     }
 }

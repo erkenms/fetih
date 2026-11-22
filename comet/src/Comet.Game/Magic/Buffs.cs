@@ -28,6 +28,18 @@ namespace Comet.Game.Magic
             _ => 0,
         };
 
+        public static UInt128 AuraOf(ushort magicType) => magicType switch
+        {
+            10395 => StatusFlags.TyrantAura,
+            10410 => StatusFlags.FendAura,
+            10420 => StatusFlags.MetalAura,
+            10421 => StatusFlags.WoodAura,
+            10422 => StatusFlags.WaterAura,
+            10423 => StatusFlags.FireAura,
+            10424 => StatusFlags.EarthAura,
+            _ => UInt128.Zero,
+        };
+
         // The flag for magictype's status number, for spells that take a status away
         public static ulong FlagOf(int status) => status switch
         {
