@@ -36,7 +36,9 @@ namespace Comet.Game.Magic
             ViperFang = 11005, EagleEye = 11030, RadiantPalm = 10381, Oblivion = 10390, TyrantAura = 10395,
             Serenity = 10400, SoulShackle = 10405, FendAura = 10410, WhirlwindKick = 10415, MetalAura = 10420,
             WoodAura = 10421, WaterAura = 10422, FireAura = 10423, EarthAura = 10424, Tranquility = 10425,
-            Compassion = 10430, TripleAttack = 10490;
+            Compassion = 10430, TripleAttack = 10490, ScurvyBomb = 11040, CannonBarrage = 11050, BlackbeardsRage = 11060,
+            GaleBomb = 11070, KrakensRevenge = 11100, BladeTempest = 11110, BlackSpot = 11120, AdrenalineRush = 11130,
+            Windstorm = 11140;
 
         // In the order masters list them
         private static readonly Rule[] Rules =
@@ -71,7 +73,16 @@ namespace Comet.Game.Magic
             new Rule(WaterAura, new[] { Monk }),
             new Rule(FireAura, new[] { Monk }),
             new Rule(EarthAura, new[] { Monk }),
+            new Rule(Windstorm, new[] { Pirate }),
+            new Rule(BladeTempest, new[] { Pirate }),
+            new Rule(CannonBarrage, new[] { Pirate }),
+            new Rule(GaleBomb, new[] { Pirate }),
             new Rule(EagleEye, new[] { Pirate }),
+            new Rule(ScurvyBomb, new[] { Pirate }),
+            new Rule(BlackSpot, new[] { Pirate }),
+            new Rule(AdrenalineRush, new[] { Pirate }),
+            new Rule(BlackbeardsRage, new[] { Pirate }),
+            new Rule(KrakensRevenge, new[] { Pirate }),
             new Rule(Meditation, new[] { Taoist }),
             new Rule(Thunder, new[] { Taoist }, FromMaster: false),
             new Rule(Cure, new[] { Taoist }, FromMaster: false),

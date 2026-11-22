@@ -35,15 +35,31 @@ namespace Comet.Game.Magic
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick, MagicSort.TripleAttack,
             MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion, MagicSort.Oblivion,
+            MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
+            MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
         };
 
         // Serenity, Tranquility and Compassion, as the client describes them
         public static readonly TimeSpan DispelInterval = TimeSpan.FromSeconds(3);
 
+        // Scurvy Bomb's fatigue: how much more stamina each of its levels makes spells cost,
+        // as its description in MagicEffect.ini has it
+        private static readonly int[] FatigueStamina = { 5, 6, 6, 8, 8 };
+
+        // As many as Gale Bomb's description says it hits, and Kraken's Revenge at each level
+        private const int GaleBombTargets = 3;
+        private static readonly int[] KrakenTargets = { 3, 3, 4, 4, 5 };
+
+        // What Cannon Barrage and Blackbeard's Rage do to players, by percent of the attack, as
+        // their descriptions have it; magictype's power is for monsters
+        private const int CannonAgainstPlayers = 10;
+        private static readonly int[] BlackbeardAgainstPlayers = { 20, 22, 24, 27, 30 };
+
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
             public uint Damage { get; set; }
             public List<uint> Hits { get; } = new List<uint>();
+            public bool Missed { get; set; }
             public uint ID => this.Monster?.Identity ?? this.Player.ID;
         }
 
@@ -117,6 +133,12 @@ namespace Comet.Game.Magic
                 case MagicSort.Compassion:
                     await DispelAsync(client, spell, Teammates(client, spell.Range).Prepend(client).ToList(), now);
                     break;
+                case MagicSort.KrakensRevenge:
+                    await KrakenAsync(client, spell, targetID, now);
+                    break;
+                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage when !InXpStatus(client, spell, now):
+                    await StartXpStatusAsync(client, spell, now);
+                    break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
                     break;
@@ -127,9 +149,9 @@ namespace Comet.Game.Magic
             !Supported.Contains(spell.Sort) ? "unsupported_sort" :
             spell.IsPassive ? "passive" :
             now < client.NextCastAt ? "too_soon" :
-            spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) ? "xp_not_full" :
+            spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) && !InXpStatus(client, spell, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
-            client.Energy.Stamina < spell.UseStamina ? "no_stamina" :
+            client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
             spell.UseItem != 0 && ItemToUse(client, spell) == null ? "no_item" :
             spell.Sort == MagicSort.Riding ? Riding.Problem(client) :
@@ -143,7 +165,7 @@ namespace Comet.Game.Magic
                 ? item : null;
         }
 
-        private static bool Holds(Client client, uint weaponSubtype) =>
+        public static bool Holds(Client client, uint weaponSubtype) =>
             new[] { ItemPosition.RightHand, ItemPosition.LeftHand }
                 .Select(p => client.Equipment?[p])
                 .Any(item => item != null && Proficiency.WeaponType(item.TypeID) == weaponSubtype);
@@ -152,9 +174,12 @@ namespace Comet.Game.Magic
         // its percent; false if none did
         public static async Task<bool> TryPassiveAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
         {
+            if (await TryWindstormAsync(client, targetID, x, y, now))
+                return true;
             foreach (var (type, learned) in client.Skills.AllSpells())
             {
-                if (!Kernel.Magics.TryGet(type, learned.Level, out var spell) || !spell.IsPassive ||
+                // Windstorm shares Triple Attack's sort, 55, and went off above if at all
+                if (type == Pirates.Windstorm || !Kernel.Magics.TryGet(type, learned.Level, out var spell) || !spell.IsPassive ||
                     spell.WeaponSubtype == 0 || !Holds(client, spell.WeaponSubtype))
                     continue;
                 if (spell.Sort == MagicSort.TripleAttack)
@@ -175,15 +200,73 @@ namespace Comet.Game.Magic
         // against players
         private static int TripleAttackOdds(uint targetID) => Attacks.IsMonster(targetID) ? 100 : 300;
 
+        // Windstorm: at its percent, a third against players, a rapier swing is a combo of three
+        // hits, shown as the skill
+        private const int WindstormHits = 3, WindstormAgainstPlayersPercent = 33;
+
+        private static async Task<bool> TryWindstormAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
+        {
+            if (!Pirates.TryGetLearned(client, Pirates.Windstorm, out var spell) ||
+                spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ||
+                Random.Shared.Next(100) >= (Attacks.IsMonster(targetID) ? spell.Percent : WindstormAgainstPlayersPercent))
+                return false;
+            // The swing checked the reach
+            var combo = spell with
+            {
+                Sort = MagicSort.Attack,
+                Power = MagicType.PercentBase + 100 * WindstormHits,
+                Distance = ushort.MaxValue,
+            };
+            return await AttackAsync(client, combo, targetID, x, y, now, passive: true);
+        }
+
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
-            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm or MagicSort.WhirlwindKick;
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan or MagicSort.RadiantPalm or MagicSort.WhirlwindKick or MagicSort.BladeTempest ||
+            AtCell(sort);
+
+        // Spells that hit around the cell aimed at, within their distance of the caster
+        private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb or MagicSort.GaleBomb or MagicSort.CannonBarrage;
+
+        // The status of an XP skill whose first cast only starts it: while it's on, the client
+        // casts the skill for each attack
+        private static UInt128 XpStatusOf(MagicSort sort) => sort switch
+        {
+            MagicSort.CannonBarrage => StatusFlags.CannonBarrage,
+            MagicSort.BlackbeardsRage => StatusFlags.BlackbeardsRage,
+            _ => 0,
+        };
+
+        private static bool InXpStatus(Client client, MagicType spell, DateTime now) =>
+            XpStatusOf(spell.Sort) is var flag && flag != 0 && client.Effects.Has(flag, now);
+
+        // A spell that costs stamina costs more during Scurvy Bomb's fatigue
+        private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
+            spell.UseStamina == 0 ? (byte)0 :
+            (byte)Math.Min(byte.MaxValue, spell.UseStamina + (client.Effects.Power(StatusFlags.Fatigue, now) ?? 0));
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
             DateTime now, bool passive = false, int hits = 1)
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or MagicSort.TripleAttack)
+            if (spell.Sort == MagicSort.BlackbeardsRage)
+            {
+                // The target and the nearest around it, as many as the spell's active times
+                var (target, reason) = FindTarget(client, spell, targetID, now);
+                if (target == null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                victims = Around(client, now)
+                    .Where(v => v.ID != target.ID && MonsterAI.Distance(target.X, target.Y, v.X, v.Y) <= spell.Range)
+                    .OrderBy(v => MonsterAI.Distance(target.X, target.Y, v.X, v.Y))
+                    .Prepend(target)
+                    .Take((int)Math.Max(1, spell.ActiveTimes))
+                    .ToList();
+                (x, y) = (target.X, target.Y);
+            }
+            else if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or MagicSort.TripleAttack)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
                 if (victim == null)
@@ -193,6 +276,32 @@ namespace Comet.Game.Magic
                 }
                 victims = new List<Victim> { victim };
                 (x, y) = (victim.X, victim.Y);
+            }
+            else if (AtCell(spell.Sort))
+            {
+                if (MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack)
+                {
+                    Reject(client, spell.Type, "too_far");
+                    return false;
+                }
+                victims = Around(client, now)
+                    .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
+                    .OrderBy(v => MonsterAI.Distance(x, y, v.X, v.Y))
+                    .Take(spell.Sort == MagicSort.GaleBomb ? GaleBombTargets : MaxTargets)
+                    .ToList();
+            }
+            else if (spell.Sort == MagicSort.BladeTempest)
+            {
+                // The client sends the cell it dashes to, no farther than the distance
+                string reason = MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack
+                    ? "too_far" : Movement.CheckDash(client, x, y);
+                if (reason != null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                var path = Line(character.X, character.Y, x, y).ToHashSet();
+                victims = Around(client, now).Where(v => path.Contains((v.X, v.Y))).Take(MaxTargets).ToList();
             }
             else
             {
@@ -204,14 +313,17 @@ namespace Comet.Game.Magic
 
             var stats = Stats.Of(client);
             foreach (var victim in victims)
+            {
+                victim.Missed = victim.Player != null && Resists(client, victim.Player, spell);
                 for (int hit = 0; hit < hits; hit++)
                 {
-                    uint damage = victim.Monster != null
+                    uint damage = victim.Missed ? 0 : victim.Monster != null
                         ? AgainstMonster(client, stats, spell, victim.Monster, now)
                         : AgainstPlayer(client, stats, spell, victim.Player, now);
                     victim.Hits.Add(damage);
                     victim.Damage += damage;
                 }
+            }
 
             await PayAsync(client, spell, now, passive);
             await Durability.WearOnAttackAsync(client);
@@ -219,8 +331,27 @@ namespace Comet.Game.Magic
             foreach (var victim in victims)
                 foreach (var damage in victim.Hits)
                     effect.Targets.Add((victim.ID, damage));
-            await client.SendAsync(effect);
-            await Movement.SendToViewAsync(client, effect);
+            if (spell.Sort == MagicSort.BladeTempest)
+                await Movement.DashAsync(client, x, y, effect);
+            else
+            {
+                await client.SendAsync(effect);
+                await Movement.SendToViewAsync(client, effect);
+            }
+
+            // Blade Tempest spots all it hits, once Black Spot is learned
+            MagicType blackSpot = null;
+            bool spots = spell.Sort == MagicSort.BladeTempest &&
+                Pirates.TryGetLearned(client, Pirates.BlackSpot, out blackSpot);
+            foreach (var victim in victims.Where(v => v.Damage > 0))
+            {
+                if (spots)
+                    await Pirates.SpotAsync(client, blackSpot, victim.ID, victim.X, victim.Y, now);
+                else
+                    await Pirates.AfterDamageAsync(client, victim.ID, victim.X, victim.Y, now);
+            }
+            if (spell.Type == Pirates.EagleEye && victims.Any(v => Pirates.IsSpotted(v.ID, now)))
+                await Pirates.RushAsync(client, "black_spot");
 
             uint experience = 0;
             foreach (var victim in victims)
@@ -230,6 +361,8 @@ namespace Comet.Game.Magic
                     var target = victim.Player;
                     await Pking.OnAttackAsync(client, target);
                     Kernel.Post(target, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
+                    if (spell.Sort == MagicSort.ScurvyBomb && !victim.Missed)
+                        Kernel.Post(target, () => FatigueAsync(client, target, spell));
                     continue;
                 }
 
@@ -249,6 +382,23 @@ namespace Comet.Game.Magic
             LogCast(client, spell, x, y, victims.Count);
             await GainExperienceAsync(client, spell, experience);
             return true;
+        }
+
+        private static async Task StartXpStatusAsync(Client client, MagicType spell, DateTime now)
+        {
+            var character = client.Character;
+            var flag = XpStatusOf(spell.Sort);
+            await PayAsync(client, spell, now);
+            client.Effects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+            var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
+            effect.Targets.Add((client.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+            await Pking.SendStatusAsync(client);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                character.Name, flag, spell.StepSeconds, character.Name, spell.Name);
+            LogCast(client, spell, character.X, character.Y, 1);
         }
 
         private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now)
@@ -307,6 +457,16 @@ namespace Comet.Game.Magic
                     yield return new Victim(null, player, px, py);
         }
 
+        // The cells from the one after (x, y) to (toX, toY)
+        private static IEnumerable<(ushort X, ushort Y)> Line(int x, int y, int toX, int toY)
+        {
+            int dx = toX - x, dy = toY - y;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            for (int i = 1; i <= steps; i++)
+                yield return ((ushort)(x + (int)Math.Round((double)dx * i / steps)),
+                    (ushort)(y + (int)Math.Round((double)dy * i / steps)));
+        }
+
         public static bool InShape(MagicType spell, int x, int y, int aimX, int aimY, int tx, int ty)
         {
             int range = (int)spell.Range;
@@ -349,6 +509,33 @@ namespace Comet.Game.Magic
             return false;
         }
 
+        // The pirates' bombs miss a player of higher battle power: 2% more often for each point
+        // of it, 20% at most
+        private const int MaxResistPercent = 20;
+
+        private static bool Resists(Client caster, Client target, MagicType spell)
+        {
+            if (spell.Sort is not (MagicSort.ScurvyBomb or MagicSort.GaleBomb))
+                return false;
+            int gap = (int)Attributes.BattlePower(target.Character) - (int)Attributes.BattlePower(caster.Character);
+            return gap > 0 && Random.Shared.Next(100) < Math.Min(MaxResistPercent, gap * 2);
+        }
+
+        // On the target's queue
+        private static async Task FatigueAsync(Client caster, Client target, MagicType spell)
+        {
+            var character = target.Character;
+            if (character == null || target.Life.Dead)
+                return;
+            var now = DateTime.UtcNow;
+            int extra = FatigueStamina[Math.Min(spell.Level, FatigueStamina.Length - 1)];
+            target.Effects.Set(StatusFlags.Fatigue, now + TimeSpan.FromSeconds(spell.StepSeconds), now, extra);
+            await Pking.SendStatusAsync(target);
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
+                character.Name, StatusFlags.Fatigue, spell.StepSeconds, caster.Character?.Name, spell.Name);
+        }
+
         // Spells with power from 30000 on hit like the weapon, by that percentage; others are
         // magic and miss when the spell's percent says so
         private static uint AgainstMonster(Client client, Stats stats, MagicType spell, Monster monster, DateTime now)
@@ -381,12 +568,19 @@ namespace Comet.Game.Magic
                 return 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(targetStats.Dodge, targetIsMonster: false, Random.Shared))
                 return 0;
-            int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * spell.PowerPercent / 100;
+            int attack = Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared) * AgainstPlayersPercent(spell) / 100;
             attack = Buffs.AgainstPlayer(client.Effects, attack, now);
             return targetStats.Taken(stats.Bow
                 ? Damage.PlayerArchery(attack, targetStats.Dodge)
                 : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
+
+        private static int AgainstPlayersPercent(MagicType spell) => spell.Sort switch
+        {
+            MagicSort.CannonBarrage => CannonAgainstPlayers,
+            MagicSort.BlackbeardsRage => BlackbeardAgainstPlayers[Math.Min(spell.Level, BlackbeardAgainstPlayers.Length - 1)],
+            _ => spell.PowerPercent,
+        };
 
         // Cruel Shade takes its power's percentage of the target's life left
         private static uint ShareOf(uint health, MagicType spell) =>
@@ -515,6 +709,43 @@ namespace Comet.Game.Magic
                     await Poison.StartAsync(victim.Monster, poison);
             }
             LogCast(client, spell, x, y, poisoned);
+        }
+
+        // Kraken's Revenge puts Black Spot on the target and the nearest around it
+        private static async Task KrakenAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var (target, reason) = FindTarget(client, spell, targetID, now);
+            if (target == null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            var victims = Around(client, now)
+                .Where(v => v.ID != target.ID && MonsterAI.Distance(target.X, target.Y, v.X, v.Y) <= spell.Range)
+                .OrderBy(v => MonsterAI.Distance(target.X, target.Y, v.X, v.Y))
+                .Prepend(target)
+                .Take(KrakenTargets[Math.Min(spell.Level, KrakenTargets.Length - 1)])
+                .ToList();
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, target.X, target.Y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var victim in victims)
+                effect.Targets.Add((victim.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+
+            var until = now + TimeSpan.FromSeconds(spell.StepSeconds);
+            foreach (var victim in victims)
+            {
+                if (victim.Player != null)
+                    await Pking.OnAttackAsync(client, victim.Player);
+                else if (victim.Monster.IsGuard)
+                    await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
+                else
+                    victim.Monster.Provoke(client.ID);
+                Pirates.Spot(victim.ID, until);
+            }
+            LogCast(client, spell, target.X, target.Y, victims.Count);
         }
 
         // Archer Bane takes a player's status (Fly) away, at the spell's percent
@@ -794,10 +1025,10 @@ namespace Comet.Game.Magic
                 character.ManaPoints -= spell.UseMana;
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, character.ManaPoints));
             }
-            await Recovery.UseStaminaAsync(client, spell.UseStamina);
+            await Recovery.UseStaminaAsync(client, StaminaOf(client, spell, now));
             if (spell.UseItem != 0 && ItemToUse(client, spell) is Database.Models.DbItem item)
                 await Quivers.UseAsync(client, item, spell.UseItemCount);
-            if (spell.IsXpSkill)
+            if (spell.IsXpSkill && !InXpStatus(client, spell, now))
             {
                 client.Effects.Remove(StatusFlags.XpFull);
                 await Recovery.SetXpAsync(client, 0);

@@ -54,6 +54,8 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) NormalTortoiseGem = (700071, "NormalTortoiseGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperThunderGem = (700103, "SuperThunderGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Rapier = (611301, "Rapier", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Pistol = (612301, "Pistol", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Arrows = (1050020, "DeftArrow", 3, 0);
         // Teleports to Twin City's portal, 430,380 in Data/maps.json
         public static readonly (uint Id, string Name, ushort Amount, byte Level) TwinCityGate = (1060020, "TwinCityGate", 1, 0);
@@ -97,6 +99,8 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForKick = (900, 700);
         public static readonly (ushort X, ushort Y) PheasantForTripleAttack = (940, 700);
         public static readonly (ushort X, ushort Y) PheasantForOblivion = (860, 740);
+        public static readonly (ushort X, ushort Y) PheasantForAdrenaline = (940, 940);
+        public static readonly (ushort X, ushort Y) PheasantForWindstorm = (960, 900);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -152,6 +156,26 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(10430, 0, 50, "Compassion") { Range = 20, Distance = 20 };
         public static readonly MagicFiles.Spell Oblivion =
             new MagicFiles.Spell(10390, 0, 53, "Oblivion") { Power = 33, StepSeconds = 30, XpSkill = true };
+        public static readonly MagicFiles.Spell ScurvyBomb =
+            new MagicFiles.Spell(11040, 0, 56, "ScurvyBomb") { Power = 30010, Range = 4, Distance = 10, StepSeconds = 10, Stamina = 20 };
+        public static readonly MagicFiles.Spell GaleBomb =
+            new MagicFiles.Spell(11070, 0, 60, "GaleBomb") { Power = 30020, Range = 5, Distance = 10, Stamina = 20 };
+        public static readonly MagicFiles.Spell BladeTempest =
+            new MagicFiles.Spell(11110, 0, 61, "BladeTempest") { Power = 30095, Range = 1, Distance = 20, Stamina = 20, WeaponSubtype = 611 };
+        public static readonly MagicFiles.Spell EagleEye =
+            new MagicFiles.Spell(11030, 0, 1, "EagleEye") { Power = 30028, Distance = 15, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell KrakensRevenge =
+            new MagicFiles.Spell(11100, 0, 62, "Kraken`sRevenge") { Range = 5, Distance = 15, StepSeconds = 8, Stamina = 35, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell BlackSpot =
+            new MagicFiles.Spell(11120, 0, 58, "BlackSpot") { Percent = 100, StepSeconds = 8, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell AdrenalineRush =
+            new MagicFiles.Spell(11130, 0, 59, "AdrenalineRush") { Percent = 100, AutoActive = 8 };
+        public static readonly MagicFiles.Spell CannonBarrage =
+            new MagicFiles.Spell(11050, 0, 57, "CannonBarrage") { Power = 30500, Range = 5, Distance = 10, StepSeconds = 60, XpSkill = true, WeaponSubtype = 611 };
+        public static readonly MagicFiles.Spell BlackbeardsRage =
+            new MagicFiles.Spell(11060, 0, 63, "Blackbeard`sRage") { Power = 30025, Range = 5, Distance = 12, StepSeconds = 60, XpSkill = true, WeaponSubtype = 612, ActiveTimes = 3 };
+        public static readonly MagicFiles.Spell Windstorm =
+            new MagicFiles.Spell(11140, 0, 55, "Windstorm") { Percent = 100, Range = 30, StepSeconds = 1000000, WeaponSubtype = 611 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -364,7 +388,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "offlinetg.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Arrows, TwinCityGate, Steed, Crop,
+                ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
                     HelmetLevelUp, HelmetRefined, DragonBall, Meteor, Emerald,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook }, new[] { Potion, ManaPotion, Bottle },
@@ -375,7 +399,10 @@ namespace Comet.Integration.Tests
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
                     RadiantPalm, WhirlwindKick, TripleAttack, TyrantAura, FendAura,
-                    SoulShackle, Serenity, Tranquility, Compassion, Oblivion));
+                    SoulShackle, Serenity, Tranquility, Compassion, Oblivion,
+
+                    ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
+                    CannonBarrage, BlackbeardsRage, Windstorm));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
@@ -391,6 +418,7 @@ namespace Comet.Integration.Tests
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
                 (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
+                (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

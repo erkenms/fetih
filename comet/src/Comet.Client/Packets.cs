@@ -167,7 +167,6 @@ namespace Comet.Client
         public uint Steed { get; init; }
         public byte SteedPlus { get; init; }
         public uint Nobility { get; init; }
-
         // Status bits 64-127, at 30
         public ulong StatusHigh { get; init; }
 

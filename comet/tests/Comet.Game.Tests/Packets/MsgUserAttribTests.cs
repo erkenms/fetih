@@ -25,6 +25,16 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
+        public void StatusBitsFrom64FollowTheValue()
+        {
+            var bytes = new MsgUserAttrib(1000042, AttributeType.Status, 0x10 | (UInt128.One << 120)).Encode();
+            Assert.Equal(25u, BitConverter.ToUInt32(bytes, 12));
+            Assert.Equal(0x10UL, BitConverter.ToUInt64(bytes, 16));
+            Assert.Equal(1UL << 56, BitConverter.ToUInt64(bytes, 24));
+            Assert.Equal(1UL << 56, Comet.Client.UserAttribMessage.Parse(bytes).StatusHigh);
+        }
+
+        [Fact]
         public void AllotReadsFourBytesPerAttributeFromEight()
         {
             // As the 5619 client sent it: 3 points to spirit

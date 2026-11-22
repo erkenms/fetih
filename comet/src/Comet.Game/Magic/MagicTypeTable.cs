@@ -88,6 +88,12 @@ namespace Comet.Game.Magic
         Oblivion = 53,
         WhirlwindKick = 54,
         TripleAttack = 55,
+        ScurvyBomb = 56,
+        CannonBarrage = 57,
+        GaleBomb = 60,
+        BladeTempest = 61,
+        KrakensRevenge = 62,
+        BlackbeardsRage = 63,
     }
 
     public sealed class MagicTypeTable

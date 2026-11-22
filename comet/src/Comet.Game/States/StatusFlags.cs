@@ -33,6 +33,12 @@ namespace Comet.Game.States
         public static readonly UInt128 EarthAura = UInt128.One << 110;
         public static readonly UInt128 SoulShackle = UInt128.One << 111;
         public static readonly UInt128 Oblivion = UInt128.One << 112;
+
+        // Magictype's status number n is bit n + 1 here (Cannon Barrage's 119 is the bit the
+        // client turns attacks into the cannon at)
+        public static readonly UInt128 Fatigue = UInt128.One << 119;
+        public static readonly UInt128 CannonBarrage = UInt128.One << 120;
+        public static readonly UInt128 BlackbeardsRage = UInt128.One << 121;
     }
 
     // Statuses that last a while: XP full, and those spells give, with the spell's power.

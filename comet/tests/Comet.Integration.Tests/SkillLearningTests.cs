@@ -72,6 +72,17 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ThePirateLordTeachesPirateSkills()
+        {
+            const uint PirateLord = 10070;
+            await using var player = await this.AtJobCenterAsync(60, 40, 70);
+            var page = await TalkAsync(player, PirateLord, Teach);
+            Assert.Equal("Windstorm", page.First(p => p.Action == DialogMessage.Choice && p.Option != DialogMessage.NoOption).Text);
+            Assert.Contains("learned Windstorm", await AnswerAsync(player, 10));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 11140 && m.Level == 0));
+        }
+
+        [Fact]
         public async Task MastersTeachOnlyTheirOwnLine()
         {
             await using var player = await this.AtJobCenterAsync(50, 40, 100);
