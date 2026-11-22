@@ -18,12 +18,20 @@ namespace Comet.Game.States
         public const ulong RedName = 0x4000;
         public const ulong BlackName = 0x8000;
         public const ulong Superman = 0x40000;
+        public const ulong IronShirt = 0x80000;
         public const ulong Invisible = 0x400000;
         public const ulong Cyclone = 0x800000;
+        public const ulong Dodge = 0x4000000;
         public const ulong Fly = 0x8000000;
+        public const ulong Intensify = 0x10000000;
+        public const ulong Bless = 0x40000000;
         public const ulong HeavenBlessing = 1UL << 33;
+        public const ulong NoPotion = 1UL << 44;
+        public const ulong ShurikenVortex = 1UL << 46;
+        public const ulong FatalStrike = 1UL << 47;
         public const ulong Riding = 1UL << 50;
 
+        public static readonly UInt128 AzureShield = UInt128.One << 93;
         public static readonly UInt128 TyrantAura = UInt128.One << 98;
         public static readonly UInt128 FendAura = UInt128.One << 100;
         public static readonly UInt128 MetalAura = UInt128.One << 102;

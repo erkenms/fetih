@@ -14,8 +14,10 @@ namespace Comet.Game.Magic
     {
         public enum Element : byte { Any, Water, Fire }
 
+        // Level, when not 0, is the character level the client's help gives for learning it, where
+        // magictype's is that for the next level (Intensify 71, not 83)
         public sealed record Rule(ushort MagicType, int[] Lines, Element Element = Element.Any,
-            bool FromMaster = true, ushort Prerequisite = 0, ushort PrerequisiteLevel = 0)
+            bool FromMaster = true, ushort Prerequisite = 0, ushort PrerequisiteLevel = 0, byte Level = 0)
         {
             public bool AnyLine => this.Lines.Length == 0;
         }
@@ -38,7 +40,7 @@ namespace Comet.Game.Magic
             WoodAura = 10421, WaterAura = 10422, FireAura = 10423, EarthAura = 10424, Tranquility = 10425,
             Compassion = 10430, TripleAttack = 10490, ScurvyBomb = 11040, CannonBarrage = 11050, BlackbeardsRage = 11060,
             GaleBomb = 11070, KrakensRevenge = 11100, BladeTempest = 11110, BlackSpot = 11120, AdrenalineRush = 11130,
-            Windstorm = 11140;
+            Windstorm = 11140, Intensify = 9000;
 
         // In the order masters list them
         private static readonly Rule[] Rules =
@@ -55,6 +57,7 @@ namespace Comet.Game.Magic
             new Rule(RapidFire, new[] { Archer }),
             new Rule(ArrowRain, new[] { Archer }),
             new Rule(Fly, new[] { Archer }),
+            new Rule(Intensify, new[] { Archer }, Level: 71),
             new Rule(TwofoldBlades, new[] { Ninja }),
             new Rule(ArcherBane, new[] { Ninja }),
             new Rule(ToxicFog, new[] { Ninja }),
@@ -170,7 +173,7 @@ namespace Comet.Game.Magic
                 return "class";
             if (rule.Element != Element.Any && ElementOf(currentClass) != rule.Element)
                 return "element";
-            if (level < first.NeedLevel)
+            if (level < (rule.Level != 0 ? rule.Level : first.NeedLevel))
                 return "level";
             if (rule.Prerequisite != 0 &&
                 (!skills.TryGetSpell(rule.Prerequisite, out var before) || before.Level < rule.PrerequisiteLevel))
@@ -199,6 +202,7 @@ namespace Comet.Game.Magic
         }
 
         public static byte RequiredLevel(ushort magicType) =>
+            TryGetRule(magicType, out var rule) && rule.Level != 0 ? rule.Level :
             Kernel.Magics.TryGet(magicType, 0, out var first) ? first.NeedLevel : (byte)0;
 
         public static string NameOf(ushort magicType) =>

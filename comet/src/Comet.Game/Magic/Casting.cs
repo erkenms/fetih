@@ -834,11 +834,12 @@ namespace Comet.Game.Magic
                 return;
             }
 
-            var target = spell.IsXpSkill ? client : Friendly(client, spell, targetID);
+            var target = spell.IsXpSkill || spell.OnSelf ? client : Friendly(client, spell, targetID);
             await PayAsync(client, spell, now);
             if (status == StatusFlags.Superman || status == StatusFlags.Cyclone || status == StatusFlags.Oblivion)
                 target.Energy.KoCount = 0;
-            target.Effects.Set(status, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+            var (seconds, power) = status == StatusFlags.AzureShield ? AzureShieldOf(spell) : (spell.StepSeconds, spell.Power);
+            target.Effects.Set(status, now + TimeSpan.FromSeconds(seconds), now, power);
 
             var character = target.Character;
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
@@ -848,9 +849,17 @@ namespace Comet.Game.Magic
             await Pking.SendStatusAsync(target);
             LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
                 "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
-                character.Name, status, spell.StepSeconds, client.Character.Name, spell.Name);
+                character.Name, status, seconds, client.Character.Name, spell.Name);
             LogCast(client, spell, character.X, character.Y, 1);
         }
+
+        // Azure Shield's seconds and the damage it takes, by level, as its descriptions have
+        // them; magictype gives it neither
+        private static readonly (uint Seconds, int Absorbs)[] AzureShieldLevels =
+            { (30, 1200), (35, 2800), (40, 5200), (50, 8000), (60, 12000) };
+
+        private static (uint Seconds, int Absorbs) AzureShieldOf(MagicType spell) =>
+            AzureShieldLevels[Math.Min(spell.Level, AzureShieldLevels.Length - 1)];
 
         // A monk keeps one aura up on themself and the teammates within its range, as long as
         // magictype's step; casting it again takes it down, casting another swaps it

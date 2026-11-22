@@ -17,6 +17,7 @@ namespace Comet.Game.Magic
         public bool Crime { get; init; }
         public bool Ground { get; init; }
         public bool Multi { get; init; }
+        // Flags: 2 the caster only, 8 a passive weapon skill
         public uint Target { get; init; }
         public ushort Level { get; init; }
         public ushort UseMana { get; init; }
@@ -55,6 +56,7 @@ namespace Comet.Game.Magic
         public uint DelayMilliseconds { get; init; }
 
         public bool IsXpSkill => this.UseXp == 1;
+        public bool OnSelf => (this.Target & 2) != 0;
         // Triple Attack goes off by itself too, though magictype gives it no auto_active
         public bool IsPassive => this.AutoActive != 0 || this.Sort == MagicSort.TripleAttack;
         public bool IsPercent => this.Power >= PercentBase;

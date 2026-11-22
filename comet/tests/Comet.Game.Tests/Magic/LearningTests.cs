@@ -15,6 +15,7 @@ namespace Comet.Game.Tests.Magic
             new MagicType { Type = Learning.Nectar, Name = "Nectar", Sort = MagicSort.Recruit, NeedLevel = 94 },
             new MagicType { Type = Learning.Phoenix, Name = "Phoenix", Sort = MagicSort.Attack, NeedLevel = 15 },
             new MagicType { Type = Learning.Cyclone, Name = "Cyclone", Sort = MagicSort.AttachStatus, NeedLevel = 3 },
+            new MagicType { Type = Learning.Intensify, Name = "Intensify", Sort = MagicSort.AttachStatus, NeedLevel = 83 },
         });
 
         private const byte Trojan = 10, Taoist = 101, WaterTaoist = 132, FireTaoist = 142;
@@ -33,6 +34,14 @@ namespace Comet.Game.Tests.Magic
             Assert.Equal("level", Unmet(Taoist, 39, new Skills(), Magics, Learning.Fire));
             Assert.Null(Unmet(Taoist, 40, new Skills(), Magics, Learning.Fire));
             Assert.Equal("level", Unmet(Trojan, 14, new Skills(), Magics, Learning.Phoenix));
+        }
+
+        [Fact]
+        public void IntensifyIsLearnedAtTheHelpsLevelNotMagictypes()
+        {
+            const byte Archer = 40;
+            Assert.Equal("level", Unmet(Archer, 70, new Skills(), Magics, Learning.Intensify));
+            Assert.Null(Unmet(Archer, 71, new Skills(), Magics, Learning.Intensify));
         }
 
         [Fact]

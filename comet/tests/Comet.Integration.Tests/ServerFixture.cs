@@ -176,6 +176,16 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(11060, 0, 63, "Blackbeard`sRage") { Power = 30025, Range = 5, Distance = 12, StepSeconds = 60, XpSkill = true, WeaponSubtype = 612, ActiveTimes = 3 };
         public static readonly MagicFiles.Spell Windstorm =
             new MagicFiles.Spell(11140, 0, 55, "Windstorm") { Percent = 100, Range = 30, StepSeconds = 1000000, WeaponSubtype = 611 };
+        public static readonly MagicFiles.Spell Dodge =
+            new MagicFiles.Spell(3080, 0, 6, "Dodge") { Power = 30110, StepSeconds = 60, Distance = 10, Target = 1, Status = 21 };
+        public static readonly MagicFiles.Spell IronShirt =
+            new MagicFiles.Spell(5100, 0, 6, "IronShirt") { Power = 30400, StepSeconds = 20, XpSkill = true, Target = 2, Status = 116 };
+        public static readonly MagicFiles.Spell Intensify =
+            new MagicFiles.Spell(9000, 0, 6, "Intensify") { Power = 30200, StepSeconds = 60, Distance = 15, Target = 2, Status = 23 };
+        public static readonly MagicFiles.Spell Bless =
+            new MagicFiles.Spell(9876, 0, 6, "Bless") { Power = 1, StepSeconds = 1000000, Stamina = 100, Target = 2, Status = 25 };
+        public static readonly MagicFiles.Spell AzureShield =
+            new MagicFiles.Spell(30000, 0, 6, "AzureShield") { Stamina = 30, Distance = 20, Target = 1, Status = 89 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -402,7 +412,8 @@ namespace Comet.Integration.Tests
                     SoulShackle, Serenity, Tranquility, Compassion, Oblivion,
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
-                    CannonBarrage, BlackbeardsRage, Windstorm));
+                    CannonBarrage, BlackbeardsRage, Windstorm,
+                    Dodge, IronShirt, Intensify, Bless, AzureShield));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

@@ -23,6 +23,9 @@ namespace Comet.Client
             public uint UseItem { get; init; }
             public uint ActiveTimes { get; init; }
             public ushort UseItemCount { get; init; } = 1;
+            public uint Target { get; init; }
+            public int Status { get; init; } = -1;
+            public uint DelayMilliseconds { get; init; }
         }
 
         // An encrypted magictype.dat as the 5619 client has it: per spell level one line of 50
@@ -38,6 +41,7 @@ namespace Comet.Client
                 fields[1] = spell.Type.ToString();
                 fields[2] = spell.Sort.ToString();
                 fields[3] = spell.Name.Replace(' ', '~');
+                fields[7] = spell.Target.ToString();
                 fields[8] = spell.Level.ToString();
                 fields[9] = spell.Mana.ToString();
                 fields[10] = spell.Power.ToString();
@@ -45,7 +49,7 @@ namespace Comet.Client
                 fields[13] = spell.StepSeconds.ToString();
                 fields[14] = spell.Range.ToString();
                 fields[15] = spell.Distance.ToString();
-                fields[16] = "-1";
+                fields[16] = spell.Status.ToString();
                 fields[18] = spell.NeedExperience.ToString();
                 fields[20] = spell.NeedLevel.ToString();
                 fields[21] = spell.XpSkill ? "1" : spell.Stamina > 0 ? "2" : "0";
@@ -54,6 +58,7 @@ namespace Comet.Client
                 fields[24] = spell.AutoActive.ToString();
                 fields[29] = spell.Stamina.ToString();
                 fields[31] = spell.UseItem.ToString();
+                fields[33] = spell.DelayMilliseconds.ToString();
                 fields[34] = spell.UseItemCount.ToString();
                 text.Append(string.Join("@@", fields)).Append("@@\r\n");
             }

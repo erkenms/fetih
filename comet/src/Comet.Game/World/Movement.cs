@@ -187,6 +187,7 @@ namespace Comet.Game.World
             client.Character.X = toX;
             client.Character.Y = toY;
             client.Character.Stance = 0; // moving ends sitting or an emote
+            bool prayed = client.Effects.Remove(StatusFlags.Bless);
             var after = map.InView(toX, toY, except: client);
 
             await client.SendAsync(move);
@@ -213,6 +214,8 @@ namespace Comet.Game.World
             }
             await Items.Ground.ShowAroundAsync(client, toX, toY, fromX, fromY);
             await Visibility.ShowNpcsAsync(client, toX, toY, fromX, fromY);
+            if (prayed)
+                await Pk.Pking.SendStatusAsync(client);
             await Monsters.ShowAroundAsync(client, map.Id, toX, toY, fromX, fromY);
         }
 

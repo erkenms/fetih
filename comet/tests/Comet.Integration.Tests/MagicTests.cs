@@ -268,5 +268,44 @@ namespace Comet.Integration.Tests
             Assert.Equal((1u, 100u), (proficiency?.Level, proficiency.Needed));
             Assert.True(proficiency.Experience > 0);
         }
+            // Status bits: Iron Shirt 19, Dodge 26, Intensify 28 and Bless 30; Azure Shield 93
+        [Theory]
+        [InlineData(3080, 26, 60, false, 700)]
+        [InlineData(5100, 19, 20, true, 710)]
+        [InlineData(9000, 28, 60, false, 720)]
+        [InlineData(9876, 30, 1000000, false, 730)]
+        [InlineData(30000, 93, 30, false, 740)]
+        public async Task StatusSpellsGiveTheCasterTheirStatus(ushort magicType, int bit, int seconds, bool xp, ushort y)
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 740, y, GameMaster, level: 100)).Player;
+            await CommandAsync(player, $"/learn {magicType}");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == magicType));
+            if (xp)
+            {
+                await CommandAsync(player, "/xp");
+                Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & XpFull) != 0));
+            }
+
+            await player.Game.CastAsync(player.User.Id, magicType, player.User.Id, 0, 0);
+            Assert.NotNull(await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == magicType));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id && (bit < 64
+                ? a.Values.TryGetValue(Status, out var s) && (s & (1UL << bit)) != 0
+                : (a.StatusHigh & (1UL << (bit - 64))) != 0)));
+            var started = await this.Servers.WaitForEventAsync("game", "status.started", "name", player.User.Name);
+            Assert.Equal(seconds, started.GetProperty("seconds").GetInt32());
+        }
+
+        [Fact]
+        public async Task BlessEndsWhenThePlayerMoves()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 760, 700, GameMaster, level: 100)).Player;
+            await CommandAsync(player, "/learn 9876");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 9876));
+            await player.Game.CastAsync(player.User.Id, 9876, player.User.Id, 0, 0);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & (1UL << 30)) != 0));
+
+            await player.Game.WalkAsync(player.User.Id, 0);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Status, out var s) && (s & (1UL << 30)) == 0));
+        }
     }
 }
