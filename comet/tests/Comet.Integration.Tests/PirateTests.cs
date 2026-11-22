@@ -81,5 +81,60 @@ namespace Comet.Integration.Tests
             Assert.Equal(victim.User.Id, Assert.Single(effect.Targets).Id);
             Assert.Equal((DesertCity, 190, 100), await this.SavedPositionAsync(pirate));
         }
+    
+
+        private static async Task HoldAsync(Player player, uint itemType, byte slot = 4)
+        {
+            var weapon = await GiveAsync(player, itemType);
+            await player.Game.EquipAsync(weapon.Id, slot);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, weapon.Id));
+        }
+
+        [Fact]
+        public async Task EagleEyeOnWhomKrakenSpottedEndsItsCooldownByAdrenalineRush()
+        {
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 200, 100, GameMaster)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 205, 100)).Player;
+            await using var near = (await this.PlayingAtAsync(DesertCity, 207, 101)).Player;
+            await FreePkAsync(pirate);
+            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            foreach (ushort spell in new ushort[] { 11100, 11030, 11130 })
+                await LearnAsync(pirate, spell);
+
+            await pirate.Game.CastAsync(pirate.User.Id, 11100, victim.User.Id, 205, 100);
+            var kraken = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11100);
+            Assert.Equal(new[] { victim.User.Id, near.User.Id }, kraken.Targets.Select(t => t.Id));
+
+            await Task.Delay(600);
+            await pirate.Game.CastAsync(pirate.User.Id, 11030, victim.User.Id, 205, 100);
+            Assert.NotNull(await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11030));
+            var rush = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11130);
+            Assert.Equal(pirate.User.Id, Assert.Single(rush.Targets).Id);
+        }
+
+        [Fact]
+        public async Task AdrenalineRushGoesOffOnTakingDamage()
+        {
+            var at = ServerFixture.PheasantForAdrenaline;
+            await using var pirate = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster)).Player;
+            await LearnAsync(pirate, 11130);
+            Assert.NotNull(await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11130,
+                System.TimeSpan.FromSeconds(20)));
+        }
+
+        [Fact]
+        public async Task BlackSpotGoesOffOnHittingWithAPistol()
+        {
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 220, 100, GameMaster, strength: 5000)).Player;
+            await using var victim = (await this.PlayingAtAsync(DesertCity, 221, 100)).Player;
+            await FreePkAsync(pirate);
+            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            await LearnAsync(pirate, 11120);
+
+            await pirate.Game.AttackAsync(pirate.User.Id, victim.User.Id, 221, 100);
+            var spot = await victim.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11120,
+                System.TimeSpan.FromSeconds(15));
+            Assert.Equal(victim.User.Id, Assert.Single(spot.Targets).Id);
+        }
     }
 }

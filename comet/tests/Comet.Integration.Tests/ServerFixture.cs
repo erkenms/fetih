@@ -94,6 +94,7 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantUnderFlyer = (860, 900);
         public static readonly (ushort X, ushort Y) PheasantForCruelShade = (860, 940);
         public static readonly (ushort X, ushort Y) PheasantInFog = (900, 940);
+        public static readonly (ushort X, ushort Y) PheasantForAdrenaline = (940, 940);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -134,6 +135,14 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(11070, 0, 60, "GaleBomb") { Power = 30020, Range = 5, Distance = 10, Stamina = 20 };
         public static readonly MagicFiles.Spell BladeTempest =
             new MagicFiles.Spell(11110, 0, 61, "BladeTempest") { Power = 30095, Range = 1, Distance = 20, Stamina = 20, WeaponSubtype = 611 };
+        public static readonly MagicFiles.Spell EagleEye =
+            new MagicFiles.Spell(11030, 0, 1, "EagleEye") { Power = 30028, Distance = 15, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell KrakensRevenge =
+            new MagicFiles.Spell(11100, 0, 62, "Kraken`sRevenge") { Range = 5, Distance = 15, StepSeconds = 8, Stamina = 35, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell BlackSpot =
+            new MagicFiles.Spell(11120, 0, 58, "BlackSpot") { Percent = 100, StepSeconds = 8, WeaponSubtype = 612 };
+        public static readonly MagicFiles.Spell AdrenalineRush =
+            new MagicFiles.Spell(11130, 0, 59, "AdrenalineRush") { Percent = 100, AutoActive = 8 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -356,7 +365,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
-                    ScurvyBomb, GaleBomb, BladeTempest));
+                    ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
@@ -371,6 +380,7 @@ namespace Comet.Integration.Tests
                 (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
+                (PheasantForAdrenaline, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

@@ -82,6 +82,7 @@ namespace Comet.Game.Magic
         ScurvyBomb = 56,
         GaleBomb = 60,
         BladeTempest = 61,
+        KrakensRevenge = 62,
     }
 
     public sealed class MagicTypeTable

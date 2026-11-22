@@ -34,14 +34,16 @@ namespace Comet.Game.Magic
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
+            MagicSort.KrakensRevenge,
         };
 
         // Scurvy Bomb's fatigue: how much more stamina each of its levels makes spells cost,
         // as its description in MagicEffect.ini has it
         private static readonly int[] FatigueStamina = { 5, 6, 6, 8, 8 };
 
-        // As many as Gale Bomb's description says it hits
+        // As many as Gale Bomb's description says it hits, and Kraken's Revenge at each level
         private const int GaleBombTargets = 3;
+        private static readonly int[] KrakenTargets = { 3, 3, 4, 4, 5 };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
@@ -104,6 +106,9 @@ namespace Comet.Game.Magic
                 case MagicSort.GroundSting:
                     await FogAsync(client, spell, x, y, now);
                     break;
+                case MagicSort.KrakensRevenge:
+                    await KrakenAsync(client, spell, targetID, now);
+                    break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
                     break;
@@ -130,7 +135,7 @@ namespace Comet.Game.Magic
                 ? item : null;
         }
 
-        private static bool Holds(Client client, uint weaponSubtype) =>
+        public static bool Holds(Client client, uint weaponSubtype) =>
             new[] { ItemPosition.RightHand, ItemPosition.LeftHand }
                 .Select(p => client.Equipment?[p])
                 .Any(item => item != null && Proficiency.WeaponType(item.TypeID) == weaponSubtype);
@@ -232,6 +237,20 @@ namespace Comet.Game.Magic
                 await client.SendAsync(effect);
                 await Movement.SendToViewAsync(client, effect);
             }
+
+            // Blade Tempest spots all it hits, once Black Spot is learned
+            MagicType blackSpot = null;
+            bool spots = spell.Sort == MagicSort.BladeTempest &&
+                Pirates.TryGetLearned(client, Pirates.BlackSpot, out blackSpot);
+            foreach (var victim in victims.Where(v => v.Damage > 0))
+            {
+                if (spots)
+                    await Pirates.SpotAsync(client, blackSpot, victim.ID, victim.X, victim.Y, now);
+                else
+                    await Pirates.AfterDamageAsync(client, victim.ID, victim.X, victim.Y, now);
+            }
+            if (spell.Type == Pirates.EagleEye && victims.Any(v => Pirates.IsSpotted(v.ID, now)))
+                await Pirates.RushAsync(client, "black_spot");
 
             uint experience = 0;
             foreach (var victim in victims)
@@ -556,6 +575,43 @@ namespace Comet.Game.Magic
                     await Poison.StartAsync(victim.Monster, poison);
             }
             LogCast(client, spell, x, y, poisoned);
+        }
+
+        // Kraken's Revenge puts Black Spot on the target and the nearest around it
+        private static async Task KrakenAsync(Client client, MagicType spell, uint targetID, DateTime now)
+        {
+            var (target, reason) = FindTarget(client, spell, targetID, now);
+            if (target == null)
+            {
+                Reject(client, spell.Type, reason);
+                return;
+            }
+
+            var victims = Around(client, now)
+                .Where(v => v.ID != target.ID && MonsterAI.Distance(target.X, target.Y, v.X, v.Y) <= spell.Range)
+                .OrderBy(v => MonsterAI.Distance(target.X, target.Y, v.X, v.Y))
+                .Prepend(target)
+                .Take(KrakenTargets[Math.Min(spell.Level, KrakenTargets.Length - 1)])
+                .ToList();
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, target.X, target.Y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var victim in victims)
+                effect.Targets.Add((victim.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+
+            var until = now + TimeSpan.FromSeconds(spell.StepSeconds);
+            foreach (var victim in victims)
+            {
+                if (victim.Player != null)
+                    await Pking.OnAttackAsync(client, victim.Player);
+                else if (victim.Monster.IsGuard)
+                    await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
+                else
+                    victim.Monster.Provoke(client.ID);
+                Pirates.Spot(victim.ID, until);
+            }
+            LogCast(client, spell, target.X, target.Y, victims.Count);
         }
 
         // Archer Bane takes a player's status (Fly) away, at the spell's percent

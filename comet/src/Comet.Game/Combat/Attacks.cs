@@ -138,6 +138,8 @@ namespace Comet.Game.Combat
 
             if (killed)
                 Stop(client);
+            else if (damage > 0)
+                await Pirates.AfterDamageAsync(client, monster.Identity, x, y, now);
             if (!type.IsGuard)
                 await Proficiency.GainAsync(client, dealt);
             await AfterMonsterHitAsync(client, monster, x, y, dealt, killed);
@@ -273,6 +275,8 @@ namespace Comet.Game.Combat
                 attacker.ID, target.ID, character.X, character.Y, damage);
             await target.SendAsync(hit);
             await Movement.SendToViewAsync(target, hit);
+            if (damage > 0)
+                await Pirates.AfterDamageAsync(attacker, target.ID, character.X, character.Y, DateTime.UtcNow);
             await DamagePlayerAsync(attacker, target, damage, shooting ? "shoot" : "melee");
         }
 
@@ -299,7 +303,11 @@ namespace Comet.Game.Combat
             character.HealthPoints -= (ushort)dealt;
             await target.SendAsync(new MsgUserAttrib(target.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
             if (damage > 0)
+            {
                 await Durability.WearOnHitAsync(target);
+                if (character.HealthPoints > 0)
+                    await Pirates.OnDamagedAsync(target);
+            }
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
                 attackerCharacter.Name, character.Name, damage, character.HealthPoints, kind);
@@ -338,7 +346,11 @@ namespace Comet.Game.Combat
             await Movement.SendToViewAsync(client, hit);
             await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
             if (damage > 0)
+            {
                 await Durability.WearOnHitAsync(client);
+                if (character.HealthPoints > 0)
+                    await Pirates.OnDamagedAsync(client);
+            }
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{MonsterName} {MonsterId} hit {Name} for {Damage}; {Health} health left",
                 type.Name, monster.Identity, character.Name, damage, character.HealthPoints);
