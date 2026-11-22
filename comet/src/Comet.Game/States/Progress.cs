@@ -159,15 +159,14 @@ namespace Comet.Game.States
             var character = client.Character;
             character.HealthPoints = Attributes.MaxHealth(client);
             character.ManaPoints = Attributes.MaxMana(client);
-            await new MsgUserAttrib(client.ID)
+            await client.SendAsync(new MsgUserAttrib(client.ID)
                 .Append(AttributeType.Level, character.Level)
                 .Append(AttributeType.Experience, character.Experience)
                 .Append(AttributeType.AttributePoints, character.AttributePoints)
                 .Append(AttributeType.MaxHealth, character.HealthPoints)
                 .Append(AttributeType.Health, character.HealthPoints)
                 .Append(AttributeType.MaxMana, character.ManaPoints)
-                .Append(AttributeType.Mana, character.ManaPoints)
-                .SendEachAsync(client);
+                .Append(AttributeType.Mana, character.ManaPoints));
 
             if (character.Level > from)
             {
@@ -211,15 +210,14 @@ namespace Comet.Game.States
         private static Task SendAttributesAsync(Client client)
         {
             var character = client.Character;
-            return new MsgUserAttrib(client.ID)
+            return client.SendAsync(new MsgUserAttrib(client.ID)
                 .Append(AttributeType.Strength, character.Strength)
                 .Append(AttributeType.Agility, character.Agility)
                 .Append(AttributeType.Vitality, character.Vitality)
                 .Append(AttributeType.Spirit, character.Spirit)
                 .Append(AttributeType.AttributePoints, character.AttributePoints)
                 .Append(AttributeType.MaxHealth, Attributes.MaxHealth(client))
-                .Append(AttributeType.MaxMana, Attributes.MaxMana(client))
-                .SendEachAsync(client);
+                .Append(AttributeType.MaxMana, Attributes.MaxMana(client)));
         }
 
         private static ushort AddPoints(ushort value, int added) =>

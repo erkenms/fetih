@@ -132,7 +132,7 @@ namespace Comet.Game.Items
                 character.ManaPoints = maxMana;
                 attributes.Append(MsgUserAttrib.AttributeType.Mana, maxMana);
             }
-            await attributes.SendEachAsync(client);
+            await client.SendAsync(attributes);
         }
 
         private static bool Reject(Client client, uint itemID, ItemPosition position, string reason)

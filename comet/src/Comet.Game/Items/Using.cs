@@ -86,9 +86,9 @@ namespace Comet.Game.Items
             await UseUpAsync(client, potion);
             character.HealthPoints = health;
             character.ManaPoints = mana;
-            await new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints)
-                .Append(MsgUserAttrib.AttributeType.Mana, character.ManaPoints)
-                .SendEachAsync(client);
+            await client.SendAsync(new MsgUserAttrib(client.ID)
+                .Append(MsgUserAttrib.AttributeType.Health, character.HealthPoints)
+                .Append(MsgUserAttrib.AttributeType.Mana, character.ManaPoints));
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) and restored {Health} HP and {Mana} MP",
                 character.Name, potion.ItemID, potion.TypeID, healed, restored);

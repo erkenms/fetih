@@ -107,8 +107,8 @@ namespace Comet.Integration.Tests
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 820, GameMaster)).Player;
             await CommandAsync(player, "/attr spi 4");
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Spirit, out var s) && s == 4));
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(MaxMana, out var m) && m == 20));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Spirit, out var s) && s == 4
+                && a.Values.TryGetValue(MaxMana, out var m) && m == 20));
             await CommandAsync(player, "/attr spi +2");
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Spirit, out var s) && s == 6));
             await CommandAsync(player, "/attr spi -10");
@@ -129,9 +129,8 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Mana, out var m) && m == mana));
 
             await CommandAsync(player, "/restore");
-            foreach (var type in new[] { Health, Mana, Stamina })
-                Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.Count == 1 && a.Values.ContainsKey(type)
-                    && (type != Mana || a.Values[Mana] == mana)));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(Health)
+                && a.Values.ContainsKey(Stamina) && a.Values.TryGetValue(Mana, out var m) && m == mana));
         }
 
         [Fact]

@@ -8,7 +8,7 @@ namespace Comet.Game.Tests.Packets
     public class MsgUserAttribTests
     {
         [Fact]
-        public void EachAttributeTakesTwentyBytes()
+        public void EachAttributeTakesTwentyFourBytes()
         {
             var bytes = new MsgUserAttrib(1000042)
                 .Append(AttributeType.Level, 3)
@@ -19,9 +19,9 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal(2u, BitConverter.ToUInt32(bytes, 8));
             Assert.Equal(12u, BitConverter.ToUInt32(bytes, 12));
             Assert.Equal(3UL, BitConverter.ToUInt64(bytes, 16));
-            Assert.Equal(5u, BitConverter.ToUInt32(bytes, 32));
-            Assert.Equal(0x0102030405060708UL, BitConverter.ToUInt64(bytes, 36));
-            Assert.Equal(12 + 2 * 20, bytes.Length);
+            Assert.Equal(5u, BitConverter.ToUInt32(bytes, 36));
+            Assert.Equal(0x0102030405060708UL, BitConverter.ToUInt64(bytes, 40));
+            Assert.Equal(12 + 2 * 24, bytes.Length);
         }
 
         [Fact]

@@ -412,13 +412,12 @@ namespace Comet.Game.Chat
             character.ManaPoints = Attributes.MaxMana(client);
             client.Energy.Stamina = HeavenBlessing.MaxStamina(client);
             // The maximums first, so the client doesn't cut health or mana to an older one
-            await new MsgUserAttrib(client.ID)
+            await client.SendAsync(new MsgUserAttrib(client.ID)
                 .Append(MsgUserAttrib.AttributeType.MaxHealth, character.HealthPoints)
                 .Append(MsgUserAttrib.AttributeType.Health, character.HealthPoints)
                 .Append(MsgUserAttrib.AttributeType.MaxMana, character.ManaPoints)
                 .Append(MsgUserAttrib.AttributeType.Mana, character.ManaPoints)
-                .Append(MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina)
-                .SendEachAsync(client);
+                .Append(MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina));
             return true;
         }
 

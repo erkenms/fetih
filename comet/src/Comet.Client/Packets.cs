@@ -365,7 +365,7 @@ namespace Comet.Client
         {
             var values = new Dictionary<uint, ulong>();
             uint count = BitConverter.ToUInt32(packet, 8);
-            for (int i = 0, offset = 12; i < count && offset + 12 <= packet.Length; i++, offset += 20)
+            for (int i = 0, offset = 12; i < count && offset + 12 <= packet.Length; i++, offset += 24)
                 values[BitConverter.ToUInt32(packet, offset)] = BitConverter.ToUInt64(packet, offset + 4);
             return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values);
         }

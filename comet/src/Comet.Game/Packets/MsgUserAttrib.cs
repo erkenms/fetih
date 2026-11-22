@@ -1,7 +1,6 @@
 namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
-    using System.Threading.Tasks;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
@@ -28,26 +27,20 @@ namespace Comet.Game.Packets
             return this;
         }
 
-        // One packet per attribute. The 5619 client misreads the entries after the first (the
-        // VM showed an empty health bar after Health with Mana and Stamina in one packet), so
-        // its entries are probably longer than the 20 bytes written here; single ones are VM-confirmed.
-        public async Task SendEachAsync(Client client)
-        {
-            foreach (var (type, value) in this.Attributes)
-                await client.SendAsync(new MsgUserAttrib(this.Identity, type, value));
-        }
-
         public override byte[] Encode()
         {
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);
             writer.Write(this.Identity);                    // 4
             writer.Write((uint)this.Attributes.Count);      // 8
+            // 24 bytes each: the type, the value, then three uints only attribute 49 reads
             foreach (var (type, value) in this.Attributes)  // 12
             {
                 writer.Write((uint)type);
                 writer.Write(value);
-                writer.Write(0UL);
+                writer.Write(0u);
+                writer.Write(0u);
+                writer.Write(0u);
             }
             return writer.ToArray();
         }
