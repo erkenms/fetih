@@ -391,7 +391,7 @@ namespace Comet.Integration.Tests
             Assert.Equal("poison_star", refused.GetProperty("reason").GetString());
         }
             [Fact]
-        public async Task GapingWoundsTakesAFifthOfWhatLifeIsLeftTwiceAsOftenWithTwoBlades()
+        public async Task GapingWoundsTakesAtLeastAFifthOfWhatLifeIsLeftTwiceAsOftenWithTwoBlades()
         {
             var at = ServerFixture.PheasantForGapingWounds;
             await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
@@ -410,7 +410,28 @@ namespace Comet.Integration.Tests
             }
             await ninja.Game.AttackAsync(ninja.User.Id, pheasant.Id, at.X, at.Y);
             var effect = await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 11230);
-            Assert.Equal((pheasant.Id, pheasant.MonsterHealth / 5), (Assert.Single(effect.Targets).Id, effect.Targets[0].Damage));
+            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+            Assert.True(effect.Targets[0].Damage >= pheasant.MonsterHealth / 5);
+        }
+            [Fact]
+        public async Task GapingWoundsHitsAtLeastAsHardAsTheSwing()
+        {
+            var at = ServerFixture.PheasantForGapingWounds;
+            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100, strength: 5000)).Player;
+            var pheasant = await ninja.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(ninja, "/learn 11230");
+            Assert.NotNull(await ninja.Game.WaitForMagicInfoAsync(m => m.Type == 11230));
+            foreach (byte hand in new byte[] { 4, 5 })
+            {
+                var katana = await GiveAsync(ninja, ServerFixture.Katana.Id);
+                await ninja.Game.EquipAsync(katana.Id, hand);
+                Assert.NotNull(await ninja.Game.WaitForItemActionAsync(ItemMessage.Equipped, katana.Id));
+            }
+
+            await ninja.Game.AttackAsync(ninja.User.Id, pheasant.Id, at.X, at.Y);
+            var effect = await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 11230);
+            Assert.True(Assert.Single(effect.Targets).Damage > pheasant.MonsterHealth / 5);
         }
             [Fact]
         public async Task CounterKillSwitchedOnTurnsAHitBackOnTheAttacker()

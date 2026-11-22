@@ -220,6 +220,9 @@ namespace Comet.Game.Magic
                     var swing = spell with { Power = MagicType.PercentBase + 100 };
                     return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
                 }
+                // Gaping Wounds leaves bosses to the plain swing
+                if (spell.Sort == MagicSort.DecLife && IsBoss(client, targetID))
+                    continue;
                 if (!spell.IsPercent || GoesWithHit(spell) || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
                     continue;
                 return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
@@ -292,6 +295,10 @@ namespace Comet.Game.Magic
                 "{Name} got status 0x{Status:X} for {Seconds}s from a stun",
                 target.Character.Name, StatusFlags.Stun, (int)(until - DateTime.UtcNow).TotalSeconds);
         }
+
+        private static bool IsBoss(Client client, uint targetID) =>
+            Attacks.IsMonster(targetID) && Kernel.Monsters.TryGet(client.Character.MapID, out var map) &&
+            map.TryGet(targetID, out var monster, out _, out _) && monster.Type.Boss;
 
         // Gaping Wounds goes off twice as often with its weapons in both hands, as its
         // description says
@@ -731,7 +738,9 @@ namespace Comet.Game.Magic
             var type = monster.Type;
             int level = client.Character.Level;
             if (spell.Sort == MagicSort.DecLife)
-                return ShareOf(monster.Health, spell);
+                return spell.IsPassive
+                    ? Math.Max(ShareOf(monster.Health, spell), AgainstMonster(client, stats, Swing(spell), monster, now))
+                    : ShareOf(monster.Health, spell);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? Damage.Magic(stats.MagicDamage, spell.Power, level, type.Level) : 0;
@@ -747,7 +756,9 @@ namespace Comet.Game.Magic
         {
             var targetStats = Stats.Of(target);
             if (spell.Sort == MagicSort.DecLife)
-                return ShareOf(target.Character.HealthPoints, spell);
+                return spell.IsPassive
+                    ? Math.Max(ShareOf(target.Character.HealthPoints, spell), AgainstPlayer(client, stats, Swing(spell), target, now))
+                    : ShareOf(target.Character.HealthPoints, spell);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
@@ -770,7 +781,11 @@ namespace Comet.Game.Magic
             _ => spell.PowerPercent,
         };
 
-        // Cruel Shade takes its power's percentage of the target's life left
+        // Gaping Wounds goes off with a swing, so never hits for less than that swing would
+        private static MagicType Swing(MagicType spell) =>
+            spell with { Sort = MagicSort.Attack, Power = MagicType.PercentBase + 100 };
+
+        // Cruel Shade and Gaping Wounds take their power's percentage of the target's life left
         private static uint ShareOf(uint health, MagicType spell) =>
             (uint)Math.Max(1, (ulong)health * (uint)Math.Max(0, spell.PowerPercent) / 100);
 
@@ -868,8 +883,9 @@ namespace Comet.Game.Magic
                 .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
                 .Take(MaxTargets)
                 .ToList();
+            // Bosses shrug the fog off
             foreach (var victim in victims)
-                victim.Missed = Random.Shared.Next(100) >= spell.Percent;
+                victim.Missed = victim.Monster?.Type.Boss == true || Random.Shared.Next(100) >= spell.Percent;
             await PayAsync(client, spell, now);
             // Damage 1 marks a target the fog poisoned, 0 one it missed
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
