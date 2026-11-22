@@ -138,7 +138,7 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(3050, 0, 26, "CruelShade") { Power = 30010, Distance = 5, Stamina = 100 };
         // Always poisons, every second, three times
         public static readonly MagicFiles.Spell ToxicFog =
-            new MagicFiles.Spell(6001, 0, 27, "ToxicFog") { Power = 30010, Range = 4, Distance = 10, StepSeconds = 1, ActiveTimes = 3 };
+            new MagicFiles.Spell(6001, 0, 27, "ToxicFog") { Power = 30010, Range = 4, Distance = 10, StepSeconds = 1, ActiveTimes = 3, Status = 43 };
         public static readonly MagicFiles.Spell Scatter =
             new MagicFiles.Spell(8001, 0, 4, "ScatterFire") { Power = 30050, Range = 8, Distance = 15, WeaponSubtype = 500, UseItem = 50, UseItemCount = 2 };
         public static readonly MagicFiles.Spell RadiantPalm =

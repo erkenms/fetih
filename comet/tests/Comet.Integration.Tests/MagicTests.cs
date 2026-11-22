@@ -188,7 +188,7 @@ namespace Comet.Integration.Tests
             await player.Game.CastAsync(player.User.Id, 6001, 0, at.X, at.Y);
             Assert.NotNull(await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 6001));
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
-                a.Values.TryGetValue(Status, out var s) && (s & Poisoned) != 0));
+                a.Values.TryGetValue(Status, out var s) && (s & ToxicFog) != 0));
             uint health = pheasant.MonsterHealth;
             for (int tick = 0; tick < 3; tick++)
             {
@@ -196,12 +196,13 @@ namespace Comet.Integration.Tests
                 uint expected = health;
                 Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
                     a.Values.TryGetValue(Health, out var hp) && hp == expected));
+                Assert.NotNull(await player.Game.WaitForEffectAsync(e => e.Caster == pheasant.Id && e.Type == 10010));
             }
             Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
                 a.Values.TryGetValue(Status, out var s) && s == 0));
         }
 
-        private const ulong Poisoned = 0x2;
+        private const ulong Poisoned = 0x2, ToxicFog = 1UL << 45;
 
         [Fact]
         public async Task RestoreHealsToFull()

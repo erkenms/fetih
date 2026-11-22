@@ -868,10 +868,13 @@ namespace Comet.Game.Magic
                 .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
                 .Take(MaxTargets)
                 .ToList();
+            foreach (var victim in victims)
+                victim.Missed = Random.Shared.Next(100) >= spell.Percent;
             await PayAsync(client, spell, now);
+            // Damage 1 marks a target the fog poisoned, 0 one it missed
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
             foreach (var victim in victims)
-                effect.Targets.Add((victim.ID, 0));
+                effect.Targets.Add((victim.ID, victim.Missed ? 0u : 1u));
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
 
@@ -884,7 +887,7 @@ namespace Comet.Game.Magic
                     await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
                 else
                     victim.Monster.Provoke(client.ID);
-                if (Random.Shared.Next(100) >= spell.Percent)
+                if (victim.Missed)
                     continue;
                 poisoned++;
                 var poison = Poison.From(spell, now);
@@ -1224,8 +1227,8 @@ namespace Comet.Game.Magic
             await Movement.SendToViewAsync(client, effect);
 
             var flags = spell.Sort == MagicSort.Compassion
-                ? (UInt128)StatusFlags.Poisoned
-                : StatusFlags.Poisoned | StatusFlags.SoulShackle;
+                ? (UInt128)(StatusFlags.Poisoned | StatusFlags.ToxicFog)
+                : StatusFlags.Poisoned | StatusFlags.ToxicFog | StatusFlags.SoulShackle;
             foreach (var target in targets)
                 Kernel.Post(target, async () =>
                 {
@@ -1233,6 +1236,7 @@ namespace Comet.Game.Magic
                     if (had == UInt128.Zero)
                         return;
                     target.Effects.Remove(StatusFlags.Poisoned);
+                    target.Effects.Remove(StatusFlags.ToxicFog);
                     target.Poison = null;
                     if ((flags & StatusFlags.SoulShackle) != UInt128.Zero)
                         target.Effects.Remove(StatusFlags.SoulShackle);

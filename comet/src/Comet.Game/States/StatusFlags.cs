@@ -27,6 +27,7 @@ namespace Comet.Game.States
         public const ulong Bless = 0x40000000;
         public const ulong HeavenBlessing = 1UL << 33;
         public const ulong NoPotion = 1UL << 44;
+        public const ulong ToxicFog = 1UL << 45;
         public const ulong Stun = 1UL << 58;
         public const ulong ShurikenVortex = 1UL << 46;
         public const ulong FatalStrike = 1UL << 47;
