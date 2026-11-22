@@ -16,7 +16,8 @@ namespace Comet.Game.Combat
     // The client asks once to attack a monster or a player; the server keeps swinging at the
     // weapon's speed until the target dies, the player moves, dies, or asks for something else.
     // Swings run on the attacker's own packet queue; a hit on a player is applied on the
-    // target's queue, so a player's health only changes there.
+    // target's queue, so a player's health only changes there. A learned weapon skill for the
+    // weapon in hand may go off in place of a melee swing.
     public static class Attacks
     {
         // How far past the weapon's range a target may be, for a monster that just stepped away
@@ -101,6 +102,11 @@ namespace Comet.Game.Combat
 
             var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
+            if (!shooting && await Casting.TryPassiveAsync(client, targetID, x, y, now))
+            {
+                Schedule(client, run, interval);
+                return;
+            }
             await Durability.WearOnAttackAsync(client);
             var type = monster.Type;
             uint damage = 0;
@@ -233,6 +239,11 @@ namespace Comet.Game.Combat
 
             var interval = Interval(client, stats, now);
             client.NextAttackAt = now + interval;
+            if (!shooting && await Casting.TryPassiveAsync(client, targetID, x, y, now))
+            {
+                Schedule(client, run, interval);
+                return;
+            }
             await Durability.WearOnAttackAsync(client);
             await Pking.OnAttackAsync(client, target);
             int attack = Buffs.AgainstPlayer(client.Effects, Damage.Roll(stats.MinDamage, stats.MaxDamage, Random.Shared), now);

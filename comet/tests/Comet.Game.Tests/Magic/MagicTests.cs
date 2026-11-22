@@ -50,10 +50,14 @@ namespace Comet.Game.Tests.Magic
         [Fact]
         public void ReadsWhatTheTestClientWrites()
         {
-            var data = MagicFiles.MagicTypeDat(new MagicFiles.Spell(1000, 0, 1, "Thunder") { Power = 7, Distance = 9 });
+            var data = MagicFiles.MagicTypeDat(new MagicFiles.Spell(1000, 0, 1, "Thunder") { Power = 7, Distance = 9 },
+                new MagicFiles.Spell(5030, 0, 16, "Phoenix") { Percent = 40, NeedLevel = 15, AutoActive = 4 });
             Comet.Game.Items.TqFileCipher.Decrypt(data);
-            Assert.True(MagicTypeTable.Parse(data).TryGet(1000, 0, out var thunder));
-            Assert.Equal((7, 9u), (thunder.Power, thunder.Distance));
+            var table = MagicTypeTable.Parse(data);
+            Assert.True(table.TryGet(1000, 0, out var thunder));
+            Assert.Equal((7, 9u, false), (thunder.Power, thunder.Distance, thunder.IsPassive));
+            Assert.True(table.TryGet(5030, 0, out var phoenix));
+            Assert.Equal((MagicSort.AttackStatus, 40u, (byte)15, true), (phoenix.Sort, phoenix.Percent, phoenix.NeedLevel, phoenix.IsPassive));
         }
     }
 

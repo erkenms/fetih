@@ -37,10 +37,14 @@ namespace Comet.Game.Magic
 
         // The weapon the spell needs, by item type / 1000 (410 blade), or 0
         public uint WeaponSubtype { get; init; }
+
+        // Not 0: a weapon skill that goes off by itself, at Percent of the holder's swings
+        public uint AutoActive { get; init; }
         public byte UseStamina { get; init; }
         public uint DelayMilliseconds { get; init; }
 
         public bool IsXpSkill => this.UseXp == 1;
+        public bool IsPassive => this.AutoActive != 0;
         public bool IsPercent => this.Power >= PercentBase;
         public int PowerPercent => this.Power - PercentBase;
 
@@ -59,6 +63,7 @@ namespace Comet.Game.Magic
         DetachStatus = 7,
         DispatchXp = 11,
         Line = 14,
+        AttackStatus = 16,
         AddMana = 20,
         Riding = 32,
     }
@@ -101,7 +106,7 @@ namespace Comet.Game.Magic
         // 0 id, 1 type, 2 sort, 3 name, 4 crime, 5 ground, 6 multi, 7 target, 8 level,
         // 9 use_mp, 10 power, 11 intone, 12 percent, 13 step_secs, 14 range, 15 distance,
         // 16 status, 17 need_prof, 18 need_exp, 20 need_level, 21 use_xp, 22 weapon_subtype,
-        // 23 active_times, 29 use_ep, 33 delay_ms
+        // 23 active_times, 24 auto_active, 29 use_ep, 33 delay_ms
         public static MagicTypeTable Parse(byte[] decrypted)
         {
             var types = new List<MagicType>();
@@ -147,6 +152,7 @@ namespace Comet.Game.Magic
                     NeedLevel = byte.Parse(f[20], CultureInfo.InvariantCulture),
                     UseXp = UInt(f[21]),
                     WeaponSubtype = UInt(f[22]),
+                    AutoActive = UInt(f[24]),
                     UseStamina = byte.Parse(f[29], CultureInfo.InvariantCulture),
                     DelayMilliseconds = UInt(f[33]),
                 };

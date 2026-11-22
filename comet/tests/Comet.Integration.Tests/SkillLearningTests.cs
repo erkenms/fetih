@@ -91,6 +91,28 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ALearnedWeaponSkillGoesOffInPlaceOfASwing()
+        {
+            var at = ServerFixture.PheasantForPassive;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(player, "/learn 5030");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 5030));
+
+            await player.Game.CastAsync(player.User.Id, 5030, pheasant.Id, at.X, at.Y);
+            Assert.Equal("passive", (await this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name))
+                .GetProperty("reason").GetString());
+
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(blade.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
+            await player.Game.AttackAsync(player.User.Id, pheasant.Id, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 5030);
+            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+        }
+
+        [Fact]
         public async Task MeditationRefusesAFullManaBar()
         {
             await using var player = (await this.PlayingAtAsync(1002, 780, 960, GameMaster, level: 50)).Player;

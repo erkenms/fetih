@@ -31,7 +31,7 @@ namespace Comet.Game.Magic
         private static readonly HashSet<MagicSort> Supported = new HashSet<MagicSort>
         {
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
-            MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding,
+            MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp,
         };
 
@@ -97,6 +97,7 @@ namespace Comet.Game.Magic
 
         private static string Problem(Client client, MagicType spell, DateTime now) =>
             !Supported.Contains(spell.Sort) ? "unsupported_sort" :
+            spell.IsPassive ? "passive" :
             now < client.NextCastAt ? "too_soon" :
             spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
@@ -110,17 +111,36 @@ namespace Comet.Game.Magic
                 .Select(p => client.Equipment?[p])
                 .Any(item => item != null && Proficiency.WeaponType(item.TypeID) == weaponSubtype);
 
-        private static async Task AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y, DateTime now)
+        // A learned weapon skill for a weapon in hand may go off instead of a melee swing, at
+        // its percent; false if none did
+        public static async Task<bool> TryPassiveAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
+        {
+            foreach (var (type, learned) in client.Skills.AllSpells())
+            {
+                if (!Kernel.Magics.TryGet(type, learned.Level, out var spell) || !spell.IsPassive ||
+                    !spell.IsPercent || !IsAttack(spell.Sort) || spell.WeaponSubtype == 0 ||
+                    !Holds(client, spell.WeaponSubtype) || Random.Shared.Next(100) >= spell.Percent)
+                    continue;
+                return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
+            }
+            return false;
+        }
+
+        private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or
+            MagicSort.Bomb or MagicSort.Line or MagicSort.Fan;
+
+        private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
+            DateTime now, bool passive = false)
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort == MagicSort.Attack)
+            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
                 if (victim == null)
                 {
                     Reject(client, spell.Type, reason);
-                    return;
+                    return false;
                 }
                 victims = new List<Victim> { victim };
                 (x, y) = (victim.X, victim.Y);
@@ -139,7 +159,7 @@ namespace Comet.Game.Magic
                     ? AgainstMonster(client, stats, spell, victim.Monster, now)
                     : AgainstPlayer(client, stats, spell, victim.Player, now);
 
-            await PayAsync(client, spell, now);
+            await PayAsync(client, spell, now, passive);
             await Durability.WearOnAttackAsync(client);
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
             foreach (var victim in victims)
@@ -173,6 +193,7 @@ namespace Comet.Game.Magic
 
             LogCast(client, spell, x, y, victims.Count);
             await GainExperienceAsync(client, spell, experience);
+            return true;
         }
 
         private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now)
@@ -462,8 +483,11 @@ namespace Comet.Game.Magic
             return target;
         }
 
-        private static async Task PayAsync(Client client, MagicType spell, DateTime now)
+        // A passive skill costs nothing and doesn't delay the next cast
+        private static async Task PayAsync(Client client, MagicType spell, DateTime now, bool passive = false)
         {
+            if (passive)
+                return;
             var character = client.Character;
             client.NextCastAt = now + TimeSpan.FromMilliseconds(Math.Max(MinimumDelay.TotalMilliseconds, spell.DelayMilliseconds));
             if (spell.UseMana > 0)

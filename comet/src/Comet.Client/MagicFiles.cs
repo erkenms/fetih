@@ -17,7 +17,9 @@ namespace Comet.Client
             public bool XpSkill { get; init; }
             public byte Stamina { get; init; }
             public uint WeaponSubtype { get; init; }
+            public uint Percent { get; init; } = 100;
             public byte NeedLevel { get; init; }
+            public uint AutoActive { get; init; }
         }
 
         // An encrypted magictype.dat as the 5619 client has it: per spell level one line of 50
@@ -36,7 +38,7 @@ namespace Comet.Client
                 fields[8] = spell.Level.ToString();
                 fields[9] = spell.Mana.ToString();
                 fields[10] = spell.Power.ToString();
-                fields[12] = "100";
+                fields[12] = spell.Percent.ToString();
                 fields[13] = spell.StepSeconds.ToString();
                 fields[14] = spell.Range.ToString();
                 fields[15] = spell.Distance.ToString();
@@ -45,6 +47,7 @@ namespace Comet.Client
                 fields[20] = spell.NeedLevel.ToString();
                 fields[21] = spell.XpSkill ? "1" : spell.Stamina > 0 ? "2" : "0";
                 fields[22] = spell.WeaponSubtype.ToString();
+                fields[24] = spell.AutoActive.ToString();
                 fields[29] = spell.Stamina.ToString();
                 text.Append(string.Join("@@", fields)).Append("@@\r\n");
             }
