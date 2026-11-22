@@ -31,7 +31,7 @@ namespace Comet.Game.Magic
             SpiritHealing = 1190, Meditation = 1195, WideStrike = 1250, SpeedGun = 1260, Penetration = 1290,
             Halt = 1300, FlyingMoon = 1320, DivineHare = 1350, NightDevil = 1360, SpeedLightning = 5001,
             Snow = 5010, StrandedMonster = 5020, Phoenix = 5030, Boom = 5040, Boreas = 5050,
-            TwofoldBlades = 6000, Seizer = 7000, Earthquake = 7010, Rage = 7020, Celestial = 7030,
+            TwofoldBlades = 6000, ToxicFog = 6001, ArcherBane = 6004, Invisibility = 1075, Fly = 8002, Seizer = 7000, Earthquake = 7010, Rage = 7020, Celestial = 7030,
             Roamer = 7040, RapidFire = 8000, ScatterFire = 8001, ArrowRain = 8030, DragonTail = 11000,
             ViperFang = 11005, EagleEye = 11030;
 
@@ -49,7 +49,10 @@ namespace Comet.Game.Magic
             new Rule(ScatterFire, new[] { Archer }),
             new Rule(RapidFire, new[] { Archer }),
             new Rule(ArrowRain, new[] { Archer }),
+            new Rule(Fly, new[] { Archer }),
             new Rule(TwofoldBlades, new[] { Ninja }),
+            new Rule(ArcherBane, new[] { Ninja }),
+            new Rule(ToxicFog, new[] { Ninja }),
             new Rule(EagleEye, new[] { Pirate }),
             new Rule(Meditation, new[] { Taoist }),
             new Rule(Thunder, new[] { Taoist }, FromMaster: false),
@@ -61,6 +64,7 @@ namespace Comet.Game.Magic
             new Rule(HealingRain, new[] { Taoist }, Element.Water),
             new Rule(StarOfAccuracy, new[] { Taoist }, Element.Water),
             new Rule(MagicShield, new[] { Taoist }, Element.Water),
+            new Rule(Invisibility, new[] { Taoist }, Element.Water),
             new Rule(Stigma, new[] { Taoist }, Element.Water),
             new Rule(Pray, new[] { Taoist }, Element.Water),
             new Rule(AdvancedCure, new[] { Taoist }, Element.Water),
