@@ -143,6 +143,12 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(10410, 0, 51, "FendAura") { Power = 2, Range = 30, StepSeconds = 1000000 };
         public static readonly MagicFiles.Spell SoulShackle =
             new MagicFiles.Spell(10405, 0, 6, "SoulShackle") { Distance = 15, StepSeconds = 30 };
+        public static readonly MagicFiles.Spell Serenity =
+            new MagicFiles.Spell(10400, 0, 46, "Serenity") { StepSeconds = 10 };
+        public static readonly MagicFiles.Spell Tranquility =
+            new MagicFiles.Spell(10425, 0, 47, "Tranquility") { Distance = 20, StepSeconds = 2 };
+        public static readonly MagicFiles.Spell Compassion =
+            new MagicFiles.Spell(10430, 0, 50, "Compassion") { Range = 20, Distance = 20 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -366,7 +372,7 @@ namespace Comet.Integration.Tests
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
                     RadiantPalm, WhirlwindKick, TripleAttack, TyrantAura, FendAura,
-                    SoulShackle));
+                    SoulShackle, Serenity, Tranquility, Compassion));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

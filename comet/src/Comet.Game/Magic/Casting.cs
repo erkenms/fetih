@@ -34,8 +34,11 @@ namespace Comet.Game.Magic
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
             MagicSort.GroundSting, MagicSort.RadiantPalm, MagicSort.WhirlwindKick, MagicSort.TripleAttack,
-            MagicSort.Aura,
+            MagicSort.Aura, MagicSort.Serenity, MagicSort.Tranquility, MagicSort.Compassion,
         };
+
+        // Serenity, Tranquility and Compassion, as the client describes them
+        public static readonly TimeSpan DispelInterval = TimeSpan.FromSeconds(3);
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
         {
@@ -103,6 +106,15 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.Aura:
                     await AuraAsync(client, spell, now);
+                    break;
+                case MagicSort.Serenity:
+                    await DispelAsync(client, spell, new List<Client> { client }, now);
+                    break;
+                case MagicSort.Tranquility:
+                    await DispelAsync(client, spell, new List<Client> { Anyone(client, spell, targetID) }, now);
+                    break;
+                case MagicSort.Compassion:
+                    await DispelAsync(client, spell, Teammates(client, spell.Range).Prepend(client).ToList(), now);
                     break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
@@ -699,6 +711,52 @@ namespace Comet.Game.Magic
             }
             LogCast(client, spell, target.Character.X, target.Character.Y, shackled ? 1 : 0);
             await GainExperienceAsync(client, spell, shackled ? 1u : 0u);
+        }
+
+        // Takes poison and Soul Shackle away; Compassion leaves the shackle
+        private static async Task DispelAsync(Client client, MagicType spell, List<Client> targets, DateTime now)
+        {
+            var character = client.Character;
+            await PayAsync(client, spell, now);
+            if (client.NextCastAt < now + DispelInterval)
+                client.NextCastAt = now + DispelInterval;
+            var at = targets[0].Character;
+            var effect = new MsgMagicEffect(client.ID, at.X, at.Y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var target in targets)
+                effect.Targets.Add((target.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+
+            var flags = spell.Sort == MagicSort.Compassion
+                ? (UInt128)StatusFlags.Poisoned
+                : StatusFlags.Poisoned | StatusFlags.SoulShackle;
+            foreach (var target in targets)
+                Kernel.Post(target, async () =>
+                {
+                    var had = target.Effects.Status(DateTime.UtcNow) & flags;
+                    if (had == UInt128.Zero)
+                        return;
+                    target.Effects.Remove(StatusFlags.Poisoned);
+                    target.Poison = null;
+                    if ((flags & StatusFlags.SoulShackle) != UInt128.Zero)
+                        target.Effects.Remove(StatusFlags.SoulShackle);
+                    await Pking.SendStatusAsync(target);
+                    LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
+                        "{Name} lost status 0x{Status:X} to {Caster}'s {MagicName}",
+                        target.Character?.Name, had, character.Name, spell.Name);
+                });
+            LogCast(client, spell, at.X, at.Y, targets.Count);
+        }
+
+        // A player in reach, living or dead, or the caster
+        private static Client Anyone(Client client, MagicType spell, uint targetID)
+        {
+            if (targetID == 0 || targetID == client.ID || !Kernel.Players.TryGet(targetID, out var target) ||
+                target.Character == null || target.Map != client.Map ||
+                MonsterAI.Distance(client.Character.X, client.Character.Y, target.Character.X, target.Character.Y) >
+                    spell.Distance + DistanceSlack)
+                return client;
+            return target;
         }
 
         private static async Task RideAsync(Client client, MagicType spell, DateTime now)
