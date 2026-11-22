@@ -21,6 +21,7 @@ namespace Comet.Client
             public byte NeedLevel { get; init; }
             public uint AutoActive { get; init; }
             public uint UseItem { get; init; }
+            public uint ActiveTimes { get; init; }
             public ushort UseItemCount { get; init; } = 1;
         }
 
@@ -49,6 +50,7 @@ namespace Comet.Client
                 fields[20] = spell.NeedLevel.ToString();
                 fields[21] = spell.XpSkill ? "1" : spell.Stamina > 0 ? "2" : "0";
                 fields[22] = spell.WeaponSubtype.ToString();
+                fields[23] = spell.ActiveTimes.ToString();
                 fields[24] = spell.AutoActive.ToString();
                 fields[29] = spell.Stamina.ToString();
                 fields[31] = spell.UseItem.ToString();

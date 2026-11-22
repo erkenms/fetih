@@ -56,6 +56,39 @@ namespace Comet.Game.World
                 this.alive = true;
                 this.CorpseRemoved = false;
                 this.Target = 0;
+                this.poison = null;
+            }
+        }
+
+        private Magic.Poisoning poison;
+
+        // False if it's dead
+        public bool Poison(Magic.Poisoning poison)
+        {
+            lock (this.Lock)
+            {
+                if (!this.alive)
+                    return false;
+                this.poison = poison;
+                return true;
+            }
+        }
+
+        // What a poison due took, the health left, and whether it's over; null if none was due
+        public (uint Taken, uint Health, bool Ended)? TickPoison(DateTime now)
+        {
+            lock (this.Lock)
+            {
+                if (this.poison == null || !this.alive || now < this.poison.NextAt)
+                    return null;
+                uint taken = this.poison.Take(this.health);
+                this.health -= taken;
+                this.poison.Left--;
+                this.poison.NextAt += this.poison.Interval;
+                bool ended = this.poison.Left <= 0;
+                if (ended)
+                    this.poison = null;
+                return (taken, this.health, ended);
             }
         }
 

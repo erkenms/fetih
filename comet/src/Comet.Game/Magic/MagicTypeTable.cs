@@ -77,6 +77,7 @@ namespace Comet.Game.Magic
         AttackStatus = 16,
         AddMana = 20,
         DecLife = 26,
+        GroundSting = 27,
         Riding = 32,
     }
 

@@ -175,6 +175,34 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ToxicFogTakesATenthOfAPheasantsLifeEachSecondThreeTimes()
+        {
+            var at = ServerFixture.PheasantInFog;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 6, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(player, "/learn 6001");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 6001));
+
+            await player.Game.CastAsync(player.User.Id, 6001, 0, at.X, at.Y);
+            Assert.NotNull(await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 6001));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
+                a.Values.TryGetValue(Status, out var s) && (s & Poisoned) != 0));
+            uint health = pheasant.MonsterHealth;
+            for (int tick = 0; tick < 3; tick++)
+            {
+                health -= System.Math.Max(1, health / 10);
+                uint expected = health;
+                Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
+                    a.Values.TryGetValue(Health, out var hp) && hp == expected));
+            }
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == pheasant.Id &&
+                a.Values.TryGetValue(Status, out var s) && s == 0));
+        }
+
+        private const ulong Poisoned = 0x2;
+
+        [Fact]
         public async Task RestoreHealsToFull()
         {
             var (first, email) = await this.PlayingAtAsync(1002, 700, 840, GameMaster);

@@ -52,7 +52,8 @@ namespace Comet.Game.Tests.Magic
         {
             var data = MagicFiles.MagicTypeDat(new MagicFiles.Spell(1000, 0, 1, "Thunder") { Power = 7, Distance = 9 },
                 new MagicFiles.Spell(5030, 0, 16, "Phoenix") { Percent = 40, NeedLevel = 15, AutoActive = 4 },
-                new MagicFiles.Spell(8001, 3, 4, "ScatterFire") { UseItem = 50, UseItemCount = 3 });
+                new MagicFiles.Spell(8001, 3, 4, "ScatterFire") { UseItem = 50, UseItemCount = 3 },
+                new MagicFiles.Spell(6001, 0, 27, "ToxicFog") { StepSeconds = 3, ActiveTimes = 20 });
             Comet.Game.Items.TqFileCipher.Decrypt(data);
             var table = MagicTypeTable.Parse(data);
             Assert.True(table.TryGet(1000, 0, out var thunder));
@@ -61,6 +62,8 @@ namespace Comet.Game.Tests.Magic
             Assert.Equal((MagicSort.AttackStatus, 40u, (byte)15, true), (phoenix.Sort, phoenix.Percent, phoenix.NeedLevel, phoenix.IsPassive));
             Assert.True(table.TryGet(8001, 3, out var scatter));
             Assert.Equal((50u, (ushort)3), (scatter.UseItem, scatter.UseItemCount));
+            Assert.True(table.TryGet(6001, 0, out var fog));
+            Assert.Equal((MagicSort.GroundSting, 3u, 20u, -1), (fog.Sort, fog.StepSeconds, fog.ActiveTimes, fog.Status));
         }
     }
 

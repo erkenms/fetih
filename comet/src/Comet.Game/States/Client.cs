@@ -69,6 +69,9 @@ namespace Comet.Game.States
         // Statuses that run out: XP full and what spells give
         public TimedStatus Effects { get; } = new TimedStatus();
 
+        // Changed on the player's own queue
+        public Magic.Poisoning Poison { get; set; }
+
         // Energy and Skills change only on the player's own queue
         public Magic.Energy Energy { get; } = new Magic.Energy();
         public Magic.Skills Skills { get; set; } = new Magic.Skills();

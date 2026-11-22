@@ -33,6 +33,7 @@ namespace Comet.Game.Magic
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
             MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
+            MagicSort.GroundSting,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -91,6 +92,9 @@ namespace Comet.Game.Magic
                     break;
                 case MagicSort.DispatchXp:
                     await RoarAsync(client, spell, now);
+                    break;
+                case MagicSort.GroundSting:
+                    await FogAsync(client, spell, x, y, now);
                     break;
                 default:
                     await AttackAsync(client, spell, targetID, x, y, now);
@@ -417,6 +421,52 @@ namespace Comet.Game.Magic
             await Movement.SendToViewAsync(client, effect);
             Kernel.Post(target, () => Death.ReviveHereAsync(target, $"magic {spell.Type} from {character.Name}"));
             LogCast(client, spell, target.Character.X, target.Character.Y, 1);
+        }
+
+        // Toxic Fog poisons the monsters and attackable players around the cell aimed at, each
+        // at the spell's percent
+        private static async Task FogAsync(Client client, MagicType spell, ushort x, ushort y, DateTime now)
+        {
+            var character = client.Character;
+            if (MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack)
+            {
+                Reject(client, spell.Type, "too_far");
+                return;
+            }
+
+            var victims = Around(client, now)
+                .Where(v => MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
+                .Take(MaxTargets)
+                .ToList();
+            await PayAsync(client, spell, now);
+            var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var victim in victims)
+                effect.Targets.Add((victim.ID, 0));
+            await client.SendAsync(effect);
+            await Movement.SendToViewAsync(client, effect);
+
+            int poisoned = 0;
+            foreach (var victim in victims)
+            {
+                if (victim.Player != null)
+                    await Pking.OnAttackAsync(client, victim.Player);
+                else if (victim.Monster.IsGuard)
+                    await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
+                else
+                    victim.Monster.Provoke(client.ID);
+                if (Random.Shared.Next(100) >= spell.Percent)
+                    continue;
+                poisoned++;
+                var poison = Poison.From(spell, now);
+                if (victim.Player != null)
+                {
+                    var target = victim.Player;
+                    Kernel.Post(target, () => Poison.StartAsync(target, poison, DateTime.UtcNow));
+                }
+                else
+                    await Poison.StartAsync(victim.Monster, poison);
+            }
+            LogCast(client, spell, x, y, poisoned);
         }
 
         // Archer Bane takes a player's status (Fly) away, at the spell's percent

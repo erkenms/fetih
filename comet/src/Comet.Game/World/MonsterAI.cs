@@ -47,7 +47,10 @@ namespace Comet.Game.World
                     monster.Target = 0;
             foreach (var monster in awake)
                 if (monster.Alive)
+                {
+                    await Magic.Poison.TickAsync(monster, now);
                     await ThinkAsync(monster, now, random);
+                }
         }
 
         private static HashSet<Monster> Awake()
