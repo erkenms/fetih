@@ -76,6 +76,7 @@ namespace Comet.Game.Magic
         Line = 14,
         AttackStatus = 16,
         AddMana = 20,
+        DecLife = 26,
         Riding = 32,
     }
 

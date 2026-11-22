@@ -161,6 +161,20 @@ namespace Comet.Integration.Tests
         private const ulong FlyStatus = 0x8000000;
 
         [Fact]
+        public async Task CruelShadeTakesATenthOfWhatLifeIsLeft()
+        {
+            var at = ServerFixture.PheasantForCruelShade;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 3, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(player, "/learn 3050");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 3050));
+            await player.Game.CastAsync(player.User.Id, 3050, pheasant.Id, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 3050);
+            Assert.Equal((pheasant.Id, pheasant.MonsterHealth / 10), (Assert.Single(effect.Targets).Id, effect.Targets[0].Damage));
+        }
+
+        [Fact]
         public async Task RestoreHealsToFull()
         {
             var (first, email) = await this.PlayingAtAsync(1002, 700, 840, GameMaster);

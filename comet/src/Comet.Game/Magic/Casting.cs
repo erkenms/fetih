@@ -32,7 +32,7 @@ namespace Comet.Game.Magic
         {
             MagicSort.Attack, MagicSort.Bomb, MagicSort.Line, MagicSort.Fan,
             MagicSort.Recruit, MagicSort.AttachStatus, MagicSort.Riding, MagicSort.AttackStatus,
-            MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp,
+            MagicSort.DetachStatus, MagicSort.AddMana, MagicSort.DispatchXp, MagicSort.DecLife,
         };
 
         private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
@@ -138,7 +138,7 @@ namespace Comet.Game.Magic
             return false;
         }
 
-        private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or
+        private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
             MagicSort.Bomb or MagicSort.Line or MagicSort.Fan;
 
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
@@ -146,7 +146,7 @@ namespace Comet.Game.Magic
         {
             var character = client.Character;
             List<Victim> victims;
-            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus)
+            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
                 if (victim == null)
@@ -305,6 +305,8 @@ namespace Comet.Game.Magic
         {
             var type = monster.Type;
             int level = client.Character.Level;
+            if (spell.Sort == MagicSort.DecLife)
+                return ShareOf(monster.Health, spell);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? Damage.Magic(stats.MagicDamage, spell.Power, level, type.Level) : 0;
@@ -319,6 +321,8 @@ namespace Comet.Game.Magic
         private static uint AgainstPlayer(Client client, Stats stats, MagicType spell, Client target, DateTime now)
         {
             var targetStats = Stats.Of(target);
+            if (spell.Sort == MagicSort.DecLife)
+                return ShareOf(target.Character.HealthPoints, spell);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
@@ -332,6 +336,10 @@ namespace Comet.Game.Magic
                 ? Damage.PlayerArchery(attack, targetStats.Dodge)
                 : Damage.PlayerMelee(attack, Buffs.Defense(target.Effects, targetStats.Defense, now)));
         }
+
+        // Cruel Shade takes its power's percentage of the target's life left
+        private static uint ShareOf(uint health, MagicType spell) =>
+            (uint)Math.Max(1, (ulong)health * (uint)Math.Max(0, spell.PowerPercent) / 100);
 
         // Heals the caster if the target isn't a living player in reach; a spell for many
         // (Healing Rain) heals the caster and the living teammates in reach too
