@@ -34,6 +34,7 @@ namespace Comet.Game.Npcs
                 [Training.TrainingGround.ExitID] = Training.TrainingGround.ExitAsync,
                 [Rebirths.EternityID] = Rebirths.EternityAsync,
                 [Rebirths.AlexID] = Rebirths.AlexAsync,
+                [Rebirths.CelestialTaoID] = Rebirths.CelestialTaoAsync,
             };
 
         static Dialogs()

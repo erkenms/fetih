@@ -1,5 +1,6 @@
 namespace Comet.Game.Tests.States
 {
+    using Comet.Game.Database.Models;
     using Comet.Game.States;
     using Xunit;
 
@@ -31,6 +32,14 @@ namespace Comet.Game.Tests.States
         {
             Assert.Equal(Rebirth.CelestialStone, Rebirth.RequiredItem(1));
             Assert.Equal(Rebirth.ExemptionToken, Rebirth.RequiredItem(2));
+        }
+
+        [Fact]
+        public void OnlyTheRebornPastSeventyReallot()
+        {
+            Assert.Equal("not_reborn", Rebirth.ReallotUnmet(new DbCharacter(1, "Hero") { Level = 130 }));
+            Assert.Equal("level", Rebirth.ReallotUnmet(new DbCharacter(1, "Hero") { Rebirths = 1, Level = 69 }));
+            Assert.Null(Rebirth.ReallotUnmet(new DbCharacter(1, "Hero") { Rebirths = 1, Level = 70 }));
         }
     }
 }

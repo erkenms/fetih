@@ -165,5 +165,28 @@ namespace Comet.Game.States
                     !Requirements.ProfessionFits(client.Character.CurrentClass, type.RequiredProfession))
                     await Equipping.UnequipAsync(client, item.ItemID, (ItemPosition)item.Position);
         }
+
+        // A reborn player of level 70 or more may put every attribute point back to allot again
+        public static string ReallotUnmet(Database.Models.DbCharacter character) =>
+            character.Rebirths == 0 ? "not_reborn" : character.Level < 70 ? "level" : null;
+
+        public static async Task<string> ReallotAsync(Client client, string npc)
+        {
+            var character = client.Character;
+            string reason = ReallotUnmet(character);
+            if (reason != null)
+            {
+                LogEvents.For(typeof(Rebirth), LogEvents.CharacterAllotRejected).Information(
+                    "{Name} can't reallot attribute points at NPC {Npc}: {Reason}", character.Name, npc, reason);
+                return reason;
+            }
+
+            await Progress.RestartAttributesAsync(client, "reallot");
+            LogEvents.For(typeof(Rebirth), LogEvents.CharacterReallotted).Information(
+                "{Name} put {Points} attribute points back to allot at NPC {Npc}",
+                character.Name, character.AttributePoints, npc);
+            await client.SaveAsync("reallot");
+            return null;
+        }
     }
 }

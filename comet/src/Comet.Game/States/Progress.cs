@@ -154,6 +154,23 @@ namespace Comet.Game.States
                 character.Name, stat.ToString(), current, value, reason);
         }
 
+        // Every attribute point back to allot again, over the starting attributes
+        public static async Task RestartAttributesAsync(Client client, string reason)
+        {
+            var character = client.Character;
+            ushort oldMaxHealth = Attributes.MaxHealth(client), oldMaxMana = Attributes.MaxMana(client);
+            int total = character.Strength + character.Agility + character.Vitality + character.Spirit +
+                character.AttributePoints;
+            Attributes.SetStarting(character);
+            character.AttributePoints = (ushort)Math.Clamp(total - character.Strength - character.Agility -
+                character.Vitality - character.Spirit, 0, ushort.MaxValue);
+            await SendAttributesAsync(client);
+            await FollowMaximumsAsync(client, oldMaxHealth, oldMaxMana);
+            LogEvents.For(typeof(Progress), LogEvents.CharacterAllotted).Information(
+                "{Name} has {Points} attribute points to allot again ({Reason})",
+                character.Name, character.AttributePoints, reason);
+        }
+
         public static async Task SetClassAsync(Client client, byte currentClass)
         {
             var character = client.Character;

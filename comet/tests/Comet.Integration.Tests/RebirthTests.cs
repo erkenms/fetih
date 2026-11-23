@@ -7,12 +7,12 @@ namespace Comet.Integration.Tests
     using Xunit;
     using static Comet.Client.UserAttribMessage;
 
-    // Eternity and Alex at their places in the market in Data/npcs.json, with the
+    // Eternity, Alex and CelestialTao at their places in the market in Data/npcs.json, with the
     // test magictypeop.dat of ServerFixture
     public class RebirthTests : IntegrationTest
     {
-        private const uint Eternity = 300500, Alex = 3600;
-        private const byte Trojan = 10, Warrior = 11, ConfirmTrojan = 20, ConfirmWarrior = 21;
+        private const uint Eternity = 300500, Alex = 3600, CelestialTao = 350050;
+        private const byte Trojan = 10, Warrior = 11, ConfirmTrojan = 20, ConfirmWarrior = 21, Reallot = 1, ConfirmReallot = 2;
 
         public RebirthTests(ServerFixture servers) : base(servers) { }
 
@@ -133,5 +133,21 @@ namespace Comet.Integration.Tests
             Assert.Equal(120, await this.CharacterAsync(player, "SecondLifeLevel"));
         }
 
+        [Fact]
+        public async Task CelestialTaoPutsARebornPlayersPointsBackToAllotPastSeventy()
+        {
+            await using var player = await this.PlayingAsAsync(291, 203, 69,
+                "Rebirths = 1, Strength = 50, Agility = 6, Vitality = 30, Spirit = 2, AttributePoints = 10");
+            Assert.Contains("level 70", await TalkAsync(player, CelestialTao));
+
+            await CommandAsync(player, "/level 70");
+            Assert.NotNull(await TalkAsync(player, CelestialTao));
+            Assert.Contains("Are you sure", await AnswerAsync(player, Reallot));
+            Assert.Contains("allot again", await AnswerAsync(player, ConfirmReallot));
+            // 88 and 10 points, less the 22 every life starts with, plus 3 for level 70
+            var points = await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Strength, out var s) && s == 4);
+            Assert.Equal(79ul, points.Values[AttributePoints]);
+        }
     }
 }

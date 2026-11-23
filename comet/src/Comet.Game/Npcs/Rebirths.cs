@@ -5,13 +5,14 @@ namespace Comet.Game.Npcs
     using Comet.Game.States;
 
     // The market's NPCs of rebirth: Eternity for the first, Alex for the second (an Exemption
-    // Token in place of its quest)
+    // Token in place of its quest) and CelestialTao putting a reborn player's attribute
+    // points back to allot
     public static class Rebirths
     {
-        public const uint EternityID = 300500, AlexID = 3600;
+        public const uint EternityID = 300500, AlexID = 3600, CelestialTaoID = 350050;
 
         // Option FirstClass + i chooses Rebirth.Classes[i], Confirm + i is reborn into it
-        private const byte MoreClasses = 1, FirstClass = 10, Confirm = 20;
+        private const byte MoreClasses = 1, FirstClass = 10, Confirm = 20, Reallot = 1, ConfirmReallot = 2;
         private const int ClassesPerPage = 4;
 
         public static Task EternityAsync(NpcTalk talk) => TalkAsync(talk, 1, "a Celestial Stone");
@@ -86,6 +87,42 @@ namespace Comet.Game.Npcs
                 "level" or "no_item" => new[] { Needs(current, life, item) },
                 _ => new[] { "I can't help you now." },
             };
+        }
+
+        public static async Task CelestialTaoAsync(NpcTalk talk)
+        {
+            var client = talk.Client;
+            string reason = Rebirth.ReallotUnmet(client.Character);
+            if (reason == null && talk.Option == ConfirmReallot)
+                reason = await Rebirth.ReallotAsync(client, talk.Npc.NpcID.ToString());
+            if (reason == null && talk.Option == ConfirmReallot)
+            {
+                await SayAsync(talk, $"Done. You have {client.Character.AttributePoints} attribute points to allot again.");
+                return;
+            }
+            if (reason == "not_reborn")
+            {
+                await SayAsync(talk, "Only those who have been reborn can allot their attribute points again.");
+                return;
+            }
+            if (reason == "level")
+            {
+                await SayAsync(talk, "Come back at level 70 and I'll let you allot your attribute points again.");
+                return;
+            }
+            if (talk.Option == Reallot)
+            {
+                await talk.Text("Your strength, agility, vitality and spirit will go back to where every life starts, " +
+                        "and all the rest will be points to allot again. Are you sure?")
+                    .Choice("I am sure.", ConfirmReallot)
+                    .Choice("Not now.", MsgTaskDialog.NoOption)
+                    .ShowAsync();
+                return;
+            }
+            await talk.Text("A reborn hero may allot their attribute points again, once past level 70.")
+                .Choice("Let me allot them again.", Reallot)
+                .Choice("Not now.", MsgTaskDialog.NoOption)
+                .ShowAsync();
         }
 
         private static string A(string name) => ("AEIOU".Contains(name[0]) ? "an " : "a ") + name;
