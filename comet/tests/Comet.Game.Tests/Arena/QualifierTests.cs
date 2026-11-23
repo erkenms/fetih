@@ -82,6 +82,33 @@ namespace Comet.Game.Tests.Arena
         }
 
         [Fact]
+        public void HonorRewardsReadTheFirstNumberOfEachRank()
+        {
+            var rewards = HonorRewards.Parse("RankAmount=3\r\n1=15000/100000\r\n2=14000/90000\r\n3=13000/80000\r\n");
+            Assert.Equal(3, rewards.Count);
+            Assert.Equal((15000u, 14000u, 13000u), (rewards.For(1), rewards.For(2), rewards.For(3)));
+            Assert.Equal((0u, 0u), (rewards.For(0), rewards.For(4)));
+            Assert.Throws<System.IO.InvalidDataException>(() => HonorRewards.Parse("RankAmount=2\n1=15000/100000\n"));
+        }
+
+        [Fact]
+        public void SeasonHonorPaysEachRankOfTheEndedDayUpToTheTable()
+        {
+            uint day = ArenaRecord.DayOf(Now);
+            var first = Record(1, 1600, winsToday: 1);
+            var second = Record(2, 1550, winsToday: 1);
+            var third = Record(3, 1500, lossesToday: 1);
+            var idle = Record(4, 9999);
+            var rewards = new HonorRewards(new uint[] { 15000, 14000 });
+
+            var awarded = ArenaRecord.AwardSeasonHonor(new[] { third, idle, second, first }, day, rewards);
+            Assert.Equal(new[] { (1u, 1, 15000u), (2u, 2, 14000u) }, awarded.Select(a => (a.Record.ID, a.Rank, a.Honor)));
+            Assert.Equal((15000u, 15000u), (first.Stored.HonorPoints, first.Stored.HonorTotal));
+            Assert.Equal(14000u, second.Stored.HonorPoints);
+            Assert.Equal((0u, 0u), (third.Stored.HonorPoints, idle.Stored.HonorPoints));
+        }
+
+        [Fact]
         public void TheTwentiethMatchAndNinthWinOfADayEarnHonor()
         {
             var winner = Record(1, 1500, winsToday: 8, lossesToday: 11);

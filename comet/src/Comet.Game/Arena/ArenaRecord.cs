@@ -149,6 +149,21 @@ namespace Comet.Game.Arena
                 })
                 .ToList();
 
+        // A season's end: each rank of the ended day earns its Honor Points
+        public static List<(ArenaRecord Record, int Rank, uint Honor)> AwardSeasonHonor(
+            IEnumerable<ArenaRecord> records, uint day, HonorRewards rewards)
+        {
+            var awarded = new List<(ArenaRecord, int, uint)>();
+            var ranked = RankDay(records, day);
+            for (int i = 0; i < ranked.Count && i < rewards.Count; i++)
+            {
+                uint honor = rewards.For(i + 1);
+                ranked[i].AddHonor(honor);
+                awarded.Add((ranked[i], i + 1, honor));
+            }
+            return awarded;
+        }
+
         public static List<ArenaRecord> RankByHonor(IEnumerable<ArenaRecord> records) =>
             records.Where(r => r.Stored.HonorTotal > 0)
                 .OrderByDescending(r => r.Stored.HonorTotal)

@@ -69,6 +69,7 @@ namespace Comet.Game.Arena
             var (lastSeasonNumber, lastSeason) = await ArenaRepository.LoadLastSeasonAsync();
             List<DbArenaSeason> closed = null;
             List<DbArena> saves = null;
+            int rewarded = 0;
             uint today = ArenaRecord.DayOf(now);
             lock (Sync)
             {
@@ -90,16 +91,12 @@ namespace Comet.Game.Arena
                     .Max();
                 if (pastDay > 0)
                 {
-                    closed = ArenaRecord.TopTen(Records.Values, pastDay, LastSeasonNumber + 1);
-                    if (closed.Count > 0)
-                    {
-                        LastSeasonNumber++;
-                        LastSeason = closed;
-                    }
+                    (closed, var awarded) = CloseSeasonLocked(pastDay);
+                    rewarded = awarded.Count;
                 }
                 saves = ResetLocked(today, all: false);
             }
-            await PersistSeasonAsync(closed, saves);
+            await PersistSeasonAsync(closed, saves, rewarded);
         }
 
         public static async Task HandleAsync(Client client, MsgQualifyingInteractive msg)
@@ -201,22 +198,24 @@ namespace Comet.Game.Arena
             await client.SendAsync(reply);
         }
 
-        public static async Task<(uint Season, int TopCount, int ResetCount)> ResetSeasonAsync()
+        public static async Task<(uint Season, int TopCount, int ResetCount, int Rewarded)> ResetSeasonAsync()
         {
             var now = DateTime.UtcNow;
             List<DbArenaSeason> top;
             List<DbArena> saves;
+            List<(ArenaRecord Record, int Rank, uint Honor)> awarded;
             uint season;
             lock (Sync)
             {
                 uint today = ArenaRecord.DayOf(now);
                 if (CurrentDay == 0)
                     CurrentDay = today;
-                (top, saves) = EndSeasonLocked(CurrentDay, today);
+                (top, saves, awarded) = EndSeasonLocked(CurrentDay, today);
                 season = LastSeasonNumber;
             }
-            await PersistSeasonAsync(top, saves);
-            return (season, top.Count, saves.Count);
+            await PersistSeasonAsync(top, saves, awarded.Count);
+            AnnounceHonor(awarded);
+            return (season, top.Count, saves.Count, awarded.Count);
         }
 
         // Combat asks before a hit on a player: null when the arena has no say (the attacker
@@ -559,6 +558,7 @@ namespace Comet.Game.Arena
         {
             List<DbArenaSeason> closed = null;
             List<DbArena> seasonSaves = null;
+            List<(ArenaRecord Record, int Rank, uint Honor)> awarded = null;
             var invited = new List<ArenaMatch>();
             var expired = new List<ArenaMatch>();
             var results = new List<Result>();
@@ -569,7 +569,7 @@ namespace Comet.Game.Arena
                 if (CurrentDay == 0)
                     CurrentDay = today;
                 else if (today > CurrentDay)
-                    (closed, seasonSaves) = EndSeasonLocked(CurrentDay, today);
+                    (closed, seasonSaves, awarded) = EndSeasonLocked(CurrentDay, today);
 
                 invited.AddRange(PairLocked(now));
                 foreach (var match in Matches.ToList())
@@ -607,7 +607,10 @@ namespace Comet.Game.Arena
             }
 
             if (closed != null || seasonSaves != null)
-                await PersistSeasonAsync(closed, seasonSaves);
+            {
+                await PersistSeasonAsync(closed, seasonSaves, awarded.Count);
+                AnnounceHonor(awarded);
+            }
             foreach (var match in invited)
                 await InviteAsync(match);
             foreach (var match in expired)
@@ -819,19 +822,37 @@ namespace Comet.Game.Arena
             return CurrentDay;
         }
 
-        private static (List<DbArenaSeason> Top, List<DbArena> Saves) EndSeasonLocked(uint endedDay, uint nextDay)
+        private static (List<DbArenaSeason> Top, List<DbArena> Saves, List<(ArenaRecord Record, int Rank, uint Honor)> Awarded)
+            EndSeasonLocked(uint endedDay, uint nextDay)
         {
             foreach (var record in Records.Values)
                 RefreshLocked(record);
+            var (top, awarded) = CloseSeasonLocked(endedDay);
+            // The reset saves every record of the ended day, with the honor just awarded
+            var saves = ResetLocked(nextDay, all: endedDay == nextDay);
+            CurrentDay = nextDay;
+            return (top, saves, awarded);
+        }
+
+        // Keeps the ended day's top ten as the latest season and pays each rank its honor
+        private static (List<DbArenaSeason> Top, List<(ArenaRecord Record, int Rank, uint Honor)> Awarded)
+            CloseSeasonLocked(uint endedDay)
+        {
             var top = ArenaRecord.TopTen(Records.Values, endedDay, LastSeasonNumber + 1);
             if (top.Count > 0)
             {
                 LastSeasonNumber++;
                 LastSeason = top;
             }
-            var saves = ResetLocked(nextDay, all: endedDay == nextDay);
-            CurrentDay = nextDay;
-            return (top, saves);
+            return (top, ArenaRecord.AwardSeasonHonor(Records.Values, endedDay, Kernel.HonorRewards));
+        }
+
+        private static void AnnounceHonor(List<(ArenaRecord Record, int Rank, uint Honor)> awarded)
+        {
+            foreach (var (record, rank, honor) in awarded)
+                if (Kernel.Players != null && Kernel.Players.TryGet(record.ID, out var client) && client.Character != null)
+                    Kernel.Post(client, () => Talk.NoticeAsync(client,
+                        $"You ranked {rank} in the Qualifier season and received {honor} Honor Points."));
         }
 
         private static List<DbArena> ResetLocked(uint day, bool all)
@@ -859,7 +880,7 @@ namespace Comet.Game.Arena
             record.Mesh = (uint)(character.Mesh + character.Avatar * 10000);
         }
 
-        private static async Task PersistSeasonAsync(List<DbArenaSeason> top, List<DbArena> saves)
+        private static async Task PersistSeasonAsync(List<DbArenaSeason> top, List<DbArena> saves, int rewarded)
         {
             bool hasTop = top != null && top.Count > 0;
             bool hasSaves = saves != null && saves.Count > 0;
@@ -879,8 +900,10 @@ namespace Comet.Game.Arena
                 return;
             }
             LogEvents.For(typeof(Qualifier), LogEvents.ArenaSeasonReset).Information(
-                "Arena season {Season} ended with {TopCount} ranked players; reset {ResetCount} records",
-                hasTop ? top[0].Season : LastSeasonNumber, hasTop ? top.Count : 0, hasSaves ? saves.Count : 0);
+                "Arena season {Season} ended with {TopCount} ranked players; {RewardedCount} got honor; " +
+                "reset {ResetCount} records",
+                hasTop ? top[0].Season : LastSeasonNumber, hasTop ? top.Count : 0, rewarded,
+                hasSaves ? saves.Count : 0);
         }
 
         private static ArenaRecord RecordOf(Character character, DateTime now)

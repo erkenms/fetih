@@ -71,6 +71,7 @@ namespace Comet.Core.Logging
         public const string ItemTakenOut = "item.taken_out";
         public const string ItemWarehouseRejected = "item.warehouse_rejected";
         public const string ShopsLoaded = "item.shops_loaded";
+        public const string HonorRewardsLoaded = "arena.honor_rewards_loaded";
         public const string ItemLocked = "item.locked";
         public const string ItemUnlockStarted = "item.unlock_started";
         public const string ItemUnlocked = "item.unlocked";

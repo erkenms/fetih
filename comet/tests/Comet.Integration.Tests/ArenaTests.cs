@@ -188,7 +188,7 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task ResettingTheSeasonSavesTheTopTenAndResetsPoints()
+        public async Task ResettingTheSeasonSavesTheTopTenPaysHonorAndResetsPoints()
         {
             // Level 100 starts with 2700 points, above other tests' level 50 fighters
             var a = await this.FighterAsync(190, authority: GameMaster, level: 100);
@@ -201,11 +201,21 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await a.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.WinsToday == 1));
             Assert.NotNull(await b.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.LossesToday == 1));
 
+            async Task<uint> HonorAsync(Player p) => Convert.ToUInt32(await this.Servers.QueryGameScalarAsync(
+                "SELECT HonorPoints FROM arena WHERE CharacterID = @id", ("@id", p.User.Id)));
+            uint honorA = await HonorAsync(a), honorB = await HonorAsync(b);
+
             int mark = this.Servers.Mark();
             await CommandAsync(a, "/arenaseason");
             var reset = await this.Servers.WaitForEventAsync("game", "arena.season_reset", _ => true, after: mark);
             uint season = reset.GetProperty("season").GetUInt32();
             Assert.True(season >= 1);
+
+            // The fixture's HonorRewards.ini pays rank 1 15000 and rank 2 14000
+            Assert.NotNull(await a.Game.WaitForTalkAsync(t => t.Text == "You ranked 1 in the Qualifier season and received 15000 Honor Points."));
+            Assert.NotNull(await b.Game.WaitForTalkAsync(t => t.Text == "You ranked 2 in the Qualifier season and received 14000 Honor Points."));
+            Assert.Equal(honorA + 15000, await HonorAsync(a));
+            Assert.Equal(honorB + 14000, await HonorAsync(b));
 
             await a.Game.SendAsync(QualifierMessage.BuildSeasonRankQuery());
             var list = await a.Game.WaitForQualifierSeasonRankingAsync();

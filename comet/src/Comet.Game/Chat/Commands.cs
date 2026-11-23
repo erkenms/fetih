@@ -581,9 +581,9 @@ namespace Comet.Game.Chat
 
         private static async Task<bool> ArenaSeasonAsync(Client client, string[] args, string rest)
         {
-            var (season, top, reset) = await Arena.Qualifier.ResetSeasonAsync();
+            var (season, top, reset, rewarded) = await Arena.Qualifier.ResetSeasonAsync();
             await Talk.NoticeAsync(client, top > 0
-                ? $"Arena season {season} saved with top {top}; reset {reset} records."
+                ? $"Arena season {season} saved with top {top}; {rewarded} players got honor; reset {reset} records."
                 : $"Arena season reset {reset} records (nobody fought).");
             return true;
         }
