@@ -454,6 +454,11 @@ namespace Comet.Integration.Tests
                     CannonBarrage, BlackbeardsRage, Windstorm,
                     Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem,
                     DragonWhirl, StarArrow, Perseverance));
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictypeop.dat"), MagicFiles.MagicTypeOpDat(
+                (1, 15, 21, 0, new ushort[] { Hercules.Type }),
+                (1, 15, 21, 2, new ushort[] { Thunder.Type, FastBlade.Type }),
+                (1, 15, 21, 7, new ushort[] { IronShirt.Type }),
+                (2, 25, 11, 7, new ushort[] { Bless.Type })));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

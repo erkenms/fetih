@@ -65,6 +65,18 @@ namespace Comet.Client
             return ItemFiles.Encrypt(Encoding.Latin1.GetBytes(text.ToString()));
         }
 
+        // An encrypted magictypeop.dat as the 5619 client has it: per operation a line of an id,
+        // the rebirth, the class before and after, the operation and the spell types
+        public static byte[] MagicTypeOpDat(params (byte Rebirth, byte From, byte To, byte Operation, ushort[] Magics)[] ops)
+        {
+            var text = new StringBuilder();
+            int id = 1;
+            foreach (var op in ops)
+                text.Append(string.Join(",", new[] { id++, op.Rebirth, op.From, op.To, op.Operation }
+                    .Concat(op.Magics.Select(m => (int)m)).Concat(new[] { 0, 0 }))).Append("\r\n");
+            return ItemFiles.Encrypt(Encoding.Latin1.GetBytes(text.ToString()));
+        }
+
         // WeaponSkillLevelExp.ini: per line a level, the experience to reach it, and a number
         // the server doesn't use
         public static byte[] WeaponSkillLevelExpIni(params uint[] toReach) =>

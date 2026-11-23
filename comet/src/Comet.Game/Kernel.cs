@@ -40,6 +40,8 @@ namespace Comet.Game
 
         public static Magic.MagicTypeTable Magics = new Magic.MagicTypeTable(new Magic.MagicType[0]);
         public static Magic.ProficiencyTable Proficiencies = new Magic.ProficiencyTable(new (ushort, uint)[0]);
+        public static Magic.MagicTypeOpTable MagicOps =
+            new Magic.MagicTypeOpTable(new (byte, byte, byte, Magic.MagicTypeOpTable.Operation, ushort[])[0]);
 
         public static NpcTable Npcs = new NpcTable(new Npc[0]);
 

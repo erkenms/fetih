@@ -85,14 +85,15 @@
             {
                 Kernel.Magics = Magic.MagicTypeTable.Load(config.Maps.ResolveClientDirectory());
                 Kernel.Proficiencies = Magic.ProficiencyTable.Load(config.Maps.ResolveClientDirectory());
+                Kernel.MagicOps = Magic.MagicTypeOpTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.MagicTypesLoaded).Information(
-                    "Loaded {MagicTypeCount} spell levels ({SkippedCount} records skipped) and " +
-                    "{ProficiencyLevelCount} proficiency levels",
-                    Kernel.Magics.Count, Kernel.Magics.Skipped, Kernel.Proficiencies.MaxLevel);
+                    "Loaded {MagicTypeCount} spell levels ({SkippedCount} records skipped), " +
+                    "{ProficiencyLevelCount} proficiency levels and {MagicOpCount} rebirth spell operations",
+                    Kernel.Magics.Count, Kernel.Magics.Skipped, Kernel.Proficiencies.MaxLevel, Kernel.MagicOps.Count);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read ini/magictype.dat or ini/WeaponSkillLevelExp.ini from {Directory}",
+                Log.Error(e, "Can't read ini/magictype.dat, ini/WeaponSkillLevelExp.ini or ini/magictypeop.dat from {Directory}",
                     config.Maps.ResolveClientDirectory());
                 Log.CloseAndFlush();
                 return;
