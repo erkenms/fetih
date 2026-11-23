@@ -10,7 +10,7 @@ namespace Comet.Integration.Tests
     public class NpcTests : IntegrationTest
     {
         private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021,
-            CloudSaint = 2000;
+            CloudSaint = 2000, MineAssistant = 4293;
 
         public NpcTests(ServerFixture servers) : base(servers) { }
 
@@ -89,6 +89,27 @@ namespace Comet.Integration.Tests
             Assert.Contains("Demon Exterminator", page?[0].Text);
             Assert.Equal("Sure.", page.Single(p => p.Action == DialogMessage.Choice).Text);
             Assert.Equal((DialogMessage.Face, (byte)67), (page[^2].Action, page[^2].Option));
+        }
+
+        [Fact]
+        public async Task TheMineAssistantLetsInThoseWhoRepeatTheProverb()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 47, 397)).Player;
+            await player.Game.TalkToNpcAsync(MineAssistant);
+            Assert.Contains("Custom is a second nature.", (await player.Game.ReadDialogAsync())?[0].Text);
+            await player.Game.AnswerNpcAsync(1);
+            var quiz = await player.Game.ReadDialogAsync();
+            Assert.Equal(4, quiz.Count(p => p.Action == DialogMessage.Choice));
+
+            await player.Game.AnswerNpcAsync(10);
+            Assert.Contains("wrong answer", (await player.Game.ReadDialogAsync())?[0].Text);
+            await player.Game.AnswerNpcAsync(2);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            await player.Game.AnswerNpcAsync(1);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            await player.Game.AnswerNpcAsync(13);
+            var teleport = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
+            Assert.Equal((ServerFixture.TwinCityMine, (ushort)148, (ushort)113), (teleport?.Command, teleport?.X, teleport?.Y));
         }
 
         [Fact]

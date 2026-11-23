@@ -43,6 +43,8 @@ namespace Comet.Game.Npcs
         {
             foreach (var boxer in Training.TrainingGround.BoxerIDs)
                 Scripts[boxer] = Training.TrainingGround.BoxerAsync;
+            foreach (var assistant in Mines.AssistantIDs)
+                Scripts[assistant] = Mines.AssistantAsync;
         }
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);
