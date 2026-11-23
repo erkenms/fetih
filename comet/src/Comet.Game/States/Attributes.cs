@@ -9,6 +9,17 @@ namespace Comet.Game.States
     {
         public const ushort PointsPerLevel = 3;
 
+        // What every class starts with, and a rebirth starts over from
+        public const ushort StartingStrength = 4, StartingAgility = 6, StartingVitality = 12, StartingSpirit = 0;
+
+        public static void SetStarting(DbCharacter character)
+        {
+            character.Strength = StartingStrength;
+            character.Agility = StartingAgility;
+            character.Vitality = StartingVitality;
+            character.Spirit = StartingSpirit;
+        }
+
         // A transformed player's is the monster's life
         public static ushort MaxHealth(Client client) => client.Transformation is { } t
             ? (ushort)Math.Min(t.Type.Life, ushort.MaxValue)

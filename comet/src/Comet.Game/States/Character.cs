@@ -60,6 +60,8 @@ namespace Comet.Game.States
             to.PreviousClass = from.PreviousClass;
             to.QuizPoints = from.QuizPoints;
             to.Rebirths = from.Rebirths;
+            to.FirstLifeLevel = from.FirstLifeLevel;
+            to.SecondLifeLevel = from.SecondLifeLevel;
             to.Registered = from.Registered;
             to.Silver = from.Silver;
             to.Spirit = from.Spirit;

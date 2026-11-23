@@ -32,6 +32,8 @@ namespace Comet.Game.Npcs
                 [JobCenter.PirateLordID] = JobCenter.TalkAsync,
                 [JobCenter.TaoistMoonID] = JobCenter.TalkAsync,
                 [Training.TrainingGround.ExitID] = Training.TrainingGround.ExitAsync,
+                [Rebirths.EternityID] = Rebirths.EternityAsync,
+                [Rebirths.AlexID] = Rebirths.AlexAsync,
             };
 
         static Dialogs()

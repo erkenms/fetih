@@ -34,6 +34,10 @@ namespace Comet.Game.Database.Models
         public virtual byte PreviousClass { get; set; }
         public virtual byte AncestorClass { get; set; }
         public virtual byte Rebirths { get; set; }
+
+        // The level each past life was reborn at, or 0
+        public virtual byte FirstLifeLevel { get; set; }
+        public virtual byte SecondLifeLevel { get; set; }
         public virtual byte Level { get; set; }
         public virtual ulong Experience { get; set; }
         public virtual uint MapID { get; set; }

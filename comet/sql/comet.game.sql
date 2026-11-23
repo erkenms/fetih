@@ -29,6 +29,8 @@ CREATE TABLE `character` (
   `PreviousClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `AncestorClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Rebirths` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `FirstLifeLevel` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `SecondLifeLevel` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Level` tinyint(3) unsigned NOT NULL DEFAULT '1',
   `Experience` bigint(20) unsigned NOT NULL DEFAULT '0',
   `MapID` int(10) unsigned NOT NULL DEFAULT '1002',

@@ -97,10 +97,7 @@ namespace Comet.Game.Packets
             character.MapID = StartPosition.MapID;
             character.X = StartPosition.X;
             character.Y = StartPosition.Y;
-            character.Strength = 4;
-            character.Agility = 6;
-            character.Vitality = 12;
-            character.Spirit = 0;
+            Attributes.SetStarting(character);
             character.HealthPoints = 
                 (ushort)((character.Strength * 3) 
                 + (character.Agility * 3)
