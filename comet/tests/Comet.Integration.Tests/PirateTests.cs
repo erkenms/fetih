@@ -106,6 +106,15 @@ namespace Comet.Integration.Tests
         }
     
 
+        // A pistol goes in the left hand beside a rapier, from the second promotion on
+        private const byte PirateGunner = 72;
+
+        private static async Task HoldPistolAsync(Player pirate)
+        {
+            await HoldAsync(pirate, ServerFixture.Rapier.Id);
+            await HoldAsync(pirate, ServerFixture.Pistol.Id, 5);
+        }
+
         private static async Task HoldAsync(Player player, uint itemType, byte slot = 4)
         {
             var weapon = await GiveAsync(player, itemType);
@@ -116,11 +125,11 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task EagleEyeOnWhomKrakenSpottedEndsItsCooldownByAdrenalineRush()
         {
-            await using var pirate = (await this.PlayingAtAsync(DesertCity, 200, 100, GameMaster)).Player;
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 200, 100, GameMaster, currentClass: PirateGunner)).Player;
             await using var victim = (await this.PlayingAtAsync(DesertCity, 205, 100)).Player;
             await using var near = (await this.PlayingAtAsync(DesertCity, 207, 101)).Player;
             await FreePkAsync(pirate);
-            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            await HoldPistolAsync(pirate);
             foreach (ushort spell in new ushort[] { 11100, 11030, 11130 })
                 await LearnAsync(pirate, spell);
 
@@ -148,10 +157,10 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task BlackSpotGoesOffOnHittingWithAPistol()
         {
-            await using var pirate = (await this.PlayingAtAsync(DesertCity, 220, 100, GameMaster, strength: 5000)).Player;
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 220, 100, GameMaster, strength: 5000, currentClass: PirateGunner)).Player;
             await using var victim = (await this.PlayingAtAsync(DesertCity, 221, 100)).Player;
             await FreePkAsync(pirate);
-            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            await HoldPistolAsync(pirate);
             await LearnAsync(pirate, 11120);
 
             await pirate.Game.AttackAsync(pirate.User.Id, victim.User.Id, 221, 100);
@@ -204,13 +213,13 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task BlackbeardsRageHitsTheTargetAndTheNearestAroundIt()
         {
-            await using var pirate = (await this.PlayingAtAsync(DesertCity, 260, 100, GameMaster)).Player;
+            await using var pirate = (await this.PlayingAtAsync(DesertCity, 260, 100, GameMaster, currentClass: PirateGunner)).Player;
             await using var victim = (await this.PlayingAtAsync(DesertCity, 265, 100)).Player;
             await using var second = (await this.PlayingAtAsync(DesertCity, 266, 100)).Player;
             await using var third = (await this.PlayingAtAsync(DesertCity, 267, 101)).Player;
             await using var fourth = (await this.PlayingAtAsync(DesertCity, 269, 102)).Player;
             await FreePkAsync(pirate);
-            await HoldAsync(pirate, ServerFixture.Pistol.Id);
+            await HoldPistolAsync(pirate);
             await LearnAsync(pirate, 11060);
             await StartXpStatusAsync(pirate, 11060, Blackbeard);
 
