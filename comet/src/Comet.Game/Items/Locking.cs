@@ -131,7 +131,7 @@ namespace Comet.Game.Items
         // The client shows the date as "yy,mm,dd"
         private static MsgEquipLock UnlockDate(DbItem item)
         {
-            var date = item.UnlocksAt.Value;
+            var date = Clock.Local(item.UnlocksAt.Value);
             return new MsgEquipLock(item.ItemID, LockMode.Unlock)
             {
                 Flag = 3,

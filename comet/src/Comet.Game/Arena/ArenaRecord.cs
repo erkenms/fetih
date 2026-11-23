@@ -42,9 +42,9 @@ namespace Comet.Game.Arena
             level < 110 ? 2700u :
             level < 120 ? 3200u : 4000u;
 
-        public static uint DayOf(DateTime now) => (uint)(now - DateTime.UnixEpoch).TotalDays;
+        public static uint DayOf(DateTime now) => (uint)(Clock.Today(now) - DateTime.UnixEpoch).TotalDays;
 
-        // Today's wins, losses and arena points start over each UTC day (season)
+        // Today's wins, losses and arena points start over each day (season)
         public void Roll(DateTime now) => this.Roll(DayOf(now));
 
         public void Roll(uint day)

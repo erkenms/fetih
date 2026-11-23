@@ -24,6 +24,10 @@ namespace Comet.Game.Database
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
 
+        // The zone whose midnight starts a new day, as an IANA or Windows ID; the machine's
+        // own zone when empty
+        public string TimeZone { get; set; }
+
         public class DatabaseConfiguration
         {
             public string Hostname { get; set; }

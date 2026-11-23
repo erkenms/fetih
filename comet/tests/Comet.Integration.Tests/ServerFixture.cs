@@ -400,7 +400,7 @@ namespace Comet.Integration.Tests
 
             // The game server first, so the account server finds its RPC port
             this.StartServer("Comet.Game", this.GameSchema, "game",
-                "--Maps:ClientDirectory=" + this.MapDirectory,
+                "--Maps:ClientDirectory=" + this.MapDirectory, "--TimeZone=UTC",
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
                 "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,

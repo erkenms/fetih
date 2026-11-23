@@ -83,7 +83,7 @@ namespace Comet.Game.Arena
                 LastSeason = lastSeason;
                 CurrentDay = today;
 
-                // Close the latest past day that had matches if the server was offline across UTC midnight
+                // Close the latest past day that had matches if the server was offline across midnight
                 uint pastDay = Records.Values
                     .Where(r => r.Stored.Day < today && r.MatchesToday > 0)
                     .Select(r => r.Stored.Day)

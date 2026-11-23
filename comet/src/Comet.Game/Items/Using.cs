@@ -22,7 +22,7 @@ namespace Comet.Game.Items
         public static readonly uint[] ExpBalls = { 723700, 723834, 723911 };
         public const byte ExpBallMaxLevel = 130;
 
-        // Ten a day, counted by the server's local date
+        // Ten a day
         public const int ExpBallsPerDay = 10;
 
         public static int ExpBallsUsedOn(DbCharacter character, DateTime today) =>
@@ -111,7 +111,7 @@ namespace Comet.Game.Items
                 await Talk.NoticeAsync(client, $"EXP balls can't be used from level {ExpBallMaxLevel}.");
                 return Reject(client, ball.ItemID, ball.TypeID, "level");
             }
-            var today = DateTime.Now.Date;
+            var today = Clock.Today(DateTime.UtcNow);
             int used = ExpBallsUsedOn(character, today);
             if (used >= ExpBallsPerDay)
             {

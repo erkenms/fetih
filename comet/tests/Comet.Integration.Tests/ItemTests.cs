@@ -211,7 +211,7 @@ namespace Comet.Integration.Tests
             await this.LogOutAsync(first);
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET ExpBallDay = @today, ExpBallsUsed = 9 WHERE Name = @name",
-                ("@today", System.DateTime.Now.Date), ("@name", name));
+                ("@today", System.DateTime.UtcNow.Date), ("@name", name));
             await using var player = await this.Servers.PlayAsync(email, Password);
 
             var tenth = await GiveAsync(player, ServerFixture.ExpBall.Id);

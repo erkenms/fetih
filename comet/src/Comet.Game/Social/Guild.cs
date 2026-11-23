@@ -130,6 +130,6 @@ namespace Comet.Game.Social
             Created = row.Created,
         };
 
-        public static uint Today => uint.Parse(DateTime.Now.ToString("yyyyMMdd"));
+        public static uint Today => uint.Parse(Clock.Local(DateTime.UtcNow).ToString("yyyyMMdd"));
     }
 }

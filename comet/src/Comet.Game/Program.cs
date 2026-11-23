@@ -40,7 +40,18 @@
                 return;
             }
 
-            Log.Information("Initializing server...");
+            try
+            {
+                Clock.Zone = string.IsNullOrEmpty(config.TimeZone)
+                    ? TimeZoneInfo.Local : TimeZoneInfo.FindSystemTimeZoneById(config.TimeZone);
+            }
+            catch (Exception e) when (e is TimeZoneNotFoundException || e is InvalidTimeZoneException)
+            {
+                Log.Error("Unknown time zone {TimeZone} in the configuration", config.TimeZone);
+                Log.CloseAndFlush();
+                return;
+            }
+            Log.Information("Initializing server in time zone {TimeZone}...", Clock.Zone.Id);
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
             AccountsRepository.Configuration = config.AccountDatabase;
