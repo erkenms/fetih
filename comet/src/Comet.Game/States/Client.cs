@@ -87,6 +87,9 @@ namespace Comet.Game.States
         // Counter-Kill switched on; on the player's own queue
         public bool CounterKill { get; set; }
 
+        // Shuriken Vortex's next spin; on the player's own queue
+        public DateTime NextVortexAt { get; set; }
+
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |

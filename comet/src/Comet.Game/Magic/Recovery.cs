@@ -63,6 +63,7 @@ namespace Comet.Game.Magic
             await Poison.TickAsync(client, now);
             if (client.Life.Dead)
                 return;
+            await Casting.VortexTickAsync(client, now);
             await Items.Riding.RecoverAsync(client, now);
 
             int gain = character.Stance == Items.Vending.SitStance ? StaminaSitting : StaminaStanding;

@@ -334,7 +334,7 @@ namespace Comet.Integration.Tests
         private const ulong ShurikenVortexStatus = 1UL << 46, FatalStrikeStatus = 1UL << 47;
 
         [Fact]
-        public async Task FatalStrikeStartsOnAFullXpBarThenStrikesMonstersFromBeside()
+        public async Task FatalStrikeStartsOnAFullXpBarThenTurnsAMeleeClickIntoAStepOntoTheMonster()
         {
             var at = ServerFixture.PheasantForFatalStrike;
             await using var ninja = (await this.PlayingAtAsync(1002, at.X + 5, at.Y, GameMaster, level: 100)).Player;
@@ -351,11 +351,15 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await ninja.Game.WaitForAttribAsync(a => a.Id == ninja.User.Id &&
                 a.Values.TryGetValue(Status, out var s) && (s & FatalStrikeStatus) != 0 && (s & XpFull) == 0));
 
+            // The client clicks the monster as for a swing, from beyond the katana's reach
+            await ninja.Game.AttackAsync(ninja.User.Id, pheasant.Id, at.X, at.Y);
+            Assert.NotNull(await ninja.Game.WaitForActionAsync(156, ninja.User.Id));
+            var strike = await ninja.Game.WaitForInteractAsync(i => i.Sender == ninja.User.Id && i.Target == pheasant.Id);
+            Assert.Equal(45u, strike.Action);
+
             await ninja.Game.CastAsync(ninja.User.Id, 6011, pheasant.Id, at.X, at.Y);
-            var effect = await ninja.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 6011 &&
-                e.Targets.Any(t => t.Id == pheasant.Id));
-            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
-            Assert.Equal((1002u, at.X + 1, (int)at.Y), await this.SavedPositionAsync(ninja));
+            Assert.Equal("xp_status", (await RejectedAsync(ninja)).GetProperty("reason").GetString());
+            Assert.Equal((1002u, (int)at.X, (int)at.Y), await this.SavedPositionAsync(ninja));
         }
 
         [Fact]
@@ -375,8 +379,7 @@ namespace Comet.Integration.Tests
             var started = await this.Servers.WaitForEventAsync("game", "status.started", "name", ninja.User.Name);
             Assert.Equal(20, started.GetProperty("seconds").GetInt32());
 
-            await Task.Delay(600);
-            await ninja.Game.CastAsync(ninja.User.Id, 6010, 0, 60, 90);
+            // The client casts it once; the vortex spins by itself every step
             var effect = await victim.Game.WaitForEffectAsync(e => e.Caster == ninja.User.Id && e.Type == 6010 &&
                 e.Targets.Any(t => t.Id != ninja.User.Id));
             Assert.Equal(victim.User.Id, Assert.Single(effect.Targets).Id);

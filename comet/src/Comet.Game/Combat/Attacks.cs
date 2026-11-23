@@ -26,6 +26,10 @@ namespace Comet.Game.Combat
         // The shortest time between a player's swings, whatever the weapon says
         public static TimeSpan PlayerInterval = TimeSpan.FromMilliseconds(1500);
 
+        // During Fatal Strike the client sends a melee click on a monster for each strike, from
+        // as far as the spell's distance; strikes come this many times faster than swings
+        private const int FatalStrikeSpeedUp = 10;
+
         public static async Task RequestAsync(Client client, MsgInteract request)
         {
             if (request.Action != InteractionType.Attack && request.Action != InteractionType.Shoot)
@@ -92,11 +96,13 @@ namespace Comet.Game.Combat
             var stats = Stats.Of(client);
             var arrows = client.Equipment?[ItemPosition.LeftHand];
             bool shooting = client.AttackShooting;
+            var fatal = shooting ? null : Casting.FatalStrikeOf(client, now);
             string reason =
                 !Kernel.Monsters.TryGet(character.MapID, out var map) ||
                 !map.TryGet(targetID, out monster, out x, out y) ? "not_found" :
                 !monster.Alive ? "dead_target" :
                 monster.IsGuard && client.Pk.Mode != PkMode.Free ? "guard_not_free_pk" :
+                fatal != null ? (MonsterAI.Distance(character.X, character.Y, x, y) > fatal.Distance + RangeSlack ? "too_far" : null) :
                 WeaponProblem(stats, shooting, arrows, MonsterAI.Distance(character.X, character.Y, x, y));
             if (reason != null)
             {
@@ -107,8 +113,10 @@ namespace Comet.Game.Combat
             }
 
             var interval = Interval(client, stats, now);
+            if (fatal != null)
+                interval /= FatalStrikeSpeedUp;
             client.NextAttackAt = now + interval;
-            if (!shooting && await Casting.TryPassiveAsync(client, targetID, x, y, now))
+            if (!shooting && fatal == null && await Casting.TryPassiveAsync(client, targetID, x, y, now))
             {
                 Schedule(client, run, interval);
                 return;
@@ -121,6 +129,8 @@ namespace Comet.Game.Combat
                     ? Damage.Archery(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Dodge, Random.Shared)
                     : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Defense, Random.Shared);
             damage = Buffs.AgainstMonster(client.Effects, damage, now);
+            if (fatal != null && damage > 0)
+                damage = (uint)Math.Min(uint.MaxValue, (ulong)damage * (uint)fatal.PowerPercent / 100);
             if (shooting)
                 await Quivers.UseAsync(client, arrows, 1);
             if (type.IsGuard)
@@ -135,16 +145,21 @@ namespace Comet.Game.Combat
                 return;
             }
 
-            var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
+            // The ninja steps onto what Fatal Strike hits, bosses and guards aside
+            if (fatal != null && !type.Boss && !monster.IsGuard && (character.X != x || character.Y != y))
+                await Movement.DashAsync(client, x, y, MsgAction.NinjaStep(client.ID, monster.Identity, x, y,
+                    Movement.DirectionTo(character.X, character.Y, x, y, character.Direction)));
+            var hit = new MsgInteract(fatal != null ? InteractionType.FatalStrike : shooting ? InteractionType.Shoot : InteractionType.Attack,
                 client.ID, monster.Identity, x, y, damage);
             await SendAroundAsync(client, monster, hit);
             LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
                 "{Name} hit {MonsterName} {MonsterId} for {Damage} ({Dealt} dealt, {Kind})",
-                character.Name, type.Name, monster.Identity, damage, dealt, shooting ? "shoot" : "melee");
+                character.Name, type.Name, monster.Identity, damage, dealt, fatal != null ? "fatal_strike" : shooting ? "shoot" : "melee");
 
-            if (killed)
+            // Each click is one Fatal Strike
+            if (killed || fatal != null)
                 Stop(client);
-            else if (damage > 0)
+            if (!killed && damage > 0)
             {
                 await Pirates.AfterDamageAsync(client, monster.Identity, x, y, now);
                 await Casting.AfterHitAsync(client, monster.Identity, now);
@@ -152,7 +167,7 @@ namespace Comet.Game.Combat
             if (!type.IsGuard)
                 await Proficiency.GainAsync(client, dealt);
             await AfterMonsterHitAsync(client, monster, x, y, dealt, killed);
-            if (!killed)
+            if (!killed && fatal == null)
                 Schedule(client, run, interval);
         }
 

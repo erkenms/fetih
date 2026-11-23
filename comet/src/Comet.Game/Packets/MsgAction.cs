@@ -84,6 +84,20 @@ namespace Comet.Game.Packets
             Y = y,
         };
 
+        // A ninja's step onto the monster Fatal Strike hits, with the monster in Command
+        public static MsgAction NinjaStep(uint identity, uint targetID, ushort x, ushort y, byte direction) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = targetID,
+            Arguments = new ushort[] { x, y },
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.NinjaStep,
+            Direction = direction,
+            X = x,
+            Y = y,
+        };
+
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,
@@ -329,6 +343,7 @@ namespace Comet.Game.Packets
             RelationshipsFriend = 148,
             CharacterAvatar = 151,
             CharacterPartnerInfo,
+            NinjaStep = 156,
             ClientCustomDialog = 160,
             CharacterAway = 161,
             MapPathfinding,

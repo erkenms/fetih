@@ -103,11 +103,8 @@ namespace Comet.Game.Magic
                 case MagicSort.Recruit:
                     await HealAsync(client, spell, targetID, now);
                     break;
-                case MagicSort.AttachStatus when spell.Type == FatalStrike && !InXpStatus(client, spell, now):
-                    await StartXpStatusAsync(client, spell, now);
-                    break;
                 case MagicSort.AttachStatus when spell.Type == FatalStrike:
-                    await AttackAsync(client, spell, targetID, x, y, now);
+                    await StartXpStatusAsync(client, spell, now);
                     break;
                 case MagicSort.AttachStatus when Buffs.StatusOf(spell.Type) == StatusFlags.NoPotion:
                     await PoisonStarAsync(client, spell, targetID, now);
@@ -155,8 +152,8 @@ namespace Comet.Game.Magic
                 case MagicSort.KrakensRevenge:
                     await KrakenAsync(client, spell, targetID, now);
                     break;
-                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage or MagicSort.ShurikenVortex
-                    when !InXpStatus(client, spell, now):
+                case MagicSort.ShurikenVortex:
+                case MagicSort.CannonBarrage or MagicSort.BlackbeardsRage when !InXpStatus(client, spell, now):
                     await StartXpStatusAsync(client, spell, now);
                     break;
                 default:
@@ -170,6 +167,7 @@ namespace Comet.Game.Magic
             spell.IsPassive ? "passive" :
             now < client.NextCastAt ? "too_soon" :
             client.Effects.Has(StatusFlags.Stun, now) ? "stunned" :
+            spell.IsXpSkill && ServerDriven(spell) && InXpStatus(client, spell, now) ? "xp_status" :
             spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) && !InXpStatus(client, spell, now) ? "xp_not_full" :
             client.Character.ManaPoints < spell.UseMana ? "no_mana" :
             client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
@@ -341,8 +339,13 @@ namespace Comet.Game.Magic
         // Spells that hit around the cell aimed at, within their distance of the caster
         private static bool AtCell(MagicSort sort) => sort is MagicSort.ScurvyBomb or MagicSort.GaleBomb or MagicSort.CannonBarrage;
 
-        // The status of an XP skill whose first cast only starts it: while it's on, the client
-        // casts the skill for each attack
+        // Ninja XP skills the client casts once: the server spins Shuriken Vortex every step, and
+        // turns each melee click into a Fatal Strike
+        private static bool ServerDriven(MagicType spell) =>
+            spell.Sort == MagicSort.ShurikenVortex || spell.Type == FatalStrike;
+
+        // The status of an XP skill whose first cast only starts it: while it's on, the pirates'
+        // client casts the skill for each attack
         private static UInt128 XpStatusOf(MagicType spell) => spell.Sort switch
         {
             MagicSort.CannonBarrage => StatusFlags.CannonBarrage,
@@ -398,19 +401,6 @@ namespace Comet.Game.Magic
                 if (canKnock)
                     knockTo = ((ushort)backX, (ushort)backY);
                 (x, y) = ((ushort)toX, (ushort)toY);
-            }
-            else if (spell.Type == FatalStrike)
-            {
-                // Monsters only, as its description says; the ninja appears next to the target
-                var (victim, reason) = Attacks.IsMonster(targetID) ? FindTarget(client, spell, targetID, now) : (null, "not_monster");
-                if (victim == null)
-                {
-                    Reject(client, spell.Type, reason);
-                    return false;
-                }
-                victims = new List<Victim> { victim };
-                (x, y) = (victim.X, victim.Y);
-                dashTo = NextTo(client, x, y);
             }
             else if (spell.Sort == MagicSort.BlackbeardsRage)
             {
@@ -565,6 +555,8 @@ namespace Comet.Game.Magic
             var flag = XpStatusOf(spell);
             await PayAsync(client, spell, now);
             client.Effects.Set(flag, now + TimeSpan.FromSeconds(XpStatusSeconds(spell)), now, spell.Power);
+            if (spell.Sort == MagicSort.ShurikenVortex)
+                client.NextVortexAt = now + VortexStep(spell);
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
             effect.Targets.Add((client.ID, 0));
             await client.SendAsync(effect);
@@ -574,6 +566,27 @@ namespace Comet.Game.Magic
                 "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
                 character.Name, flag, XpStatusSeconds(spell), character.Name, spell.Name);
             LogCast(client, spell, character.X, character.Y, 1);
+        }
+
+        // Fatal Strike's spell while its status is on and its weapon in hand, or null
+        public static MagicType FatalStrikeOf(Client client, DateTime now) =>
+            client.Effects.Has(StatusFlags.FatalStrike, now) && Pirates.TryGetLearned(client, FatalStrike, out var spell) &&
+            (spell.WeaponSubtype == 0 || Holds(client, spell.WeaponSubtype)) ? spell : null;
+
+        public const ushort ShurikenVortex = 6010;
+
+        private static TimeSpan VortexStep(MagicType spell) => TimeSpan.FromSeconds(Math.Max(1, spell.StepSeconds));
+
+        // On the player's queue, from Recovery's tick: while Shuriken Vortex is on, it hits
+        // around the ninja every step, wherever they've walked
+        public static async Task VortexTickAsync(Client client, DateTime now)
+        {
+            var character = client.Character;
+            if (character == null || client.Life.Dead || !client.Effects.Has(StatusFlags.ShurikenVortex, now) ||
+                now < client.NextVortexAt || !Pirates.TryGetLearned(client, ShurikenVortex, out var spell))
+                return;
+            client.NextVortexAt = now + VortexStep(spell);
+            await AttackAsync(client, spell, 0, character.X, character.Y, now, passive: true);
         }
 
         private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now)
@@ -622,17 +635,6 @@ namespace Comet.Game.Magic
                 Kernel.Post(player, () => Movement.PushAsync(player, x, y));
             else
                 MonsterAI.Post(() => Monsters.StepAsync(victim.Monster, direction, run: false));
-        }
-
-        // The free cell next to (x, y) on the caster's side, or null when the caster is next to
-        // it already or that cell is blocked
-        private static (ushort X, ushort Y)? NextTo(Client client, ushort x, ushort y)
-        {
-            var character = client.Character;
-            if (MonsterAI.Distance(character.X, character.Y, x, y) <= 1)
-                return null;
-            int toX = x + Math.Sign(character.X - x), toY = y + Math.Sign(character.Y - y);
-            return Movement.CheckDash(client, toX, toY) == null ? ((ushort)toX, (ushort)toY) : null;
         }
 
         // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident

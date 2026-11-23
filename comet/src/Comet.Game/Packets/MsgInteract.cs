@@ -100,6 +100,7 @@ namespace Comet.Game.Packets
             Shoot = 28,
             CounterKill = 43,
             CounterKillSwitch = 44,
+            FatalStrike = 45,
         }
     }
 }
