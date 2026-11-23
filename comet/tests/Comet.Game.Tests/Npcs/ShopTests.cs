@@ -101,5 +101,14 @@ namespace Comet.Game.Tests.Npcs
             Assert.All(ids, id => Assert.Contains(id, npcs));
             Assert.All(ids, id => Assert.False(Dialogs.Has(id), $"NPC {id} has a script"));
         }
+
+        [Theory]
+        [InlineData(1003u, 1004u)]
+        [InlineData(1004u, 1003u)]
+        [InlineData(2001u, 2002u)]
+        [InlineData(2002u, 2001u)]
+        [InlineData(999u, 0u)]
+        public void SurgeonMiracleSwapsBodiesWithinAGender(uint body, uint other) =>
+            Assert.Equal(other, Market.OtherBody(body));
     }
 }

@@ -4,12 +4,13 @@ namespace Comet.Integration.Tests
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
+    using static Comet.Client.UserAttribMessage;
 
     // The market's NPCs at their places in Data/npcs.json
     public class MarketNpcTests : IntegrationTest
     {
         private const uint Market = ServerFixture.Market, TwinCity = 1002;
-        private const uint MarkController = 45, CPAdmin = 2071;
+        private const uint MarkController = 45, CPAdmin = 2071, SurgeonMiracle = 3381;
         private const uint ConquerPoints = 29;
 
         public MarketNpcTests(ServerFixture servers) : base(servers) { }
@@ -59,6 +60,23 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForAttribAsync(
                 a => a.Values.TryGetValue(ConquerPoints, out var v) && v == 215));
             Assert.Contains("enjoy your new CPs", Text(await player.Game.ReadDialogAsync()));
+        }
+
+        [Fact]
+        public async Task SurgeonMiracleSwapsTheBodyForADragonBall()
+        {
+            await using var player = (await this.PlayingAtAsync(Market, 250, 240, GameMaster, mesh: 1003)).Player;
+            var ball = await GiveAsync(player, ServerFixture.DragonBall.Id);
+            await player.Game.TalkToNpcAsync(SurgeonMiracle);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            await player.Game.AnswerNpcAsync(1);
+            Assert.Contains("DragonBall", Text(await player.Game.ReadDialogAsync()));
+            await player.Game.AnswerNpcAsync(2);
+
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, ball.Id));
+            var look = await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(Mesh));
+            Assert.Equal(1004ul, look.Values[Mesh] % 10000);
+            await this.Servers.WaitForEventAsync("game", "character.body", "name", player.User.Name);
         }
     }
 }
