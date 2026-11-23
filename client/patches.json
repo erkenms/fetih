@@ -8,5 +8,19 @@
     "original": "ff 75 10",
     "patched": "eb 54 10",
     "reason": "Never open the 'please lock the following valuable items' window: event 1209 (VA 0x5c1a0b) jumps to its case's end. MsgItemInfo Add posts it for each +8 item or +5 steed that isn't locked or suspicious, for players who aren't merchants (MsgUserAttrib 38 = 255, which also whispers on every login)."
+  },
+  {
+    "file": "Conquer.exe",
+    "offset": "0x1ab322",
+    "original": "0f 8d",
+    "patched": "90 e9",
+    "reason": "Start without play.exe (1 of 2): startup (VA 0x5abf22) takes the command line as parsed into at least one argument, as if play.exe had passed one."
+  },
+  {
+    "file": "Conquer.exe",
+    "offset": "0x1ab426",
+    "original": "85 c0",
+    "patched": "31 c0",
+    "reason": "Start without play.exe (2 of 2): the compare of that argument with 'blacknull', the one play.exe passes (VA 0x5ac026), always comes out equal."
   }
 ]
