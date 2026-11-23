@@ -113,7 +113,7 @@ namespace Comet.Client
     // A number, the action as one byte, then the strings
     public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
     {
-        public const byte Guild = 3, SetSpouse = 6, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
+        public const byte Guild = 3, SetSpouse = 6, RoleEffect = 10, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
 
         public static NameMessage Parse(byte[] packet) => new NameMessage(
             BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));

@@ -198,17 +198,24 @@ namespace Comet.Game.States
                 .Append(AttributeType.Mana, character.ManaPoints));
 
             if (character.Level > from)
-            {
-                var effect = MsgAction.LevelUp(client.ID);
-                await client.SendAsync(effect);
-                await Movement.SendToViewAsync(client, effect);
-            }
+                await ShowLevelUpAsync(client);
 
             LogEvents.For(typeof(Progress), LogEvents.CharacterLevel).Information(
                 "{Name} went from level {FromLevel} to {Level} ({Reason})",
                 character.Name, from, character.Level, reason);
             await client.SaveAsync("level");
         }
+
+        // The level-up halo. MsgAction 92 plays it on the player's own client with the sound
+        // and message, but the 5619 client doesn't show it to others in view; they get the
+        // 3D effect by name.
+        public static async Task ShowLevelUpAsync(Client client)
+        {
+            await client.SendAsync(MsgAction.LevelUp(client.ID));
+            await Movement.SendToViewAsync(client, MsgName.RoleEffectOf(client.ID, LevelUpEffect));
+        }
+
+        public const string LevelUpEffect = "LevelUp";
 
         // Health and mana go up with their maximums, so vitality and spirit points show at
         // once; a lower maximum cuts them. The dead stay at 0 health.

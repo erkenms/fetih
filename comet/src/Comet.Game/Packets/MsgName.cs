@@ -75,6 +75,14 @@ namespace Comet.Game.Packets
             Strings = new List<string> { string.IsNullOrEmpty(spouse) ? Social.Marriage.None : spouse },
         };
 
+        // Plays a 3D effect from the client's 3DEffect.ini on a role, for everyone who sees it
+        public static MsgName RoleEffectOf(uint roleID, string effect) => new MsgName
+        {
+            Data = roleID,
+            Action = NameAction.RoleEffect,
+            Strings = new List<string> { effect },
+        };
+
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =
             new Dictionary<NameAction, Func<MsgName, Client, Task>>
             {

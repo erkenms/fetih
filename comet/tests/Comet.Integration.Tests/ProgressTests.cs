@@ -26,7 +26,9 @@ namespace Comet.Integration.Tests
             Assert.Equal((10UL, 6UL), (levelled.Values[Experience], levelled.Values[AttributePoints]));
             Assert.Equal(levelled.Values[MaxHealth], levelled.Values[Health]);
             Assert.NotNull(await player.Game.WaitForActionAsync(ActionMessage.LevelUp, player.User.Id));
-            Assert.NotNull(await observer.Game.WaitForActionAsync(ActionMessage.LevelUp, player.User.Id));
+            // Others see the halo as a named role effect: they ignore MsgAction 92
+            Assert.NotNull(await observer.Game.WaitForNameAsync(n => n.Action == NameMessage.RoleEffect &&
+                n.Data == player.User.Id && n.Strings.Count == 1 && n.Strings[0] == "LevelUp"));
 
             var logged = await this.Servers.WaitForEventAsync("game", "character.level", "name", player.User.Name);
             Assert.Equal((1, 3, "gm"), (logged.GetProperty("fromLevel").GetInt32(),

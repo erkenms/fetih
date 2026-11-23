@@ -119,9 +119,7 @@ namespace Comet.Game.States
                 .Append(AttributeType.Class, character.CurrentClass)
                 .Append(AttributeType.Level, character.Level));
             await Equipping.ShowLookAsync(client);
-            var effect = MsgAction.LevelUp(client.ID);
-            await client.SendAsync(effect);
-            await Movement.SendToViewAsync(client, effect);
+            await Progress.ShowLevelUpAsync(client);
 
             LogEvents.For(typeof(Rebirth), LogEvents.CharacterReborn).Information(
                 "{Name} was reborn (rebirth {Life}) at level {FromLevel} from class {FromClass} into {Class} " +
