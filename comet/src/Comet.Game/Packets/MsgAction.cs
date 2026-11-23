@@ -227,6 +227,9 @@ namespace Comet.Game.Packets
                     await SecondPassword.LoginAsync(client);
                 },
 
+                // The face picked in the Beautician's window, in Command; not echoed
+                [ActionType.CharacterAvatar] = (msg, client) => Npcs.Beautician.ChangeAsync(client, msg.Command),
+
                 [ActionType.CharacterPartnerInfo] = (msg, client) => Social.TradePartners.InfoAsync(client, msg),
 
                 // Asks for the stat window, sent after login and each equipment change.

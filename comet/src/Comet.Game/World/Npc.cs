@@ -6,6 +6,9 @@ namespace Comet.Game.World
     {
         public const byte StorageRole = 3;
 
+        // Clicking it opens the client's avatar window
+        public const byte BeauticianRole = 5;
+
         // Training ground goals: stakes are hit with weapons, scarecrows with spells
         public const byte StakeRole = 21, ScarecrowRole = 22;
 

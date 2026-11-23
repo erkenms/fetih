@@ -311,6 +311,7 @@ namespace Comet.Client
         public const ushort CharacterAway = 161;
         public const ushort Observe = 117;
         public const ushort PartnerInfo = 152;
+        public const ushort ChangeAvatar = 151;
         public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4;
 
