@@ -73,6 +73,22 @@ namespace Comet.Game.Tests.Npcs
         }
 
         [Fact]
+        public void TheTrainingGroundsGoalsLoadWithTheNpcsAndShowWithLife()
+        {
+            var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json"), DataFiles.PathOf("goals.json"));
+            var stake = npcs.Single(n => n.NpcID == 100011);
+            Assert.True(stake.IsGoal);
+            Assert.Equal((427, Npc.StakeRole, (byte)20, 10000u, 1039u), (stake.Lookface, stake.Role, stake.Level, stake.Life, stake.MapID));
+            Assert.True(npcs.Count(n => n.IsGoal) > 900);
+
+            var bytes = new MsgNpcInfoEx(stake, stake.Life).Encode();
+            Assert.Equal((1109, 100011u), (BitConverter.ToUInt16(bytes, 2), BitConverter.ToUInt32(bytes, 4)));
+            Assert.Equal((10000u, 10000u), (BitConverter.ToUInt32(bytes, 12), BitConverter.ToUInt32(bytes, 16)));
+            Assert.Equal((20, 220, 427, 21), (BitConverter.ToUInt16(bytes, 20), BitConverter.ToUInt16(bytes, 22),
+                BitConverter.ToUInt16(bytes, 24), BitConverter.ToUInt16(bytes, 26)));
+        }
+
+        [Fact]
         public void AnNpcIDListedTwiceIsRefused()
         {
             var path = System.IO.Path.GetTempFileName();

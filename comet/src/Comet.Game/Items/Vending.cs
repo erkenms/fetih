@@ -261,7 +261,10 @@ namespace Comet.Game.Items
 
         public static async Task ShowNpcAsync(Client client, Npc npc)
         {
-            await client.SendAsync(new MsgNpcInfo(npc));
+            if (npc.Life > 0)
+                await client.SendAsync(new MsgNpcInfoEx(npc, Training.TrainingGround.LifeOf(npc)));
+            else
+                await client.SendAsync(new MsgNpcInfo(npc));
             if (npc.Role == Booth.FlagRole && Booths.TryGetValue(npc.NpcID, out var booth))
             {
                 await client.SendAsync(booth.Spawn());

@@ -112,6 +112,9 @@ namespace Comet.Integration.Tests
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
         public static readonly MagicFiles.Spell Thunder =
             new MagicFiles.Spell(1000, 0, 1, "Thunder") { Power = 1000, Distance = 9, NeedExperience = 20 };
+        // More mana than anyone has: castable only where spells cost nothing
+        public static readonly MagicFiles.Spell Fire =
+            new MagicFiles.Spell(1001, 0, 1, "Fire") { Power = 10, Distance = 9, Mana = 60000 };
         public static readonly MagicFiles.Spell Thunder1 =
             new MagicFiles.Spell(1000, 1, 1, "Thunder") { Power = 1000, Distance = 9 };
         public static readonly MagicFiles.Spell Superman =
@@ -442,7 +445,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
-                MagicFiles.MagicTypeDat(Thunder, Thunder1, Superman, FastBlade, Riding,
+                MagicFiles.MagicTypeDat(Thunder, Thunder1, Fire, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
                     RadiantPalm, WhirlwindKick, TripleAttack, TyrantAura, FendAura,
                     SoulShackle, Serenity, Tranquility, Compassion, Oblivion,

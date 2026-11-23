@@ -71,7 +71,8 @@ namespace Comet.Game.Combat
                 client.Character == null ? "no_character" :
                 request.SenderID != client.ID ? "wrong_id" :
                 client.Life.Dead ? "dead" :
-                !IsMonster(request.TargetID) && !Kernel.Players.TryGet(request.TargetID, out _) ? "unknown_target" :
+                !IsMonster(request.TargetID) && !Kernel.Players.TryGet(request.TargetID, out _) &&
+                    Training.TrainingGround.FindGoal(client, request.TargetID) == null ? "unknown_target" :
                 null;
             if (reason != null)
             {
@@ -81,7 +82,9 @@ namespace Comet.Game.Combat
 
             await Riding.DismountToFightAsync(client, "attack");
             var now = DateTime.UtcNow;
-            if (request.Action == InteractionType.Attack && IsMonster(request.TargetID) && Casting.FatalStrikeOf(client, now) != null)
+            if (request.Action == InteractionType.Attack &&
+                (IsMonster(request.TargetID) || Training.TrainingGround.FindGoal(client, request.TargetID) != null) &&
+                Casting.FatalStrikeOf(client, now) != null)
             {
                 if (ReserveFatalStrike(client.FatalStrikes, now) is not DateTime turn)
                 {
@@ -128,6 +131,11 @@ namespace Comet.Game.Combat
                 return;
             }
 
+            if (Training.TrainingGround.FindGoal(client, client.AttackTarget) is Npc goal)
+            {
+                await SwingAtGoalAsync(client, goal, run, now);
+                return;
+            }
             if (!IsMonster(client.AttackTarget))
             {
                 await SwingAtPlayerAsync(client, run, now);
@@ -282,6 +290,50 @@ namespace Comet.Game.Combat
         {
             var interval = TimeSpan.FromMilliseconds(Math.Max(stats.AttackSpeed, PlayerInterval.TotalMilliseconds));
             return client.Effects.Has(StatusFlags.Cyclone, now) ? interval / 3 : interval;
+        }
+
+        // A stake takes swings and shots, which always hit, and the weapon skills going off in
+        // their place; Fatal Strike, a skill, strikes scarecrows instead
+        private static async Task SwingAtGoalAsync(Client client, Npc goal, int run, DateTime now)
+        {
+            var character = client.Character;
+            var stats = Stats.Of(client);
+            var arrows = client.Equipment?[ItemPosition.LeftHand];
+            bool shooting = client.AttackShooting;
+            var fatal = shooting ? null : Casting.FatalStrikeOf(client, now);
+            int distance = MonsterAI.Distance(character.X, character.Y, goal.X, goal.Y);
+            string reason = Training.TrainingGround.Problem(client, goal, spell: fatal != null) ??
+                (fatal != null ? (distance > fatal.Distance + RangeSlack ? "too_far" : null) : WeaponProblem(stats, shooting, arrows, distance));
+            if (reason != null)
+            {
+                Stop(client);
+                Reject(client, goal.NpcID, reason);
+                return;
+            }
+
+            var interval = Interval(client, stats, now);
+            client.NextAttackAt = fatal != null ? now : now + interval;
+            if (!shooting && fatal == null && await Casting.TryPassiveAsync(client, goal.NpcID, goal.X, goal.Y, now))
+            {
+                Schedule(client, run, interval);
+                return;
+            }
+            uint damage = shooting
+                ? Damage.Archery(stats.MinDamage, stats.MaxDamage, character.Level, goal.Level, 0, Random.Shared)
+                : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, goal.Level, 0, Random.Shared);
+            damage = Buffs.AgainstMonster(client.Effects, damage, now);
+            if (fatal != null)
+                damage = (uint)Math.Min(uint.MaxValue, (ulong)damage * (uint)fatal.PowerPercent / 100);
+            var hit = new MsgInteract(fatal != null ? InteractionType.FatalStrike : shooting ? InteractionType.Shoot : InteractionType.Attack,
+                client.ID, goal.NpcID, goal.X, goal.Y, damage);
+            await client.SendAsync(hit);
+            await Movement.SendToViewAsync(client, hit);
+            await Training.TrainingGround.AfterHitAsync(client, goal, damage,
+                fatal != null ? "fatal_strike" : shooting ? "shoot" : "melee");
+            if (fatal != null)
+                Stop(client);
+            else
+                Schedule(client, run, interval);
         }
 
         private static async Task SwingAtPlayerAsync(Client client, int run, DateTime now)

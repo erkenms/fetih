@@ -59,12 +59,13 @@ namespace Comet.Game.Magic
         private const int CannonAgainstPlayers = 10;
         private static readonly int[] BlackbeardAgainstPlayers = { 20, 22, 24, 27, 30 };
 
-        private sealed record Victim(Monster Monster, Client Player, ushort X, ushort Y)
+        // A monster, a player or a training ground goal
+        private sealed record Victim(Monster Monster, Client Player, Npc Goal, ushort X, ushort Y)
         {
             public uint Damage { get; set; }
             public List<uint> Hits { get; } = new List<uint>();
             public bool Missed { get; set; }
-            public uint ID => this.Monster?.Identity ?? this.Player.ID;
+            public uint ID => this.Monster?.Identity ?? this.Goal?.NpcID ?? this.Player.ID;
         }
 
         public static async Task CastAsync(Client client, ushort magicType, uint targetID, ushort x, ushort y)
@@ -169,7 +170,7 @@ namespace Comet.Game.Magic
             client.Effects.Has(StatusFlags.Stun, now) ? "stunned" :
             spell.IsXpSkill && ServerDriven(spell) && InXpStatus(client, spell, now) ? "xp_status" :
             spell.IsXpSkill && !client.Effects.Has(StatusFlags.XpFull, now) && !InXpStatus(client, spell, now) ? "xp_not_full" :
-            client.Character.ManaPoints < spell.UseMana ? "no_mana" :
+            client.Character.ManaPoints < spell.UseMana && !Training.TrainingGround.CostsNothing(client) ? "no_mana" :
             client.Energy.Stamina < StaminaOf(client, spell, now) ? "no_stamina" :
             spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ? "wrong_weapon" :
             spell.UseItem != 0 && ItemToUse(client, spell) == null ? "no_item" :
@@ -213,17 +214,17 @@ namespace Comet.Game.Magic
                     continue;
                 if (spell.Sort == MagicSort.TripleAttack)
                 {
-                    if (Random.Shared.Next(TripleAttackOdds(targetID)) >= spell.Percent)
+                    if (Random.Shared.Next(TripleAttackOdds(client, targetID)) >= spell.Percent)
                         continue;
                     var swing = spell with { Power = MagicType.PercentBase + 100 };
-                    return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3);
+                    return await AttackAsync(client, swing, targetID, x, y, now, passive: true, hits: 3, swing: true);
                 }
                 // Gaping Wounds leaves bosses and guards to the plain swing
                 if (spell.Sort == MagicSort.DecLife && IsBossOrGuard(client, targetID))
                     continue;
                 if (!spell.IsPercent || GoesWithHit(spell) || !IsAttack(spell.Sort) || Random.Shared.Next(100) >= PassiveOdds(client, spell))
                     continue;
-                return await AttackAsync(client, spell, targetID, x, y, now, passive: true);
+                return await AttackAsync(client, spell, targetID, x, y, now, passive: true, swing: true);
             }
             return false;
         }
@@ -310,7 +311,10 @@ namespace Comet.Game.Magic
 
         // The client's description: Triple Attack's percent against monsters, a third of it
         // against players
-        private static int TripleAttackOdds(uint targetID) => Attacks.IsMonster(targetID) ? 100 : 300;
+        private static int TripleAttackOdds(Client client, uint targetID) => AgainstPlayer(client, targetID) ? 300 : 100;
+
+        private static bool AgainstPlayer(Client client, uint targetID) =>
+            !Attacks.IsMonster(targetID) && Training.TrainingGround.FindGoal(client, targetID) == null;
 
         // Windstorm: at its percent, a third against players, a rapier swing is a combo of three
         // hits of a swing each, shown as the skill
@@ -320,7 +324,7 @@ namespace Comet.Game.Magic
         {
             if (!Pirates.TryGetLearned(client, Pirates.Windstorm, out var spell) ||
                 spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ||
-                Random.Shared.Next(100) >= (Attacks.IsMonster(targetID) ? spell.Percent : WindstormAgainstPlayersPercent))
+                Random.Shared.Next(100) >= (AgainstPlayer(client, targetID) ? WindstormAgainstPlayersPercent : spell.Percent))
                 return false;
             // The swing checked the reach; each hit of the combo shows on its own, as Triple
             // Attack's do
@@ -330,7 +334,7 @@ namespace Comet.Game.Magic
                 Power = MagicType.PercentBase + 100,
                 Distance = ushort.MaxValue,
             };
-            return await AttackAsync(client, combo, targetID, x, y, now, passive: true, hits: WindstormHits);
+            return await AttackAsync(client, combo, targetID, x, y, now, passive: true, hits: WindstormHits, swing: true);
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or
@@ -363,14 +367,19 @@ namespace Comet.Game.Magic
         private static bool InXpStatus(Client client, MagicType spell, DateTime now) =>
             XpStatusOf(spell) is var flag && flag != 0 && client.Effects.Has(flag, now);
 
-        // A spell that costs stamina costs more during Scurvy Bomb's fatigue
+        // A spell that costs stamina costs more during Scurvy Bomb's fatigue, and none on the
+        // training ground
         private static byte StaminaOf(Client client, MagicType spell, DateTime now) =>
-            spell.UseStamina == 0 ? (byte)0 :
+            spell.UseStamina == 0 || Training.TrainingGround.CostsNothing(client) ? (byte)0 :
             (byte)Math.Min(byte.MaxValue, spell.UseStamina + (client.Effects.Power(StatusFlags.Fatigue, now) ?? 0));
 
+        // A swing (a weapon skill going off in place of one) hits stakes, a spell scarecrows
         private static async Task<bool> AttackAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y,
-            DateTime now, bool passive = false, int hits = 1)
+            DateTime now, bool passive = false, int hits = 1, bool swing = false)
         {
+            IEnumerable<Victim> Around(Client client, DateTime now) => Casting.Around(client, now, goals: true, swing);
+            (Victim, string) FindTarget(Client client, MagicType spell, uint targetID, DateTime now) =>
+                Casting.FindTarget(client, spell, targetID, now, swing);
             var character = client.Character;
             List<Victim> victims;
             (ushort X, ushort Y)? dashTo = null;
@@ -390,7 +399,7 @@ namespace Comet.Game.Magic
                 victims = Around(client, now).Where(v => v.X == toX && v.Y == toY).Take(1).ToList();
                 int backX = toX + Movement.DeltaX[direction], backY = toY + Movement.DeltaY[direction];
                 bool canStep = Movement.CheckDash(client, toX, toY) == null;
-                bool canKnock = victims.Count > 0 && Movement.CheckDash(client, backX, backY) == null &&
+                bool canKnock = victims.Count > 0 && victims[0].Goal == null && Movement.CheckDash(client, backX, backY) == null &&
                     !Around(client, now).Any(v => v.X == backX && v.Y == backY);
                 if (!canStep && victims.Count == 0)
                 {
@@ -433,7 +442,7 @@ namespace Comet.Game.Magic
                 victims = new List<Victim> { victim };
                 (x, y) = (victim.X, victim.Y);
                 direction = Movement.DirectionTo(character.X, character.Y, x, y, character.Direction);
-                foreach (var cell in KnockedBack(client, victim, (int)spell.Range))
+                foreach (var cell in victim.Goal == null ? KnockedBack(client, victim, (int)spell.Range) : Enumerable.Empty<(ushort, ushort)>())
                     knockTo = cell;
                 if (knockTo is var (landX, landY))
                     (x, y) = (landX, landY);
@@ -517,9 +526,10 @@ namespace Comet.Game.Magic
                 victim.Missed = victim.Player != null && Resists(client, victim.Player, spell);
                 for (int hit = 0; hit < hits; hit++)
                 {
-                    uint damage = victim.Missed ? 0 : victim.Monster != null
-                        ? AgainstMonster(client, stats, spell, victim.Monster, now)
-                        : AgainstPlayer(client, stats, spell, victim.Player, now);
+                    uint damage = victim.Missed ? 0 :
+                        victim.Monster != null ? AgainstMonster(client, stats, spell, victim.Monster, now) :
+                        victim.Goal != null ? AgainstGoal(client, stats, spell, victim.Goal, now) :
+                        AgainstPlayer(client, stats, spell, victim.Player, now);
                     victim.Hits.Add(damage);
                     victim.Damage += damage;
                 }
@@ -575,6 +585,12 @@ namespace Comet.Game.Magic
                     Later(target, after, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
                     if (spell.Sort == MagicSort.ScurvyBomb && !victim.Missed)
                         Kernel.Post(target, () => FatigueAsync(client, target, spell));
+                    continue;
+                }
+                if (victim.Goal != null)
+                {
+                    experience += (uint)Math.Min(uint.MaxValue,
+                        await Training.TrainingGround.AfterHitAsync(client, victim.Goal, victim.Damage, "magic"));
                     continue;
                 }
 
@@ -656,12 +672,19 @@ namespace Comet.Game.Magic
             await AttackAsync(client, spell, 0, character.X, character.Y, now, passive: true);
         }
 
-        private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now)
+        private static (Victim Victim, string Reason) FindTarget(Client client, MagicType spell, uint targetID, DateTime now,
+            bool swing = false)
         {
             var character = client.Character;
             Victim victim = null;
             string reason;
-            if (Attacks.IsMonster(targetID))
+            if (Training.TrainingGround.FindGoal(client, targetID) is Npc goal)
+            {
+                reason = Training.TrainingGround.Problem(client, goal, spell: !swing);
+                if (reason == null)
+                    victim = new Victim(null, null, goal, goal.X, goal.Y);
+            }
+            else if (Attacks.IsMonster(targetID))
             {
                 Monster monster = null;
                 ushort mx = 0, my = 0;
@@ -672,7 +695,7 @@ namespace Comet.Game.Magic
                     monster.IsGuard && client.Pk.Mode != PkMode.Free ? "guard_not_free_pk" :
                     null;
                 if (reason == null)
-                    victim = new Victim(monster, null, mx, my);
+                    victim = new Victim(monster, null, null, mx, my);
             }
             else
             {
@@ -687,7 +710,7 @@ namespace Comet.Game.Magic
                     !Pking.CanAttack(client, target) ? "pk_mode" :
                     null;
                 if (reason == null)
-                    victim = new Victim(null, target, px, py);
+                    victim = new Victim(null, target, null, px, py);
             }
 
             if (victim != null &&
@@ -731,20 +754,24 @@ namespace Comet.Game.Magic
             }
         }
 
-        // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident
-        private static IEnumerable<Victim> Around(Client client, DateTime now)
+        // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident.
+        // Training ground goals for attacks: stakes for a swing, scarecrows for a spell.
+        private static IEnumerable<Victim> Around(Client client, DateTime now, bool goals = false, bool swing = false)
         {
             var character = client.Character;
+            if (goals)
+                foreach (var goal in Training.TrainingGround.InView(client, spell: !swing))
+                    yield return new Victim(null, null, goal, goal.X, goal.Y);
             if (Kernel.Monsters != null && Kernel.Monsters.TryGet(character.MapID, out var monsters))
                 foreach (var monster in monsters.InView(character.X, character.Y))
                     if (monster.Alive && (!monster.IsGuard || client.Pk.Mode == PkMode.Free) &&
                         monsters.TryGetPosition(monster, out var mx, out var my))
-                        yield return new Victim(monster, null, mx, my);
+                        yield return new Victim(monster, null, null, mx, my);
 
             foreach (var player in client.Map.InView(character.X, character.Y, except: client))
                 if (player.Character != null && !player.Life.Dead && now >= player.Life.ProtectedUntil &&
                     Pking.CanAttack(client, player) && client.Map.TryGetPosition(player, out var px, out var py))
-                    yield return new Victim(null, player, px, py);
+                    yield return new Victim(null, player, null, px, py);
         }
 
         // The cells from the one after (x, y) to (toX, toY)
@@ -845,6 +872,23 @@ namespace Comet.Game.Magic
             uint damage = stats.Bow
                 ? Damage.Archery(stats.MinDamage, stats.MaxDamage, level, type.Level, type.Dodge, Random.Shared)
                 : Damage.Melee(stats.MinDamage, stats.MaxDamage, level, type.Level, type.Defense, Random.Shared);
+            return Buffs.AgainstMonster(client.Effects, (uint)Math.Max(1, damage * (ulong)spell.PowerPercent / 100), now);
+        }
+
+        // A goal has no defense or dodge
+        private static uint AgainstGoal(Client client, Stats stats, MagicType spell, Npc goal, DateTime now)
+        {
+            int level = client.Character.Level;
+            if (spell.Sort == MagicSort.DecLife)
+                return spell.IsPassive
+                    ? Math.Max(ShareOf(Training.TrainingGround.LifeOf(goal), spell), AgainstGoal(client, stats, Swing(spell), goal, now))
+                    : ShareOf(Training.TrainingGround.LifeOf(goal), spell);
+            if (!spell.IsPercent)
+                return Random.Shared.Next(100) < spell.Percent
+                    ? Damage.Magic(stats.MagicDamage, spell.Power, level, goal.Level) : 0;
+            uint damage = stats.Bow
+                ? Damage.Archery(stats.MinDamage, stats.MaxDamage, level, goal.Level, 0, Random.Shared)
+                : Damage.Melee(stats.MinDamage, stats.MaxDamage, level, goal.Level, 0, Random.Shared);
             return Buffs.AgainstMonster(client.Effects, (uint)Math.Max(1, damage * (ulong)spell.PowerPercent / 100), now);
         }
 
@@ -1043,10 +1087,10 @@ namespace Comet.Game.Magic
             {
                 if (victim.Player != null)
                     await Pking.OnAttackAsync(client, victim.Player);
-                else if (victim.Monster.IsGuard)
+                else if (victim.Monster?.IsGuard == true)
                     await Pking.FlashAsync(client, Pking.FlashTime, "attack_guard");
                 else
-                    victim.Monster.Provoke(client.ID);
+                    victim.Monster?.Provoke(client.ID);
                 Pirates.Spot(victim.ID, until);
             }
             LogCast(client, spell, target.X, target.Y, victims.Count);
@@ -1401,13 +1445,14 @@ namespace Comet.Game.Magic
                 return;
             var character = client.Character;
             client.NextCastAt = now + TimeSpan.FromMilliseconds(Math.Max(MinimumDelay.TotalMilliseconds, spell.DelayMilliseconds));
-            if (spell.UseMana > 0)
+            bool free = Training.TrainingGround.CostsNothing(client);
+            if (spell.UseMana > 0 && !free)
             {
                 character.ManaPoints -= spell.UseMana;
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Mana, character.ManaPoints));
             }
             await Recovery.UseStaminaAsync(client, StaminaOf(client, spell, now));
-            if (spell.UseItem != 0 && ItemToUse(client, spell) is Database.Models.DbItem item)
+            if (spell.UseItem != 0 && !free && ItemToUse(client, spell) is Database.Models.DbItem item)
                 await Quivers.UseAsync(client, item, spell.UseItemCount);
             if (spell.IsXpSkill && !InXpStatus(client, spell, now))
             {

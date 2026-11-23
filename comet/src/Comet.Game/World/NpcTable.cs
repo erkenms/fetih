@@ -4,17 +4,19 @@ namespace Comet.Game.World
     using System.IO;
     using System.Linq;
 
-    // NPCs by map. They don't move, and a map has a few dozen at most, so a view query
-    // looks at each NPC of the map.
+    // NPCs by map. They don't move, and a map has a few dozen, the training ground's goals
+    // a thousand, so a view query looks at each NPC of the map.
     public sealed class NpcTable
     {
         private readonly Dictionary<uint, List<Npc>> ByMap;
 
         private sealed record NpcFile(List<Npc> Npcs);
 
-        public static List<Npc> Load(string path)
+        // NPC files share one set of IDs
+        public static List<Npc> Load(params string[] paths)
         {
-            var npcs = DataFiles.Read<NpcFile>(path).Npcs ?? new List<Npc>();
+            var npcs = paths.SelectMany(p => DataFiles.Read<NpcFile>(p).Npcs ?? new List<Npc>()).ToList();
+            string path = string.Join(" and ", paths);
             var repeated = npcs.GroupBy(n => n.NpcID).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
             if (repeated.Count > 0)
                 throw new InvalidDataException($"{path} lists these NPC IDs more than once: {string.Join(", ", repeated)}");

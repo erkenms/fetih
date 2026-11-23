@@ -1,19 +1,29 @@
 namespace Comet.Game.Training
 {
+    using System;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
+    using Comet.Game.Combat;
+    using Comet.Game.Magic;
     using Comet.Game.Npcs;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
 
     // The training ground (1039): from level 20 the Boxers take players there for a fare, and
-    // Boxer Huang sends them back. Runs on the player's own queue.
+    // they gain experience hitting stakes with weapons and scarecrows with spells of their
+    // level or below; weapon skills that go off in place of a swing hit stakes too. Nothing
+    // wears or is used up there: durability, arrows, mana or stamina. A goal that runs out
+    // of life stands again at once, full, and a hit on it is worth a tenth of the same damage
+    // to a monster. Runs on the player's own queue, but goals' life is shared by all who hit
+    // them.
     public static class TrainingGround
     {
         public const uint MapID = 1039;
         public const ushort EntranceX = 217, EntranceY = 215;
         public const byte MinLevel = 20;
         public const uint Fare = 1000;
+        public const ulong ExperienceShare = 10;
 
         // The Boxers of Twin City, Phoenix Castle, Desert City, Ape Mountain and Bird Island,
         // and Boxer Huang in the ground, who sends players back
@@ -22,6 +32,81 @@ namespace Comet.Game.Training
 
         private const byte Enter = 1, Leave = 1;
         private const byte BoxerFace = 20, ExitFace = 1;
+
+        // Goals' life where it isn't full, by NPC ID
+        private static readonly System.Collections.Generic.Dictionary<uint, uint> Lives =
+            new System.Collections.Generic.Dictionary<uint, uint>();
+
+        public static bool CostsNothing(Client client) => client.Character?.MapID == MapID;
+
+        public static uint LifeOf(Npc goal)
+        {
+            lock (Lives)
+                return Lives.TryGetValue(goal.NpcID, out var life) ? life : goal.Life;
+        }
+
+        // The damage comes off the goal's life; what it took, and whether it ran out and stands
+        // again full
+        private static (uint Dealt, bool Refilled) Wound(Npc goal, uint damage)
+        {
+            lock (Lives)
+            {
+                uint life = Lives.TryGetValue(goal.NpcID, out var left) ? left : goal.Life;
+                if (damage < life)
+                {
+                    Lives[goal.NpcID] = life - damage;
+                    return (damage, false);
+                }
+                Lives.Remove(goal.NpcID);
+                return (life, true);
+            }
+        }
+
+        public static Npc FindGoal(Client client, uint id) =>
+            client.Character != null && Kernel.Npcs.Find(client.Character.MapID, id) is Npc npc && npc.IsGoal ? npc : null;
+
+        // Why the player can't hit the goal, or null; a stake takes swings, a scarecrow spells
+        public static string Problem(Client client, Npc goal, bool spell) =>
+            !Takes(goal, spell) ? (spell ? "stake_needs_weapon" : "scarecrow_needs_spell") :
+            goal.Level > client.Character.Level ? "goal_level" :
+            null;
+
+        public static bool Takes(Npc goal, bool spell) => goal.Role == (spell ? Npc.ScarecrowRole : Npc.StakeRole);
+
+        // Goals in view that the player may hit
+        public static System.Collections.Generic.IEnumerable<Npc> InView(Client client, bool spell)
+        {
+            var character = client.Character;
+            foreach (var npc in Kernel.Npcs.InView(character.MapID, character.X, character.Y))
+                if (npc.IsGoal && Problem(client, npc, spell) == null)
+                    yield return npc;
+        }
+
+        public static ulong ExperienceOf(uint dealt, int level, Npc goal) =>
+            dealt == 0 ? 0 : Math.Max(1, Damage.Experience(dealt, level, goal.Level) / ExperienceShare);
+
+        // After what shows the hit was sent: the goal's life, experience, and from a swing as
+        // much toward the weapons. A goal that ran out shows its life full again.
+        public static async Task<ulong> AfterHitAsync(Client client, Npc goal, uint damage, string kind)
+        {
+            if (damage == 0)
+                return 0;
+            var (dealt, refilled) = Wound(goal, damage);
+            if (refilled)
+            {
+                var full = new MsgUserAttrib(goal.NpcID, MsgUserAttrib.AttributeType.Health, goal.Life);
+                await client.SendAsync(full);
+                await Movement.SendToViewAsync(client, full);
+            }
+            ulong experience = ExperienceOf(dealt, client.Character.Level, goal);
+            await Progress.AwardExperienceAsync(client, experience, "training_ground");
+            if (kind is "melee" or "shoot")
+                await Proficiency.GainAsync(client, (uint)Math.Min(experience, uint.MaxValue));
+            LogEvents.For(typeof(TrainingGround), LogEvents.CombatHit).Debug(
+                "{Name} hit goal {NpcId} (level {GoalLevel}) for {Damage}, {Experience} experience ({Kind})",
+                client.Character.Name, goal.NpcID, goal.Level, damage, experience, kind);
+            return experience;
+        }
 
         public static async Task BoxerAsync(NpcTalk talk)
         {

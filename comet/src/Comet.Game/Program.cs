@@ -126,7 +126,7 @@
 
             try
             {
-                var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json"));
+                var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json"), DataFiles.PathOf("goals.json"));
                 var placed = npcs.Where(n => Kernel.Maps.Exists(n.MapID)).ToList();
                 Kernel.Npcs = new NpcTable(placed);
                 LogEvents.For(typeof(Program), LogEvents.NpcsLoaded).Information(
@@ -135,7 +135,7 @@
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read Data/npcs.json");
+                Log.Error(e, "Can't read Data/npcs.json or Data/goals.json");
                 Log.CloseAndFlush();
                 return;
             }

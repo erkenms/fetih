@@ -35,7 +35,7 @@ namespace Comet.Game.Items
 
         private static async Task WearAsync(Client client, ItemPosition[] positions)
         {
-            if (client.Equipment == null || client.Character == null)
+            if (client.Equipment == null || client.Character == null || Training.TrainingGround.CostsNothing(client))
                 return;
             foreach (var position in positions)
             {

@@ -359,6 +359,13 @@ namespace Comet.Client
             return packet == null ? null : NpcSpawn.Parse(packet);
         }
 
+        public async Task<GoalSpawn> WaitForGoalAsync(uint npcId, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgNpcInfoEx && GoalSpawn.Parse(p).Id == npcId, timeout);
+            return packet == null ? null : GoalSpawn.Parse(packet);
+        }
+
         public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
 
         // Like the game, which sends 255 after each answer as its dialog window closes
