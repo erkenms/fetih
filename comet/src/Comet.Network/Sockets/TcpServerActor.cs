@@ -78,12 +78,21 @@ namespace Comet.Network.Sockets
                     this.Socket?.Send(encrypted, SocketFlags.None);
                     return Task.CompletedTask;
                 }
+                catch (SocketException e) when (e.SocketErrorCode is
+                    SocketError.ConnectionAborted or
+                    SocketError.ConnectionReset or
+                    SocketError.NotConnected or
+                    SocketError.Shutdown)
+                {
+                    Log.ForContext<TcpServerActor>().Debug(
+                        "Dropped {Length} byte send to closed connection {ConnId} ({SocketError})",
+                        packet.Length, this.ConnId, e.SocketErrorCode);
+                    return Task.CompletedTask;
+                }
                 catch (SocketException e)
                 {
-                    if (e.SocketErrorCode < SocketError.ConnectionAborted ||
-                        e.SocketErrorCode > SocketError.Shutdown)
-                        Log.ForContext<TcpServerActor>().Error(e,
-                            "Send failed for connection {ConnId}", this.ConnId);
+                    Log.ForContext<TcpServerActor>().Error(e,
+                        "Send failed for connection {ConnId}", this.ConnId);
                     return Task.FromException(e);
                 }
                 catch (ObjectDisposedException)

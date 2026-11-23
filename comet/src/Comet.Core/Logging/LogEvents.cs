@@ -21,6 +21,7 @@ namespace Comet.Core.Logging
         public const string GameAuthFailed = "game.auth_failed";
         public const string SessionLogin = "session.login";
         public const string SessionLogout = "session.logout";
+        public const string SessionLogoutFailed = "session.logout_failed";
         public const string SessionReplaced = "session.replaced";
         public const string SessionPing = "session.ping";
         public const string CharacterCreated = "character.created";

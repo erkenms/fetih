@@ -59,8 +59,8 @@ namespace Comet.Integration.Tests
                 Assert.Equal(first.User.Id, second.User.Id);
                 Assert.True(await first.Game.WaitClosedAsync());
                 await this.Servers.WaitForEventAsync("game", "session.logout",
-                    e => e.GetProperty("name").GetString() == first.User.Name
-                        && e.GetProperty("reason").GetString() == "replaced");
+                    e => e.TryGetProperty("name", out var name) && name.GetString() == first.User.Name
+                        && e.TryGetProperty("reason", out var reason) && reason.GetString() == "replaced");
             }
         }
 

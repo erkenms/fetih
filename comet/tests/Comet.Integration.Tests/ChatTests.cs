@@ -198,8 +198,8 @@ namespace Comet.Integration.Tests
             await CommandAsync(mod, "/kick " + target.User.Name);
             Assert.True(await target.Game.WaitClosedAsync());
             await this.Servers.WaitForEventAsync("game", "session.logout", e =>
-                e.GetProperty("name").GetString() == target.User.Name &&
-                e.GetProperty("reason").GetString() == "kicked");
+                e.TryGetProperty("name", out var name) && name.GetString() == target.User.Name &&
+                e.TryGetProperty("reason", out var reason) && reason.GetString() == "kicked");
         }
 
         [Fact]

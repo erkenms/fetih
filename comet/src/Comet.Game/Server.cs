@@ -141,7 +141,7 @@ namespace Comet.Game
             }
             catch (Exception e)
             {
-                LogEvents.For<Server>(LogEvents.SessionLogout).Error(e,
+                LogEvents.For<Server>(LogEvents.SessionLogoutFailed).Error(e,
                     "Telling others that character {CharacterId} left failed", actor.ID);
             }
         }
@@ -189,7 +189,7 @@ namespace Comet.Game
             try { await Task.WhenAll(leaving, actor.LogoutAsync()); }
             catch (Exception e)
             {
-                LogEvents.For<Server>(LogEvents.SessionLogout).Error(e,
+                LogEvents.For<Server>(LogEvents.SessionLogoutFailed).Error(e,
                     "Logout save failed for character {CharacterId}", actor.ID);
             }
             finally
