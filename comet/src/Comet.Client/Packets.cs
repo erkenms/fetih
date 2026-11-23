@@ -22,6 +22,7 @@ namespace Comet.Client
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgDeadMark = 2081;
         public const ushort MsgPeerage = 2064;
         public const ushort MsgQualifyingInteractive = 2205;
         public const ushort MsgQualifyingFightersList = 2206;

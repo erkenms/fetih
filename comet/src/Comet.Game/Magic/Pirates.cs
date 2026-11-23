@@ -27,7 +27,7 @@ namespace Comet.Game.Magic
             return false;
         }
 
-        public static void Spot(uint id, DateTime until) =>
+        public static DateTime Spot(uint id, DateTime until) =>
             Spotted.AddOrUpdate(id, until, (_, was) => was > until ? was : until);
 
         // What the caster's level of a learned spell does
@@ -48,15 +48,24 @@ namespace Comet.Game.Magic
             await SpotAsync(client, spell, targetID, x, y, now);
         }
 
+        // The mark shows over the target (a spell effect would show a hit of 0), and goes when
+        // it ends unless spotted again meanwhile; those around the caster see both
         public static async Task SpotAsync(Client client, MagicType spell, uint targetID, ushort x, ushort y, DateTime now)
         {
-            Spot(targetID, now + TimeSpan.FromSeconds(spell.StepSeconds));
-            var effect = new MsgMagicEffect(client.ID, x, y, BlackSpot) { MagicLevel = spell.Level };
-            effect.Targets.Add((targetID, 0));
-            await client.SendAsync(effect);
-            await Movement.SendToViewAsync(client, effect);
+            var until = Spot(targetID, now + TimeSpan.FromSeconds(spell.StepSeconds));
+            await ShowMarkAsync(client, new MsgDeadMark(false, targetID));
+            _ = Task.Delay(until - now).ContinueWith(_ => Kernel.Post(client, () =>
+                client.Character == null || IsSpotted(targetID, DateTime.UtcNow)
+                    ? Task.CompletedTask
+                    : ShowMarkAsync(client, new MsgDeadMark(true, targetID))), TaskScheduler.Default);
             LogEvents.For(typeof(Pirates), LogEvents.StatusStarted).Information(
                 "{Caster} put a black spot on {TargetId} for {Seconds}s", client.Character?.Name, targetID, spell.StepSeconds);
+        }
+
+        private static async Task ShowMarkAsync(Client client, MsgDeadMark mark)
+        {
+            await client.SendAsync(mark);
+            await Movement.SendToViewAsync(client, mark);
         }
 
         // On the player's queue, after they took damage

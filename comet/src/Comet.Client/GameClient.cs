@@ -366,6 +366,11 @@ namespace Comet.Client
             return packet == null ? null : GoalSpawn.Parse(packet);
         }
 
+        // A dead mark put on the target, or taken off: remove at 4, target at 8
+        public async Task<bool> WaitForDeadMarkAsync(uint target, bool remove, TimeSpan? timeout = null) =>
+            await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgDeadMark &&
+                BitConverter.ToUInt32(p, 8) == target && (p[4] != 0) == remove, timeout) != null;
+
         public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
 
         // Like the game, which sends 255 after each answer as its dialog window closes

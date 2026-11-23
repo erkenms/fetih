@@ -132,9 +132,10 @@ namespace Comet.Integration.Tests
             await LearnAsync(pirate, 11120);
 
             await pirate.Game.AttackAsync(pirate.User.Id, victim.User.Id, 221, 100);
-            var spot = await victim.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11120,
-                System.TimeSpan.FromSeconds(15));
-            Assert.Equal(victim.User.Id, Assert.Single(spot.Targets).Id);
+            // A mark over the victim, not a spell effect showing a hit of 0; off after 8 seconds
+            Assert.True(await victim.Game.WaitForDeadMarkAsync(victim.User.Id, remove: false, System.TimeSpan.FromSeconds(15)));
+            Assert.Null(await victim.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11120, System.TimeSpan.Zero));
+            Assert.True(await victim.Game.WaitForDeadMarkAsync(victim.User.Id, remove: true, System.TimeSpan.FromSeconds(20)));
         }
     
 

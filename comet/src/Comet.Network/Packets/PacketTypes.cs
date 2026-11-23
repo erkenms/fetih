@@ -71,6 +71,7 @@ namespace Comet.Network.Packets
         MsgContribute,
         MsgQuiz,
         MsgRelation = 2071,
+        MsgDeadMark = 2081,
         MsgSynMemberList = 2102,
         MsgTotemPoleInfo = 2201,
         MsgWeaponsInfo,
