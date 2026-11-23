@@ -13,21 +13,28 @@ namespace Comet.Game.Tests.Combat
 
     public class FatalStrikeRateTests
     {
+        private static readonly DateTime Start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         [Fact]
-        public void StrikesKeepAGapAndNoMoreThanTheirCountInTheWindow()
+        public void ClicksThatComeTogetherEachStrikeAGapApart()
         {
             var strikes = new System.Collections.Generic.Queue<DateTime>();
-            var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            Assert.Equal(start + Attacks.FatalStrikeGap, Attacks.NextFatalStrikeAt(strikes, start));
+            Assert.Equal(Start, Attacks.ReserveFatalStrike(strikes, Start));
+            Assert.Equal(Start + Attacks.FatalStrikeGap, Attacks.ReserveFatalStrike(strikes, Start));
+            Assert.Equal(Start + 2 * Attacks.FatalStrikeGap, Attacks.ReserveFatalStrike(strikes, Start));
+        }
 
-            var now = start;
-            DateTime next = default;
-            for (int i = 0; i < Attacks.FatalStrikesPerWindow; i++, now += Attacks.FatalStrikeGap)
-                next = Attacks.NextFatalStrikeAt(strikes, now);
+        [Fact]
+        public void NoMoreThanTheMostInAWindowAndAClickTooFarFromItsTurnIsDropped()
+        {
+            var strikes = new System.Collections.Generic.Queue<DateTime>();
+            var (window, most) = Attacks.FatalStrikeLimits[0];
+            var now = Start;
+            for (int i = 0; i < most; i++, now += Attacks.FatalStrikeGap)
+                Assert.Equal(now, Attacks.ReserveFatalStrike(strikes, now));
             // The window's first strike has to leave it before another goes
-            Assert.Equal(start + Attacks.FatalStrikeWindow, next);
-            Assert.Equal(start + Attacks.FatalStrikeWindow + Attacks.FatalStrikeGap,
-                Attacks.NextFatalStrikeAt(strikes, start + Attacks.FatalStrikeWindow));
+            Assert.Null(Attacks.ReserveFatalStrike(strikes, now));
+            Assert.Equal(Start + window, Attacks.ReserveFatalStrike(strikes, Start + window - Attacks.FatalStrikeLongestWait));
         }
     }
 

@@ -1,6 +1,7 @@
 namespace Comet.Game.Combat
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
@@ -27,21 +28,32 @@ namespace Comet.Game.Combat
         public static TimeSpan PlayerInterval = TimeSpan.FromMilliseconds(1500);
 
         // During Fatal Strike the client sends a melee click on a monster for each strike, from
-        // as far as the spell's distance. Strikes keep to what a hand on a mouse can do: a gap
-        // between two, and so many in any few seconds; a click sooner waits its turn.
-        public static TimeSpan FatalStrikeGap { get; set; } = TimeSpan.FromMilliseconds(300);
-        public static readonly TimeSpan FatalStrikeWindow = TimeSpan.FromSeconds(5);
-        public const int FatalStrikesPerWindow = 12;
-
-        // Counts a strike now; when the next may go
-        public static DateTime NextFatalStrikeAt(System.Collections.Generic.Queue<DateTime> strikes, DateTime now)
+        // as far as the spell's distance. Each click gets its own turn, so clicks that latency
+        // bunches up all strike, a gap apart; turns keep to what a hand on a mouse can do, so
+        // many in any few seconds and in a minute. A click whose turn is too far off is dropped.
+        public static TimeSpan FatalStrikeGap { get; set; } = TimeSpan.FromMilliseconds(100);
+        public static readonly (TimeSpan Window, int Most)[] FatalStrikeLimits =
         {
-            while (strikes.Count > 0 && strikes.Peek() <= now - FatalStrikeWindow)
+            (TimeSpan.FromSeconds(5), 20),
+            (TimeSpan.FromSeconds(60), 144),
+        };
+        public static readonly TimeSpan FatalStrikeLongestWait = TimeSpan.FromSeconds(1);
+
+        // The turn of a strike clicked now, counted in, or null if it would wait too long
+        public static DateTime? ReserveFatalStrike(System.Collections.Generic.Queue<DateTime> strikes, DateTime now)
+        {
+            var longest = FatalStrikeLimits.Max(l => l.Window);
+            while (strikes.Count > 0 && strikes.Peek() <= now - longest)
                 strikes.Dequeue();
-            strikes.Enqueue(now);
-            var next = now + FatalStrikeGap;
-            return strikes.Count >= FatalStrikesPerWindow && strikes.Peek() + FatalStrikeWindow > next
-                ? strikes.Peek() + FatalStrikeWindow : next;
+            var turns = strikes.ToArray();
+            var at = turns.Length > 0 && turns[^1] + FatalStrikeGap > now ? turns[^1] + FatalStrikeGap : now;
+            foreach (var (window, most) in FatalStrikeLimits)
+                if (turns.Length >= most && turns[^most] + window > at)
+                    at = turns[^most] + window;
+            if (at - now > FatalStrikeLongestWait)
+                return null;
+            strikes.Enqueue(at);
+            return at;
         }
 
         public static async Task RequestAsync(Client client, MsgInteract request)
@@ -68,6 +80,25 @@ namespace Comet.Game.Combat
             }
 
             await Riding.DismountToFightAsync(client, "attack");
+            var now = DateTime.UtcNow;
+            if (request.Action == InteractionType.Attack && IsMonster(request.TargetID) && Casting.FatalStrikeOf(client, now) != null)
+            {
+                if (ReserveFatalStrike(client.FatalStrikes, now) is not DateTime turn)
+                {
+                    Reject(client, request.TargetID, "too_fast");
+                    return;
+                }
+                uint targetID = request.TargetID;
+                _ = Task.Delay(turn - now).ContinueWith(_ => Kernel.Post(client, () =>
+                {
+                    int run = ++client.AttackRun;
+                    client.AttackTarget = targetID;
+                    client.AttackShooting = false;
+                    client.NextAttackAt = DateTime.MinValue;
+                    return SwingAsync(client, run);
+                }), TaskScheduler.Default);
+                return;
+            }
             client.AttackTarget = request.TargetID;
             client.AttackShooting = request.Action == InteractionType.Shoot;
             await SwingAsync(client, client.AttackRun);
@@ -127,7 +158,7 @@ namespace Comet.Game.Combat
             }
 
             var interval = Interval(client, stats, now);
-            client.NextAttackAt = fatal != null ? NextFatalStrikeAt(client.FatalStrikes, now) : now + interval;
+            client.NextAttackAt = fatal != null ? now : now + interval;
             if (!shooting && fatal == null && await Casting.TryPassiveAsync(client, targetID, x, y, now))
             {
                 Schedule(client, run, interval);

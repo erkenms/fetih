@@ -313,7 +313,7 @@ namespace Comet.Game.Magic
         private static int TripleAttackOdds(uint targetID) => Attacks.IsMonster(targetID) ? 100 : 300;
 
         // Windstorm: at its percent, a third against players, a rapier swing is a combo of three
-        // hits, shown as the skill
+        // hits of a swing each, shown as the skill
         private const int WindstormHits = 3, WindstormAgainstPlayersPercent = 33;
 
         private static async Task<bool> TryWindstormAsync(Client client, uint targetID, ushort x, ushort y, DateTime now)
@@ -322,14 +322,15 @@ namespace Comet.Game.Magic
                 spell.WeaponSubtype != 0 && !Holds(client, spell.WeaponSubtype) ||
                 Random.Shared.Next(100) >= (Attacks.IsMonster(targetID) ? spell.Percent : WindstormAgainstPlayersPercent))
                 return false;
-            // The swing checked the reach
+            // The swing checked the reach; each hit of the combo shows on its own, as Triple
+            // Attack's do
             var combo = spell with
             {
                 Sort = MagicSort.Attack,
-                Power = MagicType.PercentBase + 100 * WindstormHits,
+                Power = MagicType.PercentBase + 100,
                 Distance = ushort.MaxValue,
             };
-            return await AttackAsync(client, combo, targetID, x, y, now, passive: true);
+            return await AttackAsync(client, combo, targetID, x, y, now, passive: true, hits: WindstormHits);
         }
 
         private static bool IsAttack(MagicSort sort) => sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or

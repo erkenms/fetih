@@ -209,7 +209,8 @@ namespace Comet.Integration.Tests
 
             await pirate.Game.AttackAsync(pirate.User.Id, pheasant.Id, at.X, at.Y);
             var combo = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11140);
-            Assert.Equal(pheasant.Id, Assert.Single(combo.Targets).Id);
+            Assert.Equal(3, combo.Targets.Count);
+            Assert.All(combo.Targets, t => Assert.Equal(pheasant.Id, t.Id));
         }
     }
 }
