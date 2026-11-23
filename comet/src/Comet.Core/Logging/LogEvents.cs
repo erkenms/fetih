@@ -85,6 +85,13 @@ namespace Comet.Core.Logging
         public const string ItemRepaired = "item.repaired";
         public const string ItemRepairRejected = "item.repair_rejected";
         public const string ItemSpent = "item.spent";
+        public const string ItemEnchanted = "item.enchanted";
+        public const string ItemEnchantRejected = "item.enchant_rejected";
+        public const string ItemComposed = "item.composed";
+        public const string ItemComposeRejected = "item.compose_rejected";
+        public const string MiningStarted = "mining.started";
+        public const string MiningRejected = "mining.rejected";
+        public const string MiningFound = "mining.found";
 
         public const string SecondPasswordSet = "second_password.set";
         public const string SecondPasswordVerified = "second_password.verified";

@@ -92,6 +92,21 @@ namespace Comet.Game.Database.Repositories
                 .SetProperty(x => x.Gem2, item.Gem2));
         }
 
+        public static async Task SetEnchantAsync(uint itemID, byte enchant)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == itemID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Enchant, enchant));
+        }
+
+        public static async Task SetPlusAsync(uint itemID, byte plus, uint progress)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == itemID).ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.Plus, plus)
+                .SetProperty(x => x.PlusProgress, progress));
+        }
+
         public static async Task DeleteAsync(uint itemID)
         {
             using var db = new ServerDbContext();

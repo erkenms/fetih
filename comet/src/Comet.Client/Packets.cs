@@ -321,7 +321,8 @@ namespace Comet.Client
         public const ushort PartnerInfo = 152;
         public const ushort ChangeAvatar = 151;
         public const ushort CreateBooth = 111, CloseBooth = 114;
-        public const uint WarehouseWindow = 4;
+        public const uint WarehouseWindow = 4, ComposeWindow = 2, EnchantWindow = 1091;
+        public const ushort Mine = 99;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -395,12 +396,16 @@ namespace Comet.Client
     }
 
     // Item ID, type, amount and its limit, then the action and position as ushorts
-    // The sockets are the bytes at 24 and 25, Locked the byte at 46
+    // The sockets are the bytes at 24 and 25, the plus at 33, the enchantment at 36, Locked the
+    // byte at 46 and the plus progress the uint at 52
     public sealed record ItemInfo(uint Id, uint TypeId, ushort Amount, ushort AmountLimit, ushort Action, ushort Position)
     {
         public bool Locked { get; init; }
         public byte Gem1 { get; init; }
         public byte Gem2 { get; init; }
+        public byte Plus { get; init; }
+        public byte Enchant { get; init; }
+        public uint PlusProgress { get; init; }
 
         public static ItemInfo Parse(byte[] packet) => new ItemInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -410,7 +415,27 @@ namespace Comet.Client
             Locked = packet.Length > 46 && packet[46] != 0,
             Gem1 = packet.Length > 25 ? packet[24] : (byte)0,
             Gem2 = packet.Length > 25 ? packet[25] : (byte)0,
+            Plus = packet.Length > 36 ? packet[33] : (byte)0,
+            Enchant = packet.Length > 36 ? packet[36] : (byte)0,
+            PlusProgress = packet.Length >= 56 ? BitConverter.ToUInt32(packet, 52) : 0,
         };
+    }
+
+    // The compose window's MsgFuse: the main item at 4, 0 at 8, the count of minors at 10,
+    // then the minors from 12
+    public static class ComposeMessage
+    {
+        public const ushort Type = 1028;
+
+        public static byte[] Build(uint mainId, params uint[] minorIds)
+        {
+            var packet = Packet.Create(Type, 12 + 4 * minorIds.Length);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), mainId);
+            BitConverter.TryWriteBytes(packet.AsSpan(10), (ushort)minorIds.Length);
+            for (int i = 0; i < minorIds.Length; i++)
+                BitConverter.TryWriteBytes(packet.AsSpan(12 + 4 * i), minorIds[i]);
+            return packet;
+        }
     }
 
     // Gems in and out of sockets, 20 bytes: player ID at 4, item at 8, gem at 12, then the
@@ -530,7 +555,7 @@ namespace Comet.Client
             StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Ping = 27, Drop = 37,
             DropSilver = 38, DisplayGears = 46;
 
-        public const uint Repair = 14;
+        public const uint Repair = 14, Enchant = 28;
 
         // Booths: viewing has the booth's ID first; adding has the item and its price,
         // removing and buying the item and the booth's ID

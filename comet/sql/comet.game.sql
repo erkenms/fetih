@@ -75,8 +75,9 @@ UNLOCK TABLES;
 
 -- Items characters own. Position is where the item is: 0 the inventory, 1 to 9, 12 and 18
 -- an equipment slot, 230 a warehouse (Package is its NPC). Amount is the durability, or
--- the count of a stackable item. A locked item can only go to trade partners; UnlocksAt is
--- when a requested unlock takes effect.
+-- the count of a stackable item. PlusProgress is the composition points toward the next
+-- plus. A locked item can only go to trade partners; UnlocksAt is when a requested unlock
+-- takes effect.
 DROP TABLE IF EXISTS `item`;
 CREATE TABLE `item` (
   `ItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -90,6 +91,7 @@ CREATE TABLE `item` (
   `Plus` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Bless` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Enchant` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `PlusProgress` int(10) unsigned NOT NULL DEFAULT '0',
   `Color` tinyint(3) unsigned NOT NULL DEFAULT '3',
   `Package` int(10) unsigned NOT NULL DEFAULT '0',
   `Locked` tinyint(1) unsigned NOT NULL DEFAULT '0',

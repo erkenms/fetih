@@ -141,6 +141,9 @@ namespace Comet.Game.Packets
                 // The item to repair, at a shopkeeper
                 [ItemActionType.EquipmentRepair] = (msg, client) => Durability.RepairAsync(client, msg.CharacterID),
 
+                // Ethereal's enchant window: the gear in the ID field, the gem in Command
+                [ItemActionType.EquipmentEnchant] = (msg, client) => Enchanting.EnchantAsync(client, msg, Random.Shared),
+
                 // Warehouse silver; the amount in Command
                 [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
                 [ItemActionType.BankDeposit] = (msg, client) => Storing.MoveSilverAsync(client, msg.Command),

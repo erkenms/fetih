@@ -41,7 +41,8 @@ namespace Comet.Game.Packets
             // 44: suspicious
             body[46] = (byte)(this.Item.Locked ? 1 : 0);
             BitConverter.TryWriteBytes(span[48..], (uint)this.Item.Color);
-            // 52: plus progress, 56: inscribed, 60: time left (uint each)
+            BitConverter.TryWriteBytes(span[52..], this.Item.PlusProgress);
+            // 56: inscribed, 60: time left (uint each)
 
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);

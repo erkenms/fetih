@@ -62,6 +62,9 @@ namespace Comet.Game.States
         public int AttackRun { get; set; }
         public DateTime NextAttackAt { get; set; }
 
+        // The dig going on while mining; on the player's own queue
+        public Items.Mining.Dig Mining { get; set; }
+
         // Where Boxer Huang sends the player back to from the training ground; on the player's own queue
         public World.MapPoint TrainingReturn { get; set; }
 

@@ -40,6 +40,8 @@ namespace Comet.Game.Npcs
                 [Market.MarkControllerID] = Market.MarkControllerAsync,
                 [Market.CPAdminID] = Market.CPAdminAsync,
                 [Market.SurgeonMiracleID] = Market.SurgeonMiracleAsync,
+                [WuxingOven.OvenID] = WuxingOven.OvenAsync,
+                [WuxingOven.EtherealID] = WuxingOven.EtherealAsync,
             };
 
         static Dialogs()

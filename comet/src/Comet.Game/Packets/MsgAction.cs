@@ -272,6 +272,9 @@ namespace Comet.Game.Packets
 
                 [ActionType.MapJump] = (msg, client) => Movement.JumpAsync(client, msg),
 
+                // A right click with a pick axe in a mine; not echoed
+                [ActionType.MapMine] = (msg, client) => Items.Mining.StartAsync(client, msg),
+
                 // Non-zero Command asks to revive where the player lies
                 [ActionType.CharacterRevive] = (msg, client) =>
                     Combat.Death.ReviveAsync(client, "button", here: msg.Command != 0),
@@ -378,7 +381,14 @@ namespace Comet.Game.Packets
 
         public enum Window : uint
         {
+            // The compose window, which sends MsgFuse. 1 opens a later compose window that
+            // sends MsgDataArray.
+            Compose = 2,
             Warehouse = 4,
         }
+
+        // Commands for ClientCommand that open a window: the client posts Command as its own
+        // window command
+        public const uint EnchantWindow = 1091;
     }
 }

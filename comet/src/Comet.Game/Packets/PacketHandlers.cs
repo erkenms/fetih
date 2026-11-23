@@ -44,6 +44,8 @@ namespace Comet.Game.Packets
                 [PacketType.Msg2ndPsw] = () => new Msg2ndPsw(),
                 [PacketType.MsgTradeBuddy] = () => new MsgTradeBuddy(),
                 [PacketType.MsgGemEmbed] = () => new MsgGemEmbed(),
+                [PacketType.MsgDataArray] = () => new MsgDataArray(),
+                [PacketType.MsgFuse] = () => new MsgFuse(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

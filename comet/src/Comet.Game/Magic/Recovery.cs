@@ -65,6 +65,7 @@ namespace Comet.Game.Magic
                 return;
             await Casting.VortexTickAsync(client, now);
             await Items.Riding.RecoverAsync(client, now);
+            await Items.Mining.TickAsync(client, now, Random.Shared);
 
             int gain = character.Stance == Items.Vending.SitStance ? StaminaSitting : StaminaStanding;
             byte stamina = (byte)Math.Min(HeavenBlessing.MaxStamina(client), energy.Stamina + gain);

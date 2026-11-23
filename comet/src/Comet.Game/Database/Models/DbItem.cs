@@ -17,6 +17,9 @@ namespace Comet.Game.Database.Models
         public byte Plus { get; set; }
         public byte Bless { get; set; }
         public byte Enchant { get; set; }
+
+        // Composition points toward the next plus
+        public uint PlusProgress { get; set; }
         public byte Color { get; set; }
 
         // The warehouse NPC holding the item, when its position is Warehouse
