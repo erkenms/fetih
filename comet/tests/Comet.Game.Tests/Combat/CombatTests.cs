@@ -11,6 +11,26 @@ namespace Comet.Game.Tests.Combat
     using Comet.Game.World;
     using Xunit;
 
+    public class FatalStrikeRateTests
+    {
+        [Fact]
+        public void StrikesKeepAGapAndNoMoreThanTheirCountInTheWindow()
+        {
+            var strikes = new System.Collections.Generic.Queue<DateTime>();
+            var start = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            Assert.Equal(start + Attacks.FatalStrikeGap, Attacks.NextFatalStrikeAt(strikes, start));
+
+            var now = start;
+            DateTime next = default;
+            for (int i = 0; i < Attacks.FatalStrikesPerWindow; i++, now += Attacks.FatalStrikeGap)
+                next = Attacks.NextFatalStrikeAt(strikes, now);
+            // The window's first strike has to leave it before another goes
+            Assert.Equal(start + Attacks.FatalStrikeWindow, next);
+            Assert.Equal(start + Attacks.FatalStrikeWindow + Attacks.FatalStrikeGap,
+                Attacks.NextFatalStrikeAt(strikes, start + Attacks.FatalStrikeWindow));
+        }
+    }
+
     public class DamageTests
     {
         [Theory]

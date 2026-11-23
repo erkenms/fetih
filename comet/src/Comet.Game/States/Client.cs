@@ -90,6 +90,9 @@ namespace Comet.Game.States
         // Shuriken Vortex's next spin; on the player's own queue
         public DateTime NextVortexAt { get; set; }
 
+        // When the last Fatal Strikes went off, oldest first; on the player's own queue
+        public System.Collections.Generic.Queue<DateTime> FatalStrikes { get; } = new System.Collections.Generic.Queue<DateTime>();
+
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |

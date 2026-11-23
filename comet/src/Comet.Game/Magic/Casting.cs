@@ -563,13 +563,15 @@ namespace Comet.Game.Magic
                 await Pirates.RushAsync(client, "black_spot");
 
             uint experience = 0;
-            foreach (var victim in victims)
+            for (int i = 0; i < victims.Count; i++)
             {
+                var victim = victims[i];
+                var after = ShotGap(spell) * i;
                 if (victim.Player != null)
                 {
                     var target = victim.Player;
                     await Pking.OnAttackAsync(client, target);
-                    Kernel.Post(target, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
+                    Later(target, after, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
                     if (spell.Sort == MagicSort.ScurvyBomb && !victim.Missed)
                         Kernel.Post(target, () => FatigueAsync(client, target, spell));
                     continue;
@@ -585,12 +587,32 @@ namespace Comet.Game.Magic
                     continue;
                 if (!monster.IsGuard)
                     experience += dealt;
-                await Attacks.AfterMonsterHitAsync(client, monster, victim.X, victim.Y, dealt, killed);
+                if (killed && after > TimeSpan.Zero)
+                    Later(client, after, () => client.Character == null ? Task.CompletedTask
+                        : Attacks.AfterMonsterHitAsync(client, monster, victim.X, victim.Y, dealt, killed));
+                else
+                    await Attacks.AfterMonsterHitAsync(client, monster, victim.X, victim.Y, dealt, killed);
             }
 
             LogCast(client, spell, x, y, victims.Count);
             await GainExperienceAsync(client, spell, experience);
             return true;
+        }
+
+        // Blackbeard's Rage shoots its targets one after another, so each falls a shot after the
+        // one before rather than all at once
+        public static TimeSpan BlackbeardShotGap { get; set; } = TimeSpan.FromMilliseconds(330);
+
+        private static TimeSpan ShotGap(MagicType spell) =>
+            spell.Sort == MagicSort.BlackbeardsRage ? BlackbeardShotGap : TimeSpan.Zero;
+
+        // Runs the work on the player's queue after the delay, or now
+        private static void Later(Client client, TimeSpan delay, Func<Task> work)
+        {
+            if (delay <= TimeSpan.Zero)
+                Kernel.Post(client, work);
+            else
+                _ = Task.Delay(delay).ContinueWith(_ => Kernel.Post(client, work), TaskScheduler.Default);
         }
 
         private static async Task StartXpStatusAsync(Client client, MagicType spell, DateTime now)

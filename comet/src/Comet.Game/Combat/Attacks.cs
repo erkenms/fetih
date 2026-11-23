@@ -27,8 +27,22 @@ namespace Comet.Game.Combat
         public static TimeSpan PlayerInterval = TimeSpan.FromMilliseconds(1500);
 
         // During Fatal Strike the client sends a melee click on a monster for each strike, from
-        // as far as the spell's distance; strikes come this many times faster than swings
-        private const int FatalStrikeSpeedUp = 10;
+        // as far as the spell's distance. Strikes keep to what a hand on a mouse can do: a gap
+        // between two, and so many in any few seconds; a click sooner waits its turn.
+        public static TimeSpan FatalStrikeGap { get; set; } = TimeSpan.FromMilliseconds(300);
+        public static readonly TimeSpan FatalStrikeWindow = TimeSpan.FromSeconds(5);
+        public const int FatalStrikesPerWindow = 12;
+
+        // Counts a strike now; when the next may go
+        public static DateTime NextFatalStrikeAt(System.Collections.Generic.Queue<DateTime> strikes, DateTime now)
+        {
+            while (strikes.Count > 0 && strikes.Peek() <= now - FatalStrikeWindow)
+                strikes.Dequeue();
+            strikes.Enqueue(now);
+            var next = now + FatalStrikeGap;
+            return strikes.Count >= FatalStrikesPerWindow && strikes.Peek() + FatalStrikeWindow > next
+                ? strikes.Peek() + FatalStrikeWindow : next;
+        }
 
         public static async Task RequestAsync(Client client, MsgInteract request)
         {
@@ -113,9 +127,7 @@ namespace Comet.Game.Combat
             }
 
             var interval = Interval(client, stats, now);
-            if (fatal != null)
-                interval /= FatalStrikeSpeedUp;
-            client.NextAttackAt = now + interval;
+            client.NextAttackAt = fatal != null ? NextFatalStrikeAt(client.FatalStrikes, now) : now + interval;
             if (!shooting && fatal == null && await Casting.TryPassiveAsync(client, targetID, x, y, now))
             {
                 Schedule(client, run, interval);
