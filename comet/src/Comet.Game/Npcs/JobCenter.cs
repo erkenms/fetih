@@ -15,8 +15,9 @@ namespace Comet.Game.Npcs
             HeadAbbotID = 8314, TaoistMoonID = 10000, PirateLordID = 10070;
         private const byte Promote = 1, Water = 2, Fire = 3, Teach = 4;
 
-        // Option FirstSkill + i learns the i-th skill the master teaches
-        private const byte FirstSkill = 10;
+        // Option FirstSkill + i learns the i-th skill the master teaches; FirstPage + n lists
+        // the n-th page of them
+        private const byte FirstSkill = 10, FirstPage = 100;
 
         // As many skills as a page of the dialog lists
         private const int SkillsPerPage = 6;
@@ -37,7 +38,7 @@ namespace Comet.Game.Npcs
         public static async Task TalkAsync(NpcTalk talk)
         {
             var master = Masters[talk.Npc.NpcID];
-            if (talk.Option == Teach || talk.Option >= FirstSkill)
+            if (talk.Option is Teach or >= FirstSkill)
             {
                 await TeachAsync(talk, master);
                 return;
@@ -87,7 +88,8 @@ namespace Comet.Game.Npcs
                 .ShowAsync();
         }
 
-        // Lists the skills of the master's line the player can learn now, and learns the one chosen
+        // Lists the skills of the master's line, a page at a time, and learns the one chosen or
+        // says what it still needs
         private static async Task TeachAsync(NpcTalk talk, Master master)
         {
             var client = talk.Client;
@@ -97,54 +99,33 @@ namespace Comet.Game.Npcs
                 return;
             }
 
-            var taught = Learning.TaughtBy(master.Line);
-            if (talk.Option >= FirstSkill)
+            // Nor the other element's spells to a taoist who chose one, nor those magictype lacks
+            bool chose = Learning.ElementOf(client.Character.CurrentClass) != Learning.Element.Any;
+            var taught = Learning.TaughtBy(master.Line)
+                .Where(m => Learning.Unmet(client, m) is var reason && reason != "unknown_magic" &&
+                    !(chose && reason == "element"))
+                .ToList();
+            if (talk.Option >= FirstSkill && talk.Option < FirstPage)
             {
                 int index = talk.Option - FirstSkill;
                 if (index >= taught.Count)
                     return;
                 ushort magic = taught[index];
                 string reason = await Learning.LearnAsync(client, magic, talk.Npc.NpcID.ToString());
-                if (reason == null)
-                {
-                    await SayAsync(talk, $"You have learned {Learning.NameOf(magic)}.");
-                    return;
-                }
-                if (reason != "learned")
-                {
-                    await SayAsync(talk, Learning.Explain(reason, magic));
-                    return;
-                }
-            }
-
-            var ready = taught.Select((magic, i) => (Magic: magic, Index: i))
-                .Where(s => Learning.Unmet(client, s.Magic) == null)
-                .Take(SkillsPerPage)
-                .ToList();
-            if (ready.Count == 0)
-            {
-                await SayAsync(talk, NothingToTeach(client, taught));
+                await SayAsync(talk, reason == null ? $"You have learned {Learning.NameOf(magic)}." : Learning.Explain(reason, magic));
                 return;
             }
-            talk.Text("Which skill do you want to learn?");
-            foreach (var (magic, i) in ready)
-                talk.Choice(Learning.NameOf(magic), (byte)(FirstSkill + i));
-            await talk.Choice("Not now.", MsgTaskDialog.NoOption).ShowAsync();
-        }
 
-        private static string NothingToTeach(Client client, IReadOnlyList<ushort> taught)
-        {
-            if (taught.Any(m => Learning.Unmet(client, m) == "promotion"))
-                return "I have nothing more to teach you until you are promoted.";
-            var next = taught
-                .Where(m => Learning.Unmet(client, m) == "level")
-                .OrderBy(Learning.RequiredLevel)
-                .Select(m => (ushort?)m)
-                .FirstOrDefault();
-            if (next is ushort magic)
-                return $"I have nothing more to teach you yet. At level {Learning.RequiredLevel(magic)} " +
-                    $"I can teach you {Learning.NameOf(magic)}.";
-            return "I have nothing more to teach you.";
+            int page = talk.Option >= FirstPage ? talk.Option - FirstPage : 0;
+            int first = page * SkillsPerPage;
+            if (first >= taught.Count)
+                return;
+            talk.Text("Which skill do you want to learn?");
+            for (int i = first; i < System.Math.Min(first + SkillsPerPage, taught.Count); i++)
+                talk.Choice(Learning.NameOf(taught[i]), (byte)(FirstSkill + i));
+            if (first + SkillsPerPage < taught.Count)
+                talk.Choice("More skills.", (byte)(FirstPage + page + 1));
+            await talk.Choice("Not now.", MsgTaskDialog.NoOption).ShowAsync();
         }
 
         private static string Needs(byte current)
