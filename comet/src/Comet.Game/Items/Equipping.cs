@@ -40,11 +40,9 @@ namespace Comet.Game.Items
 
             if (position == ItemPosition.LeftHand)
             {
-                uint right = equipment.TypeAt(ItemPosition.RightHand);
-                bool fits = ItemSlots.IsArrow(type.ID) ? ItemSlots.IsBow(right) :
-                    ItemSlots.IsOneHanded(right) || ItemSlots.IsShield(type.ID) && HoldsShieldWith(client, right);
-                if (!fits)
-                    return Reject(client, itemID, position, "needs_right_hand");
+                string unfit = LeftHandUnmet(client, type.ID, equipment.TypeAt(ItemPosition.RightHand));
+                if (unfit != null)
+                    return Reject(client, itemID, position, unfit);
             }
 
             // The equipped item frees its inventory slot
@@ -84,6 +82,24 @@ namespace Comet.Game.Items
                 "went back to the inventory", character.Name, type.Name, item.ItemID, position, removed.Count);
             return true;
         }
+
+        // Why the left hand can't hold the type beside the right hand's, or null. As in the 5619
+        // client, a second weapon is for trojans, ninjas, monks and pirates from their second
+        // promotion.
+        public static string LeftHandUnmet(Client client, uint left, uint right)
+        {
+            if (ItemSlots.IsArrow(left))
+                return ItemSlots.IsBow(right) ? null : "needs_right_hand";
+            if (ItemSlots.IsShield(left))
+                return ItemSlots.IsOneHanded(right) || HoldsShieldWith(client, right) ? null : "needs_right_hand";
+            if (!DualWields(client.Character.CurrentClass))
+                return "class";
+            return ItemSlots.IsOneHanded(right) ? null : "needs_right_hand";
+        }
+
+        public static bool DualWields(byte currentClass) =>
+            Promotion.Rank(currentClass) >= 2 && Promotion.Line(currentClass) is
+                Magic.Learning.Trojan or Magic.Learning.Ninja or Magic.Learning.Monk or Magic.Learning.Pirate;
 
         public const ushort Perseverance = 10311;
 

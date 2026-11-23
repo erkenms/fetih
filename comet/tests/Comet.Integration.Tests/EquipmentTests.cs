@@ -8,6 +8,7 @@ namespace Comet.Integration.Tests
     public class EquipmentTests : IntegrationTest
     {
         private const uint RightHand = 4, LeftHand = 5, Headwear = 1;
+        private const byte VeteranTrojan = 12;
 
         public EquipmentTests(ServerFixture servers) : base(servers) { }
 
@@ -55,7 +56,7 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task ATwoHandedWeaponPutsBothHandsBackInTheInventory()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 640, 560, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 640, 560, GameMaster, currentClass: VeteranTrojan)).Player;
             var right = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(right.Id, RightHand);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, right.Id));
@@ -180,11 +181,25 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task TheLeftHandNeedsAOneHandedWeaponInTheRight()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 680, 560, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 680, 560, GameMaster, currentClass: VeteranTrojan)).Player;
             var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(blade.Id, LeftHand);
             var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", blade.Id.ToString());
             Assert.Equal("needs_right_hand", rejected.GetProperty("reason").GetString());
+        }
+
+        [Fact]
+        public async Task ASecondWeaponWaitsForTheSecondPromotion()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 660, 600, GameMaster)).Player;
+            var right = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(right.Id, RightHand);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, right.Id));
+            var left = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(left.Id, LeftHand);
+            var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", left.Id.ToString());
+            Assert.Equal("class", rejected.GetProperty("reason").GetString());
+            Assert.Equal(0, System.Convert.ToInt32(await this.PositionAsync(left.Id)));
         }
 
         [Fact]
