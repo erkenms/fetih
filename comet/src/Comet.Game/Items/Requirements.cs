@@ -1,11 +1,12 @@
 namespace Comet.Game.Items
 {
     using Comet.Game.Database.Models;
+    using Comet.Game.Magic;
 
     public static class Requirements
     {
         // Why the character can't wear the type, or null
-        public static string Unmet(DbCharacter character, ItemType type)
+        public static string Unmet(DbCharacter character, ItemType type, Skills skills = null)
         {
             if (character.Level < type.RequiredLevel)
                 return "level";
@@ -16,6 +17,14 @@ namespace Comet.Game.Items
             if (character.Strength < type.RequiredStrength || character.Agility < type.RequiredAgility ||
                 character.Vitality < type.RequiredVitality || character.Spirit < type.RequiredSpirit)
                 return "attributes";
+            if (type.RequiredWeaponSkill != 0)
+            {
+                ushort level = skills != null && skills.TryGetProficiency(Proficiency.WeaponType(type.ID), out var prof)
+                    ? prof.Level
+                    : (ushort)0;
+                if (level < type.RequiredWeaponSkill)
+                    return "proficiency";
+            }
             return null;
         }
 

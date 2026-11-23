@@ -4,6 +4,7 @@ namespace Comet.Game.Tests.Items
     using System.Linq;
     using Comet.Game.Database.Models;
     using Comet.Game.Items;
+    using Comet.Game.Magic;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Xunit;
@@ -66,6 +67,14 @@ namespace Comet.Game.Tests.Items
             Assert.Equal("gender", Requirements.Unmet(character, new ItemType { RequiredGender = 2 }));
             Assert.Equal("profession", Requirements.Unmet(character, new ItemType { RequiredProfession = 41 }));
             Assert.Equal("attributes", Requirements.Unmet(character, new ItemType { RequiredStrength = 21 }));
+
+            var blade = new ItemType { ID = 410301, RequiredWeaponSkill = 5 };
+            var skills = new Skills();
+            Assert.Equal("proficiency", Requirements.Unmet(character, blade, skills));
+            skills.SetProficiency(410, new SkillLevel(4, 0));
+            Assert.Equal("proficiency", Requirements.Unmet(character, blade, skills));
+            skills.SetProficiency(410, new SkillLevel(5, 0));
+            Assert.Null(Requirements.Unmet(character, blade, skills));
         }
 
         [Theory]

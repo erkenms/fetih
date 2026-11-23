@@ -23,7 +23,7 @@ namespace Comet.Game.Items
                 return Reject(client, itemID, position, "unknown_type");
             if (!ItemSlots.Fits(type.ID, position))
                 return Reject(client, itemID, position, "wrong_slot");
-            var unmet = Requirements.Unmet(character, type);
+            var unmet = Requirements.Unmet(character, type, client.Skills);
             if (unmet != null)
                 return Reject(client, itemID, position, unmet);
 
