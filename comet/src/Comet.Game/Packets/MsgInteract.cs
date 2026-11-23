@@ -86,14 +86,19 @@ namespace Comet.Game.Packets
             return writer.ToArray();
         }
 
-        public override Task ProcessAsync(Client client) =>
-            this.Action == InteractionType.MagicAttack
-                ? Magic.Casting.CastAsync(client, this.MagicType, this.TargetID, this.X, this.Y)
-                : Attacks.RequestAsync(client, this);
+        public override Task ProcessAsync(Client client) => this.Action switch
+        {
+            InteractionType.MagicAttack => Magic.Casting.CastAsync(client, this.MagicType, this.TargetID, this.X, this.Y),
+            InteractionType.Court => Social.Marriage.CourtAsync(client, this),
+            InteractionType.Marry => Social.Marriage.MarryAsync(client, this),
+            _ => Attacks.RequestAsync(client, this),
+        };
 
         public enum InteractionType : uint
         {
             Attack = 2,
+            Court = 8,
+            Marry = 9,
             Kill = 14,
             MagicAttack = 24,
             Dash = 27,

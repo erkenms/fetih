@@ -56,7 +56,7 @@ namespace Comet.Game.Packets
             this.EnlightenPoints = character.EnlightenPoints;
             this.QuizPoints = character.QuizPoints;
             this.CharacterName = character.Name;
-            this.SpouseName = "None";
+            this.SpouseName = string.IsNullOrEmpty(character.Spouse) ? Social.Marriage.None : character.Spouse;
         }
 
         public override byte[] Encode()

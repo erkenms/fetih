@@ -46,6 +46,25 @@ namespace Comet.Game.Database.Repositories
             await db.SaveChangesAsync();
         }
 
+        public static async Task SetMarriageAsync(uint firstID, string firstSpouse, uint secondID, string secondSpouse)
+        {
+            using var db = new ServerDbContext();
+            await db.Characters
+                .Where(x => x.CharacterID == firstID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, firstSpouse));
+            await db.Characters
+                .Where(x => x.CharacterID == secondID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, secondSpouse));
+        }
+
+        public static async Task ClearSpouseAsync(uint characterID, string spouseName, string none)
+        {
+            using var db = new ServerDbContext();
+            await db.Characters
+                .Where(x => x.CharacterID == characterID || x.Name == spouseName)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, none));
+        }
+
         public static bool IsDuplicateName(DbUpdateException e) => IsDuplicateKey(e, "Name_UNIQUE");
 
         public static bool IsDuplicateAccount(DbUpdateException e) => IsDuplicateKey(e, "AccountID_UNIQUE");

@@ -113,7 +113,7 @@ namespace Comet.Client
     // A number, the action as one byte, then the strings
     public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
     {
-        public const byte Guild = 3, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
+        public const byte Guild = 3, SetSpouse = 6, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
 
         public static NameMessage Parse(byte[] packet) => new NameMessage(
             BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));
@@ -138,19 +138,25 @@ namespace Comet.Client
     {
         public ushort PkPoints { get; init; }
         public byte Nobility { get; init; }
+        public string Spouse { get; init; }
 
-        public static UserInfo Parse(byte[] packet) => new UserInfo(
-            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 10),
-            BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt32(packet, 16),
-            BitConverter.ToUInt16(packet, 52), BitConverter.ToUInt16(packet, 54),
-            BitConverter.ToUInt16(packet, 56), BitConverter.ToUInt16(packet, 58),
-            BitConverter.ToUInt16(packet, 62), packet[68], packet[69],
-            Packet.ReadStrings(packet, 110)[0], BitConverter.ToUInt64(packet, 24),
-            BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64))
+        public static UserInfo Parse(byte[] packet)
         {
-            PkPoints = BitConverter.ToUInt16(packet, 66),
-            Nobility = packet[72],
-        };
+            var strings = Packet.ReadStrings(packet, 110);
+            return new UserInfo(
+                BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 10),
+                BitConverter.ToUInt16(packet, 14), BitConverter.ToUInt32(packet, 16),
+                BitConverter.ToUInt16(packet, 52), BitConverter.ToUInt16(packet, 54),
+                BitConverter.ToUInt16(packet, 56), BitConverter.ToUInt16(packet, 58),
+                BitConverter.ToUInt16(packet, 62), packet[68], packet[69],
+                strings[0], BitConverter.ToUInt64(packet, 24),
+                BitConverter.ToUInt16(packet, 60), BitConverter.ToUInt16(packet, 64))
+            {
+                PkPoints = BitConverter.ToUInt16(packet, 66),
+                Nobility = packet[72],
+                Spouse = strings.Count > 2 ? strings[2] : string.Empty,
+            };
+        }
     }
 
     // Monsters come as players too, with their health at 84 and level at 90
@@ -204,7 +210,7 @@ namespace Comet.Client
     // for a kill the count) at 24; 40 bytes
     public sealed record InteractMessage(uint Sender, uint Target, ushort X, ushort Y, uint Action, uint Data)
     {
-        public const uint Attack = 2, Kill = 14, MagicAttack = 24, Shoot = 28, CounterKill = 43, CounterKillSwitch = 44, Dash = 27;
+        public const uint Attack = 2, Court = 8, Marry = 9, Kill = 14, MagicAttack = 24, Shoot = 28, CounterKill = 43, CounterKillSwitch = 44, Dash = 27;
 
         // A spell cast: the magic type in the low half of data and the level in the high half;
         // type, target, cell and level are hidden with the sender's ID
@@ -310,7 +316,7 @@ namespace Comet.Client
         public const ushort QueryStatInfo = 408;
         public const ushort OpenWindow = 126, OpenShop = 160;
         public const ushort CharacterAway = 161;
-        public const ushort Observe = 117;
+        public const ushort ClientCommand = 116, Observe = 117;
         public const ushort PartnerInfo = 152;
         public const ushort ChangeAvatar = 151;
         public const ushort CreateBooth = 111, CloseBooth = 114;

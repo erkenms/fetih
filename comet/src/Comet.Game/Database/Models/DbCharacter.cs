@@ -22,6 +22,7 @@ namespace Comet.Game.Database.Models
         public virtual uint CharacterID { get; private set; }
         public virtual uint AccountID { get; private set; }
         public virtual string Name { get; private set; }
+        public virtual string Spouse { get; set; } = "None";
         public virtual uint Mesh { get; set; }
         public virtual ushort Avatar { get; set; }
         public virtual ushort Hairstyle { get; set; }

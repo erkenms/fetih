@@ -35,6 +35,8 @@ namespace Comet.Game.Npcs
                 [Rebirths.EternityID] = Rebirths.EternityAsync,
                 [Rebirths.AlexID] = Rebirths.AlexAsync,
                 [Rebirths.CelestialTaoID] = Rebirths.CelestialTaoAsync,
+                [MarriageNpc.LoveStoneID] = MarriageNpc.LoveStoneAsync,
+                [MarriageNpc.StarlitID] = MarriageNpc.StarlitAsync,
             };
 
         static Dialogs()

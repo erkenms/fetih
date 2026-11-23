@@ -56,15 +56,23 @@ namespace Comet.Game.Packets
         public static string WhisperDetails(Character character) =>
             $"{character.CharacterID} {character.Level} {Attributes.BattlePower(character)} " +
             $"#{Social.Guilds.Of(character.CharacterID)?.Guild.Name ?? string.Empty} " +
-            $"#{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? string.Empty} None " +
+            $"#{Social.Clans.Of(character.CharacterID)?.Clan.Name ?? string.Empty} " +
+            $"{Social.Marriage.SpouseOf(character)} " +
             $"{(uint)Nobility.Peerage.RankOf(character.CharacterID)} " +
             $"{(character.Mesh % 10000 / 1000 == 1 ? 1 : 0)}";
 
-        public static MsgName SpouseOf(uint characterID) => new MsgName
+        public static MsgName SpouseOf(uint characterID, string spouse = null) => new MsgName
         {
             Data = characterID,
             Action = NameAction.QuerySpouse,
-            Strings = new List<string> { "None" },
+            Strings = new List<string> { string.IsNullOrEmpty(spouse) ? Social.Marriage.None : spouse },
+        };
+
+        public static MsgName SetSpouse(uint characterID, string spouse) => new MsgName
+        {
+            Data = characterID,
+            Action = NameAction.Spouse,
+            Strings = new List<string> { string.IsNullOrEmpty(spouse) ? Social.Marriage.None : spouse },
         };
 
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =
@@ -80,7 +88,11 @@ namespace Comet.Game.Packets
                     return client.SendAsync(msg);
                 },
                 // Asked about a player in view, for the gear window
-                [NameAction.QuerySpouse] = (msg, client) => client.SendAsync(SpouseOf(msg.Data)),
+                [NameAction.QuerySpouse] = (msg, client) =>
+                {
+                    Kernel.Players.TryGet(msg.Data, out var target);
+                    return client.SendAsync(SpouseOf(msg.Data, Social.Marriage.SpouseOf(target?.Character)));
+                },
                 // The guild member list's kick button, with the member's name
                 [NameAction.GuildKick] = (msg, client) =>
                     Social.Guilds.KickAsync(client, msg.Strings.Count > 0 ? msg.Strings[0] : null),

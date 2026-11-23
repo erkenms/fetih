@@ -50,9 +50,9 @@ namespace Comet.Integration.Tests
         }
 
         protected async Task<(Player Player, string Email)> PlayingAtAsync(
-            uint mapID, int x, int y, ushort authority = 1, byte level = 1, ushort strength = 0)
+            uint mapID, int x, int y, ushort authority = 1, byte level = 1, ushort strength = 0, ushort mesh = 1003)
         {
-            var (first, email) = await this.PlayingAsync();
+            var (first, email) = await this.PlayingAsync(mesh: mesh);
             var name = first.User.Name;
 
             // After the logout save, or it could overwrite what's set below

@@ -19,6 +19,7 @@ CREATE TABLE `character` (
   `CharacterID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `AccountID` int(11) unsigned NOT NULL,
   `Name` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `Spouse` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL DEFAULT 'None',
   `Mesh` int(11) unsigned NOT NULL DEFAULT '1003',
   `Avatar` smallint(5) unsigned NOT NULL DEFAULT '1',
   `Hairstyle` smallint(5) unsigned NOT NULL DEFAULT '535',

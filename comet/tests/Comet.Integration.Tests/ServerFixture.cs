@@ -46,6 +46,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetRefined = (111016, "IronHelmet", 3899, 20);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) DragonBall = (1088000, "DragonBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Meteor = (1088001, "Meteor", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) MeteorTear = (1088002, "MeteorTear", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Emerald = (1080001, "Emerald", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExpBall = (723700, "ExpBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CelestialStone = (721259, "CelestialStone", 1, 0);
@@ -445,7 +446,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
-                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor, Emerald,
+                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));

@@ -84,6 +84,18 @@ namespace Comet.Game.Packets
             Y = y,
         };
 
+        public static MsgAction ClientCommand(uint identity, uint command, ushort x, ushort y) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = command,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.ClientCommand,
+            X = x,
+            Y = y,
+        };
+
         // A ninja's step onto the monster Fatal Strike hits, with the monster in Command
         public static MsgAction NinjaStep(uint identity, uint targetID, ushort x, ushort y, byte direction) => new MsgAction
         {
@@ -286,7 +298,7 @@ namespace Comet.Game.Packets
                     await client.SendAsync(new MsgPlayer(target));
                     foreach (var item in target.Equipment.Items)
                         await client.SendAsync(new MsgItemInfoEx(item, target.ID, 0, MsgItemInfoEx.ViewType.Equipment));
-                    await client.SendAsync(MsgName.SpouseOf(target.ID));
+                    await client.SendAsync(MsgName.SpouseOf(target.ID, Social.Marriage.SpouseOf(target.Character)));
                 },
                 [ActionType.CharacterAway] = (msg, client) =>
                 {

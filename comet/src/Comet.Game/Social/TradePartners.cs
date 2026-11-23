@@ -79,6 +79,7 @@ namespace Comet.Game.Social
                     Level = character.Level,
                     Class = character.CurrentClass,
                     PkPoints = character.KillPoints,
+                    Spouse = Marriage.SpouseOf(character),
                 };
                 if (Guilds.Of(partner.ID) is Guilds.Membership guild)
                 {

@@ -35,6 +35,7 @@ namespace Comet.Game.States
         public uint TradeRequest { get; set; }
         public uint FriendRequest { get; set; }
         public uint PartnerRequest { get; set; }
+        public uint MarriageProposal { get; set; }
 
         // The guild recruiter this player asked to join, or the player this recruiter invited
         public uint GuildApply { get; set; }

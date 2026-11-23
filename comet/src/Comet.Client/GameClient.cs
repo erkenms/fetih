@@ -430,6 +430,15 @@ namespace Comet.Client
         public Task ShootAsync(uint characterId, uint targetId, int x, int y) =>
             this.SendAsync(InteractMessage.Build(InteractMessage.Shoot, characterId, targetId, x, y));
 
+        public Task CourtAsync(uint characterId, uint targetId, int x, int y) =>
+            this.SendAsync(InteractMessage.Build(InteractMessage.Court, characterId, targetId, x, y));
+
+        public Task MarryAsync(uint characterId, uint targetId, int x, int y) =>
+            this.SendAsync(InteractMessage.Build(InteractMessage.Marry, characterId, targetId, x, y));
+
+        public Task QuerySpouseAsync(uint targetId) =>
+            this.SendAsync(NameMessage.Build(NameMessage.Spouse, string.Empty, targetId));
+
         public async Task<InteractMessage> WaitForInteractAsync(Func<InteractMessage, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

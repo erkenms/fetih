@@ -64,6 +64,7 @@ namespace Comet.Game.States
             to.SecondLifeLevel = from.SecondLifeLevel;
             to.Registered = from.Registered;
             to.Silver = from.Silver;
+            to.Spouse = from.Spouse;
             to.Spirit = from.Spirit;
             to.StoredSilver = from.StoredSilver;
             to.Strength = from.Strength;

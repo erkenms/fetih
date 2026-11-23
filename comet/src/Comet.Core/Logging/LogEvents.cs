@@ -118,6 +118,11 @@ namespace Comet.Core.Logging
         public const string TradePartnerRemoved = "trade_partner.removed";
         public const string TradePartnerRejected = "trade_partner.rejected";
 
+        public const string MarriageProposed = "marriage.proposed";
+        public const string MarriageMarried = "marriage.married";
+        public const string MarriageDivorced = "marriage.divorced";
+        public const string MarriageRejected = "marriage.rejected";
+
         public const string GuildsLoaded = "guild.loaded";
         public const string GuildCreated = "guild.created";
         public const string GuildDisbanded = "guild.disbanded";
