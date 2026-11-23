@@ -109,6 +109,7 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForGapingWounds = (880, 780);
         public static readonly (ushort X, ushort Y) PheasantForFreezingArrow = (860, 780);
         public static readonly (ushort X, ushort Y) PheasantForPoisonousArrows = (900, 740);
+        public static readonly (ushort X, ushort Y) PheasantForGaleBomb = (960, 740);
         // Macaques (type 10) outlast a hit, so a combo goes on
         public static readonly (ushort X, ushort Y) MacaqueForTripleAttack = (940, 740);
         public static readonly (ushort X, ushort Y) MacaqueForWindstorm = (960, 780);
@@ -450,6 +451,9 @@ namespace Comet.Integration.Tests
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
+            // Gale Bomb's throw, as the client's: 250ms, then 2ms for each world unit
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "MagicEffect.ini"),
+                "[110700]\nClientRepresent=3\nTraceEffect=pro_tir_assbom\nTraceEffectDelay=250\nTraceEffectSpeed=2\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Fire, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,
@@ -481,7 +485,7 @@ namespace Comet.Integration.Tests
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
                 (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
                 (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u), (PheasantForFreezingArrow, 1u), (PheasantForPoisonousArrows, 1u),
-                (MacaqueForTripleAttack, 10u), (MacaqueForWindstorm, 10u),
+                (MacaqueForTripleAttack, 10u), (MacaqueForWindstorm, 10u), (PheasantForGaleBomb, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),

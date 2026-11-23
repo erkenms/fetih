@@ -39,6 +39,7 @@ namespace Comet.Game
         public static ItemAdditionTable ItemAdditions = new ItemAdditionTable(new ItemAddition[0]);
 
         public static Magic.MagicTypeTable Magics = new Magic.MagicTypeTable(new Magic.MagicType[0]);
+        public static Magic.MagicEffectTable MagicEffects = new Magic.MagicEffectTable(new());
         public static Magic.ProficiencyTable Proficiencies = new Magic.ProficiencyTable(new (ushort, uint)[0]);
         public static Magic.MagicTypeOpTable MagicOps =
             new Magic.MagicTypeOpTable(new (byte, byte, byte, Magic.MagicTypeOpTable.Operation, ushort[])[0]);

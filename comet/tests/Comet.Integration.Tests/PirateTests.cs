@@ -1,5 +1,6 @@
 namespace Comet.Integration.Tests
 {
+    using System.Diagnostics;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
@@ -58,6 +59,28 @@ namespace Comet.Integration.Tests
             var effect = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11070);
             Assert.Equal(new[] { first.User.Id, second.User.Id, third.User.Id }.Order(),
                 effect.Targets.Select(t => t.Id).Order());
+        }
+
+        [Fact]
+        public async Task WhatABombKillsFallsAsTheBombLands()
+        {
+            var at = ServerFixture.PheasantForGaleBomb;
+            await using var pirate = (await this.PlayingAtAsync(1002, at.X + 4, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await pirate.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(pirate, 11070);
+
+            // A bomb takes a third of its life, so the third throw kills
+            for (int throws = 0; throws < 3; throws++)
+            {
+                await pirate.Game.CastAsync(pirate.User.Id, 11070, 0, at.X, at.Y);
+                var effect = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11070);
+                Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+            }
+            var watch = Stopwatch.StartNew();
+            Assert.NotNull(await pirate.Game.WaitForInteractAsync(i => i.Action == InteractMessage.Kill && i.Target == pheasant.Id));
+            // 250ms, and 2ms for each of the 143 world units of 4 cells
+            Assert.InRange(watch.ElapsedMilliseconds, 450, 2000);
         }
 
         [Fact]

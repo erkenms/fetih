@@ -577,17 +577,18 @@ namespace Comet.Game.Magic
                 await Pirates.RushAsync(client, "black_spot");
 
             uint experience = 0;
+            var show = Kernel.MagicEffects.Find(spell.Type, spell.Level);
             for (int i = 0; i < victims.Count; i++)
             {
                 var victim = victims[i];
-                var after = ShotGap(spell) * i;
+                var after = HitShownAfter(show, spell, character.X, character.Y, x, y, victim) + ShotGap(spell) * i;
                 if (victim.Player != null)
                 {
                     var target = victim.Player;
                     await Pking.OnAttackAsync(client, target);
                     Later(target, after, () => Attacks.DamagePlayerAsync(client, target, victim.Damage, "magic"));
                     if (spell.Sort == MagicSort.ScurvyBomb && !victim.Missed)
-                        Kernel.Post(target, () => FatigueAsync(client, target, spell));
+                        Later(target, after, () => FatigueAsync(client, target, spell));
                     continue;
                 }
                 if (victim.Goal != null)
@@ -625,6 +626,53 @@ namespace Comet.Game.Magic
 
         private static TimeSpan ShotGap(MagicType spell) =>
             spell.Sort == MagicSort.BlackbeardsRage ? BlackbeardShotGap : TimeSpan.Zero;
+
+        // When the client shows a victim's last hit, so what it kills falls then rather than
+        // before. A thrown body (the bombs) lands TraceEffectDelay and TraceEffectSpeed ms for
+        // each world unit from the caster to the cell aimed at; the client shows Gale Bomb's
+        // hits at once, but it falls as its bomb lands too, like Scurvy Bomb's. A shot covers
+        // (TraceEffectSpeed + TraceEffectAcceleration * t) * t world units in t seconds; a
+        // combo's hits come ExtraCmdTime apart.
+        private static TimeSpan HitShownAfter(MagicEffect effect, MagicType spell, ushort casterX, ushort casterY,
+            ushort aimX, ushort aimY, Victim victim)
+        {
+            if (effect == null)
+                return TimeSpan.Zero;
+            double ms = effect.TargetDelay + effect.WoundDelay;
+            if (effect.Represent == MagicEffect.Thrown && effect.Traces)
+                ms += effect.TraceDelay + effect.TraceSpeed * (int)WorldDistance(casterX, casterY, aimX, aimY);
+            // Blackbeard's Rage keeps its shots a measured gap apart
+            else if (effect.Represent is MagicEffect.Shot or MagicEffect.ShotEx or MagicEffect.ShotChain &&
+                effect.Traces && spell.Sort != MagicSort.BlackbeardsRage)
+                ms = Math.Max(ms, ShotFlight(WorldDistance(casterX, casterY, victim.X, victim.Y),
+                    effect.TraceSpeed, effect.TraceAcceleration));
+            else if (effect.Represent == MagicEffect.Combo)
+                ms += effect.HitGap * Math.Max(0, victim.Hits.Count - 1);
+            if (spell.Sort == MagicSort.CannonBarrage)
+                ms += CannonBarrageLanding;
+            return TimeSpan.FromMilliseconds(ms);
+        }
+
+        // The client shows Cannon Barrage's hits at once, but its shells fall about this long
+        // after, as seen in the client
+        private const int CannonBarrageLanding = 200;
+
+        // A cell is (x - y) * 32 by (x + y) * 16 world units
+        private static double WorldDistance(int fromX, int fromY, int toX, int toY)
+        {
+            int dx = toX - fromX, dy = toY - fromY;
+            return Math.Sqrt(Math.Pow((dx - dy) * 32, 2) + Math.Pow((dx + dy) * 16, 2));
+        }
+
+        // Milliseconds for (speed + acceleration * t) * t to reach the distance
+        private static double ShotFlight(double distance, int speed, int acceleration)
+        {
+            if (distance <= 0)
+                return 0;
+            if (acceleration == 0)
+                return speed > 0 ? distance / speed * 1000 : 0;
+            return (-speed + Math.Sqrt((double)speed * speed + 4.0 * acceleration * distance)) / (2.0 * acceleration) * 1000;
+        }
 
         // Runs the work on the player's queue after the delay, or now
         private static void Later(Client client, TimeSpan delay, Func<Task> work)
