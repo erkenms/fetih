@@ -1218,7 +1218,7 @@ namespace Comet.Game.Magic
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
             foreach (var member in members)
-                Kernel.Post(member, () => member.Character == null || member.Life.Dead
+                Kernel.Post(member, () => member.Character == null || member.Life.Dead || !Recovery.HasXpSkill(member)
                     ? Task.CompletedTask
                     : Recovery.AddXpAsync(member, Energy.MaxXp, DateTime.UtcNow));
             LogCast(client, spell, character.X, character.Y, members.Count);

@@ -75,6 +75,7 @@ namespace Comet.Game.Magic
             }
 
             if (now < energy.NextXpAt ||
+                !HasXpSkill(client) ||
                 client.Effects.Has(StatusFlags.XpFull, now) ||
                 client.Effects.Has(StatusFlags.Superman, now) ||
                 client.Effects.Has(StatusFlags.Cyclone, now))
@@ -82,6 +83,11 @@ namespace Comet.Game.Magic
             energy.NextXpAt = now + XpInterval;
             await AddXpAsync(client, 1, now);
         }
+
+        public static bool HasXpSkill(Client client) => HasXpSkill(client.Skills, Kernel.Magics);
+
+        public static bool HasXpSkill(Skills skills, MagicTypeTable magics) =>
+            skills.AllSpells().Any(s => magics.TryGet(s.Type, s.Level.Level, out var spell) && spell.IsXpSkill);
 
         public static async Task AddXpAsync(Client client, int amount, DateTime now)
         {

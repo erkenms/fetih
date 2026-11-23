@@ -219,5 +219,26 @@ namespace Comet.Game.Tests.Magic
             Assert.Equal(39u, Damage.Magic(10, 16, 15, 10));
             Assert.Equal(1u, Damage.PlayerMagic(10, 16, 50));
         }
+
+        [Fact]
+        public void HasXpSkillRequiresAnLearnedXpSkill()
+        {
+            var magics = new MagicTypeTable(new[]
+            {
+                new MagicType { Type = 1000, Level = 0, UseXp = 0 },
+                new MagicType { Type = 1025, Level = 0, UseXp = 1 },
+            });
+            var skills = new Skills();
+            Assert.False(Recovery.HasXpSkill(skills, magics));
+
+            skills.SetSpell(1000, new SkillLevel(0, 0));
+            Assert.False(Recovery.HasXpSkill(skills, magics));
+
+            skills.SetSpell(1025, new SkillLevel(0, 0));
+            Assert.True(Recovery.HasXpSkill(skills, magics));
+
+            skills.ForgetSpell(1025);
+            Assert.False(Recovery.HasXpSkill(skills, magics));
+        }
     }
 }
