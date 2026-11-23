@@ -24,6 +24,7 @@ namespace Comet.Game.Npcs
         [JsonPropertyName("face")] public byte Face { get; init; }
         [JsonPropertyName("text")] public List<string> Text { get; init; }
         [JsonPropertyName("destinations")] public List<Destination> Destinations { get; init; }
+        [JsonPropertyName("close")] public string Close { get; init; }
     }
 
     public sealed class Teleporters
@@ -64,7 +65,7 @@ namespace Comet.Game.Npcs
                     talk.Text(line);
                 for (int i = 0; i < teleporter.Destinations.Count; i++)
                     talk.Choice(teleporter.Destinations[i].Name, (byte)(i + 1));
-                await talk.Choice("Just passing by.", MsgTaskDialog.NoOption).Face(teleporter.Face).ShowAsync();
+                await talk.Choice(teleporter.Close ?? "Just passing by.", MsgTaskDialog.NoOption).Face(teleporter.Face).ShowAsync();
                 return;
             }
 

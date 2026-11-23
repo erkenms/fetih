@@ -1,5 +1,6 @@
 // NPCs that teleport players for a fare. "text" is the greeting, one dialog line per entry;
-// each destination becomes a choice, in order. Texts are from the original NPC scripts.
+// each destination becomes a choice, in order, and "close" is the choice that closes the
+// dialog ("Just passing by." if not given). Texts are from the original NPC scripts.
 {
   "teleporters": [
     {
@@ -55,6 +56,78 @@
       ],
       "destinations": [
         { "name": "Enter the arena.", "map": 1005, "x": 51, "y": 71 },
+      ],
+    },
+    {
+      "id": 43, "fare": 1000, "face": 37, // CaptainLi, Twin City
+      "text": ["What can I do for you? I can take you to visit the jail for 1000 silver."],
+      "destinations": [
+        { "name": "Visit the jail.", "map": 6000, "x": 29, "y": 72 },
+      ],
+    },
+    {
+      "id": 380, "fare": 0, "face": 123, // GuildController, Twin City
+      "text": ["What can I do for you?"],
+      "destinations": [
+        { "name": "Enter the guild area.", "map": 1038, "x": 350, "y": 339 },
+      ],
+    },
+    {
+      "id": 10054, "fare": 0, "face": 7, // GeneralPeace, Twin City's west road
+      "text": ["This is the way to the Desert City. Although you are excellent, it is dangerous to go ahead."],
+      "destinations": [
+        { "name": "I see.", "map": 1000, "x": 971, "y": 666 },
+      ],
+      "close": "I think I will stay here.",
+    },
+    {
+      "id": 7000, "fare": 0, "face": 7, // GuildGateKeeper, guild area
+      "text": ["Are you going to leave here?"],
+      "destinations": [
+        { "name": "Yes.", "map": 1002, "x": 430, "y": 380 },
+      ],
+      "close": "No. Wait a moment.",
+    },
+    {
+      "id": 102091, "fare": 500, "face": 130, // GuildConductor2, Desert City
+      "text": ["Would you like to go to the Guild Arena in Twin City? I can teleport you there for 500 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
+      ],
+    },
+    {
+      "id": 102093, "fare": 500, "face": 130, // GuildConductor1, Bird Island
+      "text": ["Would you like to go to the Guild Arena in Twin City? I can teleport you there for 500 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
+      ],
+    },
+    {
+      "id": 102097, "fare": 500, "face": 130, // GuildConductor3, Ape City
+      "text": ["Would you like to go to the Guild Arena in Twin City? I can teleport you there for 500 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
+      ],
+    },
+    {
+      "id": 101617, "fare": 1000, "face": 130, // GuildConductor1, guild area, to Bird Island
+      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1015, "x": 744, "y": 630 },
+      ],
+    },
+    {
+      "id": 101615, "fare": 1000, "face": 130, // GuildConductor2, guild area, to Desert City
+      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1000, "x": 492, "y": 669 },
+      ],
+    },
+    {
+      "id": 101613, "fare": 1000, "face": 130, // GuildConductor3, guild area, to Ape City
+      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1020, "x": 571, "y": 585 },
       ],
     },
   ]
