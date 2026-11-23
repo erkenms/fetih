@@ -36,6 +36,13 @@ namespace Comet.Game.Tests.States
         }
 
         [Fact]
+        public void BattlePowerCountsFivePerRebirth()
+        {
+            var character = new DbCharacter(1, "Hero") { Level = 100, Rebirths = 2 };
+            Assert.Equal(110u, Attributes.BattlePower(character));
+        }
+
+        [Fact]
         public void ValuesStopAtTheirFieldSize()
         {
             Assert.Equal(ushort.MaxValue, Attributes.MaxHealth(Character(15, 0, 0, 60000, 0), null));
