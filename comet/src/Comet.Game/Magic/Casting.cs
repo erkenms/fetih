@@ -532,6 +532,9 @@ namespace Comet.Game.Magic
                         AgainstPlayer(client, stats, spell, victim.Player, now);
                     victim.Hits.Add(damage);
                     victim.Damage += damage;
+                    // A combo ends with the hit that kills
+                    if (victim.Monster != null && victim.Damage >= victim.Monster.Health)
+                        break;
                 }
             }
 

@@ -201,6 +201,22 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task WindstormTurnsARapierSwingIntoACombo()
         {
+            var at = ServerFixture.MacaqueForWindstorm;
+            await using var pirate = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var macaque = await pirate.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(macaque);
+            await HoldAsync(pirate, ServerFixture.Rapier.Id);
+            await LearnAsync(pirate, 11140);
+
+            await pirate.Game.AttackAsync(pirate.User.Id, macaque.Id, at.X, at.Y);
+            var combo = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11140);
+            Assert.Equal(3, combo.Targets.Count);
+            Assert.All(combo.Targets, t => Assert.Equal(macaque.Id, t.Id));
+        }
+
+        [Fact]
+        public async Task AWindstormComboEndsWithTheHitThatKills()
+        {
             var at = ServerFixture.PheasantForWindstorm;
             await using var pirate = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
             var pheasant = await pirate.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
@@ -210,8 +226,7 @@ namespace Comet.Integration.Tests
 
             await pirate.Game.AttackAsync(pirate.User.Id, pheasant.Id, at.X, at.Y);
             var combo = await pirate.Game.WaitForEffectAsync(e => e.Caster == pirate.User.Id && e.Type == 11140);
-            Assert.Equal(3, combo.Targets.Count);
-            Assert.All(combo.Targets, t => Assert.Equal(pheasant.Id, t.Id));
+            Assert.Equal(pheasant.Id, Assert.Single(combo.Targets).Id);
         }
     }
 }

@@ -109,6 +109,9 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantForGapingWounds = (880, 780);
         public static readonly (ushort X, ushort Y) PheasantForFreezingArrow = (860, 780);
         public static readonly (ushort X, ushort Y) PheasantForPoisonousArrows = (900, 740);
+        // Macaques (type 10) outlast a hit, so a combo goes on
+        public static readonly (ushort X, ushort Y) MacaqueForTripleAttack = (940, 740);
+        public static readonly (ushort X, ushort Y) MacaqueForWindstorm = (960, 780);
 
         // Spells in the test magictype.dat. Thunder kills a pheasant and its first kill
         // reaches level 1; proficiency levels need 0, 100 and 1000 experience.
@@ -478,6 +481,7 @@ namespace Comet.Integration.Tests
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),
                 (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
                 (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u), (PheasantForFreezingArrow, 1u), (PheasantForPoisonousArrows, 1u),
+                (MacaqueForTripleAttack, 10u), (MacaqueForWindstorm, 10u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),
