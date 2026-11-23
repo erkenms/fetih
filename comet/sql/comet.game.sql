@@ -122,13 +122,15 @@ CREATE TABLE `trade_partner` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Spells a character learned, by magic type, and weapon proficiencies, by item type / 1000
--- (410 blade). Experience counts toward the next level.
+-- (410 blade). Experience counts toward the next level; OldLevel is a spell's level before a
+-- rebirth put it back to 0.
 DROP TABLE IF EXISTS `magic`;
 CREATE TABLE `magic` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Type` smallint(5) unsigned NOT NULL,
   `Level` smallint(5) unsigned NOT NULL DEFAULT '0',
   `Experience` int(10) unsigned NOT NULL DEFAULT '0',
+  `OldLevel` smallint(5) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`CharacterID`,`Type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

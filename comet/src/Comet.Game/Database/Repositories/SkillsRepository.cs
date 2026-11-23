@@ -1,6 +1,5 @@
 namespace Comet.Game.Database.Repositories
 {
-    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Game.Database.Models;
@@ -17,17 +16,19 @@ namespace Comet.Game.Database.Repositories
             return new Skills(spells, proficiencies);
         }
 
-        // Writes every skill as it is now; skills are never forgotten, so none are deleted
-        public static async Task SaveAsync(uint characterID,
-            (List<(ushort Type, SkillLevel Level)> Spells, List<(ushort Type, SkillLevel Level)> Proficiencies) skills)
+        // Writes every skill as it is now, and deletes the spells forgotten
+        public static async Task SaveAsync(uint characterID, SkillsSnapshot skills)
         {
-            if (skills.Spells.Count == 0 && skills.Proficiencies.Count == 0)
+            if (skills.Spells.Count == 0 && skills.Proficiencies.Count == 0 && skills.Forgotten.Count == 0)
                 return;
             using var db = new ServerDbContext();
             using var transaction = await db.Database.BeginTransactionAsync();
+            foreach (var type in skills.Forgotten)
+                await db.Database.ExecuteSqlInterpolatedAsync(
+                    $"DELETE FROM magic WHERE CharacterID = {characterID} AND Type = {type}");
             foreach (var (type, level) in skills.Spells)
                 await db.Database.ExecuteSqlInterpolatedAsync(
-                    $"INSERT INTO magic (CharacterID, Type, Level, Experience) VALUES ({characterID}, {type}, {level.Level}, {level.Experience}) ON DUPLICATE KEY UPDATE Level = VALUES(Level), Experience = VALUES(Experience)");
+                    $"INSERT INTO magic (CharacterID, Type, Level, Experience, OldLevel) VALUES ({characterID}, {type}, {level.Level}, {level.Experience}, {level.OldLevel}) ON DUPLICATE KEY UPDATE Level = VALUES(Level), Experience = VALUES(Experience), OldLevel = VALUES(OldLevel)");
             foreach (var (type, level) in skills.Proficiencies)
                 await db.Database.ExecuteSqlInterpolatedAsync(
                     $"INSERT INTO proficiency (CharacterID, Type, Level, Experience) VALUES ({characterID}, {type}, {level.Level}, {level.Experience}) ON DUPLICATE KEY UPDATE Level = VALUES(Level), Experience = VALUES(Experience)");

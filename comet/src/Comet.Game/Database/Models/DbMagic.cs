@@ -9,6 +9,7 @@ namespace Comet.Game.Database.Models
         public ushort Type { get; set; }
         public ushort Level { get; set; }
         public uint Experience { get; set; }
+        public ushort OldLevel { get; set; }
     }
 
     [Table("proficiency")]

@@ -298,6 +298,7 @@ namespace Comet.Client
         public const ushort Turn = 79;
         public const ushort Emote = 81;
         public const ushort LevelUp = 92;
+        public const ushort SpellRemove = 109;
         public const ushort Revive = 94;
         public const ushort Ghost = 145;
         public const ushort PkMode = 96;

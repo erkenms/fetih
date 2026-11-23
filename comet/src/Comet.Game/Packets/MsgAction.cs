@@ -98,6 +98,16 @@ namespace Comet.Game.Packets
             Y = y,
         };
 
+        public static MsgAction RemoveSpell(uint identity, ushort magicType) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = magicType,
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.SpellRemove
+        };
+
         public static MsgAction RemoveEntity(uint identity) => new MsgAction
         {
             Type = PacketType.MsgAction,

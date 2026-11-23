@@ -1463,7 +1463,8 @@ namespace Comet.Game.Magic
         }
 
         // Experience from damage or healing, toward the spell's next level once the character
-        // is high enough
+        // is high enough. A spell a rebirth put back to 0 goes up a level with any experience
+        // from half its old level until it's back at it.
         public static async Task GainExperienceAsync(Client client, MagicType spell, uint amount)
         {
             if (amount == 0 || spell.NeedExperience == 0 || client.Character.Level < spell.NeedLevel ||
@@ -1471,14 +1472,20 @@ namespace Comet.Game.Magic
                 return;
             ulong experience = (ulong)learned.Experience + amount;
             ushort level = learned.Level;
-            if (experience >= spell.NeedExperience && Kernel.Magics.TryGet(spell.Type, (ushort)(level + 1), out _))
+            if (LevelsUp(learned, experience, spell.NeedExperience) &&
+                Kernel.Magics.TryGet(spell.Type, (ushort)(level + 1), out _))
             {
-                experience -= spell.NeedExperience;
+                experience = experience >= spell.NeedExperience ? experience - spell.NeedExperience : 0;
                 level++;
             }
-            await SetAsync(client, spell.Type, new SkillLevel(level, (uint)Math.Min(experience, uint.MaxValue)),
+            await SetAsync(client, spell.Type,
+                learned with { Level = level, Experience = (uint)Math.Min(experience, uint.MaxValue) },
                 learned.Level, "experience");
         }
+
+        public static bool LevelsUp(SkillLevel learned, ulong experience, uint needExperience) =>
+            experience >= needExperience ||
+            learned.Level < learned.OldLevel && learned.Level >= learned.OldLevel / 2;
 
         public static async Task SetAsync(Client client, ushort magicType, SkillLevel spell, ushort fromLevel, string reason)
         {
@@ -1499,6 +1506,17 @@ namespace Comet.Game.Magic
             LogEvents.For(typeof(Casting), LogEvents.MagicLearned).Information(
                 "{Name} learned {MagicName} {MagicType} at level {Level} ({Reason})",
                 client.Character.Name, spell.Name, magicType, level, reason);
+            return true;
+        }
+
+        // The client takes the spell off its skill window on MsgAction 109 with the type in Command
+        public static async Task<bool> ForgetAsync(Client client, ushort magicType, string reason)
+        {
+            if (!client.Skills.ForgetSpell(magicType))
+                return false;
+            await client.SendAsync(MsgAction.RemoveSpell(client.ID, magicType));
+            LogEvents.For(typeof(Casting), LogEvents.MagicForgotten).Information(
+                "{Name} forgot magic {MagicType} ({Reason})", client.Character.Name, magicType, reason);
             return true;
         }
 
