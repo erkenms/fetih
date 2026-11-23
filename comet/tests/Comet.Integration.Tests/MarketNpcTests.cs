@@ -9,7 +9,8 @@ namespace Comet.Integration.Tests
     public class MarketNpcTests : IntegrationTest
     {
         private const uint Market = ServerFixture.Market, TwinCity = 1002;
-        private const uint MarkController = 45;
+        private const uint MarkController = 45, CPAdmin = 2071;
+        private const uint ConquerPoints = 29;
 
         public MarketNpcTests(ServerFixture servers) : base(servers) { }
 
@@ -39,6 +40,25 @@ namespace Comet.Integration.Tests
             await player.Game.AnswerNpcAsync(1);
             var back = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
             Assert.Equal((TwinCity, (ushort)428, (ushort)378), (back?.Command, back?.X, back?.Y));
+        }
+
+        [Fact]
+        public async Task CPAdminPaysForADragonBall()
+        {
+            await using var player = (await this.PlayingAtAsync(Market, 180, 184, GameMaster)).Player;
+            await player.Game.TalkToNpcAsync(CPAdmin);
+            Assert.Contains("215 CPs", Text(await player.Game.ReadDialogAsync()));
+            await player.Game.AnswerNpcAsync(1);
+            Assert.Contains("do not have a DragonBall", Text(await player.Game.ReadDialogAsync()));
+
+            var ball = await GiveAsync(player, ServerFixture.DragonBall.Id);
+            await player.Game.TalkToNpcAsync(CPAdmin);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            await player.Game.AnswerNpcAsync(1);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, ball.Id));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(
+                a => a.Values.TryGetValue(ConquerPoints, out var v) && v == 215));
+            Assert.Contains("enjoy your new CPs", Text(await player.Game.ReadDialogAsync()));
         }
     }
 }

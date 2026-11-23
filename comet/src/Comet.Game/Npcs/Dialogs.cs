@@ -38,6 +38,7 @@ namespace Comet.Game.Npcs
                 [MarriageNpc.LoveStoneID] = MarriageNpc.LoveStoneAsync,
                 [MarriageNpc.StarlitID] = MarriageNpc.StarlitAsync,
                 [Market.MarkControllerID] = Market.MarkControllerAsync,
+                [Market.CPAdminID] = Market.CPAdminAsync,
             };
 
         static Dialogs()
