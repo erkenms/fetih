@@ -129,6 +129,8 @@ namespace Comet.Game.World
             if (from != to)
                 await client.SendAsync(MsgMapInfo.For(mapID));
             await Visibility.EnterAsync(client);
+            if (mapID == Npcs.Market.MapID && from.Id != mapID)
+                client.MarketReturn = (from.Id, fromX, fromY);
             LogEvents.For(typeof(Movement), LogEvents.MoveTeleport).Information(
                 "{Name} teleported from map {FromMapId} at {FromX},{FromY} to map {MapId} at {X},{Y}",
                 character.Name, from.Id, fromX, fromY, mapID, x, y);

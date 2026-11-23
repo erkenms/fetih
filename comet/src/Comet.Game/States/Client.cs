@@ -104,6 +104,10 @@ namespace Comet.Game.States
 
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }
+
+        // Where the player came into the market from, for its Mark.Controller to send them back
+        public (uint MapID, ushort X, ushort Y)? MarketReturn { get; set; }
+
         public DiffieHellman DiffieHellman = null;
 
         // Kept so the client can repeat MsgConnect on the same connection.

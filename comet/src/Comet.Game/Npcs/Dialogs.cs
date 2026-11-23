@@ -37,6 +37,7 @@ namespace Comet.Game.Npcs
                 [Rebirths.CelestialTaoID] = Rebirths.CelestialTaoAsync,
                 [MarriageNpc.LoveStoneID] = MarriageNpc.LoveStoneAsync,
                 [MarriageNpc.StarlitID] = MarriageNpc.StarlitAsync,
+                [Market.MarkControllerID] = Market.MarkControllerAsync,
             };
 
         static Dialogs()
