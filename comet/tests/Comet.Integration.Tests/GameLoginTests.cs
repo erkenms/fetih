@@ -1,5 +1,7 @@
 namespace Comet.Integration.Tests
 {
+    using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
     using Comet.Client;
@@ -33,20 +35,53 @@ namespace Comet.Integration.Tests
             Assert.Equal(InvalidLogin, (await second.LoginAsync(login.Token)).Message);
         }
 
+        private async Task WaitForAllSessionsToLeaveAsync()
+        {
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            while (true)
+            {
+                var active = new HashSet<string>();
+                foreach (var e in this.Servers.Events("game"))
+                {
+                    if (!e.TryGetProperty("event", out var ev) || !e.TryGetProperty("connId", out var id))
+                        continue;
+                    var eventName = ev.GetString();
+                    if (eventName == "session.login")
+                        active.Add(id.ToString());
+                    else if (eventName == "session.logout")
+                        active.Remove(id.ToString());
+                }
+                if (active.Count == 0)
+                    return;
+                if (DateTime.UtcNow > deadline)
+                    throw new Xunit.Sdk.XunitException(
+                        $"Earlier test sessions are still online ({active.Count} remaining)");
+                await Task.Delay(20);
+            }
+        }
+
         [Fact]
         public async Task OnlineCountGoesUpAndDownWithPlayers()
         {
-            var (first, _) = await this.PlayingAsync();
-            await using var firstGuard = first;
-            var (second, _) = await this.PlayingAsync();
+            await this.WaitForAllSessionsToLeaveAsync();
+
             async Task<int> OnlineAtAsync(string eventName, string name) =>
                 (await this.Servers.WaitForEventAsync("game", eventName, "name", name))
                     .GetProperty("online").GetInt32();
 
-            int withBoth = await OnlineAtAsync("session.login", second.User.Name);
-            Assert.True(withBoth >= 2);
+            var (first, _) = await this.PlayingAsync();
+            await using var firstGuard = first;
+            Assert.Equal(1, await OnlineAtAsync("session.login", first.User.Name));
+
+            var (second, _) = await this.PlayingAsync();
+            await using var secondGuard = second;
+            Assert.Equal(2, await OnlineAtAsync("session.login", second.User.Name));
+
             await second.DisposeAsync();
-            Assert.True(await OnlineAtAsync("session.logout", second.User.Name) < withBoth);
+            Assert.Equal(1, await OnlineAtAsync("session.logout", second.User.Name));
+
+            await first.DisposeAsync();
+            Assert.Equal(0, await OnlineAtAsync("session.logout", first.User.Name));
         }
 
         [Fact]
