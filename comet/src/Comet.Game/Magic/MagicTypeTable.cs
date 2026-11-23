@@ -82,6 +82,8 @@ namespace Comet.Game.Magic
         Transform = 19,
         Line = 14,
         AttackStatus = 16,
+        StarArrow = 38,
+        DragonWhirl = 40,
         AddMana = 20,
         DecLife = 26,
         GroundSting = 27,

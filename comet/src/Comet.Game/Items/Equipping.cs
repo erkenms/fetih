@@ -34,13 +34,15 @@ namespace Comet.Game.Items
 
             var left = equipment[ItemPosition.LeftHand];
             if (position == ItemPosition.RightHand && ItemSlots.IsTwoHanded(type.ID) && left != null &&
-                !(ItemSlots.IsBow(type.ID) && ItemSlots.IsArrow(left.TypeID)))
+                !(ItemSlots.IsBow(type.ID) && ItemSlots.IsArrow(left.TypeID)) &&
+                !(ItemSlots.IsShield(left.TypeID) && HoldsShieldWith(client, type.ID)))
                 removed.Add(left);
 
             if (position == ItemPosition.LeftHand)
             {
                 uint right = equipment.TypeAt(ItemPosition.RightHand);
-                bool fits = ItemSlots.IsArrow(type.ID) ? ItemSlots.IsBow(right) : ItemSlots.IsOneHanded(right);
+                bool fits = ItemSlots.IsArrow(type.ID) ? ItemSlots.IsBow(right) :
+                    ItemSlots.IsOneHanded(right) || ItemSlots.IsShield(type.ID) && HoldsShieldWith(client, right);
                 if (!fits)
                     return Reject(client, itemID, position, "needs_right_hand");
             }
@@ -82,6 +84,14 @@ namespace Comet.Game.Items
                 "went back to the inventory", character.Name, type.Name, item.ItemID, position, removed.Count);
             return true;
         }
+
+        public const ushort Perseverance = 10311;
+
+        // Perseverance lets a warrior hold a shield with a two-handed weapon, bows aside
+        private static bool HoldsShieldWith(Client client, uint right) =>
+            ItemSlots.IsTwoHanded(right) && !ItemSlots.IsBow(right) &&
+            Promotion.Line(client.Character.CurrentClass) == Magic.Learning.Warrior &&
+            client.Skills.TryGetSpell(Perseverance, out _);
 
         public static async Task<bool> UnequipAsync(Client client, uint itemID, ItemPosition position)
         {

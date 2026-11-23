@@ -215,6 +215,12 @@ namespace Comet.Integration.Tests
         // A Robot of Data/monsters.json, lookface 214 and 50000 life, for two seconds
         public static readonly MagicFiles.Spell Golem =
             new MagicFiles.Spell(1270, 0, 19, "Golem") { Power = 2000, StepSeconds = 2, Distance = 5, XpSkill = true, Target = 2 };
+        public static readonly MagicFiles.Spell DragonWhirl =
+            new MagicFiles.Spell(10315, 0, 40, "DragonWhirl") { Power = 30105, Range = 3, Distance = 20, Target = 4 };
+        public static readonly MagicFiles.Spell StarArrow =
+            new MagicFiles.Spell(10313, 0, 38, "StarArrow") { Power = 30100, Range = 6, Distance = 15, WeaponSubtype = 500, UseItem = 50 };
+        public static readonly MagicFiles.Spell Perseverance =
+            new MagicFiles.Spell(10311, 0, 41, "Perseverance") { Target = 8 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
 
@@ -442,7 +448,8 @@ namespace Comet.Integration.Tests
 
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
-                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem));
+                    Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem,
+                    DragonWhirl, StarArrow, Perseverance));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(

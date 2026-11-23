@@ -38,7 +38,7 @@ namespace Comet.Game.Magic
             MagicSort.ScurvyBomb, MagicSort.GaleBomb, MagicSort.BladeTempest,
             MagicSort.KrakensRevenge, MagicSort.CannonBarrage, MagicSort.BlackbeardsRage,
             MagicSort.ShurikenVortex, MagicSort.CounterKill, MagicSort.Collide,
-            MagicSort.Transform,
+            MagicSort.Transform, MagicSort.StarArrow, MagicSort.DragonWhirl,
         };
 
         public const ushort FatalStrike = 6011;
@@ -419,6 +419,50 @@ namespace Comet.Game.Magic
                     .ToList();
                 (x, y) = (target.X, target.Y);
             }
+            else if (spell.Sort == MagicSort.StarArrow)
+            {
+                // The arrow throws the target back along the line from the archer, as far as the
+                // spell's range from the archer and the way is clear
+                var (victim, reason) = FindTarget(client, spell, targetID, now);
+                if (victim == null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
+                victims = new List<Victim> { victim };
+                (x, y) = (victim.X, victim.Y);
+                direction = Movement.DirectionTo(character.X, character.Y, x, y, character.Direction);
+                foreach (var cell in KnockedBack(client, victim, (int)spell.Range))
+                    knockTo = cell;
+                if (knockTo is var (landX, landY))
+                    (x, y) = (landX, landY);
+            }
+            else if (spell.Sort == MagicSort.DragonWhirl)
+            {
+                // The trojan leaps toward the cell aimed at, as far as the way is clear, and hits
+                // all within the range of where they land
+                if (MonsterAI.Distance(character.X, character.Y, x, y) > spell.Distance + DistanceSlack)
+                {
+                    Reject(client, spell.Type, "too_far");
+                    return false;
+                }
+                var (aimX, aimY) = (x, y);
+                (x, y) = (character.X, character.Y);
+                foreach (var cell in Line(character.X, character.Y, aimX, aimY))
+                {
+                    if (Movement.CheckDash(client, cell.X, cell.Y) != null)
+                        break;
+                    (x, y) = cell;
+                }
+                if (x != character.X || y != character.Y)
+                    dashTo = (x, y);
+                ushort landX = x, landY = y;
+                victims = Around(client, now)
+                    .Where(v => MonsterAI.Distance(landX, landY, v.X, v.Y) <= spell.Range)
+                    .OrderBy(v => MonsterAI.Distance(landX, landY, v.X, v.Y))
+                    .Take(MaxTargets)
+                    .ToList();
+            }
             else if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus or MagicSort.DecLife or MagicSort.TripleAttack)
             {
                 var (victim, reason) = FindTarget(client, spell, targetID, now);
@@ -629,12 +673,39 @@ namespace Comet.Game.Magic
             return (victim, reason);
         }
 
+        // Moves a living target to (x, y): a player at once, a monster a step at a time
         private static void Knock(Victim victim, ushort x, ushort y, byte direction)
         {
             if (victim.Player is Client player)
-                Kernel.Post(player, () => Movement.PushAsync(player, x, y));
+                Kernel.Post(player, () => player.Life.Dead ? Task.CompletedTask : Movement.PushAsync(player, x, y));
             else
-                MonsterAI.Post(() => Monsters.StepAsync(victim.Monster, direction, run: false));
+                MonsterAI.Post(async () =>
+                {
+                    var monster = victim.Monster;
+                    while (monster.Alive && (monster.X != x || monster.Y != y) &&
+                        await Monsters.StepAsync(monster, Movement.DirectionTo(monster.X, monster.Y, x, y, direction), run: false))
+                    {
+                    }
+                });
+        }
+
+        // The cells past the victim on the line from the caster, up to range cells from the
+        // caster, until one is blocked or taken
+        private static IEnumerable<(ushort X, ushort Y)> KnockedBack(Client client, Victim victim, int range)
+        {
+            var character = client.Character;
+            int dx = victim.X - character.X, dy = victim.Y - character.Y;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            if (steps == 0 || steps >= range)
+                yield break;
+            var taken = Around(client, DateTime.UtcNow).Where(v => v.ID != victim.ID).Select(v => (v.X, v.Y)).ToHashSet();
+            int endX = character.X + dx * range / steps, endY = character.Y + dy * range / steps;
+            foreach (var cell in Line(character.X, character.Y, endX, endY).Skip(steps))
+            {
+                if (Movement.CheckDash(client, cell.X, cell.Y) != null || taken.Contains(cell))
+                    yield break;
+                yield return cell;
+            }
         }
 
         // Guards only in free PK mode, so an area spell doesn't make the caster flash by accident
