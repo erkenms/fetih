@@ -38,10 +38,17 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task TheTrojanStarTeachesTrojanSkillsAsTheyReachTheirLevels()
+        public async Task TheTrojanStarTeachesTrojanSkillsAsTheyReachTheirLevelsAndPromotions()
         {
-            await using var player = await this.AtJobCenterAsync(46, 3, 10);
+            await using var player = await this.AtJobCenterAsync(46, 15, 10);
+            Assert.Contains("until you are promoted", (await TalkAsync(player, TrojanStar, Teach))[0].Text);
+            Assert.Contains("need to be promoted", await AnswerAsync(player, Cyclone));
+            var unpromoted = await this.Servers.WaitForEventAsync("game", "magic.learn_rejected", "name", player.User.Name);
+            Assert.Equal("promotion", unpromoted.GetProperty("reason").GetString());
 
+            await CommandAsync(player, "/class 11");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Class, out var c) && c == 11));
             var page = await TalkAsync(player, TrojanStar, Teach);
             Assert.Equal(new[] { "Cyclone" }, page.Where(p => p.Action == DialogMessage.Choice && p.Option != DialogMessage.NoOption)
                 .Select(p => p.Text));
@@ -50,10 +57,14 @@ namespace Comet.Integration.Tests
 
             Assert.Contains("At level 40 I can teach you Hercules", (await TalkAsync(player, TrojanStar, Teach))[0].Text);
             Assert.Contains("level 40", await AnswerAsync(player, Hercules));
-            var refused = await this.Servers.WaitForEventAsync("game", "magic.learn_rejected", "name", player.User.Name);
-            Assert.Equal("level", refused.GetProperty("reason").GetString());
+            await this.Servers.WaitForEventAsync("game", "magic.learn_rejected", e =>
+                e.GetProperty("name").GetString() == player.User.Name && e.GetProperty("reason").GetString() == "level");
 
             await CommandAsync(player, "/level 40");
+            Assert.Contains("until you are promoted", (await TalkAsync(player, TrojanStar, Teach))[0].Text);
+            await CommandAsync(player, "/class 12");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Class, out var c) && c == 12));
             Assert.NotNull(await TalkAsync(player, TrojanStar, Teach));
             Assert.Contains("learned Hercules", await AnswerAsync(player, Hercules));
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1115));

@@ -134,6 +134,8 @@ namespace Comet.Game.Npcs
 
         private static string NothingToTeach(Client client, IReadOnlyList<ushort> taught)
         {
+            if (taught.Any(m => Learning.Unmet(client, m) == "promotion"))
+                return "I have nothing more to teach you until you are promoted.";
             var next = taught
                 .Where(m => Learning.Unmet(client, m) == "level")
                 .OrderBy(Learning.RequiredLevel)

@@ -15,6 +15,7 @@ namespace Comet.Game.Tests.Magic
             new MagicType { Type = Learning.Nectar, Name = "Nectar", Sort = MagicSort.Recruit, NeedLevel = 94 },
             new MagicType { Type = Learning.Phoenix, Name = "Phoenix", Sort = MagicSort.Attack, NeedLevel = 15 },
             new MagicType { Type = Learning.Cyclone, Name = "Cyclone", Sort = MagicSort.AttachStatus, NeedLevel = 3 },
+            new MagicType { Type = Learning.Hercules, Name = "Hercules", Sort = MagicSort.Attack, NeedLevel = 40 },
             new MagicType { Type = Learning.Intensify, Name = "Intensify", Sort = MagicSort.AttachStatus, NeedLevel = 83 },
         });
 
@@ -29,11 +30,32 @@ namespace Comet.Game.Tests.Magic
         }
 
         [Fact]
-        public void TheFirstLevelsNeedLevelIsTheLevelToLearn()
+        public void WithoutTheHelpsLevelTheFirstLevelsNeedLevelIsTheLevelToLearn()
         {
-            Assert.Equal("level", Unmet(Taoist, 39, new Skills(), Magics, Learning.Fire));
-            Assert.Null(Unmet(Taoist, 40, new Skills(), Magics, Learning.Fire));
             Assert.Equal("level", Unmet(Trojan, 14, new Skills(), Magics, Learning.Phoenix));
+            Assert.Null(Unmet(Trojan, 15, new Skills(), Magics, Learning.Phoenix));
+        }
+
+        [Fact]
+        public void FireBuildsOnThunderAtLevelFour()
+        {
+            var skills = new Skills();
+            skills.SetSpell(Learning.Thunder, new SkillLevel(4, 0));
+            Assert.Equal("level", Unmet(Taoist, 39, skills, Magics, Learning.Fire));
+            Assert.Null(Unmet(Taoist, 40, skills, Magics, Learning.Fire));
+            skills.SetSpell(Learning.Thunder, new SkillLevel(3, 0));
+            Assert.Equal("prerequisite", Unmet(Taoist, 40, skills, Magics, Learning.Fire));
+        }
+
+        [Fact]
+        public void XpSkillsComeWithPromotions()
+        {
+            const byte Promoted = 11, Veteran = 12;
+            Assert.Equal("level", Unmet(Trojan, 14, new Skills(), Magics, Learning.Cyclone));
+            Assert.Equal("promotion", Unmet(Trojan, 15, new Skills(), Magics, Learning.Cyclone));
+            Assert.Null(Unmet(Promoted, 15, new Skills(), Magics, Learning.Cyclone));
+            Assert.Equal("promotion", Unmet(Promoted, 40, new Skills(), Magics, Learning.Hercules));
+            Assert.Null(Unmet(Veteran, 40, new Skills(), Magics, Learning.Hercules));
         }
 
         [Fact]

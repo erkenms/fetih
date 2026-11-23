@@ -6,18 +6,19 @@ namespace Comet.Game.Magic
     using Comet.Core.Logging;
     using Comet.Game.States;
 
-    // Who may learn a spell, from a class master or a book. A spell's first level needs the
-    // character level magictype gives it at level 0 (Fire Ring 55, Nectar 94); on top of that
-    // a spell may belong to class lines (Promotion.Line), to water or fire taoists, and build
-    // on another spell's level.
+    // Who may learn a spell, from a class master or a book: the spell's class lines
+    // (Promotion.Line), element, character level, promotion and a spell it builds on.
     public static class Learning
     {
         public enum Element : byte { Any, Water, Fire }
 
-        // Level, when not 0, is the character level the client's help gives for learning it, where
-        // magictype's is that for the next level (Intensify 71, not 83)
+        // Level is the character level the client's help gives for learning it. magictype's
+        // need_level at level 0 is that for reaching level 1 (Scatter 32, learned at 23), so
+        // it stands in only where the help says nothing, as for monks and pirates. Rank is the
+        // promotion the help ties an XP skill to (Cyclone at the first, Roar at the second).
         public sealed record Rule(ushort MagicType, int[] Lines, Element Element = Element.Any,
-            bool FromMaster = true, ushort Prerequisite = 0, ushort PrerequisiteLevel = 0, byte Level = 0)
+            bool FromMaster = true, ushort Prerequisite = 0, ushort PrerequisiteLevel = 0, byte Level = 0,
+            byte Rank = 0)
         {
             public bool AnyLine => this.Lines.Length == 0;
         }
@@ -45,26 +46,26 @@ namespace Comet.Game.Magic
         // In the order masters list them
         private static readonly Rule[] Rules =
         {
-            new Rule(Cyclone, new[] { Trojan }),
-            new Rule(Accuracy, new[] { Trojan, Warrior }),
-            new Rule(Hercules, new[] { Trojan }),
-            new Rule(SpiritHealing, new[] { Trojan }),
-            new Rule(Superman, new[] { Warrior }),
-            new Rule(Shield, new[] { Warrior }),
-            new Rule(Roar, new[] { Warrior }),
+            new Rule(Cyclone, new[] { Trojan }, Rank: 1),
+            new Rule(Accuracy, new[] { Trojan, Warrior }, Rank: 1),
+            new Rule(Hercules, new[] { Trojan }, Rank: 2),
+            new Rule(SpiritHealing, new[] { Trojan }, Rank: 2),
+            new Rule(Superman, new[] { Warrior }, Rank: 1),
+            new Rule(Shield, new[] { Warrior }, Rank: 1),
+            new Rule(Roar, new[] { Warrior }, Rank: 2),
             new Rule(Dash, new[] { Warrior }, Level: 63),
             new Rule(FlyingMoon, new[] { Warrior }, FromMaster: false),
-            new Rule(ScatterFire, new[] { Archer }),
-            new Rule(RapidFire, new[] { Archer }),
-            new Rule(ArrowRain, new[] { Archer }),
-            new Rule(Fly, new[] { Archer }),
+            new Rule(ScatterFire, new[] { Archer }, Level: 23),
+            new Rule(RapidFire, new[] { Archer }, Level: 46),
+            new Rule(ArrowRain, new[] { Archer }, Level: 70),
+            new Rule(Fly, new[] { Archer }, Rank: 1),
             new Rule(Intensify, new[] { Archer }, Level: 71),
-            new Rule(TwofoldBlades, new[] { Ninja }),
-            new Rule(ArcherBane, new[] { Ninja }),
-            new Rule(ToxicFog, new[] { Ninja }),
-            new Rule(ShurikenVortex, new[] { Ninja }),
-            new Rule(FatalStrike, new[] { Ninja }),
-            new Rule(PoisonStar, new[] { Ninja }),
+            new Rule(TwofoldBlades, new[] { Ninja }, Level: 40),
+            new Rule(ArcherBane, new[] { Ninja }, Level: 110),
+            new Rule(ToxicFog, new[] { Ninja }, Level: 70),
+            new Rule(ShurikenVortex, new[] { Ninja }, Level: 70),
+            new Rule(FatalStrike, new[] { Ninja }, Level: 40),
+            new Rule(PoisonStar, new[] { Ninja }, Level: 70),
             new Rule(GapingWounds, new[] { Ninja }),
             new Rule(CounterKill, new[] { Ninja }),
             new Rule(TripleAttack, new[] { Monk }),
@@ -92,30 +93,30 @@ namespace Comet.Game.Magic
             new Rule(AdrenalineRush, new[] { Pirate }),
             new Rule(BlackbeardsRage, new[] { Pirate }),
             new Rule(KrakensRevenge, new[] { Pirate }),
-            new Rule(Meditation, new[] { Taoist }),
+            new Rule(Meditation, new[] { Taoist }, Level: 44),
             new Rule(Thunder, new[] { Taoist }, FromMaster: false),
             new Rule(Cure, new[] { Taoist }, FromMaster: false),
-            new Rule(Lightning, new[] { Taoist }, FromMaster: false),
-            new Rule(Fire, new[] { Taoist }, FromMaster: false),
-            new Rule(SpeedLightning, new[] { Taoist }, FromMaster: false),
-            new Rule(Revive, new[] { Taoist }, Element.Water),
-            new Rule(HealingRain, new[] { Taoist }, Element.Water),
-            new Rule(StarOfAccuracy, new[] { Taoist }, Element.Water),
-            new Rule(MagicShield, new[] { Taoist }, Element.Water),
-            new Rule(Invisibility, new[] { Taoist }, Element.Water),
-            new Rule(Stigma, new[] { Taoist }, Element.Water),
-            new Rule(Pray, new[] { Taoist }, Element.Water),
-            new Rule(AdvancedCure, new[] { Taoist }, Element.Water),
-            new Rule(Nectar, new[] { Taoist }, Element.Water),
+            new Rule(Lightning, new[] { Taoist }, Rank: 1),
+            new Rule(Fire, new[] { Taoist }, FromMaster: false, Prerequisite: Thunder, PrerequisiteLevel: 4, Level: 40),
+            new Rule(SpeedLightning, new[] { Taoist }, FromMaster: false, Level: 70),
+            new Rule(Revive, new[] { Taoist }, Element.Water, Level: 40),
+            new Rule(HealingRain, new[] { Taoist }, Element.Water, Level: 40),
+            new Rule(StarOfAccuracy, new[] { Taoist }, Element.Water, Level: 45),
+            new Rule(MagicShield, new[] { Taoist }, Element.Water, Level: 50),
+            new Rule(Invisibility, new[] { Taoist }, Element.Water, Level: 60),
+            new Rule(Stigma, new[] { Taoist }, Element.Water, Level: 55),
+            new Rule(Pray, new[] { Taoist }, Element.Water, Level: 70),
+            new Rule(AdvancedCure, new[] { Taoist }, Element.Water, Level: 81),
+            new Rule(Nectar, new[] { Taoist }, Element.Water, Level: 94),
             new Rule(WaterElf, new[] { Taoist }, Element.Water, Level: 50),
             new Rule(DivineHare, new[] { Taoist }, Element.Water, FromMaster: false),
-            new Rule(Volcano, new[] { Taoist }, Element.Fire),
-            new Rule(FireMeteor, new[] { Taoist }, Element.Fire),
-            new Rule(FireRing, new[] { Taoist }, Element.Fire),
-            new Rule(FireCircle, new[] { Taoist }, Element.Fire),
-            new Rule(Bomb, new[] { Taoist }, Element.Fire),
-            new Rule(FireOfHell, new[] { Taoist }, Element.Fire),
-            new Rule(Tornado, new[] { Taoist }, Element.Fire, FromMaster: false, Prerequisite: Fire, PrerequisiteLevel: 3),
+            new Rule(Volcano, new[] { Taoist }, Element.Fire, Level: 40),
+            new Rule(FireMeteor, new[] { Taoist }, Element.Fire, Level: 52),
+            new Rule(FireRing, new[] { Taoist }, Element.Fire, Level: 50),
+            new Rule(FireCircle, new[] { Taoist }, Element.Fire, Level: 65),
+            new Rule(Bomb, new[] { Taoist }, Element.Fire, Level: 80),
+            new Rule(FireOfHell, new[] { Taoist }, Element.Fire, Level: 82),
+            new Rule(Tornado, new[] { Taoist }, Element.Fire, FromMaster: false, Prerequisite: Fire, PrerequisiteLevel: 3, Level: 90),
             new Rule(NightDevil, AnyLine, FromMaster: false),
             new Rule(FastBlade, AnyLine, FromMaster: false),
             new Rule(ScentSword, AnyLine, FromMaster: false),
@@ -180,8 +181,10 @@ namespace Comet.Game.Magic
                 return "class";
             if (rule.Element != Element.Any && ElementOf(currentClass) != rule.Element)
                 return "element";
-            if (level < (rule.Level != 0 ? rule.Level : first.NeedLevel))
+            if (level < RequiredLevel(rule, first))
                 return "level";
+            if (Promotion.Rank(currentClass) < rule.Rank)
+                return "promotion";
             if (rule.Prerequisite != 0 &&
                 (!skills.TryGetSpell(rule.Prerequisite, out var before) || before.Level < rule.PrerequisiteLevel))
                 return "prerequisite";
@@ -203,14 +206,21 @@ namespace Comet.Game.Magic
                 "class" => $"Only {string.Join(" and ", rule.Lines.Select(LineName))} can learn {name}.",
                 "element" => $"Only {(rule.Element == Element.Water ? "water" : "fire")} taoists can learn {name}.",
                 "level" => $"You need to be level {RequiredLevel(magicType)} to learn {name}.",
+                "promotion" => rule.Rank == 1 ? $"You need to be promoted to learn {name}."
+                    : $"You need to be promoted {rule.Rank} times to learn {name}.",
                 "prerequisite" => $"You need {NameOf(rule.Prerequisite)} at level {rule.PrerequisiteLevel} to learn {name}.",
                 _ => $"You can't learn {name}.",
             };
         }
 
         public static byte RequiredLevel(ushort magicType) =>
-            TryGetRule(magicType, out var rule) && rule.Level != 0 ? rule.Level :
-            Kernel.Magics.TryGet(magicType, 0, out var first) ? first.NeedLevel : (byte)0;
+            TryGetRule(magicType, out var rule) && Kernel.Magics.TryGet(magicType, 0, out var first)
+                ? RequiredLevel(rule, first) : (byte)0;
+
+        // At least the level of the promotion the spell needs
+        private static byte RequiredLevel(Rule rule, MagicType first) => System.Math.Max(
+            rule.Level != 0 ? rule.Level : first.NeedLevel,
+            rule.Rank != 0 ? Promotion.RequiredLevel((byte)(rule.Rank - 1)) : (byte)0);
 
         public static string NameOf(ushort magicType) =>
             Kernel.Magics != null && Kernel.Magics.TryGet(magicType, 0, out var first) ? first.Name : $"magic {magicType}";
