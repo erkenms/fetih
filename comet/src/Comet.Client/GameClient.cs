@@ -718,6 +718,12 @@ namespace Comet.Client
             return packet == null ? null : QualifierRanking.Parse(packet);
         }
 
+        public async Task<QualifierSeasonRanking> WaitForQualifierSeasonRankingAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgQualifyingSeasonRankList, timeout);
+            return packet == null ? null : QualifierSeasonRanking.Parse(packet);
+        }
+
         public async Task<ArenaScore> WaitForArenaScoreAsync(Func<ArenaScore, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

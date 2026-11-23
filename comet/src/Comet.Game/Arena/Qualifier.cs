@@ -49,6 +49,9 @@ namespace Comet.Game.Arena
         private static readonly Dictionary<uint, ArenaRecord> Records = new Dictionary<uint, ArenaRecord>();
         private static readonly List<uint> Waiting = new List<uint>();
         private static readonly List<ArenaMatch> Matches = new List<ArenaMatch>();
+        private static uint CurrentDay;
+        private static uint LastSeasonNumber;
+        private static List<DbArenaSeason> LastSeason = new List<DbArenaSeason>();
 
         private sealed record Result(ArenaMatch Match, MatchState Before, Fighter Winner, Fighter Loser,
             uint Points, int WinnerBonuses, int LoserBonuses, DbArena WinnerSave, DbArena LoserSave);
@@ -58,15 +61,45 @@ namespace Comet.Game.Arena
             get { lock (Sync) return Records.Count; }
         }
 
-        public static async Task LoadAsync()
+        public static Task LoadAsync() => LoadAsync(DateTime.UtcNow);
+
+        public static async Task LoadAsync(DateTime now)
         {
             var rows = await ArenaRepository.LoadAsync();
+            var (lastSeasonNumber, lastSeason) = await ArenaRepository.LoadLastSeasonAsync();
+            List<DbArenaSeason> closed = null;
+            List<DbArena> saves = null;
+            uint today = ArenaRecord.DayOf(now);
             lock (Sync)
+            {
+                Records.Clear();
                 foreach (var row in rows)
                     Records[row.Record.CharacterID] = new ArenaRecord(row.Record)
                     {
                         Name = row.Name, Level = row.Level, Class = row.Class, Mesh = row.Mesh,
                     };
+                LastSeasonNumber = lastSeasonNumber;
+                LastSeason = lastSeason;
+                CurrentDay = today;
+
+                // Close the latest past day that had matches if the server was offline across UTC midnight
+                uint pastDay = Records.Values
+                    .Where(r => r.Stored.Day < today && r.MatchesToday > 0)
+                    .Select(r => r.Stored.Day)
+                    .DefaultIfEmpty(0u)
+                    .Max();
+                if (pastDay > 0)
+                {
+                    closed = ArenaRecord.TopTen(Records.Values, pastDay, LastSeasonNumber + 1);
+                    if (closed.Count > 0)
+                    {
+                        LastSeasonNumber++;
+                        LastSeason = closed;
+                    }
+                }
+                saves = ResetLocked(today, all: false);
+            }
+            await PersistSeasonAsync(closed, saves);
         }
 
         public static async Task HandleAsync(Client client, MsgQualifyingInteractive msg)
@@ -113,12 +146,13 @@ namespace Comet.Game.Arena
             var character = client.Character;
             if (character == null)
                 return;
+            var now = DateTime.UtcNow;
             Fighter fighter;
             QualifierStatus status;
             lock (Sync)
             {
-                var record = RecordOf(character, DateTime.UtcNow);
-                fighter = record.ToFighter(RankOf(record.ID, DateTime.UtcNow));
+                var record = RecordOf(character, now);
+                fighter = record.ToFighter(RankOf(record.ID, ActiveDayLocked(now)));
                 status = StatusOf(character.CharacterID);
             }
             await client.SendAsync(new MsgQualifyingDetailInfo(fighter, status));
@@ -150,13 +184,39 @@ namespace Comet.Game.Arena
                     RecordOf(client.Character, now);
                 var ranked = kind == MsgQualifyingRank.RankKind.Honor
                     ? ArenaRecord.RankByHonor(Records.Values)
-                    : ArenaRecord.RankToday(Records.Values, now);
+                    : ArenaRecord.RankDay(Records.Values, ActiveDayLocked(now));
                 reply.Total = ranked.Count;
                 int first = (reply.Page - 1) * MsgQualifyingRank.PageSize;
                 for (int i = first; i < ranked.Count && i < first + MsgQualifyingRank.PageSize; i++)
                     reply.Shown.Add(((uint)(i + 1), ranked[i].ToFighter((uint)(i + 1))));
             }
             await client.SendAsync(reply);
+        }
+
+        public static async Task SendSeasonRankAsync(Client client)
+        {
+            var reply = new MsgQualifyingSeasonRankList();
+            lock (Sync)
+                reply.Entries.AddRange(LastSeason);
+            await client.SendAsync(reply);
+        }
+
+        public static async Task<(uint Season, int TopCount, int ResetCount)> ResetSeasonAsync()
+        {
+            var now = DateTime.UtcNow;
+            List<DbArenaSeason> top;
+            List<DbArena> saves;
+            uint season;
+            lock (Sync)
+            {
+                uint today = ArenaRecord.DayOf(now);
+                if (CurrentDay == 0)
+                    CurrentDay = today;
+                (top, saves) = EndSeasonLocked(CurrentDay, today);
+                season = LastSeasonNumber;
+            }
+            await PersistSeasonAsync(top, saves);
+            return (season, top.Count, saves.Count);
         }
 
         // Combat asks before a hit on a player: null when the arena has no say (the attacker
@@ -497,12 +557,20 @@ namespace Comet.Game.Arena
 
         public static async Task TickAsync(DateTime now)
         {
+            List<DbArenaSeason> closed = null;
+            List<DbArena> seasonSaves = null;
             var invited = new List<ArenaMatch>();
             var expired = new List<ArenaMatch>();
             var results = new List<Result>();
             var closing = new List<ArenaMatch>();
             lock (Sync)
             {
+                uint today = ArenaRecord.DayOf(now);
+                if (CurrentDay == 0)
+                    CurrentDay = today;
+                else if (today > CurrentDay)
+                    (closed, seasonSaves) = EndSeasonLocked(CurrentDay, today);
+
                 invited.AddRange(PairLocked(now));
                 foreach (var match in Matches.ToList())
                 {
@@ -538,6 +606,8 @@ namespace Comet.Game.Arena
                 }
             }
 
+            if (closed != null || seasonSaves != null)
+                await PersistSeasonAsync(closed, seasonSaves);
             foreach (var match in invited)
                 await InviteAsync(match);
             foreach (var match in expired)
@@ -721,13 +791,14 @@ namespace Comet.Game.Arena
             var before = match.State;
             if (!match.End(winner, reason, now))
                 return null;
+            uint day = ActiveDayLocked(now);
             var winnerRecord = Records[winner];
             var loserRecord = Records[match.Opponent(winner)];
-            var (points, winnerBonuses, loserBonuses) = ArenaRecord.Settle(winnerRecord, loserRecord, now);
+            var (points, winnerBonuses, loserBonuses) = ArenaRecord.Settle(winnerRecord, loserRecord, day);
             if (before == MatchState.Invited)
                 Matches.Remove(match);
             return new Result(match, before,
-                winnerRecord.ToFighter(RankOf(winnerRecord.ID, now)), loserRecord.ToFighter(RankOf(loserRecord.ID, now)),
+                winnerRecord.ToFighter(RankOf(winnerRecord.ID, day)), loserRecord.ToFighter(RankOf(loserRecord.ID, day)),
                 points, winnerBonuses, loserBonuses, winnerRecord.Snapshot(), loserRecord.Snapshot());
         }
 
@@ -741,19 +812,91 @@ namespace Comet.Game.Arena
             return 0;
         }
 
+        private static uint ActiveDayLocked(DateTime now)
+        {
+            if (CurrentDay == 0)
+                CurrentDay = ArenaRecord.DayOf(now);
+            return CurrentDay;
+        }
+
+        private static (List<DbArenaSeason> Top, List<DbArena> Saves) EndSeasonLocked(uint endedDay, uint nextDay)
+        {
+            foreach (var record in Records.Values)
+                RefreshLocked(record);
+            var top = ArenaRecord.TopTen(Records.Values, endedDay, LastSeasonNumber + 1);
+            if (top.Count > 0)
+            {
+                LastSeasonNumber++;
+                LastSeason = top;
+            }
+            var saves = ResetLocked(nextDay, all: endedDay == nextDay);
+            CurrentDay = nextDay;
+            return (top, saves);
+        }
+
+        private static List<DbArena> ResetLocked(uint day, bool all)
+        {
+            var saves = new List<DbArena>();
+            foreach (var record in Records.Values)
+            {
+                RefreshLocked(record);
+                if (!all && record.Stored.Day == day)
+                    continue;
+                record.Reset(day);
+                saves.Add(record.Snapshot());
+            }
+            return saves;
+        }
+
+        private static void RefreshLocked(ArenaRecord record)
+        {
+            if (Kernel.Players == null || !Kernel.Players.TryGet(record.ID, out var client) || client.Character == null)
+                return;
+            var character = client.Character;
+            record.Name = character.Name;
+            record.Level = character.Level;
+            record.Class = character.CurrentClass;
+            record.Mesh = (uint)(character.Mesh + character.Avatar * 10000);
+        }
+
+        private static async Task PersistSeasonAsync(List<DbArenaSeason> top, List<DbArena> saves)
+        {
+            bool hasTop = top != null && top.Count > 0;
+            bool hasSaves = saves != null && saves.Count > 0;
+            if (!hasTop && !hasSaves)
+                return;
+            try
+            {
+                if (hasTop)
+                    await ArenaRepository.SaveSeasonAsync(top);
+                if (hasSaves)
+                    await ArenaRepository.SaveManyAsync(saves);
+            }
+            catch (Exception e)
+            {
+                LogEvents.For(typeof(Qualifier), LogEvents.ArenaSaveFailed).Error(e,
+                    "Couldn't save the arena season reset");
+                return;
+            }
+            LogEvents.For(typeof(Qualifier), LogEvents.ArenaSeasonReset).Information(
+                "Arena season {Season} ended with {TopCount} ranked players; reset {ResetCount} records",
+                hasTop ? top[0].Season : LastSeasonNumber, hasTop ? top.Count : 0, hasSaves ? saves.Count : 0);
+        }
+
         private static ArenaRecord RecordOf(Character character, DateTime now)
         {
+            uint day = ActiveDayLocked(now);
             if (!Records.TryGetValue(character.CharacterID, out var record))
                 Records[character.CharacterID] = record = new ArenaRecord(new DbArena
                 {
                     CharacterID = character.CharacterID,
-                    Day = ArenaRecord.DayOf(now),
+                    Day = day,
                 });
             record.Name = character.Name;
             record.Level = character.Level;
             record.Class = character.CurrentClass;
             record.Mesh = (uint)(character.Mesh + character.Avatar * 10000);
-            record.Roll(now);
+            record.Roll(day);
             record.GiveStartingPoints();
             return record;
         }
@@ -762,12 +905,12 @@ namespace Comet.Game.Arena
         {
             if (Kernel.Players.TryGet(id, out var client) && client.Character != null)
                 RecordOf(client.Character, now);
-            return Records.TryGetValue(id, out var record) ? record.ToFighter(RankOf(id, now)) : null;
+            return Records.TryGetValue(id, out var record) ? record.ToFighter(RankOf(id, ActiveDayLocked(now))) : null;
         }
 
-        private static uint RankOf(uint id, DateTime now)
+        private static uint RankOf(uint id, uint day)
         {
-            int index = ArenaRecord.RankToday(Records.Values, now).FindIndex(r => r.ID == id);
+            int index = ArenaRecord.RankDay(Records.Values, day).FindIndex(r => r.ID == id);
             return (uint)(index + 1);
         }
 

@@ -53,8 +53,32 @@ namespace Comet.Game.Tests.Arena
             Assert.Equal((1940u, 3u, 1u), (loser.Stored.Points, loser.Stored.LossesToday, loser.Stored.LossesTotal));
 
             ArenaRecord.Settle(winner, loser, Now.AddDays(1));
-            Assert.Equal((1u, 0u), (winner.Stored.WinsToday, winner.Stored.LossesToday));
-            Assert.Equal((0u, 1u), (loser.Stored.WinsToday, loser.Stored.LossesToday));
+            Assert.Equal((1545u, 1u, 0u), (winner.Stored.Points, winner.Stored.WinsToday, winner.Stored.LossesToday));
+            Assert.Equal((1455u, 0u, 1u), (loser.Stored.Points, loser.Stored.WinsToday, loser.Stored.LossesToday));
+        }
+
+        [Fact]
+        public void SeasonTopTenTakesUpToTenRankedPlayersFromTheEndedDay()
+        {
+            uint day = ArenaRecord.DayOf(Now);
+            var records = Enumerable.Range(1, 12)
+                .Select(i => new ArenaRecord(new DbArena
+                {
+                    CharacterID = (uint)i, Points = (uint)(1500 + i * 10), Day = day,
+                    WinsToday = (uint)i, LossesToday = (uint)(12 - i),
+                }) { Name = "Hero" + i, Level = 50, Class = 15, Mesh = 1003 })
+                .ToList();
+            records.Add(Record(99, 9999)); // did not fight
+            records.Add(new ArenaRecord(new DbArena { CharacterID = 100, Points = 9999, WinsToday = 5, Day = day - 1 })
+                { Name = "Old", Level = 50 });
+
+            var top = ArenaRecord.TopTen(records, day, season: 3);
+            Assert.Equal(10, top.Count);
+            Assert.Equal(new uint[] { 12, 11, 10, 9, 8, 7, 6, 5, 4, 3 }, top.Select(e => e.CharacterID));
+            Assert.Equal((3u, 1u, 12u, "Hero12", 1003u, (byte)50, (byte)15, 1620u, 12u, 0u),
+                (top[0].Season, top[0].Rank, top[0].CharacterID, top[0].Name, top[0].Mesh, top[0].Level,
+                    top[0].Class, top[0].Points, top[0].Wins, top[0].Losses));
+            Assert.Equal(10u, top[9].Rank);
         }
 
         [Fact]
@@ -180,6 +204,37 @@ namespace Comet.Game.Tests.Arena
 
         [Fact]
         public void SeasonRankListIs60Bytes() => Assert.Equal(60, new MsgQualifyingSeasonRankList().Encode().Length);
+
+        [Fact]
+        public void SeasonRankListCarriesSavedEntries()
+        {
+            var list = new MsgQualifyingSeasonRankList();
+            list.Entries.Add(new DbArenaSeason
+            {
+                Season = 1, Rank = 1, CharacterID = 1000002, Name = "Altay", Mesh = 1003,
+                Level = 52, Class = 15, Points = 1545, Wins = 3, Losses = 1,
+            });
+            list.Entries.Add(new DbArenaSeason
+            {
+                Season = 1, Rank = 2, CharacterID = 1000003, Name = "Bora", Mesh = 1004,
+                Level = 50, Class = 25, Points = 1455, Wins = 1, Losses = 3,
+            });
+            var bytes = list.Encode();
+            Assert.Equal(8 + 2 * 52, bytes.Length);
+            Assert.Equal(2208, BitConverter.ToUInt16(bytes, 2));
+            Assert.Equal(2u, BitConverter.ToUInt32(bytes, 4));
+            Assert.Equal(1000002u, BitConverter.ToUInt32(bytes, 8));
+            Assert.Equal("Altay", System.Text.Encoding.ASCII.GetString(bytes, 12, 5));
+            Assert.Equal((1003u, 52u, 15u, 0u, 1u, 1545u, 3u, 1u), (
+                BitConverter.ToUInt32(bytes, 28), BitConverter.ToUInt32(bytes, 32),
+                BitConverter.ToUInt32(bytes, 36), BitConverter.ToUInt32(bytes, 40),
+                BitConverter.ToUInt32(bytes, 44), BitConverter.ToUInt32(bytes, 48),
+                BitConverter.ToUInt32(bytes, 52), BitConverter.ToUInt32(bytes, 56)));
+            Assert.Equal((1000003u, 2u, 1455u, 1u, 3u), (
+                BitConverter.ToUInt32(bytes, 60), BitConverter.ToUInt32(bytes, 96),
+                BitConverter.ToUInt32(bytes, 100), BitConverter.ToUInt32(bytes, 104),
+                BitConverter.ToUInt32(bytes, 108)));
+        }
 
         [Fact]
         public void ArenicScoreIs56Bytes() => Assert.Equal(56, new MsgArenicScore().Encode().Length);

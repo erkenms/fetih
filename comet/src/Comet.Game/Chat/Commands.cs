@@ -57,6 +57,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "xp" }, Authority.GameMaster, "/xp", XpAsync),
             new Command(new[] { "restore" }, Authority.GameMaster, "/restore", RestoreAsync),
             new Command(new[] { "window" }, Authority.GameMaster, WindowUsage, WindowAsync),
+            new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -576,6 +577,15 @@ namespace Comet.Game.Chat
                 return true;
             await Talk.NoticeAsync(client, "There's no room to drop it here.");
             return false;
+        }
+
+        private static async Task<bool> ArenaSeasonAsync(Client client, string[] args, string rest)
+        {
+            var (season, top, reset) = await Arena.Qualifier.ResetSeasonAsync();
+            await Talk.NoticeAsync(client, top > 0
+                ? $"Arena season {season} saved with top {top}; reset {reset} records."
+                : $"Arena season reset {reset} records (nobody fought).");
+            return true;
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)

@@ -15,6 +15,7 @@ namespace Comet.Game.Arena
     public sealed class ArenaRecord
     {
         public const byte MinLevel = 40;
+        public const int SeasonTopCount = 10;
 
         // The client: playing 20 matches in a day, or winning 9, earns 500 honor and an EXP ball
         public const uint HonorBonus = 500;
@@ -43,15 +44,22 @@ namespace Comet.Game.Arena
 
         public static uint DayOf(DateTime now) => (uint)(now - DateTime.UnixEpoch).TotalDays;
 
-        // Today's wins and losses start over each UTC day
-        public void Roll(DateTime now)
+        // Today's wins, losses and arena points start over each UTC day (season)
+        public void Roll(DateTime now) => this.Roll(DayOf(now));
+
+        public void Roll(uint day)
         {
-            uint today = DayOf(now);
-            if (this.Stored.Day == today)
+            if (this.Stored.Day == day)
                 return;
-            this.Stored.Day = today;
+            this.Reset(day);
+        }
+
+        public void Reset(uint day)
+        {
+            this.Stored.Day = day;
             this.Stored.WinsToday = 0;
             this.Stored.LossesToday = 0;
+            this.Stored.Points = StartingPoints(this.Level);
         }
 
         public void GiveStartingPoints()
@@ -63,10 +71,14 @@ namespace Comet.Game.Arena
         // The loser gives the winner 3% of their points. Each side gets the honor
         // bonuses the match earned; the counts are of the bonuses, for the EXP balls.
         public static (uint Points, int WinnerBonuses, int LoserBonuses) Settle(
-            ArenaRecord winner, ArenaRecord loser, DateTime now)
+            ArenaRecord winner, ArenaRecord loser, DateTime now) =>
+            Settle(winner, loser, DayOf(now));
+
+        public static (uint Points, int WinnerBonuses, int LoserBonuses) Settle(
+            ArenaRecord winner, ArenaRecord loser, uint day)
         {
-            winner.Roll(now);
-            loser.Roll(now);
+            winner.Roll(day);
+            loser.Roll(day);
             uint points = loser.Stored.Points * 3 / 100;
             loser.Stored.Points -= points;
             winner.Stored.Points += points;
@@ -108,16 +120,34 @@ namespace Comet.Game.Arena
         };
 
         // Today's ranking: players who fought today, by points, then wins, then fewest losses
-        public static List<ArenaRecord> RankToday(IEnumerable<ArenaRecord> records, DateTime now)
-        {
-            uint today = DayOf(now);
-            return records.Where(r => r.Stored.Day == today && r.MatchesToday > 0)
+        public static List<ArenaRecord> RankToday(IEnumerable<ArenaRecord> records, DateTime now) =>
+            RankDay(records, DayOf(now));
+
+        public static List<ArenaRecord> RankDay(IEnumerable<ArenaRecord> records, uint day) =>
+            records.Where(r => r.Stored.Day == day && r.MatchesToday > 0)
                 .OrderByDescending(r => r.Stored.Points)
                 .ThenByDescending(r => r.Stored.WinsToday)
                 .ThenBy(r => r.Stored.LossesToday)
                 .ThenBy(r => r.ID)
                 .ToList();
-        }
+
+        public static List<DbArenaSeason> TopTen(IEnumerable<ArenaRecord> records, uint day, uint season) =>
+            RankDay(records, day)
+                .Take(SeasonTopCount)
+                .Select((r, i) => new DbArenaSeason
+                {
+                    Season = season,
+                    Rank = (uint)(i + 1),
+                    CharacterID = r.ID,
+                    Name = r.Name ?? string.Empty,
+                    Mesh = r.Mesh,
+                    Level = r.Level,
+                    Class = r.Class,
+                    Points = r.Stored.Points,
+                    Wins = r.Stored.WinsToday,
+                    Losses = r.Stored.LossesToday,
+                })
+                .ToList();
 
         public static List<ArenaRecord> RankByHonor(IEnumerable<ArenaRecord> records) =>
             records.Where(r => r.Stored.HonorTotal > 0)

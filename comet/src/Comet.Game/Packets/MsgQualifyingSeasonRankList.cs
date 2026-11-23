@@ -1,16 +1,20 @@
 namespace Comet.Game.Packets
 {
+    using System.Collections.Generic;
     using System.Threading.Tasks;
     using Comet.Game.Arena;
+    using Comet.Game.Database.Models;
     using Comet.Game.States;
     using Comet.Network.Packets;
 
     // Last season's top ten. The 5619 client asks with 60 bytes: count at 4, then room for
     // one 52-byte player (ID, name (16 bytes), look, level, class, 0,
-    // rank, points, wins, losses).
+    // rank, points, wins, losses). Always room for one player.
     public sealed class MsgQualifyingSeasonRankList : MsgBase<Client>
     {
         private const int EntrySize = 52;
+
+        public List<DbArenaSeason> Entries { get; } = new List<DbArenaSeason>();
 
         public MsgQualifyingSeasonRankList() => base.Type = PacketType.MsgQualifyingSeasonRankList;
 
@@ -25,11 +29,25 @@ namespace Comet.Game.Packets
         {
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);
-            writer.Write(0u);                   // 4
-            writer.Write(new byte[EntrySize]);  // 8
+            writer.Write((uint)this.Entries.Count);         // 4
+            foreach (var entry in this.Entries)             // 8
+            {
+                writer.Write(entry.CharacterID);
+                writer.Write(entry.Name ?? string.Empty, 16);
+                writer.Write(entry.Mesh);
+                writer.Write((uint)entry.Level);
+                writer.Write((uint)entry.Class);
+                writer.Write(0u);
+                writer.Write(entry.Rank);
+                writer.Write(entry.Points);
+                writer.Write(entry.Wins);
+                writer.Write(entry.Losses);
+            }
+            if (this.Entries.Count == 0)
+                writer.Write(new byte[EntrySize]);
             return writer.ToArray();
         }
 
-        public override Task ProcessAsync(Client client) => client.SendAsync(new MsgQualifyingSeasonRankList());
+        public override Task ProcessAsync(Client client) => Qualifier.SendSeasonRankAsync(client);
     }
 }

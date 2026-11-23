@@ -27,6 +27,7 @@ namespace Comet.Client
         public const ushort MsgQualifyingInteractive = 2205;
         public const ushort MsgQualifyingFightersList = 2206;
         public const ushort MsgQualifyingRank = 2207;
+        public const ushort MsgQualifyingSeasonRankList = 2208;
         public const ushort MsgQualifyingDetailInfo = 2209;
         public const ushort MsgArenicScore = 2210;
         public const ushort MsgSynpOffer = 1058;
@@ -768,6 +769,7 @@ namespace Comet.Client
             Build(PacketTypes.MsgQualifyingFightersList, 148, (4, page), (8, 6));
         public static byte[] BuildRankQuery(ushort kind, ushort page) =>
             Build(PacketTypes.MsgQualifyingRank, 52, (4, (uint)(kind | page << 16)));
+        public static byte[] BuildSeasonRankQuery() => Packet.Create(PacketTypes.MsgQualifyingSeasonRankList, 60);
 
         private static byte[] Build(ushort type, int length, params (int Offset, uint Value)[] fields)
         {
@@ -858,6 +860,27 @@ namespace Comet.Client
                 shown.Add((BitConverter.ToUInt16(packet, at), Packet.ReadText(packet, at + 2, 16),
                     BitConverter.ToUInt32(packet, at + 20)));
             return new QualifierRanking(BitConverter.ToUInt32(packet, 8), shown);
+        }
+    }
+
+    // Last season's top ten: count at 4, 52 bytes per player from 8: ID, name (16 bytes),
+    // look, level, class, 0, rank, points, wins, losses
+    public sealed record QualifierSeasonEntry(uint Id, string Name, uint Mesh, uint Level, uint Class,
+        uint Rank, uint Points, uint Wins, uint Losses);
+
+    public sealed record QualifierSeasonRanking(List<QualifierSeasonEntry> Entries)
+    {
+        public static QualifierSeasonRanking Parse(byte[] packet)
+        {
+            var entries = new List<QualifierSeasonEntry>();
+            for (int i = 0, at = 8; i < BitConverter.ToInt32(packet, 4); i++, at += 52)
+                entries.Add(new QualifierSeasonEntry(
+                    BitConverter.ToUInt32(packet, at), Packet.ReadText(packet, at + 4, 16),
+                    BitConverter.ToUInt32(packet, at + 20), BitConverter.ToUInt32(packet, at + 24),
+                    BitConverter.ToUInt32(packet, at + 28), BitConverter.ToUInt32(packet, at + 36),
+                    BitConverter.ToUInt32(packet, at + 40), BitConverter.ToUInt32(packet, at + 44),
+                    BitConverter.ToUInt32(packet, at + 48)));
+            return new QualifierSeasonRanking(entries);
         }
     }
 

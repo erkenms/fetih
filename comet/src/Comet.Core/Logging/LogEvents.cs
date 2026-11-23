@@ -196,6 +196,7 @@ namespace Comet.Core.Logging
         public const string ArenaStarted = "arena.started";
         public const string ArenaEnded = "arena.ended";
         public const string ArenaPointsBought = "arena.points_bought";
+        public const string ArenaSeasonReset = "arena.season_reset";
         public const string ArenaRejected = "arena.rejected";
         public const string ArenaSaveFailed = "arena.save_failed";
         public const string ArenaLoopFailed = "arena.loop_failed";

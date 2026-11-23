@@ -238,6 +238,22 @@ CREATE TABLE `arena` (
   PRIMARY KEY (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Top ten of each ended arena qualifier season.
+DROP TABLE IF EXISTS `arena_season`;
+CREATE TABLE `arena_season` (
+  `Season` int(10) unsigned NOT NULL,
+  `Rank` int(10) unsigned NOT NULL,
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Name` varchar(16) NOT NULL DEFAULT '',
+  `Mesh` int(10) unsigned NOT NULL DEFAULT '0',
+  `Level` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Class` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Points` int(10) unsigned NOT NULL DEFAULT '0',
+  `Wins` int(10) unsigned NOT NULL DEFAULT '0',
+  `Losses` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Season`,`Rank`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Silver donated for nobility, one row per character that has donated. Ranks follow from
 -- the donations, so they aren't stored.
 DROP TABLE IF EXISTS `nobility`;

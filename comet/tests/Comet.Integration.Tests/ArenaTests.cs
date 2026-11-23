@@ -38,9 +38,9 @@ namespace Comet.Integration.Tests
             }
         }
 
-        private async Task<Player> FighterAsync(int x, ushort strength = 0)
+        private async Task<Player> FighterAsync(int x, ushort strength = 0, ushort authority = 1, byte level = 50)
         {
-            var fighter = (await this.PlayingAtAsync(DesertCity, x, 300 - 50, level: 50, strength: strength)).Player;
+            var fighter = (await this.PlayingAtAsync(DesertCity, x, 300 - 50, authority: authority, level: level, strength: strength)).Player;
             this.Fighters.Add(fighter);
             return fighter;
         }
@@ -185,6 +185,48 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.Points == 0));
             await SyncAsync(player);
             Assert.Null(await player.Game.WaitForQualifierAsync(q => q.Action == SignUp, Already));
+        }
+
+        [Fact]
+        public async Task ResettingTheSeasonSavesTheTopTenAndResetsPoints()
+        {
+            // Level 100 starts with 2700 points, above other tests' level 50 fighters
+            var a = await this.FighterAsync(190, authority: GameMaster, level: 100);
+            var b = await this.FighterAsync(200, level: 100);
+            await SignUpAsync(a);
+            await SignUpAsync(b);
+            Assert.NotNull(await b.Game.WaitForQualifierAsync(q => q.Action == Countdown));
+            await b.Game.SendAsync(Build(Answer, GiveUp));
+            Assert.Equal(Won, (await a.Game.WaitForQualifierAsync(q => q.Action == EndDialog))?.Option);
+            Assert.NotNull(await a.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.WinsToday == 1));
+            Assert.NotNull(await b.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.LossesToday == 1));
+
+            int mark = this.Servers.Mark();
+            await CommandAsync(a, "/arenaseason");
+            var reset = await this.Servers.WaitForEventAsync("game", "arena.season_reset", _ => true, after: mark);
+            uint season = reset.GetProperty("season").GetUInt32();
+            Assert.True(season >= 1);
+
+            await a.Game.SendAsync(QualifierMessage.BuildSeasonRankQuery());
+            var list = await a.Game.WaitForQualifierSeasonRankingAsync();
+            Assert.NotNull(list);
+            var first = Assert.Single(list.Entries, e => e.Id == a.User.Id);
+            var second = Assert.Single(list.Entries, e => e.Id == b.User.Id);
+            Assert.Equal((1u, a.User.Name, 100u, 2781u, 1u, 0u),
+                (first.Rank, first.Name, first.Level, first.Points, first.Wins, first.Losses));
+            Assert.Equal((2u, b.User.Name, 100u, 2619u, 0u, 1u),
+                (second.Rank, second.Name, second.Level, second.Points, second.Wins, second.Losses));
+
+            Assert.Equal(2781u, Convert.ToUInt32(await this.Servers.QueryGameScalarAsync(
+                "SELECT Points FROM arena_season WHERE Season = @s AND CharacterID = @id",
+                ("@s", season), ("@id", a.User.Id))));
+
+            await a.Game.SendAsync(QualifierMessage.BuildDetailQuery());
+            var details = await a.Game.WaitForQualifierDetailsAsync(d => d.Status == 0 && d.Points == 2700 && d.WinsToday == 0);
+            Assert.NotNull(details);
+            Assert.Equal((1u, 0u), (details.WinsTotal, details.LossesTotal));
+            Assert.Equal(2700u, Convert.ToUInt32(await this.Servers.QueryGameScalarAsync(
+                "SELECT Points FROM arena WHERE CharacterID = @id", ("@id", a.User.Id))));
         }
 
         private async Task<QualifierMatches> QueryMatchesAsync(Player player)
