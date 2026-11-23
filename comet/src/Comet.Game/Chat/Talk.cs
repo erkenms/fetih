@@ -25,6 +25,13 @@ namespace Comet.Game.Chat
                 return;
             }
 
+            if (IsMuted(character, DateTime.UtcNow))
+            {
+                await RejectAsync(client, msg, "muted",
+                    $"You are muted until {character.MutedUntil:yyyy-MM-dd HH:mm} UTC.");
+                return;
+            }
+
             // The client fills in the sender itself; never trust it
             msg.SenderName = character.Name;
             msg.SenderMesh = Mesh(character);
@@ -124,6 +131,9 @@ namespace Comet.Game.Chat
                     break;
             }
         }
+
+        public static bool IsMuted(Character character, DateTime now) =>
+            character.MutedUntil is DateTime until && until > now;
 
         public static Task NoticeAsync(Client client, string text) =>
             client.SendAsync(new MsgTalk(client.ID, TalkChannel.Service, text));

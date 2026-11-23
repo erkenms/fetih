@@ -33,6 +33,10 @@ namespace Comet.Game.Chat
             new Command(new[] { "online" }, Authority.Moderator, "/online", OnlineAsync),
             new Command(new[] { "where" }, Authority.Moderator, "/where [name]", WhereAsync),
             new Command(new[] { "kick" }, Authority.Moderator, "/kick <name>", KickAsync),
+            new Command(new[] { "ban" }, Authority.Moderator, "/ban <name> [reason]", BanAsync),
+            new Command(new[] { "unban" }, Authority.Moderator, "/unban <account>", UnbanAsync),
+            new Command(new[] { "mute" }, Authority.Moderator, "/mute <name> <minutes>", MuteAsync),
+            new Command(new[] { "unmute" }, Authority.Moderator, "/unmute <name>", UnmuteAsync),
             new Command(new[] { "teleport", "tp" }, Authority.GameMaster, TeleportUsage, TeleportAsync),
             new Command(new[] { "goto" }, Authority.GameMaster, "/goto <name>", GotoAsync),
             new Command(new[] { "grab" }, Authority.GameMaster, "/grab <name>", GrabAsync),
@@ -175,6 +179,97 @@ namespace Comet.Game.Chat
 
             await Talk.NoticeAsync(client, $"Kicked {target.Character.Name}.");
             target.Disconnect(DisconnectReasons.Kicked);
+            return true;
+        }
+
+        // Like /kick, only on players of lower authority
+        private static async Task<bool> OutranksAsync(Client client, Client target, string verb)
+        {
+            if (target.Authority < client.Authority)
+                return true;
+            await Talk.NoticeAsync(client, $"You can't {verb} {target.Character.Name}.");
+            return false;
+        }
+
+        private static async Task<bool> BanAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length < 1)
+                return await UsageAsync(client, "/ban <name> [reason]");
+            if (!TryFind(args[0], out var target))
+                return await NotOnlineAsync(client, args[0]);
+            if (!await OutranksAsync(client, target, "ban"))
+                return false;
+
+            var name = target.Character.Name;
+            if (!await Database.Repositories.AccountsRepository.BanAsync(target.Character.AccountID))
+            {
+                await Talk.NoticeAsync(client, $"Can't ban {name}: account {target.Character.AccountID} not found.");
+                return false;
+            }
+            string reason = rest.Substring(args[0].Length).Trim();
+            await Talk.NoticeAsync(target, reason.Length > 0 ? "You have been banned: " + reason : "You have been banned.");
+            await Talk.NoticeAsync(client, $"Banned {name}.");
+            target.Disconnect(DisconnectReasons.Banned);
+            return true;
+        }
+
+        private static async Task<bool> UnbanAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, "/unban <account>");
+            switch (await Database.Repositories.AccountsRepository.UnbanAsync(args[0]))
+            {
+                case Database.Repositories.AccountsRepository.UnbanResult.Unbanned:
+                    await Talk.NoticeAsync(client, $"Unbanned account {args[0]}.");
+                    return true;
+                case Database.Repositories.AccountsRepository.UnbanResult.NotBanned:
+                    await Talk.NoticeAsync(client, $"Account {args[0]} isn't banned.");
+                    return false;
+                default:
+                    await Talk.NoticeAsync(client, $"There's no account {args[0]}.");
+                    return false;
+            }
+        }
+
+        // Ten years; much more would overflow DateTime
+        private const int MaxMuteMinutes = 10 * 365 * 24 * 60;
+
+        private static async Task<bool> MuteAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 2 || !int.TryParse(args[1], out var minutes) || minutes < 1 || minutes > MaxMuteMinutes)
+                return await UsageAsync(client, $"/mute <name> <minutes 1-{MaxMuteMinutes}>");
+            if (!TryFind(args[0], out var target))
+                return await NotOnlineAsync(client, args[0]);
+            if (!await OutranksAsync(client, target, "mute"))
+                return false;
+
+            var character = target.Character;
+            character.MutedUntil = DateTime.UtcNow.AddMinutes(minutes);
+            await target.SaveAsync("mute");
+            await Talk.NoticeAsync(target, $"You have been muted for {minutes} minutes.");
+            await Talk.NoticeAsync(client, $"Muted {character.Name} for {minutes} minutes.");
+            return true;
+        }
+
+        private static async Task<bool> UnmuteAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, "/unmute <name>");
+            if (!TryFind(args[0], out var target))
+                return await NotOnlineAsync(client, args[0]);
+            if (!await OutranksAsync(client, target, "unmute"))
+                return false;
+
+            var character = target.Character;
+            if (!Talk.IsMuted(character, DateTime.UtcNow))
+            {
+                await Talk.NoticeAsync(client, $"{character.Name} isn't muted.");
+                return false;
+            }
+            character.MutedUntil = null;
+            await target.SaveAsync("mute");
+            await Talk.NoticeAsync(target, "You can chat again.");
+            await Talk.NoticeAsync(client, $"Unmuted {character.Name}.");
             return true;
         }
 

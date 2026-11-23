@@ -76,6 +76,9 @@ namespace Comet.Game.Database.Models
 
         // Asked before warehouses and unlocking items; 0 if none is set
         public virtual uint SecondPassword { get; set; }
+
+        // Until when (UTC) a moderator's /mute keeps the player from chatting; null if not muted
+        public virtual DateTime? MutedUntil { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

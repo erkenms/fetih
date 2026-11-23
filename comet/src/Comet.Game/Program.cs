@@ -43,6 +43,7 @@
             Log.Information("Initializing server...");
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
+            AccountsRepository.Configuration = config.AccountDatabase;
             if (!ServerDbContext.Ping())
             {
                 Log.Error("Invalid database configuration");

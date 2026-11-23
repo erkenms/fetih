@@ -410,7 +410,9 @@ namespace Comet.Integration.Tests
                 "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
                 "--Arena:InviteSeconds=" + ArenaInviteSeconds, "--Arena:CountdownSeconds=" + ArenaCountdownSeconds,
                 "--Arena:EndSeconds=" + ArenaEndSeconds, "--Magic:MinimumCastMilliseconds=0",
-                "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort);
+                "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
+                "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
+                "--AccountDatabase:Username=" + DbUser, "--AccountDatabase:Password=" + DbPassword);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
                 "--Network:IPAddress=" + Host, "--Network:Port=" + this.AccountPort,

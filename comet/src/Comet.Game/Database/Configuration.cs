@@ -6,6 +6,9 @@ namespace Comet.Game.Database
     public class ServerConfiguration 
     {
         public DatabaseConfiguration Database { get; set; }
+
+        // Where /ban and /unban set account status
+        public DatabaseConfiguration AccountDatabase { get; set; }
         public GameNetworkConfiguration GameNetwork { get; set; }
         public RpcNetworkConfiguration RpcNetwork { get; set; }
         public AuthenticationConfiguration Authentication { get; set; }
@@ -139,6 +142,14 @@ namespace Comet.Game.Database
                 .AddCommandLine(args)
                 .Build()
                 .Bind(this);
+
+            // Without its own section, the account database is on the game database's server
+            if (this.AccountDatabase == null && this.Database != null)
+                this.AccountDatabase = new DatabaseConfiguration
+                {
+                    Hostname = this.Database.Hostname, Schema = "comet.account",
+                    Username = this.Database.Username, Password = this.Database.Password
+                };
         }
 
         public bool Valid => 

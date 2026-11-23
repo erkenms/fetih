@@ -203,6 +203,68 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task ModeratorCanBanAndUnban()
+        {
+            await using var mod = (await this.PlayingAtAsync(1002, 670, 520, Moderator)).Player;
+            var (target, email) = await this.PlayingAtAsync(1002, 671, 520);
+            await using var _ = target;
+
+            await CommandAsync(mod, $"/ban {target.User.Name} botting");
+            Assert.NotNull(await target.Game.WaitForTalkAsync(t => t.Text.Contains("banned: botting")));
+            Assert.True(await target.Game.WaitClosedAsync());
+            await this.Servers.WaitForEventAsync("game", "session.logout", e =>
+                e.TryGetProperty("name", out var name) && name.GetString() == target.User.Name &&
+                e.TryGetProperty("reason", out var reason) && reason.GetString() == "banned");
+            var logged = await this.Servers.WaitForEventAsync("game", "gm.command", e =>
+                e.TryGetProperty("command", out var c) && c.GetString() == "ban" &&
+                e.TryGetProperty("name", out var n) && n.GetString() == mod.User.Name);
+            Assert.Equal("ok", logged.GetProperty("result").GetString());
+            Assert.Equal(Banned, (await this.Servers.LoginAsync(email, Password)).RejectCode);
+
+            await CommandAsync(mod, "/unban " + email);
+            Assert.NotNull(await NoticeAsync(mod, "Unbanned account"));
+            Assert.True((await this.Servers.LoginAsync(email, Password)).Accepted);
+        }
+
+        [Fact]
+        public async Task ModeratorsCantBanOrMuteTheirEquals()
+        {
+            await using var mod = (await this.PlayingAtAsync(1002, 672, 520, Moderator)).Player;
+            await using var other = (await this.PlayingAtAsync(1002, 673, 520, Moderator)).Player;
+
+            await CommandAsync(mod, "/ban " + other.User.Name);
+            Assert.NotNull(await NoticeAsync(mod, "You can't ban"));
+            await CommandAsync(mod, $"/mute {other.User.Name} 5");
+            Assert.NotNull(await NoticeAsync(mod, "You can't mute"));
+        }
+
+        [Fact]
+        public async Task MutedPlayersCantChatEvenAfterRelogin()
+        {
+            await using var mod = (await this.PlayingAtAsync(1002, 674, 520, Moderator)).Player;
+            var (target, email) = await this.PlayingAtAsync(1002, 675, 520);
+
+            await CommandAsync(mod, $"/mute {target.User.Name} 30");
+            Assert.NotNull(await NoticeAsync(target, "You have been muted"));
+            await target.Game.SayAsync(TalkChannels.Talk, target.User.Name, "ALLUSERS", "can you hear me");
+            Assert.NotNull(await NoticeAsync(target, "You are muted"));
+            await target.Game.SayAsync(TalkChannels.Whisper, target.User.Name, mod.User.Name, "psst");
+            await SyncAsync(target);
+            Assert.Null(await mod.Game.WaitForTalkAsync(t => t.Sender == target.User.Name, Already));
+
+            await this.LogOutAsync(target);
+            await using var again = await this.Servers.PlayAsync(email, Password);
+            await again.Game.SayAsync(TalkChannels.Whisper, again.User.Name, mod.User.Name, "still?");
+            Assert.NotNull(await NoticeAsync(again, "You are muted"));
+            var rejected = await this.Servers.WaitForEventAsync("game", "chat.rejected", "name", again.User.Name);
+            Assert.Equal("muted", rejected.GetProperty("reason").GetString());
+
+            await CommandAsync(mod, "/unmute " + again.User.Name);
+            Assert.NotNull(await NoticeAsync(again, "You can chat again"));
+            await SyncAsync(again, mod);
+        }
+
+        [Fact]
         public async Task GameMastersCanAskTheClientToOpenAnyWindow()
         {
             await using var player = (await this.PlayingAtAsync(1002, 800, 940, GameMaster)).Player;

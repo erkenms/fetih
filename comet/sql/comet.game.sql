@@ -59,6 +59,7 @@ CREATE TABLE `character` (
   `ExpBallDay` date DEFAULT NULL,
   `ExpBallsUsed` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
+  `MutedUntil` datetime DEFAULT NULL,
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),

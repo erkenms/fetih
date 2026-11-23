@@ -50,6 +50,7 @@ namespace Comet.Game.States
             to.ExpBallDay = from.ExpBallDay;
             to.ExpBallsUsed = from.ExpBallsUsed;
             to.SecondPassword = from.SecondPassword;
+            to.MutedUntil = from.MutedUntil;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;
