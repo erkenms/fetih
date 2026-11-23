@@ -1,0 +1,33 @@
+// Field edits to ini/itemtype.dat (decrypted with TQ's file cipher, edited, encrypted back).
+// Each entry names the item ID, the 0-based column index (21 = amount, 22 = amount limit),
+// the value it expects and the new one; a mismatch fails the build.
+[
+  {
+    "id": 1050000,
+    "field": 21,
+    "original": "500",
+    "patched": "20",
+    "reason": "LuckyArrow holds 20 arrows; 5619 has 500 for all three plain quivers."
+  },
+  {
+    "id": 1050000,
+    "field": 22,
+    "original": "500",
+    "patched": "20",
+    "reason": "LuckyArrow holds 20 arrows."
+  },
+  {
+    "id": 1050001,
+    "field": 21,
+    "original": "500",
+    "patched": "100",
+    "reason": "IronArrow holds 100 arrows; 5619 has 500 for all three plain quivers."
+  },
+  {
+    "id": 1050001,
+    "field": 22,
+    "original": "500",
+    "patched": "100",
+    "reason": "IronArrow holds 100 arrows."
+  }
+]

@@ -21,6 +21,7 @@ using System.IO.Compression;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 var here = Path.GetDirectoryName(ScriptPath())!;
@@ -97,13 +98,17 @@ foreach (var key in files.Keys.ToList())
 foreach (var key in folders)
     Directory.CreateDirectory(Path.Combine(output, key));
 
-var patches = JsonSerializer.Deserialize<List<Patch>>(
-    File.ReadAllText(Path.Combine(here, "patches.json")),
-    new JsonSerializerOptions { PropertyNameCaseInsensitive = true, ReadCommentHandling = JsonCommentHandling.Skip })!;
+var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true, ReadCommentHandling = JsonCommentHandling.Skip };
+var patches = JsonSerializer.Deserialize<List<Patch>>(File.ReadAllText(Path.Combine(here, "patches.json")), jsonOptions)!;
 var patchesByFile = patches.GroupBy(p => p.File.Replace('\\', '/'), comparer).ToDictionary(g => g.Key, g => g.ToList(), comparer);
 foreach (var file in patchesByFile.Keys)
     if (!files.ContainsKey(file))
         return Fail($"patches.json: {file} isn't in the client");
+
+const string itemTypeName = "ini/itemtype.dat";
+var itemTypeEdits = JsonSerializer.Deserialize<List<ItemTypeEdit>>(File.ReadAllText(Path.Combine(here, "itemtype.json")), jsonOptions)!;
+if (itemTypeEdits.Count > 0 && !files.ContainsKey(itemTypeName))
+    return Fail($"itemtype.json: {itemTypeName} isn't in the client");
 
 const string exeName = "Conquer.exe";
 if (!files.ContainsKey(exeName))
@@ -137,6 +142,14 @@ foreach (var (key, from) in files)
     }
     if (signed.TryGetValue(key, out var plaintext))
         bytes = Rsa.Encrypt(from.StartsWith(overlay + Path.DirectorySeparatorChar) ? File.ReadAllBytes(from) : plaintext, ourKey);
+    if (comparer.Equals(key, itemTypeName) && itemTypeEdits.Count > 0)
+    {
+        bytes ??= File.ReadAllBytes(from);
+        var (edited, error) = ItemTypeEdit.ApplyAll(bytes, itemTypeEdits);
+        if (error != null)
+            return Fail($"itemtype.json: {error}");
+        bytes = edited;
+    }
     if (patchesByFile.TryGetValue(key, out var filePatches))
     {
         bytes ??= File.ReadAllBytes(from);
@@ -182,7 +195,7 @@ if (Directory.Exists(output))
 }
 
 Console.WriteLine($"{output}: {files.Count} files ({added} added, {replaced} replaced, {deleted} deleted, " +
-    $"{patches.Count} byte patches, {signed.Count} signed again); {written} written, {stale} stale removed");
+    $"{patches.Count} byte patches, {itemTypeEdits.Count} itemtype edits, {signed.Count} signed again); {written} written, {stale} stale removed");
 return 0;
 
 static string Relative(string root, string path) => Path.GetRelativePath(root, path).Replace('\\', '/');
@@ -345,5 +358,76 @@ sealed record Patch(string File, string Offset, string Original, string Patched,
             return $"expected {Convert.ToHexString(original)}, found {Convert.ToHexString(at)}";
         patched.CopyTo(at);
         return null;
+    }
+}
+
+sealed record ItemTypeEdit(uint Id, int Field, string Original, string Patched, string Reason)
+{
+    public static (byte[]? Bytes, string? Error) ApplyAll(byte[] encrypted, List<ItemTypeEdit> edits)
+    {
+        var plain = TqFileCipher.Decrypt(encrypted);
+        var lines = Encoding.Latin1.GetString(plain).Split("\r\n");
+        var byId = new Dictionary<uint, int>();
+        for (var i = 0; i < lines.Length; i++)
+        {
+            var sep = lines[i].IndexOf("@@", StringComparison.Ordinal);
+            if (sep > 0 && uint.TryParse(lines[i].AsSpan(0, sep), out var id))
+                byId.TryAdd(id, i);
+        }
+
+        foreach (var edit in edits)
+        {
+            if (!byId.TryGetValue(edit.Id, out var index))
+                return (null, $"item {edit.Id} ({edit.Reason}): not found");
+            var fields = lines[index].Split("@@");
+            if (edit.Field < 0 || edit.Field >= fields.Length)
+                return (null, $"item {edit.Id} field {edit.Field} ({edit.Reason}): out of range");
+            if (fields[edit.Field] != edit.Original)
+                return (null, $"item {edit.Id} field {edit.Field} ({edit.Reason}): expected {edit.Original}, found {fields[edit.Field]}");
+            fields[edit.Field] = edit.Patched;
+            lines[index] = string.Join("@@", fields);
+        }
+
+        return (TqFileCipher.Encrypt(Encoding.Latin1.GetBytes(string.Join("\r\n", lines))), null);
+    }
+}
+
+static class TqFileCipher
+{
+    static readonly byte[] Key = CreateKey(0x2537);
+
+    public static byte[] Decrypt(byte[] data)
+    {
+        var result = new byte[data.Length];
+        for (var i = 0; i < data.Length; i++)
+        {
+            var b = data[i] ^ Key[i % Key.Length];
+            var shift = i % 8;
+            result[i] = (byte)((b >> shift) | (b << (8 - shift)));
+        }
+        return result;
+    }
+
+    public static byte[] Encrypt(byte[] data)
+    {
+        var result = new byte[data.Length];
+        for (var i = 0; i < data.Length; i++)
+        {
+            var shift = i % 8;
+            int b = data[i];
+            result[i] = (byte)(((b << shift) | (b >> (8 - shift))) ^ Key[i % Key.Length]);
+        }
+        return result;
+    }
+
+    static byte[] CreateKey(uint seed)
+    {
+        var key = new byte[128];
+        for (var i = 0; i < key.Length; i++)
+        {
+            seed = seed * 214013 + 2531011;
+            key[i] = (byte)((seed >> 16) & 0x7FFF);
+        }
+        return key;
     }
 }
