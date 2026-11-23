@@ -178,6 +178,19 @@
 
             try
             {
+                Kernel.Talkers = new Talkers(Talkers.Load(DataFiles.PathOf("talkers.json")));
+                LogEvents.For(typeof(Program), LogEvents.TalkersLoaded).Information(
+                    "Loaded {TalkerCount} NPCs that only talk", Kernel.Talkers.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read Data/talkers.json");
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 await Social.Guilds.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.GuildsLoaded).Information(
                     "Loaded {GuildCount} guilds", Social.Guilds.Count);

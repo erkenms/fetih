@@ -47,6 +47,7 @@ namespace Comet.Game
         public static NpcTable Npcs = new NpcTable(new Npc[0]);
 
         public static Teleporters Teleporters = new Teleporters(new Teleporter[0]);
+        public static Talkers Talkers = new Talkers(new Talker[0]);
 
         public static ShopTable Shops = new ShopTable(new Shop[0]);
         public static Arena.HonorRewards HonorRewards = new Arena.HonorRewards(new uint[0]);

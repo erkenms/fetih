@@ -164,6 +164,7 @@ namespace Comet.Core.Logging
         public const string NpcTalk = "npc.talk";
         public const string NpcRejected = "npc.rejected";
         public const string TeleportersLoaded = "npc.teleporters_loaded";
+        public const string TalkersLoaded = "npc.talkers_loaded";
 
         public const string MonstersLoaded = "monster.loaded";
         public const string MonsterKilled = "monster.killed";

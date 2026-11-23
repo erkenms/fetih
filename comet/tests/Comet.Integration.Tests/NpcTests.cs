@@ -9,7 +9,8 @@ namespace Comet.Integration.Tests
     // Twin City's NPCs come from the seeded npc table
     public class NpcTests : IntegrationTest
     {
-        private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021;
+        private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021,
+            CloudSaint = 2000;
 
         public NpcTests(ServerFixture servers) : base(servers) { }
 
@@ -77,6 +78,17 @@ namespace Comet.Integration.Tests
             Assert.Equal("too_far", refused.GetProperty("reason").GetString());
             await SyncAsync(player);
             Assert.Null(await player.Game.ReadDialogAsync(Already));
+        }
+
+        [Fact]
+        public async Task TalkersSayTheirLine()
+        {
+            await using var player = (await this.PlayingAtAsync(ServerFixture.Market, 207, 215)).Player;
+            await player.Game.TalkToNpcAsync(CloudSaint);
+            var page = await player.Game.ReadDialogAsync();
+            Assert.Contains("Demon Exterminator", page?[0].Text);
+            Assert.Equal("Sure.", page.Single(p => p.Action == DialogMessage.Choice).Text);
+            Assert.Equal((DialogMessage.Face, (byte)67), (page[^2].Action, page[^2].Option));
         }
 
         [Fact]

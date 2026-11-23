@@ -1,0 +1,54 @@
+// NPCs that only say something. "text" is one dialog line per entry, "reply" the player's
+// one answer, which closes the dialog. Texts are from the original NPC scripts.
+{
+  "talkers": [
+    {
+      "id": 4573, "face": 67, // GhoulKong, Desert City
+      "text": ["If only I were 10 years younger..."],
+      "reply": "In your dreams.",
+    },
+    {
+      "id": 30103, "face": 22, // StoneBandit, Desert City
+      "text": ["Go out from my sight or I will kill you."],
+      "reply": "I am busy.",
+    },
+    {
+      "id": 2000, "face": 67, // CloudSaint, market
+      "text": ["It's a chaotic world. Demons are ruining the peace. Will you be a Demon Exterminator to defend the peace when you reach level 120?"],
+      "reply": "Sure.",
+    },
+    {
+      "id": 4579, "face": 118, // NetPeddler, Bird Island
+      "text": [
+        "The Hut is at the center of Bird Island. It's owned by the Ruan brothers. Man, I'm so jealous. They are crazy rich.",
+        " I don't care if I'm poor, I won't be a bandit. Selling fishing supplies is a decent trade, and safer, too!",
+      ],
+      "reply": "As long as you're happy.",
+    },
+    {
+      "id": 4575, "face": 0, // TimeDoor, Bird Island
+      "text": ["These stone doors are cursed. They can only be opened with the Iron Poise owned by Ye Sheng (192,212) on Bird Island."],
+      "reply": "I'll pass.",
+    },
+    {
+      "id": 4576, "face": 0, // SeasonDoor
+      "text": ["These stone doors are all glowing with a strange aura. Break them open with the Iron Poise."],
+      "reply": "I'll pass.",
+    },
+    {
+      "id": 4577, "face": 0, // DreamDoor
+      "text": ["Take these stone doors seriously. They are cursed and can only be opened with the Iron Poise."],
+      "reply": "I'll pass.",
+    },
+    { "id": 4587, "face": 0, "text": ["This stone pillar looks mysterious..."], "reply": "Yeah..." }, // SparrowPillar
+    { "id": 4588, "face": 0, "text": ["This stone pillar looks mysterious..."], "reply": "Yeah..." }, // DragonPillar
+    { "id": 4589, "face": 0, "text": ["This stone pillar looks mysterious..."], "reply": "Yeah..." }, // TigerPillar
+    { "id": 4590, "face": 0, "text": ["This stone pillar looks mysterious..."], "reply": "Yeah..." }, // LeopardPillar
+    { "id": 4591, "face": 0, "text": ["The Teleport Platform looks mysterious..."], "reply": "Yeah..." }, // Platform
+    {
+      "id": 8396, "face": 67, // BoldBoy
+      "text": ["Good and Evil each have their own destiny. I hope people in this world can find their place."],
+      "reply": "Nice to meet you.",
+    },
+  ]
+}

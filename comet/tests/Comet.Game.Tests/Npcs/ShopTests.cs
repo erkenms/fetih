@@ -7,6 +7,7 @@ namespace Comet.Game.Tests.Npcs
     using Comet.Game.Items;
     using Comet.Game.Npcs;
     using Comet.Game.Packets;
+    using Comet.Game.World;
     using Xunit;
 
     public class ShopTests
@@ -80,6 +81,25 @@ namespace Comet.Game.Tests.Npcs
             var conductress = teleporters.Single(t => t.NpcID == 10050);
             Assert.Equal((100u, 6), (conductress.Fare, conductress.Destinations.Count));
             Assert.Equal(("Market", 1036u), (conductress.Destinations[5].Name, conductress.Destinations[5].MapID));
+        }
+
+        [Fact]
+        public void TheShippedTalkerFileLoads()
+        {
+            var talkers = Talkers.Load(DataFiles.PathOf("talkers.json"));
+            var ghoulKong = talkers.Single(t => t.NpcID == 4573);
+            Assert.Equal(("In your dreams.", (byte)67), (ghoulKong.Reply, ghoulKong.Face));
+        }
+
+        [Fact]
+        public void ShippedTalkersAndTeleportersAreNpcsWithoutAScript()
+        {
+            var npcs = NpcTable.Load(DataFiles.PathOf("npcs.json")).Select(n => n.NpcID).ToHashSet();
+            var ids = Talkers.Load(DataFiles.PathOf("talkers.json")).Select(t => t.NpcID)
+                .Concat(Teleporters.Load(DataFiles.PathOf("teleporters.json")).Select(t => t.NpcID)).ToList();
+            Assert.Equal(ids.Count, ids.Distinct().Count());
+            Assert.All(ids, id => Assert.Contains(id, npcs));
+            Assert.All(ids, id => Assert.False(Dialogs.Has(id), $"NPC {id} has a script"));
         }
     }
 }
