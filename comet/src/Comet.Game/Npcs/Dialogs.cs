@@ -31,7 +31,14 @@ namespace Comet.Game.Npcs
                 [JobCenter.HeadAbbotID] = JobCenter.TalkAsync,
                 [JobCenter.PirateLordID] = JobCenter.TalkAsync,
                 [JobCenter.TaoistMoonID] = JobCenter.TalkAsync,
+                [Training.TrainingGround.ExitID] = Training.TrainingGround.ExitAsync,
             };
+
+        static Dialogs()
+        {
+            foreach (var boxer in Training.TrainingGround.BoxerIDs)
+                Scripts[boxer] = Training.TrainingGround.BoxerAsync;
+        }
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);
 

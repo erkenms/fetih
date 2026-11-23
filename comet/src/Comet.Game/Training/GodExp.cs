@@ -31,7 +31,7 @@ namespace Comet.Game.Training
         // No online training in the training grounds: the online one counts its own points
         // (StrRes 11044) and the offline one pays when claimed
         public static bool Trains(uint mapID) =>
-            mapID != OfflineTraining.MapID && mapID != OfflineTraining.OnlineGroundMapID;
+            mapID != OfflineTraining.MapID && mapID != TrainingGround.MapID;
 
         public static async Task HandleAsync(Client client, GodExpAction action)
         {

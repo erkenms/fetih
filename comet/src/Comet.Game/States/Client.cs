@@ -61,6 +61,9 @@ namespace Comet.Game.States
         public int AttackRun { get; set; }
         public DateTime NextAttackAt { get; set; }
 
+        // Where Boxer Huang sends the player back to from the training ground; on the player's own queue
+        public World.MapPoint TrainingReturn { get; set; }
+
         // When the next minute of online training counts; MinValue while it doesn't run
         public DateTime NextOnlineTrainingAt { get; set; }
 

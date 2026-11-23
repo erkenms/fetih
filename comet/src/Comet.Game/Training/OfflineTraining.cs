@@ -17,7 +17,6 @@ namespace Comet.Game.Training
     public static class OfflineTraining
     {
         public const uint MapID = 601;
-        public const uint OnlineGroundMapID = 1039;
         public const ushort EntranceX = 65, EntranceY = 55;
 
         // Hours of training that count, by VIP level (Cn_Res STR_VIP_Acrobatics; 15 without)
