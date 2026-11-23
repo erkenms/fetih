@@ -102,6 +102,25 @@ namespace Comet.Game.Items
             IsUpgradable(typeID) && NextLevelID(typeID) is uint nextID &&
             Kernel.ItemTypes.TryGet(nextID, out var next) ? next : null;
 
+        // The same gear at the lowest level that upgrades to it: what a rebirth turns worn gear
+        // into. Null when it has no lower level.
+        public static ItemType LowestLevel(uint typeID) => LowestLevel(typeID, Kernel.ItemTypes);
+
+        public static ItemType LowestLevel(uint typeID, ItemTypeTable types)
+        {
+            if (!IsUpgradable(typeID))
+                return null;
+            for (uint id = typeID / 1000 * 1000 + typeID % 10; id < typeID; id += 10)
+            {
+                if (!types.TryGet(id, out var lowest))
+                    continue;
+                for (uint? next = id; next is uint n && n <= typeID; next = NextLevelID(n))
+                    if (n == typeID)
+                        return lowest;
+            }
+            return null;
+        }
+
         private static bool IsUpgradable(uint typeID) =>
             ItemSlots.IsMonsterDrop(typeID) && !ItemSlots.IsArrow(typeID);
 

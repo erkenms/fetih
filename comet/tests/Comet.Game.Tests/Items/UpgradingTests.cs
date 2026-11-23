@@ -1,5 +1,6 @@
 namespace Comet.Game.Tests.Items
 {
+    using System.Linq;
     using Comet.Game.Items;
     using Xunit;
 
@@ -22,5 +23,17 @@ namespace Comet.Game.Tests.Items
         [InlineData(410229u, 11)]  // a super level-22 blade: a fifth of 40% is 8%, raised to 10%
         public void MeteorCostsRiseWithLevelAndQuality(uint type, int meteors) =>
             Assert.Equal(meteors, Upgrading.MeteorCost(type));
+
+        [Fact]
+        public void GearGoesBackToTheLowestLevelThatUpgradesToIt()
+        {
+            var types = new ItemTypeTable(new[] { 111003u, 111013u, 111023u, 120003u, 120023u, 410305u, 410315u }
+                .Select(id => new ItemType { ID = id }));
+            Assert.Equal(111003u, Upgrading.LowestLevel(111023, types).ID);
+            Assert.Equal(120003u, Upgrading.LowestLevel(120023, types).ID);
+            Assert.Equal(410305u, Upgrading.LowestLevel(410315, types).ID);
+            Assert.Null(Upgrading.LowestLevel(111003, types));
+            Assert.Null(Upgrading.LowestLevel(1088000, types));
+        }
     }
 }
