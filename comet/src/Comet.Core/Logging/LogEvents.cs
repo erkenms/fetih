@@ -285,6 +285,20 @@ namespace Comet.Core.Logging
         public const string ClanWarRevenue = "clanwar.revenue";
         public const string ClanWarRejected = "clanwar.rejected";
         public const string ClanWarLoopFailed = "clanwar.loop_failed";
+        public const string EventsLoaded = "event.loaded";
+        public const string EventEdge = "event.edge";
+        public const string EventLoopFailed = "event.loop_failed";
+        public const string ElitePkLoaded = "elitepk.loaded";
+        public const string ElitePkOpened = "elitepk.opened";
+        public const string ElitePkSignedUp = "elitepk.signed_up";
+        public const string ElitePkLeft = "elitepk.left";
+        public const string ElitePkStarted = "elitepk.started";
+        public const string ElitePkRound = "elitepk.round";
+        public const string ElitePkMatchEnded = "elitepk.match_ended";
+        public const string ElitePkEnded = "elitepk.ended";
+        public const string ElitePkRewardClaimed = "elitepk.reward_claimed";
+        public const string ElitePkRejected = "elitepk.rejected";
+        public const string ElitePkFailed = "elitepk.failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

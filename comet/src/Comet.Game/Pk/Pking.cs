@@ -62,6 +62,8 @@ namespace Comet.Game.Pk
         {
             if (attacker == target || attacker.Character == null || target.Character == null)
                 return false;
+            if (Tournaments.ElitePk.CanFight(attacker, target) is bool tournament)
+                return tournament;
             if (Arena.Qualifier.CanFight(attacker, target) is bool fighting)
                 return fighting;
             if (Social.ClanWar.CanFight(attacker, target) is bool warring)

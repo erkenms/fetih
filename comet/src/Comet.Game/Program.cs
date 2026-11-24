@@ -92,6 +92,19 @@
 
             try
             {
+                Events.EventScheduler.Schedule = Events.EventSchedule.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.EventsLoaded).Information(
+                    "Loaded {EventCount} weekly events from client ini", Events.EventScheduler.Schedule.All.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/Activity.ini from {Directory}", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.TutorTypes = Social.TutorTypes.Load(config.Maps.ResolveClientDirectory());
             }
             catch (Exception e)
@@ -278,6 +291,7 @@
                 Social.ClanWar.EntryTime = TimeSpan.FromMinutes(Math.Max(0, config.ClanWar.EntryMinutes));
                 Social.ClanWar.Fee = config.ClanWar.Fee;
                 await Social.ClanWar.LoadAsync();
+                await Tournaments.ElitePk.LoadAsync();
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
@@ -408,6 +422,14 @@
             _ = Arena.Qualifier.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Social.GuildWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Social.ClanWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Tournaments.ElitePk.KnockoutTime = TimeSpan.FromSeconds(Math.Max(1, config.ElitePk.KnockoutSeconds));
+            Tournaments.ElitePk.FinalTime = TimeSpan.FromSeconds(Math.Max(1, config.ElitePk.FinalSeconds));
+            Tournaments.ElitePk.CountdownTime = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.CountdownSeconds));
+            Tournaments.ElitePk.RoundBreak = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.RoundBreakSeconds));
+            Tournaments.ElitePk.LeaveDelay = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.LeaveSeconds));
+            Tournaments.ElitePk.Subscribe();
+            _ = Tournaments.ElitePk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            _ = Events.EventScheduler.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Chat.Broadcasts.Interval = TimeSpan.FromSeconds(Math.Max(1, config.Broadcast.IntervalSeconds));
             _ = Chat.Broadcasts.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 

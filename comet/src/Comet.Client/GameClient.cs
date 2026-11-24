@@ -865,6 +865,21 @@ namespace Comet.Client
             return packet == null ? null : ArenaScore.Parse(packet);
         }
 
+        public async Task<ElitePkArenic> WaitForElitePkAsync(Func<ElitePkArenic, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgElitePKArenic && match(ElitePkArenic.Parse(p)), timeout);
+            return packet == null ? null : ElitePkArenic.Parse(packet);
+        }
+
+        // The Elite PK score is laid out like the arena's
+        public async Task<ArenaScore> WaitForElitePkScoreAsync(Func<ArenaScore, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgElitePKScore && match(ArenaScore.Parse(p)), timeout);
+            return packet == null ? null : ArenaScore.Parse(packet);
+        }
+
         public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>
             this.SendAsync(AllotMessage.Build(strength, agility, vitality, spirit));
 

@@ -148,3 +148,14 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   `%u %d %u %u %d %d %d` (challenged NPC, days, pack, next pack, challenged, income claimed, exp
   claimed), strings 4 and 5 the occupied and challenged map names; MsgFamily 29 carries the same
   seven numbers. The battlefield is map 3024 (`family.7z`); packs are 722454-722478 per city.
+- **Elite PK** (2026-11-24, Mac `CMsgElitePK*::Process`, `CElitePKGameMgr`): MsgElitePKArenic 2218
+  action u16 at 4: 1 closes the windows, 2 match start (score window, seconds u16 at 44), 3 result
+  (`sports_victory` if u32 at 8 is 1, else `sports_failure`), 4 leaves the match. MsgElitePKScore 2222
+  is MsgArenicScore's layout. MsgPKEliteMatchInfo 2219 (the bracket, 124 bytes when the client sends
+  it): action u16 at 4, u32 at 6, total matches u32 at 10, group u16 at 14, stage u16 at 16 (3-4
+  knock-out, 5 last eight, 6 semifinal, 7 third place, 8-10 final), match seconds u16 at 18, count
+  u32 at 20, then 100-byte `PKELITEMATCH_INFO` entries from 24, not traced further.
+  MsgElitePKGameRankInfo 2223 (56 bytes from the client: u16 at 4, u32 at 8) is the top-8 list. The
+  server sends only 2218 and 2222 so far. Schedule and groups come from `ini/Activity.ini`; the
+  waiting rooms 2075-2078 named in GameMapEx.ini aren't in GameMap.dat, so the server uses 2068
+  (`pk.7z`). Prize packs 720714-720729 (group + 4 × place), per-match EXP pack 720713.

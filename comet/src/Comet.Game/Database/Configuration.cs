@@ -26,6 +26,7 @@ namespace Comet.Game.Database
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
         public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
         public ClanWarConfiguration ClanWar { get; set; } = new ClanWarConfiguration();
+        public ElitePkConfiguration ElitePk { get; set; } = new ElitePkConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
@@ -173,6 +174,16 @@ namespace Comet.Game.Database
 
         // Daily Clan War in the server's local time zone: sign-up closes at SignUpClose and
         // reopens at the war's end; the battlefield takes entrants for EntryMinutes after the start
+        // Elite PK Tournament match timings; its days and times come from the client's Activity.ini
+        public class ElitePkConfiguration
+        {
+            public int KnockoutSeconds { get; set; } = 180;
+            public int FinalSeconds { get; set; } = 300;
+            public int CountdownSeconds { get; set; } = 10;
+            public int RoundBreakSeconds { get; set; } = 15;
+            public int LeaveSeconds { get; set; } = 3;
+        }
+
         public class ClanWarConfiguration
         {
             public int StartHour { get; set; } = 20;

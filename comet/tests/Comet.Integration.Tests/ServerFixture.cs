@@ -53,6 +53,8 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) MeteorTear = (1088002, "MeteorTear", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Emerald = (1080001, "Emerald", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExpBall = (723700, "ExpBall", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) ElitePkExpPack = (720713, "ElitePKEXPPack", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) ElitePkChampionPack = (720714, "RefinedElitePKChampionPack", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CelestialStone = (721259, "CelestialStone", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExemptionToken = (723701, "ExemptionToken", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) OblivionDew = (711083, "OblivionDew", 1, 0);
@@ -299,6 +301,10 @@ namespace Comet.Integration.Tests
         public const uint Arena = 900000;
         public const int ArenaInviteSeconds = 3, ArenaCountdownSeconds = 3, ArenaEndSeconds = 1;
 
+        // The Elite PK waiting room, and short match timings
+        public const uint ElitePkWaitingRoom = 2068;
+        public const int ElitePkCountdownSeconds = 2;
+
         // Short, so a test can see a periodic save happen
         public const int SaveIntervalSeconds = 2;
 
@@ -465,6 +471,8 @@ namespace Comet.Integration.Tests
                 "--GuildWar:PoleLife=2000", "--GuildWar:GateLife=1000",
                 "--ClanWar:StartHour=0", "--ClanWar:StartMinute=0", "--ClanWar:EndHour=0", "--ClanWar:EndMinute=0",
                 "--ClanWar:SignUpCloseHour=0", "--ClanWar:SignUpCloseMinute=0",
+                "--ElitePk:CountdownSeconds=" + ElitePkCountdownSeconds, "--ElitePk:RoundBreakSeconds=1",
+                "--ElitePk:LeaveSeconds=1",
                 "--Broadcast:IntervalSeconds=2", "--Metrics:Port=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
@@ -490,6 +498,7 @@ namespace Comet.Integration.Tests
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z"), (TrainingGround, "map/map/tg.7z"),
                     (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"), (ClanWarField, "map/map/family.7z"),
+                    (ElitePkWaitingRoom, "map/map/pk.7z"),
                     (BirthVillage, "map/map/newbie.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
@@ -507,11 +516,12 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "mine-four.DMap"), MapFiles.DMap(184, 184));
             File.WriteAllBytes(Path.Combine(maps, "gw.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(maps, "family.DMap"), MapFiles.DMap(170, 170));
+            File.WriteAllBytes(Path.Combine(maps, "pk.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
                     HelmetRefinedLowest, HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald, OblivionDew,
-                    SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
+                    SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, ElitePkExpPack, ElitePkChampionPack, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
                     Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies, NormalTwinCityClanPack,
@@ -559,6 +569,10 @@ namespace Comet.Integration.Tests
                 (2, 25, 11, 7, new ushort[] { Bless.Type })));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "Activity.ini"),
+                "[tasktoday]\r\nNum=2\r\n\r\n[t9]\r\nid=9\r\ntype=1\r\nDate=5\r\nName=Elite PK\r\nLevel_min=1\r\n" +
+                "Level_max=99\r\nEnter1=19:55~20:06\r\nLast1=20:06\r\n\r\n[t12]\r\nid=12\r\ntype=1\r\nDate=5\r\n" +
+                "Name=Elite PK\r\nLevel_min=130\r\nLevel_max=200\r\nEnter1=19:55~20:00\r\nLast1=20:00\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "HonorRewards.ini"),
                 "RankAmount=3\r\n1=15000/100000\r\n2=14000/90000\r\n3=13000/80000\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "tutorType.ini"),

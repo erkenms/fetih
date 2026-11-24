@@ -278,6 +278,19 @@ namespace Comet.Game.Arena
             return true;
         }
 
+        // Honor Points earned outside the qualifier, like the Elite PK Tournament's
+        public static void AddHonor(Client client, uint honor)
+        {
+            DbArena save;
+            lock (Sync)
+            {
+                var record = RecordOf(client.Character, DateTime.UtcNow);
+                record.AddHonor(honor);
+                save = record.Snapshot();
+            }
+            _ = SaveAsync(save);
+        }
+
         public static bool IsSignedUp(Client client)
         {
             lock (Sync)
@@ -306,12 +319,14 @@ namespace Comet.Game.Arena
             var now = DateTime.UtcNow;
             string reason;
             uint points;
+            bool tournament = Tournaments.ElitePk.IsTakingPart(client);
             lock (Sync)
             {
                 var record = RecordOf(character, now);
                 points = record.Stored.Points;
                 reason =
                     character.Level < ArenaRecord.MinLevel ? "level" :
+                    tournament ? "tournament" :
                     InJail(character) ? "jail" :
                     Kernel.Maps?.Exists(MapID) != true ? "no_arena_map" :
                     MatchOf(client.ID) != null ? "in_match" :
@@ -776,6 +791,7 @@ namespace Comet.Game.Arena
                 "no_points" => "You don't have enough Arena Points to sign up. Please pay silver to buy some.",
                 "jail" => "You can't sign up for the Qualifier in jail.",
                 "in_match" => "You are already in a Qualifier match.",
+                "tournament" => "You can't join the Arena during the Elite PK Tournament.",
                 "no_arena_map" => "The Qualifier is closed.",
                 "silver" => "Sorry, you don't have enough silver.",
                 "enough_points" => $"You can only buy Arena Points up to {PointsForSale}.",

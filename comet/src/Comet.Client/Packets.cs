@@ -39,6 +39,8 @@ namespace Comet.Client
         public const ushort MsgQualifyingSeasonRankList = 2208;
         public const ushort MsgQualifyingDetailInfo = 2209;
         public const ushort MsgArenicScore = 2210;
+        public const ushort MsgElitePKArenic = 2218;
+        public const ushort MsgElitePKScore = 2222;
         public const ushort MsgSynpOffer = 1058;
         public const ushort MsgSyndicateAttributeInfo = 1106;
         public const ushort MsgSyndicate = 1107;
@@ -998,6 +1000,16 @@ namespace Comet.Client
     }
 
     // The match score: IDs at 4 and 28, damage at 24 and 48
+    // An Elite PK match for one fighter: action at 4 (2 start, 3 result, 4 left the match,
+    // 1 closed), won at 8, match seconds (u16) at 44
+    public sealed record ElitePkArenic(ushort Action, bool Won, ushort Seconds)
+    {
+        public const ushort Close = 1, Start = 2, Result = 3, Leave = 4;
+
+        public static ElitePkArenic Parse(byte[] packet) => new ElitePkArenic(
+            BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt32(packet, 8) == 1, BitConverter.ToUInt16(packet, 44));
+    }
+
     public sealed record ArenaScore(uint IdA, uint DamageA, uint IdB, uint DamageB)
     {
         public static ArenaScore Parse(byte[] packet) => new ArenaScore(

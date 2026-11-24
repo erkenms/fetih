@@ -101,10 +101,13 @@ namespace Comet.Network.Packets
         MsgQualifyingDetailInfo,
         MsgArenicScore,
         MsgArenicWitness,
+        MsgElitePKArenic = 2218,
         // Elite PK bracket and match queries sent by the Elite PK dialogs.
         MsgPKEliteMatchInfo = 2219,
         // PK log queries sent by CPKLogMgr::QueryPKLog.
         MsgPkStatistic = 2220,
+        MsgElitePKScore = 2222,
+        MsgElitePKGameRankInfo = 2223,
         // War flag status and action queries sent by CWarFlagMgr and flag dialogs.
         MsgWarFlag = 2224,
         // Faction recruiting ad-list paging sent by CFactionRecruitMgr::QueryAdList.

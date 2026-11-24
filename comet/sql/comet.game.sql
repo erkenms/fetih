@@ -281,6 +281,20 @@ CREATE TABLE `family_war_signup` (
   PRIMARY KEY (`FamilyID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Elite PK Tournament placements waiting to be claimed at the Elite PK Envoy: one per
+-- character. Group 0-3 is the level group (under 100, 100-119, 120-129, 130+), Rank 1-3 the
+-- podium and 4 the rest of the final eight. Unclaimed rows go when the group's next
+-- tournament opens.
+DROP TABLE IF EXISTS `elite_pk_reward`;
+CREATE TABLE `elite_pk_reward` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Group` tinyint(3) unsigned NOT NULL,
+  `Rank` tinyint(3) unsigned NOT NULL,
+  `Name` varchar(16) NOT NULL DEFAULT '',
+  `Claimed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
 DROP TABLE IF EXISTS `arena`;

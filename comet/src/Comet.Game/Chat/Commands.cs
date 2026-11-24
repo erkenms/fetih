@@ -62,6 +62,8 @@ namespace Comet.Game.Chat
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
             new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
             new Command(new[] { "clanwar", "cw" }, Authority.GameMaster, ClanWarUsage, ClanWarAsync),
+            new Command(new[] { "elitepk", "epk" }, Authority.GameMaster, ElitePkUsage, ElitePkAsync),
+            new Command(new[] { "events" }, Authority.GameMaster, "/events", EventsAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
             new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
         };
@@ -608,6 +610,42 @@ namespace Comet.Game.Chat
             await Talk.NoticeAsync(client, top > 0
                 ? $"Arena season {season} saved with top {top}; {rewarded} players got honor; reset {reset} records."
                 : $"Arena season reset {reset} records (nobody fought).");
+            return true;
+        }
+
+        private const string ElitePkUsage = "/elitepk <open|start|status> [group 0-3, default yours]";
+
+        // Opens sign-up or starts a level group's tournament now, outside its schedule
+        private static async Task<bool> ElitePkAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length < 1 || args.Length > 2)
+                return await UsageAsync(client, ElitePkUsage);
+            int group = Tournaments.ElitePk.GroupOf(client.Character.Level);
+            if (args.Length == 2 && (!int.TryParse(args[1], out group) || group < 0 || group >= Tournaments.ElitePk.Groups))
+                return await UsageAsync(client, ElitePkUsage);
+            switch (args[0].ToLowerInvariant())
+            {
+                case "open":
+                    await Talk.NoticeAsync(client, await Tournaments.ElitePk.OpenAsync(group, DateTime.UtcNow)
+                        ? $"Elite PK sign-up opened for {Tournaments.ElitePk.GroupNames[group]}."
+                        : "That group's tournament is already open or running, or its maps are missing.");
+                    return true;
+                case "start":
+                    await Talk.NoticeAsync(client, await Tournaments.ElitePk.StartAsync(group, DateTime.UtcNow)
+                        ? $"Elite PK started for {Tournaments.ElitePk.GroupNames[group]}."
+                        : "Not started: sign-up isn't open, or fewer than 2 players are waiting.");
+                    return true;
+                case "status":
+                    await Talk.NoticeAsync(client, Tournaments.ElitePk.StatusText());
+                    return true;
+                default:
+                    return await UsageAsync(client, ElitePkUsage);
+            }
+        }
+
+        private static async Task<bool> EventsAsync(Client client, string[] args, string rest)
+        {
+            await Talk.NoticeAsync(client, Events.EventScheduler.StatusText(DateTime.UtcNow));
             return true;
         }
 

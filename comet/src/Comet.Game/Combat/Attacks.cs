@@ -494,12 +494,14 @@ namespace Comet.Game.Combat
                 "{Attacker} hit {Name} for {Damage}; {Health} health left ({Kind})",
                 attackerCharacter.Name, character.Name, damage, character.HealthPoints, kind);
             await Arena.Qualifier.OnHitAsync(attacker, target, dealt);
+            await Tournaments.ElitePk.OnHitAsync(attacker, target, dealt);
 
             if (character.HealthPoints > 0)
                 return;
             bool guilty = Pking.IsGuilty(target, DateTime.UtcNow);
             await Death.DieAsync(target, attacker.ID, attackerCharacter.Name);
             if (!await Arena.Qualifier.OnKillAsync(attacker, target) &&
+                !await Tournaments.ElitePk.OnKillAsync(attacker, target) &&
                 !await Social.ClanWar.OnKillAsync(attacker, target))
             {
                 await Pking.OnKillAsync(attacker, target, guilty);
