@@ -50,6 +50,7 @@ namespace Comet.Network.Packets
         MsgTitle = 1130,
         MsgTaskStatus = 1134,
         MsgTaskDetailInfo,
+        MsgRank = 1151,
         MsgLoginChallengeS = 1213,
         MsgLoginProofC,
         MsgFamily = 1312,

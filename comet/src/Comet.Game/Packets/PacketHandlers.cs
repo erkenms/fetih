@@ -47,6 +47,9 @@ namespace Comet.Game.Packets
                 [PacketType.MsgDataArray] = () => new MsgDataArray(),
                 [PacketType.MsgFuse] = () => new MsgFuse(),
                 [PacketType.MsgAura] = () => new MsgAura(),
+                [PacketType.MsgData] = () => new MsgData(),
+                [PacketType.MsgTaskStatus] = () => new MsgTaskStatus(),
+                [PacketType.MsgRank] = () => new MsgRank(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>
