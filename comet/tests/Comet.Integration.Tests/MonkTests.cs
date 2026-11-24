@@ -59,6 +59,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task RadiantPalmAtATargetOutOfReachTurnsTheMonkTowardIt()
+        {
+            var at = ServerFixture.PheasantForPalm;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 4, at.Y, GameMaster, level: 100)).Player;
+            await LearnAsync(player, 10381);
+            await HoldBeadsAsync(player);
+
+            // Eight cells up the screen, past the four paces it reaches
+            await player.Game.CastAsync(player.User.Id, 10381, 0, (ushort)(at.X + 12), (ushort)(at.Y - 8));
+            var turn = await player.Game.WaitForActionAsync(ActionMessage.Turn, player.User.Id);
+            Assert.NotNull(turn);
+            Assert.Equal(5, turn.Direction);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10381);
+            Assert.Empty(effect.Targets);
+        }
+
+        [Fact]
         public async Task WhirlwindKickHitsAroundTheCasterWithinThreePaces()
         {
             var at = ServerFixture.PheasantForKick;

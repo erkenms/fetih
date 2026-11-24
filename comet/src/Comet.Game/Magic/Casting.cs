@@ -570,6 +570,15 @@ namespace Comet.Game.Magic
                 await Movement.DashAsync(client, toX, toY, shown);
             else
             {
+                // The client turns the caster toward the first target and keeps their facing
+                // when there's none, so a swing at nothing (a target out of reach) turns first
+                if (victims.Count == 0 && spell.Sort is MagicSort.Line or MagicSort.RadiantPalm or MagicSort.Fan)
+                {
+                    character.Direction = Movement.DirectionTo(character.X, character.Y, x, y, character.Direction);
+                    var turn = MsgAction.Turn(client.ID, character.Direction);
+                    await client.SendAsync(turn);
+                    await Movement.SendToViewAsync(client, turn);
+                }
                 await client.SendAsync(shown);
                 await Movement.SendToViewAsync(client, shown);
             }
