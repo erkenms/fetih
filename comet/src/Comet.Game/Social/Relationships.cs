@@ -15,6 +15,7 @@ namespace Comet.Game.Social
     public static class Relationships
     {
         public const int MaxFriends = 50;
+        // The help page: the latest five players who killed you
         public const int MaxEnemies = 5;
 
         private static readonly SemaphoreSlim Gate = new SemaphoreSlim(1, 1);
@@ -182,9 +183,21 @@ namespace Comet.Game.Social
             await Gate.WaitAsync();
             try
             {
-                if (victim.Enemies.ContainsKey(killer.ID) || victim.Enemies.Count >= MaxEnemies)
+                var now = System.DateTime.UtcNow;
+                if (victim.Enemies.ContainsKey(killer.ID))
+                {
+                    await RelationshipsRepository.AddEnemyAsync(victim.ID, killer.ID, now);
                     return;
-                await RelationshipsRepository.AddEnemyAsync(victim.ID, killer.ID);
+                }
+                // The list keeps the latest killers
+                if (victim.Enemies.Count >= MaxEnemies)
+                {
+                    uint oldest = await RelationshipsRepository.OldestEnemyAsync(victim.ID);
+                    await RelationshipsRepository.RemoveEnemyAsync(victim.ID, oldest);
+                    if (victim.Enemies.TryRemove(oldest, out var gone))
+                        await victim.SendAsync(new MsgFriend(FriendAction.EnemyDelete, oldest, gone.Name, false));
+                }
+                await RelationshipsRepository.AddEnemyAsync(victim.ID, killer.ID, now);
                 victim.Enemies[killer.ID] = (killerCharacter.Name, killerCharacter.Mesh);
                 await victim.SendAsync(new MsgFriend(FriendAction.EnemyAdd, killer.ID, killerCharacter.Name, true));
                 LogEvents.For(typeof(Relationships), LogEvents.EnemyAdded).Information(

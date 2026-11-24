@@ -113,6 +113,7 @@ DROP TABLE IF EXISTS `enemy`;
 CREATE TABLE `enemy` (
   `CharacterID` int(10) unsigned NOT NULL,
   `EnemyID` int(10) unsigned NOT NULL,
+  `AddedAt` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`CharacterID`,`EnemyID`),
   KEY `EnemyID` (`EnemyID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

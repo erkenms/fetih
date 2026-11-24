@@ -1,5 +1,6 @@
 namespace Comet.Game.Database.Repositories
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -38,11 +39,23 @@ namespace Comet.Game.Database.Repositories
                 f.CharacterID == friendID && f.FriendID == characterID).ExecuteDeleteAsync();
         }
 
-        public static async Task AddEnemyAsync(uint characterID, uint enemyID)
+        // Adds the enemy, or moves them to the latest if they're already one
+        public static async Task AddEnemyAsync(uint characterID, uint enemyID, DateTime now)
         {
             using var db = new ServerDbContext();
-            db.Enemies.Add(new DbEnemy { CharacterID = characterID, EnemyID = enemyID });
+            int updated = await db.Enemies.Where(e => e.CharacterID == characterID && e.EnemyID == enemyID)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.AddedAt, now));
+            if (updated > 0)
+                return;
+            db.Enemies.Add(new DbEnemy { CharacterID = characterID, EnemyID = enemyID, AddedAt = now });
             await db.SaveChangesAsync();
+        }
+
+        public static async Task<uint> OldestEnemyAsync(uint characterID)
+        {
+            using var db = new ServerDbContext();
+            return await db.Enemies.Where(e => e.CharacterID == characterID)
+                .OrderBy(e => e.AddedAt).Select(e => e.EnemyID).FirstOrDefaultAsync();
         }
 
         public static async Task RemoveEnemyAsync(uint characterID, uint enemyID)

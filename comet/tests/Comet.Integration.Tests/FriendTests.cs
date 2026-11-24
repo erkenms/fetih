@@ -157,20 +157,23 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task EnemyListRespectsMaxLimit()
+        public async Task TheOldestOfFiveEnemiesGivesWayToANewKiller()
         {
             await using var killer = (await this.PlayingAtAsync(ServerFixture.DesertCity, 150, 100, strength: 5000)).Player;
             await FreePkAsync(killer);
             var (victim, email) = await this.PlayingAtAsync(ServerFixture.DesertCity, 151, 100);
             await this.LogOutAsync(victim);
 
+            uint oldest = 0;
             for (int i = 0; i < 5; i++)
             {
                 var (other, _) = await this.PlayingAsync();
                 await this.LogOutAsync(other);
                 await this.Servers.ExecuteGameSqlAsync(
-                    "INSERT INTO enemy (CharacterID, EnemyID) VALUES (@v, @e)",
-                    ("@v", victim.User.Id), ("@e", other.User.Id));
+                    "INSERT INTO enemy (CharacterID, EnemyID, AddedAt) VALUES (@v, @e, @at)",
+                    ("@v", victim.User.Id), ("@e", other.User.Id), ("@at", new System.DateTime(2026, 1, 1 + i)));
+                if (i == 0)
+                    oldest = other.User.Id;
             }
 
             await using var back = await this.Servers.PlayAsync(email, Password);
@@ -180,10 +183,12 @@ namespace Comet.Integration.Tests
             var kill = await back.Game.WaitForInteractAsync(
                 i => i.Action == InteractMessage.Kill && i.Target == back.User.Id, TimeSpan.FromSeconds(15));
             Assert.Equal(killer.User.Id, kill?.Sender);
-            await SyncAsync(back);
-            Assert.Null(await back.Game.WaitForFriendAsync(
-                f => f.Action == FriendMessage.EnemyAdd && f.Id == killer.User.Id, Already));
-            Assert.Equal(0, await this.RowsAsync("enemy", "EnemyID", victim.User.Id, killer.User.Id));
+            Assert.NotNull(await back.Game.WaitForFriendAsync(
+                f => f.Action == FriendMessage.EnemyDelete && f.Id == oldest));
+            Assert.NotNull(await back.Game.WaitForFriendAsync(
+                f => f.Action == FriendMessage.EnemyAdd && f.Id == killer.User.Id));
+            Assert.Equal(1, await this.RowsAsync("enemy", "EnemyID", victim.User.Id, killer.User.Id));
+            Assert.Equal(0, await this.RowsAsync("enemy", "EnemyID", victim.User.Id, oldest));
         }
     }
 }

@@ -1,5 +1,6 @@
 namespace Comet.Game.Database.Models
 {
+    using System;
     using System.ComponentModel.DataAnnotations.Schema;
 
     [Table("enemy")]
@@ -7,5 +8,7 @@ namespace Comet.Game.Database.Models
     {
         public uint CharacterID { get; set; }
         public uint EnemyID { get; set; }
+        // When they last killed the character; the oldest gives way past the limit
+        public DateTime AddedAt { get; set; }
     }
 }
