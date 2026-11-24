@@ -102,5 +102,36 @@
         { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
       ],
     },
+    {
+      "id": 102063, "fare": 500, "face": 130, // GuildConductor4, Frozen Grotto 4
+      "text": ["Would you like to go to the Guild Arena in Twin City? I can teleport you there for 500 silver."],
+      "destinations": [
+        { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
+      ],
+    },
+    {
+      "id": 1338, "fare": 0, "face": 6, // Lottery exit, map 700
+      "text": ["Are you ready to leave?"],
+      "destinations": [
+        { "name": "Yes.", "map": 1036, "x": 205, "y": 196 },
+      ],
+      "close": "Not yet!",
+    },
+    {
+      "id": 10010, "fare": 0, "face": 6, // VillageGateman, Birth Village
+      "text": ["Are you ready to leave Birth Village and head to Twin City?"],
+      "destinations": [
+        { "name": "Yes, send me to Twin City.", "map": 1002, "x": 430, "y": 380 },
+      ],
+      "close": "Not yet!",
+    },
+    {
+      "id": 1342, "fare": 0, "face": 6, // Labyrinth 4 exit, map 1354
+      "text": ["This is the last floor of the Labyrinth. Are you ready to head back to Twin City?"],
+      "destinations": [
+        { "name": "Yes, please.", "map": 1002, "x": 430, "y": 378 },
+      ],
+      "close": "I'm not ready!",
+    },
   ]
 }

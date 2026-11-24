@@ -50,5 +50,45 @@
       "text": ["Good and Evil each have their own destiny. I hope people in this world can find their place."],
       "reply": "Nice to meet you.",
     },
+    {
+      "id": 425, "face": 91, // OldGeneralYang, Birth Village
+      "text": ["Welcome! The Recruit Master is waiting for you! Go speak to him, and find out more about this new world!"],
+      "reply": "Thanks.",
+    },
+    {
+      "id": 10004, "face": 6, // VillageWiseGuy, Birth Village
+      "text": ["Well, if you want to talk to any of the traders or people in town, just walk up and click them! Easy, huh?"],
+      "reply": "I see.",
+    },
+    {
+      "id": 10005, "face": 9, // Blacksmith, Birth Village
+      "text": ["We blacksmiths can be found from north to south, east to west. We promise a fine selection of weapons for you to purchase!"],
+      "reply": "I see.",
+    },
+    {
+      "id": 10006, "face": 10, // Warehouseman, Birth Village
+      "text": ["Welcome! I run a warehouse in every city. You can store your money and items in my warehouses, and retrieve them for free."],
+      "reply": "I see.",
+    },
+    {
+      "id": 10007, "face": 7, // Armorer, Birth Village
+      "text": ["Armorers swear only to provide the very best in defense. Whether it's robes or helmets, we stock it all."],
+      "reply": "I see.",
+    },
+    {
+      "id": 10008, "face": 1, // Pharmacist, Birth Village
+      "text": ["Hi! I am selling all kinds of potions and City Gate Scrolls in the cities. I also sell fireworks and skill books in the market."],
+      "reply": "I see.",
+    },
+    {
+      "id": 10009, "face": 6, // VillageIdiot, Birth Village
+      "text": ["Hello, there! Welcome! It is so nice to see that another young person has chosen to follow the path of Light!"],
+      "reply": "Thank you.",
+    },
+    {
+      "id": 10055, "face": 6, // TaoistStar, Birth Village
+      "text": ["Welcome! The Recruit Master is waiting for you! Go speak to him, and find out more about this new world!"],
+      "reply": "Thanks.",
+    },
   ]
 }

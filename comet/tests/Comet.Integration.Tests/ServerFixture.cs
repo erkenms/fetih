@@ -266,6 +266,7 @@ namespace Comet.Integration.Tests
 
         // The market, with the booth flags of Data/npcs.json
         public const uint Market = 1036;
+        public const uint BirthVillage = 1010;
 
         // Players may fight in Desert City; on a PK field it's no crime (Data/maps.json).
         // Twin City and the market forbid it. Not 1005, the arena: NpcTests need it missing.
@@ -465,10 +466,12 @@ namespace Comet.Integration.Tests
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z"), (TrainingGround, "map/map/tg.7z"),
-                    (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z")));
+                    (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"),
+                    (BirthVillage, "map/map/newbie.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
+            File.WriteAllBytes(Path.Combine(maps, "newbie.DMap"), MapFiles.DMap(120, 120));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(maps, "jobcenter.DMap"), MapFiles.DMap(96, 96));

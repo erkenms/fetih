@@ -10,7 +10,7 @@ namespace Comet.Integration.Tests
     public class NpcTests : IntegrationTest
     {
         private const uint Conductress = 10050, Guard = 30104, Warehouseman = 8, Unscripted = 10002, ArenaKeeper = 10021,
-            CloudSaint = 2000, MineAssistant = 4293;
+            CloudSaint = 2000, MineAssistant = 4293, OldGeneralYang = 425, VillageGateman = 10010;
 
         public NpcTests(ServerFixture servers) : base(servers) { }
 
@@ -135,6 +135,35 @@ namespace Comet.Integration.Tests
             await player.Game.AnswerNpcAsync(1);
             await SyncAsync(player);
             Assert.Null(await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id, Already));
+        }
+
+        [Fact]
+        public async Task BirthVillageTalkerGreetsThePlayer()
+        {
+            await using var player = (await this.PlayingAtAsync(ServerFixture.BirthVillage, 95, 42)).Player;
+            await player.Game.TalkToNpcAsync(OldGeneralYang);
+            var page = await player.Game.ReadDialogAsync();
+            Assert.NotNull(page);
+            Assert.Contains("Recruit Master", page[0].Text);
+            Assert.Equal("Thanks.", page.Single(p => p.Action == DialogMessage.Choice).Text);
+            Assert.Equal((DialogMessage.Face, (byte)91), (page[^2].Action, page[^2].Option));
+        }
+
+        [Fact]
+        public async Task VillageGatemanTeleportsToTwinCity()
+        {
+            await using var player = (await this.PlayingAtAsync(ServerFixture.BirthVillage, 88, 33)).Player;
+            await player.Game.TalkToNpcAsync(VillageGateman);
+            var page = await player.Game.ReadDialogAsync();
+            Assert.NotNull(page);
+            Assert.Contains("Twin City", page[0].Text);
+            Assert.Equal(2, page.Count(p => p.Action == DialogMessage.Choice));
+
+            await player.Game.AnswerNpcAsync(1);
+            var teleport = await player.Game.WaitForActionAsync(ActionMessage.Teleport, player.User.Id);
+            Assert.Equal((1002u, (ushort)430, (ushort)380), (teleport?.Command, teleport?.X, teleport?.Y));
+            await SyncAsync(player);
+            Assert.Null(await player.Game.WaitForAttribAsync(a => a.Values.ContainsKey(Silver), Already));
         }
     }
 }
