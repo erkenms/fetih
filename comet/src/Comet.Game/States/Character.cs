@@ -49,6 +49,7 @@ namespace Comet.Game.States
             to.OfflineReturnY = from.OfflineReturnY;
             to.ExpBallDay = from.ExpBallDay;
             to.ExpBallsUsed = from.ExpBallsUsed;
+            to.FlowerSentDay = from.FlowerSentDay;
             to.SecondPassword = from.SecondPassword;
             to.MutedUntil = from.MutedUntil;
             to.HealthPoints = from.HealthPoints;

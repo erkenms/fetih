@@ -50,6 +50,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgAura] = () => new MsgAura(),
                 [PacketType.MsgData] = () => new MsgData(),
                 [PacketType.MsgTaskStatus] = () => new MsgTaskStatus(),
+                [PacketType.MsgFlower] = () => new MsgFlower(),
                 [PacketType.MsgRank] = () => new MsgRank(),
             };
 

@@ -33,6 +33,7 @@ namespace Comet.Game.Packets
         public uint ClanID { get; set; }
         public ushort ClanRank { get; set; }
         public string ClanName { get; set; } = string.Empty;
+        public uint FlowerCharm { get; set; }
         public Nobility.NobilityRank Nobility { get; set; }
         public uint QuizPoints { get; set; }
         public ushort EnlightenPoints { get; set; }
@@ -106,6 +107,7 @@ namespace Comet.Game.Packets
             this.QuizPoints = character.QuizPoints;
             this.EnlightenPoints = character.EnlightenPoints;
             this.Name = character.Name;
+            this.FlowerCharm = Flowers.FlowerRanking.CharmOf(character.CharacterID);
             this.Nobility = Comet.Game.Nobility.Peerage.RankOf(character.CharacterID);
         }
 
@@ -146,7 +148,8 @@ namespace Comet.Game.Packets
             writer.Write(this.Level);               // 107
             writer.Write((byte)0);                  // 109 equipment viewable
             writer.Write((byte)(this.Away ? 1 : 0)); // 110
-            writer.Write(new byte[16]);             // 111 flowers, ...
+            writer.Write(new byte[12]);             // 111 tutor battle effect, team info
+            writer.Write(this.FlowerCharm);         // 123 flower charm (Dynarank.ini ID)
             writer.Write((uint)this.Nobility);      // 127 nobility rank
             writer.Write(this.ArmorColor);          // 131
             writer.Write(this.ShieldColor);         // 133

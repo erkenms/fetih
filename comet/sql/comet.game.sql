@@ -58,6 +58,7 @@ CREATE TABLE `character` (
   `OfflineReturnY` smallint(5) unsigned NOT NULL DEFAULT '0',
   `ExpBallDay` date DEFAULT NULL,
   `ExpBallsUsed` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `FlowerSentDay` date DEFAULT NULL,
   `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
   `MutedUntil` datetime DEFAULT NULL,
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -263,6 +264,22 @@ DROP TABLE IF EXISTS `nobility`;
 CREATE TABLE `nobility` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Donation` bigint(20) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Flowers received by female characters, all-time and on TodayDate (server-local day).
+DROP TABLE IF EXISTS `flower`;
+CREATE TABLE `flower` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `RedRoses` int(10) unsigned NOT NULL DEFAULT '0',
+  `RedRosesToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `Lilies` int(10) unsigned NOT NULL DEFAULT '0',
+  `LiliesToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `Orchids` int(10) unsigned NOT NULL DEFAULT '0',
+  `OrchidsToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `Tulips` int(10) unsigned NOT NULL DEFAULT '0',
+  `TulipsToday` int(10) unsigned NOT NULL DEFAULT '0',
+  `TodayDate` date DEFAULT NULL,
   PRIMARY KEY (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 

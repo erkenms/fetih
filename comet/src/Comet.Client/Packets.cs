@@ -51,6 +51,8 @@ namespace Comet.Client
         public const ushort MsgConnectEx = 1055;
         public const ushort MsgEncryptCode = 1059;
         public const ushort MsgAccountSRP6 = 1124;
+        public const ushort MsgFlower = 1150;
+        public const ushort MsgRank = 1151;
         public const ushort MsgLoginChallengeS = 1213;
         public const ushort MsgLoginProofC = 1214;
         public const ushort MsgAction = 10010;
@@ -179,6 +181,7 @@ namespace Comet.Client
         public bool Away { get; init; }
         public uint Steed { get; init; }
         public byte SteedPlus { get; init; }
+        public uint FlowerCharm { get; init; }
         public uint Nobility { get; init; }
         // Status bits 64-127, at 30
         public ulong StatusHigh { get; init; }
@@ -206,6 +209,7 @@ namespace Comet.Client
             Away = packet[110] != 0,
             Steed = BitConverter.ToUInt32(packet, 72),
             SteedPlus = packet[141],
+            FlowerCharm = BitConverter.ToUInt32(packet, 123),
             Nobility = BitConverter.ToUInt32(packet, 127),
             StatusHigh = BitConverter.ToUInt64(packet, 30),
         };

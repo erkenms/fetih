@@ -221,6 +221,10 @@ namespace Comet.Core.Logging
         public const string NobilityRank = "nobility.rank";
         public const string NobilityRejected = "nobility.rejected";
 
+        public const string FlowersLoaded = "flowers.loaded";
+        public const string FlowerSent = "flowers.sent";
+        public const string FlowerRejected = "flowers.rejected";
+
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";
         public const string MoveTeleport = "move.teleport";

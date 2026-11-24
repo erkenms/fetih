@@ -58,6 +58,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperThunderGem = (700103, "SuperThunderGem", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bow = (500301, "LuckyBow", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) PlusOneStone = (730001, "+1Stone", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) NineLilies = (752009, "9Lilies", 9, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) PickAxe = (562000, "PickAxe", 1000, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Shield = (900301, "Shield", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Katana = (601301, "Katana", 1099, 0);
@@ -474,7 +475,7 @@ namespace Comet.Integration.Tests
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
-                    Class1MoneyBag, CpBag, AmritaBundle, Amrita }, new[] { Potion, ManaPotion, Bottle },
+                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));

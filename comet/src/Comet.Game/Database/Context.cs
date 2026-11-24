@@ -23,6 +23,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbArena> Arena { get; set; }
         public virtual DbSet<DbArenaSeason> ArenaSeasons { get; set; }
         public virtual DbSet<DbNobility> Nobility { get; set; }
+        public virtual DbSet<DbFlower> Flowers { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -53,6 +54,7 @@ namespace Comet.Game.Database
             builder.Entity<DbArena>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbArenaSeason>(e => e.HasKey(x => new { x.Season, x.Rank }));
             builder.Entity<DbNobility>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbFlower>(e => e.HasKey(x => x.CharacterID));
         }
 
         public static bool Ping()

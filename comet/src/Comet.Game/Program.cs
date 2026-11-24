@@ -214,6 +214,9 @@
                 await Nobility.Peerage.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.NobilityLoaded).Information(
                     "Loaded {DonorCount} nobility donors", Nobility.Peerage.Count);
+                await Flowers.FlowerRanking.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.FlowersLoaded).Information(
+                    "Loaded {RecordCount} flower records", Flowers.FlowerRanking.Count);
             }
             catch (Exception e)
             {

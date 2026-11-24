@@ -159,6 +159,7 @@ namespace Comet.Game.Packets
                 await client.SendAsync(new MsgUserInfo(client.Character));
                 await client.SendAsync(MsgData.ServerTime(Clock.Local(DateTime.UtcNow)));
                 await Nobility.Peerage.LoginAsync(client);
+                await Flowers.FlowerRanking.LoginAsync(client);
                 await client.SendAsync(new MsgUserAttrib(
                     client.ID, MsgUserAttrib.AttributeType.Stamina, client.Energy.Stamina));
                 if (HeavenBlessing.IsBlessed(entered, DateTime.UtcNow))

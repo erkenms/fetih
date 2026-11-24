@@ -54,6 +54,7 @@ namespace Comet.Network.Packets
         MsgTaskDetailInfo,
         // Achievement queries and submissions sent by the achievement manager.
         MsgAchievement = 1136,
+        MsgFlower = 1150,
         MsgRank = 1151,
         MsgLoginChallengeS = 1213,
         MsgLoginProofC,

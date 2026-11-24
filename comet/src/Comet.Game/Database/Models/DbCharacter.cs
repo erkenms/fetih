@@ -74,6 +74,9 @@ namespace Comet.Game.Database.Models
         public virtual DateTime? ExpBallDay { get; set; }
         public virtual byte ExpBallsUsed { get; set; }
 
+        // Server-local day the character last sent their daily free flower
+        public virtual DateTime? FlowerSentDay { get; set; }
+
         // Asked before warehouses and unlocking items; 0 if none is set
         public virtual uint SecondPassword { get; set; }
 
