@@ -58,6 +58,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "xp" }, Authority.GameMaster, "/xp", XpAsync),
             new Command(new[] { "restore" }, Authority.GameMaster, "/restore", RestoreAsync),
             new Command(new[] { "window" }, Authority.GameMaster, WindowUsage, WindowAsync),
+            new Command(new[] { "weather" }, Authority.GameMaster, WeatherUsage, WeatherAsync),
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
         };
 
@@ -357,6 +358,27 @@ namespace Comet.Game.Chat
             if (args.Length != 1 || !ulong.TryParse(args[0], out var amount) || amount == 0)
                 return await UsageAsync(client, "/exp <amount>");
             await Progress.AwardExperienceAsync(client, amount, "gm");
+            return true;
+        }
+
+        private const string WeatherUsage =
+            "/weather <none|rain|snow|leaves|sand|flowers|fireflies|clouds> [intensity] [direction] [look]";
+
+        // Sets the weather of the GM's map for everyone on it; direction in degrees, -180 to 180
+        private static async Task<bool> WeatherAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length is < 1 or > 4 || !World.Weather.Kinds.TryGetValue(args[0].ToLowerInvariant(), out var kind))
+                return await UsageAsync(client, WeatherUsage);
+            uint intensity = 100, look = 0;
+            int direction = 0;
+            if ((args.Length > 1 && (!uint.TryParse(args[1], out intensity) || intensity > 1000)) ||
+                (args.Length > 2 && (!int.TryParse(args[2], out direction) || direction is < -180 or > 180)) ||
+                (args.Length > 3 && (!uint.TryParse(args[3], out look) || look >= kind.Looks)))
+                return await UsageAsync(client, WeatherUsage);
+
+            var weather = new MsgWeather { Code = kind.Code + look, Intensity = intensity, Direction = direction };
+            await World.Weather.SetAsync(client.Character.MapID, weather);
+            await Talk.NoticeAsync(client, $"Weather on map {client.Character.MapID}: {args[0].ToLowerInvariant()}.");
             return true;
         }
 

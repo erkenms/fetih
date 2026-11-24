@@ -129,7 +129,10 @@ namespace Comet.Game.World
                 await Items.Riding.DismountAsync(client, "map");
             await client.SendAsync(MsgAction.Teleport(client.ID, mapID, x, y, character.Direction));
             if (from != to)
+            {
                 await client.SendAsync(MsgMapInfo.For(mapID));
+                await Weather.SendAsync(client, mapID);
+            }
             await Visibility.EnterAsync(client);
             if (mapID == Npcs.Market.MapID && from.Id != mapID)
                 client.MarketReturn = (from.Id, fromX, fromY);

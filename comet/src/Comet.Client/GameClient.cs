@@ -683,6 +683,14 @@ namespace Comet.Client
             return packet == null ? null : TradeBuddyInfo.Parse(packet);
         }
 
+        // The weather code, intensity and direction
+        public async Task<(uint Code, uint Intensity, int Direction)?> WaitForWeatherAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgWeather, timeout);
+            return packet == null ? null
+                : (BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8), BitConverter.ToInt32(packet, 12));
+        }
+
         public Task GodExpAsync(byte action) => this.SendAsync(GodExpMessage.Build(action));
 
         public async Task<GodExpMessage> WaitForGodExpAsync(Func<GodExpMessage, bool> match, TimeSpan? timeout = null)

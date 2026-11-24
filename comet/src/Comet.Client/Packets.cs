@@ -57,6 +57,7 @@ namespace Comet.Client
         public const ushort MsgPlayer = 10014;
         public const ushort MsgUserAttrib = 10017;
         public const ushort MsgGodExp = 1036;
+        public const ushort MsgWeather = 1016;
         public const ushort MsgPlayerAttribInfo = 1040;
         public const ushort MsgTrainingInfo = 2043;
         public const ushort MsgTraining = 2044;

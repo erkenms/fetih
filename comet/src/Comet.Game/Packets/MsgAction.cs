@@ -199,6 +199,7 @@ namespace Comet.Game.Packets
                     msg.Y = client.Character.Y;
                     await client.SendAsync(msg);
                     await client.SendAsync(MsgMapInfo.For(msg.Command));
+                    await World.Weather.SendAsync(client, msg.Command);
                     await Training.OfflineTraining.LoginAsync(client);
                 },
 
