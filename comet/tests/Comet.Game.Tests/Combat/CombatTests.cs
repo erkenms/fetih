@@ -6,6 +6,7 @@ namespace Comet.Game.Tests.Combat
     using Comet.Game.Combat;
     using Comet.Game.Database.Models;
     using Comet.Game.Items;
+    using Comet.Game.Magic;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -206,11 +207,52 @@ namespace Comet.Game.Tests.Combat
         {
             var types = new MonsterTypeTable(MonsterTypeTable.Load(DataFiles.PathOf("monsters.json")));
             Assert.True(types.TryGet(1, out var pheasant));
-            Assert.Equal(("Pheasant", 33u), (pheasant.Name, pheasant.Life));
+            Assert.Equal(("Pheasant", 33u, false), (pheasant.Name, pheasant.Life, pheasant.HasMagic));
             Assert.True(types.TryGet(900, out var guard) && guard.IsGuard);
+            Assert.Equal((ushort)8036, guard.MagicType);
+            Assert.True(types.TryGet(7004, out var fireDevil));
+            Assert.Equal((ushort)1000, fireDevil.MagicType);
+            Assert.True(types.TryGet(38, out var birdKing));
+            Assert.Equal(((ushort)1002, 30), (birdKing.MagicType, birdKing.MagicHitRate));
+            Assert.True(types.TryGet(3587, out var dragon) && dragon.Spells != null);
+            Assert.Contains((ushort)7012, dragon.Spells);
             var spawns = Generator.Load(DataFiles.PathOf("spawns.json"), types);
             Assert.Contains(spawns, s => s.MapID == 1002 && s.MonsterID == 1);
             Assert.True(spawns.Sum(s => s.Amount) <= Monster.LastID - Monster.FirstID + 1);
+        }
+
+        [Fact]
+        public void MonsterSpellDamageFollowsPowerAndHitRate()
+        {
+            var caster = new MonsterType { ID = 1, AttackMin = 100, AttackMax = 100, MagicHitRate = 100 };
+            var flat = new MagicType { Sort = MagicSort.Attack, Power = 50, Percent = 100, Distance = 9 };
+            Assert.Equal(120u, Casting.MonsterSpellDamage(caster, flat, targetDefense: 40, targetMagicDefense: 30, new Random(1)));
+
+            var pct = new MagicType { Sort = MagicSort.Attack, Power = MagicType.PercentBase + 35, Percent = 100, Distance = 20 };
+            Assert.Equal(25u, Casting.MonsterSpellDamage(caster, pct, targetDefense: 10, targetMagicDefense: 99, new Random(1)));
+
+            var missed = new MonsterType { ID = 1, AttackMin = 100, AttackMax = 100, MagicHitRate = 0 };
+            Assert.Equal(0u, Casting.MonsterSpellDamage(missed, flat, 0, 0, new Random(1)));
+        }
+
+        [Fact]
+        public void MonsterCastRangeFollowsSpellSort()
+        {
+            Assert.Equal(12, Casting.MonsterCastRange(new MagicType { Sort = MagicSort.Attack, Distance = 12 }));
+            Assert.Equal(4, Casting.MonsterCastRange(new MagicType { Sort = MagicSort.Line, Range = 4, Distance = 10 }));
+            Assert.Equal(0, Casting.MonsterCastRange(new MagicType { Sort = MagicSort.Recruit, Distance = 5 }));
+        }
+
+        [Fact]
+        public void MonsterHealsUpToMaxLifeWhileAlive()
+        {
+            var monster = New(100);
+            monster.Damage(60, 1000001, DateTime.UtcNow);
+            Assert.Equal(60u, monster.Heal(80));
+            Assert.Equal(100u, monster.Health);
+            Assert.Equal(0u, monster.Heal(10));
+            monster.Damage(100, 1000001, DateTime.UtcNow);
+            Assert.Equal(0u, monster.Heal(50));
         }
 
         [Fact]

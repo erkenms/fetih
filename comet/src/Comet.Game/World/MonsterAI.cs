@@ -92,7 +92,22 @@ namespace Comet.Game.World
                 return;
             }
 
-            if (Distance(monster.X, monster.Y, x, y) <= Math.Max(1, monster.Type.AttackRange))
+            int distance = Distance(monster.X, monster.Y, x, y);
+            if (monster.Type.HasMagic && Magic.Casting.ChooseMonsterSpell(monster, distance, random) is { } spell)
+            {
+                if (spell.Sort == Magic.MagicSort.Recruit || distance <= Magic.Casting.MonsterCastRange(spell))
+                {
+                    if (now < monster.NextAttackAt || monster.Stunned(now))
+                        return;
+                    double delayMs = Math.Max(
+                        Math.Max(monster.Type.AttackSpeed, AttackInterval.TotalMilliseconds),
+                        spell.DelayMilliseconds);
+                    monster.NextAttackAt = now + TimeSpan.FromMilliseconds(delayMs);
+                    await Magic.Casting.MonsterCastAsync(monster, spell, player, victim, x, y, now, random);
+                    return;
+                }
+            }
+            else if (distance <= Math.Max(1, monster.Type.AttackRange))
             {
                 if (now < monster.NextAttackAt || monster.Stunned(now))
                     return;

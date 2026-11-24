@@ -507,6 +507,38 @@ namespace Comet.Game.Combat
                 await Pking.OnKilledByGuardAsync(client);
         }
 
+        // Runs on the player's queue, after the monster's MsgMagicEffect was sent
+        public static async Task MonsterSpellHitsPlayerAsync(Monster monster, Client client, uint damage)
+        {
+            var character = client.Character;
+            var now = DateTime.UtcNow;
+            if (character == null || client.Life.Dead || now < client.Life.ProtectedUntil ||
+                client.Map?.Id != monster.Map.Id)
+                return;
+
+            damage = await AbsorbAsync(client, damage, now);
+            uint dealt = Math.Min(damage, character.HealthPoints);
+            character.HealthPoints -= (ushort)dealt;
+
+            await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Health, character.HealthPoints));
+            if (damage > 0)
+            {
+                await Durability.WearOnHitAsync(client);
+                if (character.HealthPoints > 0)
+                    await Pirates.OnDamagedAsync(client);
+            }
+            var type = monster.Type;
+            LogEvents.For(typeof(Attacks), LogEvents.CombatHit).Debug(
+                "{MonsterName} {MonsterId} hit {Name} for {Damage}; {Health} health left (magic)",
+                type.Name, monster.Identity, character.Name, damage, character.HealthPoints);
+
+            if (character.HealthPoints > 0)
+                return;
+            await Death.DieAsync(client, monster.Identity, type.Name);
+            if (type.IsGuard)
+                await Pking.OnKilledByGuardAsync(client);
+        }
+
         // Guards against monsters, on the monster loop
         public static async Task MonsterHitsMonsterAsync(Monster attacker, Monster victim, DateTime now, Random random)
         {

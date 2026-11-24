@@ -126,6 +126,18 @@ namespace Comet.Game.World
             }
         }
 
+        public uint Heal(uint amount)
+        {
+            lock (this.Lock)
+            {
+                if (!this.alive)
+                    return 0;
+                uint gained = Math.Min(amount, this.Type.Life - this.health);
+                this.health += gained;
+                return gained;
+            }
+        }
+
         // An attack that missed still makes the attacker its target, if it has none
         public void Provoke(uint attackerID)
         {

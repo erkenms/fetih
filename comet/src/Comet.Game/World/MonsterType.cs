@@ -30,9 +30,13 @@ namespace Comet.Game.World
         [JsonPropertyName("dropHp")] public uint DropHp { get; init; }
         [JsonPropertyName("dropMp")] public uint DropMp { get; init; }
         [JsonPropertyName("boss")] public bool Boss { get; init; }
+        [JsonPropertyName("magicType")] public ushort MagicType { get; init; }
+        [JsonPropertyName("magicHitRate")] public int MagicHitRate { get; init; } = 100;
+        [JsonPropertyName("spells")] public ushort[] Spells { get; init; }
 
         public bool IsGuard => (this.AttackUser & GuardFlag) != 0;
         public bool IsAggressive => (this.AttackUser & AttacksOnSight) != 0;
+        public bool HasMagic => this.MagicType != 0 || this.Spells is { Length: > 0 };
     }
 
     public sealed class MonsterTypeTable

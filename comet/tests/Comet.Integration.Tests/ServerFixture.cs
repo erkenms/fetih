@@ -99,6 +99,8 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantToKill = (820, 820);
         public static readonly (ushort X, ushort Y) PheasantToShoot = (840, 820);
         public static readonly (ushort X, ushort Y) PheasantThatBites = (820, 860);
+        // FireDevil (type 7004) casts Thunder (1000) at players it sees
+        public static readonly (ushort X, ushort Y) FireDevilThatCasts = (820, 900);
         public static readonly (ushort X, ushort Y) GuardToProvoke = (860, 860);
         public static readonly (ushort X, ushort Y) GuardOnDuty = (900, 900);
         public static readonly (ushort X, ushort Y) PheasantNearGuard = (903, 900);
@@ -246,6 +248,8 @@ namespace Comet.Integration.Tests
             new MagicFiles.Spell(10311, 0, 41, "Perseverance") { Target = 8 };
         public static readonly MagicFiles.Spell Riding =
             new MagicFiles.Spell(7001, 0, 32, "Riding") { Power = 1, Stamina = 20, StepSeconds = 1000000 };
+        public static readonly MagicFiles.Spell GuardsSpell =
+            new MagicFiles.Spell(8036, 0, 1, "Guard`sSpell") { Power = 30035, Distance = 20 };
 
         // Short, so a test can revive a dead player
         public const int ReviveSeconds = 1;
@@ -487,7 +491,7 @@ namespace Comet.Integration.Tests
                     ScurvyBomb, GaleBomb, BladeTempest, EagleEye, KrakensRevenge, BlackSpot, AdrenalineRush,
                     CannonBarrage, BlackbeardsRage, Windstorm,
                     Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem,
-                    DragonWhirl, StarArrow, Perseverance));
+                    DragonWhirl, StarArrow, Perseverance, GuardsSpell));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictypeop.dat"), MagicFiles.MagicTypeOpDat(
                 (1, 15, 21, 0, new ushort[] { Hercules.Type }),
                 (1, 15, 21, 2, new ushort[] { Thunder.Type, FastBlade.Type }),
@@ -505,7 +509,7 @@ namespace Comet.Integration.Tests
         {
             var spawns = new[]
             {
-                (PheasantToKill, 1u), (PheasantToShoot, 1u), (PheasantThatBites, 1u),
+                (PheasantToKill, 1u), (PheasantToShoot, 1u), (PheasantThatBites, 1u), (FireDevilThatCasts, 7004u),
                 (GuardToProvoke, 900u), (GuardOnDuty, 900u), (PheasantNearGuard, 1u),
                 (PheasantForMagic, 1u), (PheasantForBlade, 1u), (PheasantForFastBlade, 1u),
                 (PheasantForTeam, 1u), (PheasantForWear, 1u), (PheasantForSavedWear, 1u), (PheasantForPassive, 1u), (PheasantForScatter, 1u), (PheasantUnderFlyer, 1u), (PheasantForCruelShade, 1u), (PheasantInFog, 1u),

@@ -84,12 +84,32 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task CastingMonstersHitPlayersWithTheirSpell()
+        {
+            var at = ServerFixture.FireDevilThatCasts;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 5, at.Y, level: 100)).Player;
+            var devil = await MonsterAtAsync(player, at);
+            Assert.Equal("FireDevil", devil?.Name);
+
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == devil.Id, TimeSpan.FromSeconds(10));
+            Assert.NotNull(effect);
+            Assert.Equal(ServerFixture.Thunder.Type, effect.Type);
+            var hit = Assert.Single(effect.Targets);
+            Assert.Equal(player.User.Id, hit.Id);
+            Assert.True(hit.Damage > 0);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Health, out var hp) && hp < player.User.HealthPoints));
+        }
+
+        [Fact]
         public async Task GuardsKillMonstersNearThem()
         {
             var guardAt = ServerFixture.GuardOnDuty;
             await using var player = (await this.PlayingAtAsync(1002, guardAt.X - 10, guardAt.Y)).Player;
             var guard = await MonsterAtAsync(player, guardAt);
             Assert.Equal("Guard1", guard?.Name);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == guard.Id, TimeSpan.FromSeconds(10));
+            Assert.NotNull(effect);
+            Assert.Equal(ServerFixture.GuardsSpell.Type, effect.Type);
             var kill = await player.Game.WaitForInteractAsync(
                 i => i.Action == InteractMessage.Kill && i.Sender == guard.Id, TimeSpan.FromSeconds(10));
             Assert.NotNull(kill);

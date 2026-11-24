@@ -679,7 +679,11 @@ namespace Comet.Game.Magic
         // (TraceEffectSpeed + TraceEffectAcceleration * t) * t world units in t seconds; a
         // combo's hits come ExtraCmdTime apart.
         private static TimeSpan HitShownAfter(MagicEffect effect, MagicType spell, ushort casterX, ushort casterY,
-            ushort aimX, ushort aimY, Victim victim)
+            ushort aimX, ushort aimY, Victim victim) =>
+            HitShownAfter(effect, spell, casterX, casterY, aimX, aimY, victim.X, victim.Y, victim.Hits.Count);
+
+        private static TimeSpan HitShownAfter(MagicEffect effect, MagicType spell, ushort casterX, ushort casterY,
+            ushort aimX, ushort aimY, ushort victimX, ushort victimY, int hitCount = 1)
         {
             if (effect == null)
                 return TimeSpan.Zero;
@@ -689,10 +693,10 @@ namespace Comet.Game.Magic
             // Blackbeard's Rage keeps its shots a measured gap apart
             else if (effect.Represent is MagicEffect.Shot or MagicEffect.ShotEx or MagicEffect.ShotChain &&
                 effect.Traces && spell.Sort != MagicSort.BlackbeardsRage)
-                ms = Math.Max(ms, ShotFlight(Movement.WorldDistance(casterX, casterY, victim.X, victim.Y),
+                ms = Math.Max(ms, ShotFlight(Movement.WorldDistance(casterX, casterY, victimX, victimY),
                     effect.TraceSpeed, effect.TraceAcceleration));
             else if (effect.Represent == MagicEffect.Combo)
-                ms += effect.HitGap * Math.Max(0, victim.Hits.Count - 1);
+                ms += effect.HitGap * Math.Max(0, hitCount - 1);
             // A kick that lifts its targets (Whirlwind Kick) is told of a kill at once: when the
             // kick ends, the client lands the living and lets the dead fall
             else if (effect.Represent == MagicEffect.Lift)
@@ -1712,6 +1716,169 @@ namespace Comet.Game.Magic
         {
             foreach (var (type, spell) in client.Skills.AllSpells())
                 await client.SendAsync(new MsgMagicInfo(type, spell.Level, spell.Experience));
+        }
+
+        public static int MonsterCastRange(MagicType spell) => spell.Sort switch
+        {
+            MagicSort.Recruit => 0,
+            MagicSort.Line or MagicSort.Fan or MagicSort.Bomb =>
+                (int)(spell.Range > 0 ? spell.Range : Math.Max(1u, spell.Distance)),
+            _ => Math.Max(1, (int)spell.Distance),
+        };
+
+        public static MagicType ChooseMonsterSpell(Monster monster, int distance, Random random)
+        {
+            var type = monster.Type;
+            if (type.Spells is { Length: > 0 })
+            {
+                var known = new List<MagicType>();
+                foreach (ushort id in type.Spells)
+                    if (Kernel.Magics.TryGet(id, 0, out var s) &&
+                        (s.Sort != MagicSort.Recruit || monster.Health < type.Life))
+                        known.Add(s);
+                if (type.MagicType != 0 && Kernel.Magics.TryGet(type.MagicType, 0, out var primary))
+                    known.Add(primary);
+                if (known.Count == 0)
+                    return null;
+                var ready = known.Where(s => s.Sort == MagicSort.Recruit || distance <= MonsterCastRange(s)).ToList();
+                return ready.Count > 0
+                    ? ready[random.Next(ready.Count)]
+                    : known.OrderByDescending(MonsterCastRange).First();
+            }
+            return type.MagicType != 0 && Kernel.Magics.TryGet(type.MagicType, 0, out var spell) ? spell : null;
+        }
+
+        public static uint MonsterSpellDamage(MonsterType caster, MagicType spell, int targetDefense,
+            int targetMagicDefense, Random random)
+        {
+            int hitRate = Math.Clamp(caster.MagicHitRate, 0, 100);
+            if (random.Next(100) >= hitRate || random.Next(100) >= spell.Percent)
+                return 0;
+            int roll = Damage.Roll(caster.AttackMin, caster.AttackMax, random);
+            if (spell.IsPercent)
+                return Damage.PlayerMelee(roll * spell.PowerPercent / 100, targetDefense);
+            return Damage.PlayerMagic(roll, spell.Power, targetMagicDefense);
+        }
+
+        // Runs on the monster loop; damage to players is posted to each target's queue once the
+        // client shows the hit
+        public static async Task MonsterCastAsync(Monster monster, MagicType spell, Client player, Monster victim,
+            ushort x, ushort y, DateTime now, Random random)
+        {
+            if (spell.Sort == MagicSort.Recruit)
+            {
+                uint amount = spell.Power > 0 ? (uint)spell.Power : monster.Type.Life;
+                uint gained = monster.Heal(amount);
+                var healEffect = new MsgMagicEffect(monster.Identity, monster.X, monster.Y, spell.Type) { MagicLevel = spell.Level };
+                healEffect.Targets.Add((monster.Identity, gained));
+                await Monsters.SendToViewAsync(monster, healEffect);
+                return;
+            }
+
+            var victims = MonsterSpellVictims(monster, spell, player, victim, x, y, now);
+            foreach (var v in victims)
+            {
+                if (v.Player != null)
+                {
+                    var stats = Stats.Of(v.Player);
+                    int defense = Buffs.Defense(v.Player.Effects, stats.Defense, now);
+                    v.Damage = stats.Taken(MonsterSpellDamage(monster.Type, spell, defense, stats.MagicDefense, random));
+                }
+                else if (v.Monster != null)
+                {
+                    v.Damage = MonsterSpellDamage(monster.Type, spell, v.Monster.Type.Defense, 0, random);
+                }
+            }
+
+            var effect = new MsgMagicEffect(monster.Identity, x, y, spell.Type) { MagicLevel = spell.Level };
+            foreach (var v in victims)
+                effect.Targets.Add((v.ID, v.Damage));
+            var viewers = new HashSet<Client>(Monsters.PlayersInView(monster));
+            foreach (var v in victims)
+                if (v.Player != null)
+                    viewers.Add(v.Player);
+            foreach (var viewer in viewers)
+                await viewer.SendAsync(effect);
+
+            var show = Kernel.MagicEffects.Find(spell.Type, spell.Level);
+            foreach (var v in victims)
+            {
+                var after = HitShownAfter(show, spell, monster.X, monster.Y, x, y, v.X, v.Y);
+                if (v.Player != null)
+                {
+                    var target = v.Player;
+                    uint damage = v.Damage;
+                    Later(target, after, () => Attacks.MonsterSpellHitsPlayerAsync(monster, target, damage));
+                    if (spell.Sort == MagicSort.AttackStatus && spell.Status == StunStatus && damage > 0)
+                        Later(target, after, () => StunAsync(target, DateTime.UtcNow + TimeSpan.FromMilliseconds(Math.Max(0, spell.Power))));
+                    continue;
+                }
+
+                var targetMonster = v.Monster;
+                if (v.Damage == 0)
+                    targetMonster.Provoke(monster.Identity);
+                var (dealt, killed) = v.Damage > 0 ? targetMonster.Damage(v.Damage, monster.Identity, now) : (0u, false);
+                if (v.Damage > 0 && dealt == 0 && !killed)
+                    continue;
+                if (!killed)
+                    continue;
+                if (monster.Target == targetMonster.Identity)
+                    monster.Target = 0;
+                var kill = new MsgInteract(MsgInteract.InteractionType.Kill, monster.Identity, targetMonster.Identity, v.X, v.Y, 1);
+                if (after > TimeSpan.Zero)
+                    _ = Task.Delay(after).ContinueWith(_ => MonsterAI.Post(() => Monsters.SendToViewAsync(targetMonster, kill)), TaskScheduler.Default);
+                else
+                    await Monsters.SendToViewAsync(targetMonster, kill);
+                LogEvents.For(typeof(Attacks), LogEvents.MonsterKilled).Information(
+                    "{Killer} {KillerId} killed {MonsterName} {MonsterId} (type {MonsterTypeId}) on map {MapId} at {X},{Y}",
+                    monster.Type.Name, monster.Identity, targetMonster.Type.Name, targetMonster.Identity, targetMonster.Type.ID,
+                    targetMonster.Map.Id, v.X, v.Y);
+            }
+
+            LogEvents.For(typeof(Casting), LogEvents.MagicCast).Debug(
+                "{Name} cast {MagicName} {MagicType} level {Level} at {X},{Y} on {TargetCount} targets",
+                monster.Type.Name, spell.Name, spell.Type, spell.Level, x, y, victims.Count);
+        }
+
+        private static List<Victim> MonsterSpellVictims(Monster monster, MagicType spell, Client player, Monster victim,
+            ushort x, ushort y, DateTime now)
+        {
+            var primary = player != null ? new Victim(null, player, null, x, y)
+                : victim != null ? new Victim(victim, null, null, x, y) : null;
+            if (spell.Sort is MagicSort.Attack or MagicSort.AttackStatus)
+                return primary != null ? new List<Victim> { primary } : new List<Victim>();
+
+            bool shaped = spell.Sort is MagicSort.Line or MagicSort.Fan or MagicSort.Bomb;
+            bool area = !shaped && spell.Range > 0;
+            if (!shaped && !area)
+                return primary != null ? new List<Victim> { primary } : new List<Victim>();
+
+            var candidates = new List<Victim>();
+            if (monster.IsGuard)
+            {
+                foreach (var other in monster.Map.InView(monster.X, monster.Y, except: monster))
+                    if (!other.IsGuard && other.Alive)
+                        candidates.Add(new Victim(other, null, null, other.X, other.Y));
+            }
+            if (Kernel.World.TryGet(monster.Map.Id, out var players))
+            {
+                foreach (var p in players.InView(monster.X, monster.Y))
+                    if (p.Character != null && !p.Life.Dead && now >= p.Life.ProtectedUntil &&
+                        !p.Effects.Has(StatusFlags.Invisible, now) &&
+                        (!monster.IsGuard || Pking.IsGuilty(p, now)) &&
+                        players.TryGetPosition(p, out var px, out var py))
+                        candidates.Add(new Victim(null, p, null, px, py));
+            }
+
+            var hits = candidates
+                .Where(v => shaped
+                    ? InShape(spell, monster.X, monster.Y, x, y, v.X, v.Y)
+                    : MonsterAI.Distance(x, y, v.X, v.Y) <= spell.Range)
+                .Take(MaxTargets)
+                .ToList();
+            if (primary != null && hits.All(v => v.ID != primary.ID))
+                hits.Insert(0, primary);
+            return hits;
         }
 
         private static void LogCast(Client client, MagicType spell, int x, int y, int targets) =>
