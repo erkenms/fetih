@@ -97,3 +97,20 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   (the Mac client has 4 extra bytes before it). Not confirmed in the Windows client.
 - **Monk auras**: MsgAura 2410 (`CMsgAura`, `CAuraMgr`); the icon's tooltip level and percent
   come from it, not from the status flag.
+- **Lucky time** (2026-11-24, `CHero::ProcessLuck`): the client counts it itself between
+  updates. Status 30 (LuckDiffuse, set by the Bless spell 9876) gains 3x the time passed, 31
+  (LuckAbsorb) 1x, otherwise it runs down; capped at 7,200,000 ms. MsgUserAttrib 28 sets it in
+  ms (icon 28). Gaining 30 shows "You start to pray", 31 "You are ready to pray"; with 30 the
+  client blocks emote changes for 5 s. No help page gives its effect on drops or upgrades.
+- **Sub-classes** (2026-11-24): `ini/SubProfessionInfo.ini` holds requirements and
+  `EffectProportion` per phase, `ini/levexp.dat` (seed 0x4D2) the study points per level. The
+  attribute window reads only the active sub-class (`CPlayer::GetCurrentSubProfession`).
+  `AccessionMapID` says 6072, which 5619's GameMap.dat lacks; the masters stand in 1004.
+- **Guild donation ranking** is MsgFactionRankInfo 2101 (`CDlgFactionContriRank`), not
+  MsgContribute 2067, which is the mentor contribution (`CEducationMgr`).
+- **Detained items** (2026-11-24): MsgDetainItemInfo 1034, MsgDetainItemUpdate 1035. MsgAction
+  126 command 336 opens `CDlgPKDetain`, 337 `CDlgPKReward`; both send MsgAction 153 on open,
+  then MsgItem 32 (redeem) or 33 (claim). Days >= 8 is expired.
+- **Reincarnation, name change, degrade** open native windows through MsgAction 126: 485
+  (`CDlgMeteSpecial`, MsgMeteSpecial 1066), 489 (`CDlgChangeName`, MsgChangeName 2080), 506
+  (`CDlgEquipDegrade`, MsgItem 54, 54 CPs). The client keeps its old name until relog.
