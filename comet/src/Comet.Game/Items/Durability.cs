@@ -125,6 +125,44 @@ namespace Comet.Game.Items
             return true;
         }
 
+        // MsgItem 15, from the VIP whole-body repair window, which the client only lets VIP
+        // level 2 and up use. It repairs worn gear whose durability, as the client shows it in
+        // hundreds, is below the maximum. Broken gear still takes meteors, one piece at a time.
+        public const uint RepairAllVipLevel = 2;
+
+        public static async Task<bool> RepairAllAsync(Client client)
+        {
+            var character = client.Character;
+            if (character == null || client.Equipment == null)
+                return Reject(client, 0, "not_found");
+            if (character.VIPLevel < RepairAllVipLevel)
+                return Reject(client, 0, "not_vip");
+
+            var items = client.Equipment.Items
+                .Where(i => Wears(i.TypeID) && i.Amount > 0 && i.Amount / 100 < i.AmountLimit / 100)
+                .Select(i => (Item: i, Cost: Kernel.ItemTypes.TryGet(i.TypeID, out var type)
+                    ? RepairCost(type.Price, i.Amount, i.AmountLimit, i.TypeID) : 0u))
+                .ToList();
+            if (items.Count == 0)
+                return Reject(client, 0, "not_worn");
+            long cost = items.Sum(i => (long)i.Cost);
+            if (!await Progress.ChangeSilverAsync(client, -cost, "repair_all"))
+            {
+                await Talk.NoticeAsync(client, "You don't have enough silver for the repair.");
+                return Reject(client, 0, "no_silver");
+            }
+
+            foreach (var (item, _) in items)
+            {
+                item.Amount = item.AmountLimit;
+                await ItemsRepository.SetAmountAsync(item.ItemID, item.Amount);
+                await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Update));
+            }
+            LogEvents.For(typeof(Durability), LogEvents.ItemRepaired).Information(
+                "{Name} repaired {Count} worn items for {Cost} silver", character.Name, items.Count, cost);
+            return true;
+        }
+
         private static bool Reject(Client client, uint itemID, string reason)
         {
             LogEvents.For(typeof(Durability), LogEvents.ItemRepairRejected).Warning(

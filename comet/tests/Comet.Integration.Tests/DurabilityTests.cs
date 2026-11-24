@@ -9,7 +9,7 @@ namespace Comet.Integration.Tests
         public DurabilityTests(ServerFixture servers) : base(servers) { }
 
         // A game master with a blade whose durability and silver are set while logged out
-        private async Task<(Player Player, ItemInfo Blade)> BladeAtAsync(int x, int y, ushort amount, uint silver = 0)
+        private async Task<(Player Player, ItemInfo Blade)> BladeAtAsync(int x, int y, ushort amount, uint silver = 0, byte vip = 0)
         {
             var (first, email) = await this.PlayingAtAsync(1002, x, y, GameMaster, level: 100);
             var blade = await GiveAsync(first, ServerFixture.Blade.Id);
@@ -17,8 +17,8 @@ namespace Comet.Integration.Tests
             await this.LogOutAsync(first);
             await this.Servers.ExecuteGameSqlAsync("UPDATE item SET Amount = @amount WHERE ItemID = @id",
                 ("@amount", amount), ("@id", blade.Id));
-            await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET Silver = @silver WHERE Name = @name",
-                ("@silver", silver), ("@name", name));
+            await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET Silver = @silver, VIPLevel = @vip WHERE Name = @name",
+                ("@silver", silver), ("@vip", vip), ("@name", name));
             return (await this.Servers.PlayAsync(email, Password), blade);
         }
 
@@ -67,6 +67,32 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await SilverAsync(player, 1000 - 13));
             var repaired = await this.Servers.WaitForEventAsync("game", "item.repaired", "name", player.User.Name);
             Assert.Equal("13 silver", repaired.GetProperty("paid").GetString());
+        }
+
+        [Fact]
+        public async Task VipRepairAllRepairsWornGear()
+        {
+            var (player, blade) = await BladeAtAsync(660, 960, 500, silver: 1000, vip: 2);
+            await using var _ = player;
+            await player.Game.EquipAsync(blade.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
+
+            await player.Game.RepairAllAsync();
+            Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == blade.Id && i.Amount == ServerFixture.Blade.Amount));
+            Assert.NotNull(await SilverAsync(player, 1000 - 13));
+        }
+
+        [Fact]
+        public async Task RepairAllNeedsVipLevelTwo()
+        {
+            var (player, blade) = await BladeAtAsync(680, 960, 500, silver: 1000, vip: 1);
+            await using var _ = player;
+            await player.Game.EquipAsync(blade.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
+
+            await player.Game.RepairAllAsync();
+            var refused = await this.Servers.WaitForEventAsync("game", "item.repair_rejected", "name", player.User.Name);
+            Assert.Equal("not_vip", refused.GetProperty("reason").GetString());
         }
 
         [Fact]

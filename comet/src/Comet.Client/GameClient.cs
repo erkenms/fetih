@@ -240,6 +240,9 @@ namespace Comet.Client
         public Task RepairAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Repair));
 
+        public Task RepairAllAsync() =>
+            this.SendAsync(ItemMessage.Build(0, 0, ItemMessage.RepairAll));
+
         // The gear in the ID field, the gem in Command; the echo carries the roll in Command
         public Task EnchantAsync(uint itemId, uint gemId) =>
             this.SendAsync(ItemMessage.Build(itemId, gemId, ItemMessage.Enchant));

@@ -140,6 +140,7 @@ namespace Comet.Game.Packets
 
                 // The item to repair, at a shopkeeper
                 [ItemActionType.EquipmentRepair] = (msg, client) => Durability.RepairAsync(client, msg.CharacterID),
+                [ItemActionType.EquipmentRepairAll] = (msg, client) => Durability.RepairAllAsync(client),
 
                 // Ethereal's enchant window: the gear in the ID field, the gem in Command
                 [ItemActionType.EquipmentEnchant] = (msg, client) => Enchanting.EnchantAsync(client, msg, Random.Shared),

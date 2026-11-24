@@ -557,7 +557,7 @@ namespace Comet.Client
             StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Ping = 27, Drop = 37,
             DropSilver = 38, DisplayGears = 46;
 
-        public const uint Repair = 14, Enchant = 28;
+        public const uint Repair = 14, RepairAll = 15, Enchant = 28;
 
         // Booths: viewing has the booth's ID first; adding has the item and its price,
         // removing and buying the item and the booth's ID
