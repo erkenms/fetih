@@ -54,6 +54,8 @@ namespace Comet.Game
 
         public static MonsterTypeTable MonsterTypes = new MonsterTypeTable(new MonsterType[0]);
         public static WorldMaps<Monster> Monsters;
+        public static BossSchedule Bosses = new BossSchedule();
+        public static Combat.DropTable Drops = new Combat.DropTable();
 
         // Runs work on the player's own packet queue, after the packets before it. The server
         // sets this; without one (in unit tests) the work runs at once.

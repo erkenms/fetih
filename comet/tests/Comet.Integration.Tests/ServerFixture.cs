@@ -116,6 +116,9 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y) PheasantUnderFlyer = (860, 900);
         public static readonly (ushort X, ushort Y) PheasantForCruelShade = (860, 940);
         public static readonly (ushort X, ushort Y) PheasantInFog = (900, 940);
+        public static readonly (ushort X, ushort Y) TimedBoss = (780, 900);
+        public static readonly (ushort X, ushort Y) ManualBoss = (780, 940);
+        public const int BossIntervalSeconds = 4;
         public static readonly (ushort X, ushort Y) PheasantForPalm = (860, 700);
         public static readonly (ushort X, ushort Y) PheasantForKick = (900, 700);
         public static readonly (ushort X, ushort Y) PheasantForTripleAttack = (940, 700);
@@ -425,6 +428,8 @@ namespace Comet.Integration.Tests
                 "--Saving:IntervalSeconds=" + SaveIntervalSeconds,
                 "--Ground:ExpireSeconds=" + GroundExpireSeconds,
                 "--Monsters:SpawnsFile=" + Path.Combine(this.MapDirectory, "spawns.json"),
+                "--Monsters:BossesFile=" + Path.Combine(this.MapDirectory, "bosses.json"),
+                "--Monsters:DropsFile=" + Path.Combine(this.MapDirectory, "drops.json"),
                 "--Death:ReviveSeconds=" + ReviveSeconds,
                 "--Training:OnlineSeconds=" + TrainingOnlineSeconds,
                 "--Monsters:WanderChance=0",
@@ -526,6 +531,18 @@ namespace Comet.Integration.Tests
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),
                 "{ \"spawns\": [\n" + string.Join(",\n", spawns) + "\n] }\n");
+
+            File.WriteAllText(Path.Combine(this.MapDirectory, "bosses.json"),
+                "{\n  \"bosses\": [\n" +
+                $"    {{ \"id\": \"timed-rooster\", \"monster\": 21, \"map\": 1002, \"x\": {TimedBoss.X}, \"y\": {TimedBoss.Y}, \"spread\": 0, \"intervalSeconds\": {BossIntervalSeconds}, \"broadcast\": \"FlyingRooster has appeared at Twin City!\" }},\n" +
+                $"    {{ \"id\": \"manual-cooer\", \"monster\": 22, \"map\": 1002, \"x\": {ManualBoss.X}, \"y\": {ManualBoss.Y}, \"spread\": 0, \"times\": [\"03:33\"], \"broadcast\": \"BlueCooer has appeared at Twin City!\" }}\n" +
+                "  ]\n}\n");
+
+            File.WriteAllText(Path.Combine(this.MapDirectory, "drops.json"),
+                "{\n  \"drops\": [\n" +
+                $"    {{ \"monster\": 21, \"entries\": [{{ \"item\": {DragonBall.Id}, \"chance\": 100, \"count\": 2 }}, {{ \"item\": {SuperDragonGem.Id}, \"chance\": 100, \"count\": 1 }}] }},\n" +
+                $"    {{ \"monster\": 22, \"entries\": [{{ \"item\": {MeteorScroll.Id}, \"chance\": 100, \"count\": 1 }}, {{ \"item\": {ExpBall.Id}, \"chance\": 100, \"count\": 1 }}] }}\n" +
+                "  ]\n}\n");
         }
 
         public async Task DisposeAsync()

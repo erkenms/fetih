@@ -47,6 +47,7 @@ namespace Comet.Game.World
             while (Posted.TryDequeue(out var work))
                 await work();
             await Monsters.RespawnAsync(now, random);
+            await Kernel.Bosses.TickAsync(now, random);
             var awake = Awake();
 
             // Monsters out of every player's sight don't think, so they'd keep a target forever

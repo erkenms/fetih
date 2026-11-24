@@ -89,6 +89,8 @@ namespace Comet.Game.Database
         {
             // A file in Data/ or a full path
             public string SpawnsFile { get; set; } = "spawns.json";
+            public string BossesFile { get; set; } = "bosses.json";
+            public string DropsFile { get; set; } = "drops.json";
 
             // Chance in percent that an idle monster takes a random step, ten times a second
             public int WanderChance { get; set; } = 10;

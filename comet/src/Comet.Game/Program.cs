@@ -262,10 +262,25 @@
                     "Loaded {MonsterTypeCount} monster types and {SpawnCount} spawns from {SpawnsFile}; " +
                     "placed {MonsterCount} monsters ({SkippedCount} spawns on maps the client doesn't have)",
                     Kernel.MonsterTypes.Count, generators.Count, spawnsFile, placed, skipped);
+
+                var dropsFile = System.IO.Path.GetFullPath(config.Monsters.DropsFile, DataFiles.PathOf(""));
+                var drops = Combat.DropTable.Load(dropsFile, Kernel.MonsterTypes, Kernel.ItemTypes);
+                Kernel.Drops = new Combat.DropTable(drops);
+                LogEvents.For(typeof(Program), LogEvents.DropsLoaded).Information(
+                    "Loaded per-monster drop tables for {DropTableCount} monsters from {DropsFile}",
+                    Kernel.Drops.Count, dropsFile);
+
+                var bossesFile = System.IO.Path.GetFullPath(config.Monsters.BossesFile, DataFiles.PathOf(""));
+                var bossSpawns = BossSpawn.Load(bossesFile, Kernel.MonsterTypes);
+                Kernel.Bosses = new BossSchedule();
+                var (bossesRegistered, bossesSkipped) = Kernel.Bosses.Register(bossSpawns, DateTime.UtcNow);
+                LogEvents.For(typeof(Program), LogEvents.BossesLoaded).Information(
+                    "Loaded {BossCount} scheduled bosses from {BossesFile} ({SkippedCount} skipped)",
+                    bossesRegistered, bossesFile, bossesSkipped);
             }
             catch (Exception e)
             {
-                Log.Error(e, "Can't read Data/monsters.json or the spawns file");
+                Log.Error(e, "Can't read Data/monsters.json, spawns, drops or bosses files");
                 Log.CloseAndFlush();
                 return;
             }

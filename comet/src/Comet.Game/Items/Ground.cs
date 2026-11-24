@@ -240,6 +240,10 @@ namespace Comet.Game.Items
             yield return (x, y);
             for (int direction = 0; direction < 8; direction++)
                 yield return (x + Movement.DeltaX[direction], y + Movement.DeltaY[direction]);
+            for (int dy = -2; dy <= 2; dy++)
+            for (int dx = -2; dx <= 2; dx++)
+                if (Math.Max(Math.Abs(dx), Math.Abs(dy)) == 2)
+                    yield return (x + dx, y + dy);
         }
 
         private static Task ShowAsync(Client client, GroundItem item) =>

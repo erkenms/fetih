@@ -1,0 +1,72 @@
+// Per-monster drop tables. Monsters listed here roll these entries instead of the flat
+// rates in Combat/Loot.cs. chance is in percent (0-100); count is the number of items
+// dropped when the roll succeeds. Item IDs match client ini/itemtype.dat.
+{
+  "drops": [
+    {
+      "monster": 3587,
+      "entries": [
+        { "item": 1088000, "chance": 100, "count": 2 },
+        { "item": 720028, "chance": 25, "count": 1 },
+        { "item": 720027, "chance": 100, "count": 2 },
+        { "item": 730003, "chance": 50, "count": 1 },
+        { "item": 700013, "chance": 30, "count": 1 },
+        { "item": 700073, "chance": 30, "count": 1 },
+        { "item": 723700, "chance": 100, "count": 2 }
+      ]
+    },
+    {
+      "monster": 3588,
+      "entries": [
+        { "item": 1088000, "chance": 100, "count": 2 },
+        { "item": 720027, "chance": 100, "count": 2 },
+        { "item": 730002, "chance": 60, "count": 1 },
+        { "item": 700012, "chance": 40, "count": 1 },
+        { "item": 700072, "chance": 40, "count": 1 },
+        { "item": 723700, "chance": 100, "count": 1 }
+      ]
+    },
+    {
+      "monster": 3589,
+      "entries": [
+        { "item": 1088000, "chance": 100, "count": 2 },
+        { "item": 720028, "chance": 30, "count": 1 },
+        { "item": 720027, "chance": 100, "count": 2 },
+        { "item": 730003, "chance": 50, "count": 1 },
+        { "item": 700003, "chance": 30, "count": 1 },
+        { "item": 700073, "chance": 30, "count": 1 },
+        { "item": 723700, "chance": 100, "count": 2 }
+      ]
+    },
+    {
+      "monster": 3590,
+      "entries": [
+        { "item": 1088000, "chance": 100, "count": 1 },
+        { "item": 720027, "chance": 100, "count": 1 },
+        { "item": 730002, "chance": 50, "count": 1 },
+        { "item": 700012, "chance": 40, "count": 1 },
+        { "item": 723700, "chance": 100, "count": 1 }
+      ]
+    },
+    {
+      "monster": 3130,
+      "entries": [
+        { "item": 1088001, "chance": 100, "count": 2 },
+        { "item": 1088000, "chance": 25, "count": 1 },
+        { "item": 700001, "chance": 35, "count": 1 },
+        { "item": 700011, "chance": 35, "count": 1 },
+        { "item": 721258, "chance": 40, "count": 1 }
+      ]
+    },
+    {
+      "monster": 3134,
+      "entries": [
+        { "item": 1088001, "chance": 100, "count": 2 },
+        { "item": 1088000, "chance": 25, "count": 1 },
+        { "item": 700021, "chance": 35, "count": 1 },
+        { "item": 700071, "chance": 35, "count": 1 },
+        { "item": 721258, "chance": 40, "count": 1 }
+      ]
+    }
+  ]
+}

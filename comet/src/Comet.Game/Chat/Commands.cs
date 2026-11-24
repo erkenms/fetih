@@ -61,6 +61,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "weather" }, Authority.GameMaster, WeatherUsage, WeatherAsync),
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
             new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
+            new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -648,6 +649,53 @@ namespace Comet.Game.Chat
                     return true;
                 default:
                     return await UsageAsync(client, "/guildwar <start|end|status>");
+            }
+        }
+
+        private static async Task<bool> BossAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length == 0)
+                return await UsageAsync(client, "/boss <list|spawn <id>>");
+            switch (args[0].ToLowerInvariant())
+            {
+                case "list":
+                    if (Kernel.Bosses.Count == 0)
+                    {
+                        await Talk.NoticeAsync(client, "No scheduled bosses.");
+                        return true;
+                    }
+                    foreach (var line in Lines("Bosses:", Kernel.Bosses.All.Select(b =>
+                        $"{b.Config.ID} ({b.Monster.Type.Name} @ {b.Config.MapID}:{b.Config.X},{b.Config.Y}, " +
+                        $"{(b.Monster.Alive ? "alive" : "dead")})")))
+                        await Talk.NoticeAsync(client, line);
+                    return true;
+                case "spawn":
+                    if (args.Length != 2)
+                        return await UsageAsync(client, "/boss <list|spawn <id>>");
+                    var done = new TaskCompletionSource<BossSpawnResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    MonsterAI.Post(async () =>
+                    {
+                        try { done.TrySetResult(await Kernel.Bosses.SpawnAsync(args[1], DateTime.UtcNow, Random.Shared)); }
+                        catch (Exception e) { done.TrySetException(e); }
+                    });
+                    var result = await done.Task;
+                    switch (result)
+                    {
+                        case BossSpawnResult.Spawned:
+                            await Talk.NoticeAsync(client, $"Spawned boss {args[1]}.");
+                            return true;
+                        case BossSpawnResult.AlreadyAlive:
+                            await Talk.NoticeAsync(client, $"Boss {args[1]} is already alive.");
+                            return false;
+                        case BossSpawnResult.NotFound:
+                            await Talk.NoticeAsync(client, $"Unknown boss {args[1]}. Try /boss list.");
+                            return false;
+                        default:
+                            await Talk.NoticeAsync(client, $"Could not place boss {args[1]}: no walkable cell.");
+                            return false;
+                    }
+                default:
+                    return await UsageAsync(client, "/boss <list|spawn <id>>");
             }
         }
 

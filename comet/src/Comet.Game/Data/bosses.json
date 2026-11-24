@@ -1,0 +1,67 @@
+// Scheduled world bosses. Daily times are HH:mm in the server's configured time zone;
+// intervalSeconds respawns that many seconds after death (and after startup). One alive
+// at a time per entry. Monster IDs match Data/monsters.json and client ini/monster.dat.
+{
+  "bosses": [
+    {
+      "id": "terato-dragon",
+      "monster": 3587,
+      "map": 1002,
+      "x": 565,
+      "y": 793,
+      "spread": 5,
+      "times": ["02:00", "08:00", "14:00", "20:00"],
+      "broadcast": "TeratoDragon has appeared in Twin City (565, 793)!"
+    },
+    {
+      "id": "thrilling-spook",
+      "monster": 3588,
+      "map": 1013,
+      "x": 49,
+      "y": 55,
+      "spread": 3,
+      "times": ["04:00", "10:00", "16:00", "22:00"],
+      "broadcast": "ThrillingSpook has appeared in Tiger Cave (49, 55)!"
+    },
+    {
+      "id": "snow-banshee",
+      "monster": 3589,
+      "map": 1762,
+      "x": 527,
+      "y": 328,
+      "spread": 5,
+      "times": ["01:00", "07:00", "13:00", "19:00"],
+      "broadcast": "SnowBanshee has appeared in Frozen Grotto 1 (527, 328)!"
+    },
+    {
+      "id": "sword-master",
+      "monster": 3590,
+      "map": 1000,
+      "x": 622,
+      "y": 576,
+      "spread": 5,
+      "times": ["03:00", "09:00", "15:00", "21:00"],
+      "broadcast": "SwordMaster has appeared in Desert City (622, 576)!"
+    },
+    {
+      "id": "ganoderma",
+      "monster": 3130,
+      "map": 1011,
+      "x": 72,
+      "y": 364,
+      "spread": 10,
+      "intervalSeconds": 3600,
+      "broadcast": "Ganoderma has appeared in Phoenix Castle (72, 364)!"
+    },
+    {
+      "id": "titan",
+      "monster": 3134,
+      "map": 1020,
+      "x": 775,
+      "y": 617,
+      "spread": 10,
+      "intervalSeconds": 3600,
+      "broadcast": "Titan has appeared in Ape Mountain (775, 617)!"
+    }
+  ]
+}

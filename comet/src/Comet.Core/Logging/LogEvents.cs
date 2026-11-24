@@ -184,6 +184,9 @@ namespace Comet.Core.Logging
         public const string MonsterRespawned = "monster.respawned";
         public const string MonsterDrop = "monster.drop";
         public const string MonsterLoopFailed = "monster.loop_failed";
+        public const string DropsLoaded = "monster.drops_loaded";
+        public const string BossesLoaded = "boss.loaded";
+        public const string BossSpawned = "boss.spawned";
 
         public const string CombatHit = "combat.hit";
         public const string CombatRejected = "combat.rejected";

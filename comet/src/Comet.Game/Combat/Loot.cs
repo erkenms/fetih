@@ -41,9 +41,25 @@ namespace Comet.Game.Combat
                 await PlaceAsync(killer, monster, x, y, drop);
         }
 
-        public static List<(uint Silver, uint TypeID)> Roll(MonsterType type, ItemTypeTable items, Random random)
+        public static List<(uint Silver, uint TypeID)> Roll(MonsterType type, ItemTypeTable items, Random random) =>
+            Roll(type, items, random, Kernel.Drops);
+
+        public static List<(uint Silver, uint TypeID)> Roll(MonsterType type, ItemTypeTable items, Random random, DropTable dropTable)
         {
             var drops = new List<(uint, uint)>();
+            if (dropTable != null && dropTable.TryGet(type.ID, out var table))
+            {
+                foreach (var entry in table.Entries)
+                {
+                    if (!items.TryGet(entry.ItemID, out _))
+                        continue;
+                    if (entry.Chance >= 100 || random.NextDouble() * 100 < entry.Chance)
+                        for (int i = 0; i < entry.Count; i++)
+                            drops.Add((0, entry.ItemID));
+                }
+                return drops;
+            }
+
             if (type.DropMoney > 0 && random.Next(100) < SilverChance)
                 drops.Add(((uint)random.Next((int)Math.Max(1, type.DropMoney / 2), (int)type.DropMoney + 1), 0));
             foreach (var potion in new[] { type.DropHp, type.DropMp })

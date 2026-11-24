@@ -17,6 +17,7 @@ namespace Comet.Game.World
 
         private static List<Monster> all = new List<Monster>();
         private static Dictionary<uint, Monster> byId = new Dictionary<uint, Monster>();
+        private static uint nextId = Monster.FirstID;
 
         public static IReadOnlyList<Monster> All => all;
 
@@ -50,7 +51,30 @@ namespace Comet.Game.World
 
             all = monsters;
             byId = monsters.ToDictionary(m => m.Identity);
+            nextId = next;
             return (monsters.Count(m => m.Alive), skipped);
+        }
+
+        // Registers a scheduled monster (initially dead) using the next free monster ID
+        public static Monster RegisterScheduled(MonsterType type, Generator generator, GameMap<Monster> map)
+        {
+            if (nextId > Monster.LastID)
+                return null;
+            var monster = new Monster(nextId++, type, generator, map) { CorpseRemoved = true };
+            all.Add(monster);
+            byId[monster.Identity] = monster;
+            return monster;
+        }
+
+        // Places and revives a monster immediately, showing it to players in view
+        public static async Task<bool> SpawnNowAsync(Monster monster, DateTime now, Random random)
+        {
+            if (monster.Alive || !TryPlace(monster, random))
+                return false;
+            monster.Revive();
+            monster.NextMoveAt = monster.NextAttackAt = now + TimeSpan.FromSeconds(1);
+            await SendToViewAsync(monster, new MsgPlayer(monster));
+            return true;
         }
 
         public static async Task RespawnAsync(DateTime now, Random random)
@@ -65,10 +89,14 @@ namespace Comet.Game.World
                         continue;
                     monster.CorpseRemoved = true;
                     await SendToViewAsync(monster, MsgAction.RemoveEntity(monster.Identity));
+                    if (monster.Generator.RespawnSeconds < 0)
+                        monster.Map.Remove(monster);
                     continue;
                 }
 
-                var wait = TimeSpan.FromSeconds(Math.Max(monster.Generator.RespawnSeconds, 0));
+                if (monster.Generator.RespawnSeconds < 0)
+                    continue;
+                var wait = TimeSpan.FromSeconds(monster.Generator.RespawnSeconds);
                 if (now - monster.DiedAt < wait || !TryPlace(monster, random))
                     continue;
                 monster.Revive();
