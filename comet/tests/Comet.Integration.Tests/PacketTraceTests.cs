@@ -52,6 +52,7 @@ namespace Comet.Integration.Tests
                     "in MsgConnect", "out MsgTalk",             // NEW_ROLE
                     "in MsgRegister", "out MsgTalk",            // ANSWER_OK
                     "in MsgConnect", "out MsgTalk", "out MsgUserInfo",
+                    "out MsgSubPro",                            // sub-classes, none yet
                     "out MsgData",                              // server time
                     "out MsgPeerage",                           // nobility rank
                     "out MsgFlower",                            // daily flower / counts
