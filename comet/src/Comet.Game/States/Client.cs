@@ -97,6 +97,8 @@ namespace Comet.Game.States
 
         // Shuriken Vortex's next spin; on the player's own queue
         public DateTime NextVortexAt { get; set; }
+        // When the client shows the character landing from their last jump
+        public DateTime LandsAt { get; set; }
 
         // When the last Fatal Strikes went off, oldest first; on the player's own queue
         public System.Collections.Generic.Queue<DateTime> FatalStrikes { get; } = new System.Collections.Generic.Queue<DateTime>();

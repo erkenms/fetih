@@ -66,6 +66,8 @@ namespace Comet.Game.World
             }
 
             client.Character.Direction = DirectionTo(x, y, toX, toY, client.Character.Direction);
+            var now = DateTime.UtcNow;
+            client.LandsAt = now + JumpTime(client, x, y, toX, toY, now);
             await MoveAsync(client, map, x, y, (ushort)toX, (ushort)toY, jump);
             await Items.Riding.SpendAsync(client,
                 Items.Riding.JumpCost(Math.Max(Math.Abs(toX - x), Math.Abs(toY - y))), DateTime.UtcNow);
@@ -160,6 +162,30 @@ namespace Comet.Game.World
             await MoveAsync(client, map, x, y, toX, toY, null);
             LogEvents.For(typeof(Movement), LogEvents.MoveJump).Debug(
                 "{Name} was pushed to {X},{Y} on map {MapId}", client.Character.Name, toX, toY, map.Id);
+        }
+
+        // The client plays a jump's 20 frames (40 in flight) max(33, 33 * world distance / 300 + 1)
+        // ms apart, half that in Cyclone and two thirds in Oblivion. A steed's speed leaves
+        // jumps alone.
+        public static TimeSpan JumpTime(Client client, int fromX, int fromY, int toX, int toY, DateTime now) =>
+            JumpTime(fromX, fromY, toX, toY, client.Effects.Has(StatusFlags.Cyclone, now),
+                client.Effects.Has(StatusFlags.Oblivion, now), client.Effects.Has(StatusFlags.Fly, now));
+
+        public static TimeSpan JumpTime(int fromX, int fromY, int toX, int toY, bool cyclone, bool oblivion, bool flying)
+        {
+            int frame = Math.Max(33, (int)(33 * WorldDistance(fromX, fromY, toX, toY) / 300 + 1));
+            if (cyclone)
+                frame /= 2;
+            else if (oblivion)
+                frame = frame * 2 / 3;
+            return TimeSpan.FromMilliseconds((flying ? 40 : 20) * frame);
+        }
+
+        // A cell is (x - y) * 32 by (x + y) * 16 world units
+        public static double WorldDistance(int fromX, int fromY, int toX, int toY)
+        {
+            int dx = toX - fromX, dy = toY - fromY;
+            return Math.Sqrt(Math.Pow((dx - dy) * 32, 2) + Math.Pow((dx + dy) * 16, 2));
         }
 
         public static byte DirectionTo(int x, int y, int toX, int toY, byte current)

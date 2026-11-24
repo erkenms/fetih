@@ -92,6 +92,12 @@ namespace Comet.Game.Magic
                 Reject(client, magicType, reason);
                 return;
             }
+            // The client lets a spell be cast in the air and casts it once it lands
+            if (now < client.LandsAt)
+            {
+                Later(client, client.LandsAt - now, () => CastAsync(client, magicType, targetID, x, y));
+                return;
+            }
 
             Attacks.Stop(client);
             if (spell.Sort != MagicSort.Riding)
@@ -679,11 +685,11 @@ namespace Comet.Game.Magic
                 return TimeSpan.Zero;
             double ms = effect.Intone + effect.TargetDelay;
             if (effect.Represent == MagicEffect.Thrown && effect.Traces)
-                ms += effect.TraceDelay + effect.TraceSpeed * (int)WorldDistance(casterX, casterY, aimX, aimY);
+                ms += effect.TraceDelay + effect.TraceSpeed * (int)Movement.WorldDistance(casterX, casterY, aimX, aimY);
             // Blackbeard's Rage keeps its shots a measured gap apart
             else if (effect.Represent is MagicEffect.Shot or MagicEffect.ShotEx or MagicEffect.ShotChain &&
                 effect.Traces && spell.Sort != MagicSort.BlackbeardsRage)
-                ms = Math.Max(ms, ShotFlight(WorldDistance(casterX, casterY, victim.X, victim.Y),
+                ms = Math.Max(ms, ShotFlight(Movement.WorldDistance(casterX, casterY, victim.X, victim.Y),
                     effect.TraceSpeed, effect.TraceAcceleration));
             else if (effect.Represent == MagicEffect.Combo)
                 ms += effect.HitGap * Math.Max(0, victim.Hits.Count - 1);
@@ -699,13 +705,6 @@ namespace Comet.Game.Magic
         // The client shows Cannon Barrage's hits at once, but its shells fall about this long
         // after, as seen in the client
         private const int CannonBarrageLanding = 200;
-
-        // A cell is (x - y) * 32 by (x + y) * 16 world units
-        private static double WorldDistance(int fromX, int fromY, int toX, int toY)
-        {
-            int dx = toX - fromX, dy = toY - fromY;
-            return Math.Sqrt(Math.Pow((dx - dy) * 32, 2) + Math.Pow((dx + dy) * 16, 2));
-        }
 
         // Milliseconds for (speed + acceleration * t) * t to reach the distance
         private static double ShotFlight(double distance, int speed, int acceleration)
