@@ -463,7 +463,8 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             // Gale Bomb's throw, as the client's: 250ms, then 2ms for each world unit
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "MagicEffect.ini"),
-                "[110700]\nClientRepresent=3\nTraceEffect=pro_tir_assbom\nTraceEffectDelay=250\nTraceEffectSpeed=2\n");
+                "[110700]\nClientRepresent=3\nTraceEffect=pro_tir_assbom\nTraceEffectDelay=250\nTraceEffectSpeed=2\n" +
+                "[104150]\nClientRepresent=107\nSkillLastTime=1000\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictype.dat"),
                 MagicFiles.MagicTypeDat(Thunder, Thunder1, Fire, Superman, FastBlade, Riding,
                     Cyclone, Hercules, Revive, Meditation, Phoenix, Scatter, Restore, Fly, CruelShade, ToxicFog,

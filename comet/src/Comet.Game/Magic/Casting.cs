@@ -551,6 +551,10 @@ namespace Comet.Game.Magic
             await PayAsync(client, spell, now, passive);
             await Durability.WearOnAttackAsync(client);
             var effect = new MsgMagicEffect(client.ID, x, y, spell.Type) { MagicLevel = spell.Level };
+            // The client plays a kick that lifts its targets (Whirlwind Kick) as X hits, each
+            // showing a share of the damage and lifting the targets higher, up to 99
+            if (Kernel.MagicEffects.Find(spell.Type, spell.Level)?.Represent == MagicEffect.Lift)
+                (effect.X, effect.Y) = (LiftHits, 0);
             foreach (var victim in victims)
                 foreach (var damage in victim.Hits)
                     effect.Targets.Add((victim.ID, damage));
@@ -571,6 +575,9 @@ namespace Comet.Game.Magic
             }
             if (knockTo is var (knockX, knockY))
                 Knock(victims[0], knockX, knockY, direction);
+            // A kick's targets can't move while it holds them in the air, as its description says
+            if (Kernel.MagicEffects.Find(spell.Type, spell.Level) is { Represent: MagicEffect.Lift, LastTime: > 0 } lift)
+                Hold(victims, now + TimeSpan.FromMilliseconds(lift.LastTime));
 
             // Blade Tempest spots all it hits, once Black Spot is learned
             MagicType blackSpot = null;
@@ -659,6 +666,10 @@ namespace Comet.Game.Magic
                     effect.TraceSpeed, effect.TraceAcceleration));
             else if (effect.Represent == MagicEffect.Combo)
                 ms += effect.HitGap * Math.Max(0, victim.Hits.Count - 1);
+            // A kick that lifts its targets (Whirlwind Kick) is told of a kill at once: when the
+            // kick ends, the client lands the living and lets the dead fall
+            else if (effect.Represent == MagicEffect.Lift)
+                return TimeSpan.Zero;
             if (spell.Sort == MagicSort.CannonBarrage)
                 ms += CannonBarrageLanding;
             return TimeSpan.FromMilliseconds(ms);
@@ -800,6 +811,21 @@ namespace Comet.Game.Magic
         private static bool AimsAtDead(Client client, uint targetID) =>
             Attacks.IsMonster(targetID) && Kernel.Monsters.TryGet(client.Character.MapID, out var map) &&
             map.TryGet(targetID, out var monster, out _, out _) && !monster.Alive;
+
+        private const ushort LiftHits = 6;
+
+        private static void Hold(List<Victim> victims, DateTime until)
+        {
+            var monsters = victims.Where(v => v.Monster != null).Select(v => v.Monster).ToList();
+            if (monsters.Count > 0)
+                MonsterAI.Post(() =>
+                {
+                    foreach (var monster in monsters)
+                        if (monster.NextMoveAt < until)
+                            monster.NextMoveAt = until;
+                    return Task.CompletedTask;
+                });
+        }
 
         // The cells past the victim on the line from the caster, up to range cells from the
         // caster, until one is blocked or taken

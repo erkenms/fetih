@@ -71,6 +71,8 @@ namespace Comet.Integration.Tests
             await player.Game.CastAsync(player.User.Id, 10415, 0, (ushort)(at.X + 3), at.Y);
             var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10415);
             Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
+            // The client plays the kick as X hits
+            Assert.Equal((6, 0), (effect.X, effect.Y));
         }
 
         [Fact]
