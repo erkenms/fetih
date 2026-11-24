@@ -179,7 +179,12 @@ namespace Comet.Game.Social
                     MaxRankSize = (ushort)Math.Min(ranked.Count, ushort.MaxValue),
                 };
                 for (int i = 0; i < MsgFactionRankInfo.PageSize && start + i < ranked.Count; i++)
-                    reply.Entries.Add((ranked[start + i], (uint)(start + i)));
+                {
+                    var member = ranked[start + i];
+                    reply.Entries.Add((member, (uint)(start + i)));
+                    if (Flowers.FlowerRanking.Of(member.CharacterID) is { } flowers)
+                        reply.Flowers[member.CharacterID] = flowers;
+                }
                 await client.SendAsync(reply);
             }
             finally { Gate.Release(); }
@@ -190,8 +195,15 @@ namespace Comet.Game.Social
             MsgFactionRankInfo.FactionRankType.Silver => member.SilverDonation,
             MsgFactionRankInfo.FactionRankType.ConquerPoints => member.ConquerPointsDonation,
             MsgFactionRankInfo.FactionRankType.Total => member.TotalDonation,
+            MsgFactionRankInfo.FactionRankType.Rose => FlowerTotal(member, Flowers.FlowerKind.RedRose),
+            MsgFactionRankInfo.FactionRankType.Orchid => FlowerTotal(member, Flowers.FlowerKind.Orchid),
+            MsgFactionRankInfo.FactionRankType.Lily => FlowerTotal(member, Flowers.FlowerKind.Lily),
+            MsgFactionRankInfo.FactionRankType.Tulip => FlowerTotal(member, Flowers.FlowerKind.Tulip),
             _ => 0u,
         };
+
+        private static uint FlowerTotal(GuildMember member, Flowers.FlowerKind kind) =>
+            Flowers.FlowerRanking.Of(member.CharacterID)?.TotalOf(kind) ?? 0;
 
         public static List<Client> OthersOf(Client client)
         {

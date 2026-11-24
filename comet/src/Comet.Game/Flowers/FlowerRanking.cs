@@ -29,6 +29,11 @@ namespace Comet.Game.Flowers
         // Replaced whole on each change so MsgPlayer and rank queries read without the lock
         private static volatile Snapshot current = EmptySnapshot();
 
+        public static FlowerRecord Of(uint characterID)
+        {
+            lock (Sync) return Records.TryGetValue(characterID, out var record) ? record : null;
+        }
+
         public static int Count
         {
             get { lock (Sync) return Records.Count; }

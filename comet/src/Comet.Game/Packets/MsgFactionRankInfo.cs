@@ -2,6 +2,7 @@ namespace Comet.Game.Packets
 {
     using System.Collections.Generic;
     using System.Threading.Tasks;
+    using Comet.Game.Flowers;
     using Comet.Game.Social;
     using Comet.Game.States;
     using Comet.Network.Packets;
@@ -38,6 +39,7 @@ namespace Comet.Game.Packets
         public ushort MaxRankSize { get; set; }
         public List<(GuildMember Member, uint Position)> Entries { get; set; } =
             new List<(GuildMember, uint)>();
+        public Dictionary<uint, FlowerRecord> Flowers { get; set; } = new Dictionary<uint, FlowerRecord>();
 
         public MsgFactionRankInfo() => base.Type = PacketType.MsgFactionRankInfo;
 
@@ -70,10 +72,11 @@ namespace Comet.Game.Packets
                 writer.Write(0u);                       // +20 guide
                 writer.Write(0u);                       // +24 PK
                 writer.Write(0u);                       // +28 arsenal
-                writer.Write(0u);                       // +32 rose
-                writer.Write(0u);                       // +36 orchid
-                writer.Write(0u);                       // +40 lily
-                writer.Write(0u);                       // +44 tulip
+                this.Flowers.TryGetValue(member.CharacterID, out var flowers);
+                writer.Write(flowers?.RedRoses ?? 0);   // +32 rose
+                writer.Write(flowers?.Orchids ?? 0);    // +36 orchid
+                writer.Write(flowers?.Lilies ?? 0);     // +40 lily
+                writer.Write(flowers?.Tulips ?? 0);     // +44 tulip
                 writer.Write(member.TotalDonation);     // +48 total
                 writer.Write(member.Name, 16);          // +52
             }
