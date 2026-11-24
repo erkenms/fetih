@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 public record AuditEntry(ulong Id, DateTime Timestamp, uint AccountId, string Username,
-    string IpAddress, string Action, string TargetType, string TargetId, string Summary,
-    string Before, string After);
+    string? IpAddress, string Action, string? TargetType, string? TargetId, string? Summary,
+    string? Before, string? After);
 
 public record AuditPage(AuditEntry[] Items, int Total);
 
@@ -21,7 +21,7 @@ public class AuditFeature : IFeature
     }
 
     private static async Task<Ok<AuditPage>> ListAsync(IDbContextFactory<WebDbContext> factory,
-        uint? accountId, string action, string targetType, string targetId,
+        uint? accountId, string? action, string? targetType, string? targetId,
         DateTime? from, DateTime? to, int page = 1, int pageSize = 50)
     {
         pageSize = Math.Clamp(pageSize, 1, MaxPageSize);

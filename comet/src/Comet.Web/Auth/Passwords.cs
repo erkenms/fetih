@@ -1,5 +1,6 @@
 namespace Comet.Web.Auth;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using Comet.Account.Database.Models;
@@ -13,7 +14,7 @@ public static class Passwords
 
     // The stored verifier is g^x for the password the game client logs in with, so the web
     // recomputes it from the salt and compares.
-    public static bool Matches(DbAccount account, string password)
+    public static bool Matches([NotNullWhen(true)] DbAccount? account, string? password)
     {
         if (password == null || password.Length > AccountRules.MaxPasswordLength)
             return false;

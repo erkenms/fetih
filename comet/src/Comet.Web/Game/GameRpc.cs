@@ -14,7 +14,7 @@ public sealed class GameRpc(WebConfiguration config) : BackgroundService
     public static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
-    private volatile JsonRpc Rpc;
+    private volatile JsonRpc? Rpc;
 
     public bool Connected => this.Rpc is { } rpc && !rpc.Completion.IsCompleted;
 

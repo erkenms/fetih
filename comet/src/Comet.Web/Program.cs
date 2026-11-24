@@ -46,7 +46,10 @@ builder.WebHost.UseUrls(config.Web.Urls);
 builder.Services.AddSingleton(config);
 builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureHttpJsonOptions(options =>
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+{
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddOpenApi();
 builder.Services.AddDbContextFactory<WebDbContext>(options => options.UseMySql(
     config.Database.ConnectionString, MySqlServerVersion.LatestSupportedServerVersion));
@@ -77,7 +80,7 @@ app.UseExceptionHandler(error => error.Run(async context =>
 }));
 
 // Client art, built by tools/assets into web/assets. Pages show placeholders without it.
-string assets = WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory);
+string? assets = WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory);
 if (assets != null)
 {
     Directory.CreateDirectory(assets);
@@ -89,7 +92,7 @@ if (assets != null)
 }
 
 // The built frontend (npm run build). In development Vite serves it and proxies /api here.
-string frontend = WebConfiguration.PathsSection.Resolve(config.Paths.FrontendDirectory);
+string? frontend = WebConfiguration.PathsSection.Resolve(config.Paths.FrontendDirectory);
 var frontendFiles = frontend != null && File.Exists(Path.Combine(frontend, "index.html"))
     ? new PhysicalFileProvider(frontend) : null;
 if (frontendFiles != null)

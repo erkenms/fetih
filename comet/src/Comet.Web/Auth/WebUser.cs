@@ -21,7 +21,7 @@ public static class WebUser
     public static uint AccountId(this ClaimsPrincipal user) =>
         uint.TryParse(user.FindFirstValue(ClaimTypes.NameIdentifier), out uint id) ? id : 0;
 
-    public static string Username(this ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Name);
+    public static string Username(this ClaimsPrincipal user) => user.FindFirstValue(ClaimTypes.Name) ?? "";
 
     public static Authority Authority(this ClaimsPrincipal user) =>
         ushort.TryParse(user.FindFirstValue(AuthorityClaim), out ushort a) ? (Authority)a : 0;

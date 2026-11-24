@@ -14,15 +14,17 @@ public static class AuthEndpoints
     public static void MapAuth(this RouteGroupBuilder api)
     {
         api.MapPost("/auth/login", LoginAsync).RequireRateLimiting(AuthSetup.LoginRateLimit)
-            .WithName("login").AllowAnonymous();
-        api.MapPost("/auth/logout", LogoutAsync).WithName("logout").AllowAnonymous();
+            .WithName("login").AllowAnonymous()
+            .Produces<ApiError>(StatusCodes.Status401Unauthorized)
+            .Produces<ApiError>(StatusCodes.Status403Forbidden);
+        api.MapPost("/auth/logout", (Delegate)LogoutAsync).WithName("logout").AllowAnonymous();
         api.MapGet("/me", Me).WithName("me").RequireAuthorization();
     }
 
     private static async Task<Results<Ok<MeResponse>, JsonHttpResult<ApiError>>> LoginAsync(
         LoginRequest request, HttpContext http, AccountStore accounts)
     {
-        string ip = http.Connection.RemoteIpAddress?.ToString();
+        string? ip = http.Connection.RemoteIpAddress?.ToString();
         var account = await accounts.FindAsync(request.Username);
         if (!Passwords.Matches(account, request.Password))
         {
@@ -46,13 +48,13 @@ public static class AuthEndpoints
         return TypedResults.Ok(ToMe(user));
     }
 
-    private static async Task<Ok> LogoutAsync(HttpContext http)
+    private static async Task<NoContent> LogoutAsync(HttpContext http)
     {
         if (http.User.Identity?.IsAuthenticated == true)
             LogEvents.For(typeof(AuthEndpoints), WebEvents.Logout).Information(
                 "Web logout by account {AccountId}", http.User.AccountId());
         await http.SignOutAsync(AuthSetup.Scheme);
-        return TypedResults.Ok();
+        return TypedResults.NoContent();
     }
 
     private static Ok<MeResponse> Me(HttpContext http) => TypedResults.Ok(ToMe(http.User));

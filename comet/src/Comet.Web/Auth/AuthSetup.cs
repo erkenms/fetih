@@ -63,12 +63,14 @@ public static class AuthSetup
     private static async Task RecheckAsync(CookieValidatePrincipalContext context)
     {
         var principal = context.Principal;
-        long.TryParse(principal?.FindFirstValue(WebUser.CheckedClaim), out long checkedAt);
+        if (principal == null)
+            return;
+        long.TryParse(principal.FindFirstValue(WebUser.CheckedClaim), out long checkedAt);
         if (DateTimeOffset.UtcNow - DateTimeOffset.FromUnixTimeSeconds(checkedAt) < RecheckInterval)
             return;
 
         var accounts = context.HttpContext.RequestServices.GetRequiredService<AccountStore>();
-        DbAccount account = await accounts.FindAsync(principal.AccountId());
+        DbAccount? account = await accounts.FindAsync(principal.AccountId());
         if (account == null || AccountStore.LoginRefusal(account) != null)
         {
             context.RejectPrincipal();

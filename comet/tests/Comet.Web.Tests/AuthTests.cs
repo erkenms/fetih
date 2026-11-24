@@ -70,7 +70,7 @@ public class AuthTests(WebFixture fixture)
     public async Task LogoutEndsTheSession()
     {
         var client = await fixture.LoginAsync("test", "test");
-        (await client.PostAsync("/api/auth/logout", null)).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/me")).StatusCode);
     }
 

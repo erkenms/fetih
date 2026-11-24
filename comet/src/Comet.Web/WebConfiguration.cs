@@ -4,8 +4,8 @@ using Comet.Core.Logging;
 
 public class WebConfiguration
 {
-    public DatabaseConfiguration Database { get; set; }
-    public DatabaseConfiguration AccountDatabase { get; set; }
+    public DatabaseConfiguration? Database { get; set; }
+    public DatabaseConfiguration? AccountDatabase { get; set; }
     public WebSection Web { get; set; } = new();
     public GameRpcSection GameRpc { get; set; } = new();
     public PathsSection Paths { get; set; } = new();
@@ -13,10 +13,10 @@ public class WebConfiguration
 
     public class DatabaseConfiguration
     {
-        public string Hostname { get; set; }
-        public string Schema { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Hostname { get; set; } = "";
+        public string Schema { get; set; } = "";
+        public string Username { get; set; } = "";
+        public string Password { get; set; } = "";
 
         public string ConnectionString =>
             $"server={this.Hostname};database={this.Schema};user={this.Username};password={this.Password}";
@@ -42,14 +42,15 @@ public class WebConfiguration
     // Relative paths are from the build output folder, like the game server's Maps:ClientDirectory
     public class PathsSection
     {
-        public string DataDirectory { get; set; }
-        public string AssetsDirectory { get; set; }
-        public string ClientDirectory { get; set; }
-        public string FrontendDirectory { get; set; }
+        public string? DataDirectory { get; set; }
+        public string? AssetsDirectory { get; set; }
+        public string? ClientDirectory { get; set; }
+        public string? FrontendDirectory { get; set; }
 
-        public static string Resolve(string path) =>
+        public static string? Resolve(string? path) =>
             string.IsNullOrEmpty(path) ? null : Path.GetFullPath(path, AppContext.BaseDirectory);
     }
 
+    [System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(Database), nameof(AccountDatabase))]
     public bool Valid => this.Database != null && this.AccountDatabase != null;
 }

@@ -11,8 +11,8 @@ public sealed class AuditLog(IDbContextFactory<WebDbContext> factory, IHttpConte
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public async Task WriteAsync(string action, string targetType, string targetId,
-        object before = null, object after = null, string summary = null)
+    public async Task WriteAsync(string action, string? targetType, string? targetId,
+        object? before = null, object? after = null, string? summary = null)
     {
         var context = http.HttpContext;
         var user = context?.User;
