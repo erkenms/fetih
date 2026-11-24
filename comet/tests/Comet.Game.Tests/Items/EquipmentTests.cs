@@ -48,6 +48,21 @@ namespace Comet.Game.Tests.Items
             Assert.False(ItemSlots.Fits(type, position));
 
         [Theory]
+        [InlineData(11, false)]
+        [InlineData(12, true)]
+        [InlineData(15, true)]
+        [InlineData(25, false)]
+        [InlineData(45, false)]
+        [InlineData(51, false)]
+        [InlineData(52, true)]
+        [InlineData(61, false)]
+        [InlineData(62, true)]
+        [InlineData(72, true)]
+        [InlineData(145, false)]
+        public void SecondWeaponsAreForTrojansNinjasMonksAndPiratesFromTheSecondPromotion(byte currentClass, bool holds) =>
+            Assert.Equal(holds, Equipping.DualWields(currentClass));
+
+        [Theory]
         [InlineData(10, 11, false)]  // an intern trojan, a trojan item
         [InlineData(15, 11, true)]
         [InlineData(21, 21, true)]

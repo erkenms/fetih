@@ -162,6 +162,12 @@ namespace Comet.Game.States
                 if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && type.RequiredProfession != 0 &&
                     !Requirements.ProfessionFits(client.Character.CurrentClass, type.RequiredProfession))
                     await Equipping.UnequipAsync(client, item.ItemID, (ItemPosition)item.Position);
+
+            // A reborn class starts again below the rank that holds a second weapon
+            var left = client.Equipment[ItemPosition.LeftHand];
+            if (left != null && Equipping.LeftHandUnmet(
+                    client, left.TypeID, client.Equipment.TypeAt(ItemPosition.RightHand)) != null)
+                await Equipping.UnequipAsync(client, left.ItemID, ItemPosition.LeftHand);
         }
 
         // A reborn player of level 70 or more may put every attribute point back to allot again

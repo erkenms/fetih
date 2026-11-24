@@ -19,6 +19,10 @@ namespace Comet.Game.Items
 
         public static bool IsShield(uint type) => Sort(type) == 900;
 
+        public static bool IsRapier(uint type) => Sort(type) == 611;
+
+        public static bool IsPistol(uint type) => Sort(type) == 612;
+
         public static bool IsSteed(uint type) => Sort(type) == 300;
 
         // RidingCrop: 203003 normal to 203009 super

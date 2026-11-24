@@ -50,7 +50,8 @@ namespace Comet.Integration.Tests
         }
 
         protected async Task<(Player Player, string Email)> PlayingAtAsync(
-            uint mapID, int x, int y, ushort authority = 1, byte level = 1, ushort strength = 0, ushort mesh = 1003)
+            uint mapID, int x, int y, ushort authority = 1, byte level = 1, ushort strength = 0, ushort mesh = 1003,
+            byte currentClass = 0)
         {
             var (first, email) = await this.PlayingAsync(mesh: mesh);
             var name = first.User.Name;
@@ -60,6 +61,9 @@ namespace Comet.Integration.Tests
             await this.Servers.ExecuteGameSqlAsync(
                 "UPDATE `character` SET MapID = @map, X = @x, Y = @y, Level = @level WHERE Name = @name",
                 ("@map", mapID), ("@x", x), ("@y", y), ("@level", level), ("@name", name));
+            if (currentClass > 0)
+                await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET CurrentClass = @class WHERE Name = @name",
+                    ("@class", currentClass), ("@name", name));
             if (strength > 0)
                 await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET Strength = @strength WHERE Name = @name",
                     ("@strength", strength), ("@name", name));

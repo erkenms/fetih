@@ -33,6 +33,13 @@ namespace Comet.Game.Items
                 removed.Add(equipment[position]);
 
             var left = equipment[ItemPosition.LeftHand];
+            if (position == ItemPosition.RightHand)
+            {
+                if (ItemSlots.IsPistol(type.ID))
+                    return Reject(client, itemID, position, "left_hand_only");
+                if (left != null && ItemSlots.IsPistol(left.TypeID) && !ItemSlots.IsRapier(type.ID))
+                    return Reject(client, itemID, position, "pistol_needs_rapier");
+            }
             if (position == ItemPosition.RightHand && ItemSlots.IsTwoHanded(type.ID) && left != null &&
                 !(ItemSlots.IsBow(type.ID) && ItemSlots.IsArrow(left.TypeID)) &&
                 !(ItemSlots.IsShield(left.TypeID) && HoldsShieldWith(client, type.ID)))
@@ -40,11 +47,9 @@ namespace Comet.Game.Items
 
             if (position == ItemPosition.LeftHand)
             {
-                uint right = equipment.TypeAt(ItemPosition.RightHand);
-                bool fits = ItemSlots.IsArrow(type.ID) ? ItemSlots.IsBow(right) :
-                    ItemSlots.IsOneHanded(right) || ItemSlots.IsShield(type.ID) && HoldsShieldWith(client, right);
-                if (!fits)
-                    return Reject(client, itemID, position, "needs_right_hand");
+                string unfit = LeftHandUnmet(client, type.ID, equipment.TypeAt(ItemPosition.RightHand));
+                if (unfit != null)
+                    return Reject(client, itemID, position, unfit);
             }
 
             // The equipped item frees its inventory slot
@@ -85,6 +90,28 @@ namespace Comet.Game.Items
             return true;
         }
 
+        // Why the left hand can't hold the type beside the right hand's, or null. As in the 5619
+        // client: a rapier only goes in the right hand and a pistol only beside one, and a
+        // second weapon is for trojans, ninjas, monks and pirates from their second promotion.
+        public static string LeftHandUnmet(Client client, uint left, uint right)
+        {
+            if (ItemSlots.IsArrow(left))
+                return ItemSlots.IsBow(right) ? null : "needs_right_hand";
+            if (ItemSlots.IsShield(left))
+                return ItemSlots.IsOneHanded(right) || HoldsShieldWith(client, right) ? null : "needs_right_hand";
+            if (ItemSlots.IsRapier(left))
+                return "right_hand_only";
+            if (ItemSlots.IsPistol(left) && !ItemSlots.IsRapier(right))
+                return "pistol_needs_rapier";
+            if (!DualWields(client.Character.CurrentClass))
+                return "class";
+            return ItemSlots.IsOneHanded(right) ? null : "needs_right_hand";
+        }
+
+        public static bool DualWields(byte currentClass) =>
+            Promotion.Rank(currentClass) >= 2 && Promotion.Line(currentClass) is
+                Magic.Learning.Trojan or Magic.Learning.Ninja or Magic.Learning.Monk or Magic.Learning.Pirate;
+
         public const ushort Perseverance = 10311;
 
         // Perseverance lets a warrior hold a shield with a two-handed weapon, bows aside
@@ -101,6 +128,15 @@ namespace Comet.Game.Items
                 return Reject(client, itemID, position, "not_equipped");
             if (client.Inventory.FreeSlots == 0)
                 return Reject(client, itemID, position, "inventory_full");
+
+            // A pistol can't stay without the rapier; the client takes it off first
+            var pistol = client.Equipment[ItemPosition.LeftHand];
+            if (position == ItemPosition.RightHand && pistol != null && ItemSlots.IsPistol(pistol.TypeID))
+            {
+                if (client.Inventory.FreeSlots < 2)
+                    return Reject(client, itemID, position, "inventory_full");
+                await UnequipAsync(client, pistol.ItemID, ItemPosition.LeftHand);
+            }
 
             client.Equipment.Clear(position);
             item.Position = (byte)ItemPosition.Inventory;

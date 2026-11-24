@@ -56,6 +56,12 @@ namespace Comet.Integration.Tests
             var helmet = await GiveAsync(player, ServerFixture.HelmetLevelUp.Id);
             await player.Game.EquipAsync(helmet.Id, 1);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, helmet.Id));
+            var right = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(right.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, right.Id));
+            var left = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(left.Id, 5);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, left.Id));
 
             Assert.Contains("Celestial Stone", await TalkAsync(player, Eternity));
             Assert.Contains("Celestial Stone", await AnswerAsync(player, Warrior));
@@ -78,6 +84,8 @@ namespace Comet.Integration.Tests
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == ServerFixture.Thunder.Type && m.Level == 0));
             Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == ServerFixture.IronShirt.Type));
             Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == helmet.Id && i.TypeId == ServerFixture.Helmet.Id));
+            // A warrior holds no second weapon
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Unequip, left.Id));
 
             await this.LogOutAsync(player);
             Assert.Equal(21, await this.CharacterAsync(player, "CurrentClass"));

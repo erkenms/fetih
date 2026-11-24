@@ -413,7 +413,7 @@ namespace Comet.Integration.Tests
         public async Task GapingWoundsTakesAtLeastAFifthOfWhatLifeIsLeftTwiceAsOftenWithTwoBlades()
         {
             var at = ServerFixture.PheasantForGapingWounds;
-            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100, currentClass: 52)).Player;
             var pheasant = await ninja.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
             Assert.NotNull(pheasant);
             await CommandAsync(ninja, "/learn 11230");
@@ -436,7 +436,7 @@ namespace Comet.Integration.Tests
         public async Task GapingWoundsHitsAtLeastAsHardAsTheSwing()
         {
             var at = ServerFixture.PheasantForGapingWounds;
-            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100, strength: 5000)).Player;
+            await using var ninja = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100, strength: 5000, currentClass: 52)).Player;
             var pheasant = await ninja.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
             Assert.NotNull(pheasant);
             await CommandAsync(ninja, "/learn 11230");

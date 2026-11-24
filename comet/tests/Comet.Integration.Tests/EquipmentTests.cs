@@ -8,6 +8,7 @@ namespace Comet.Integration.Tests
     public class EquipmentTests : IntegrationTest
     {
         private const uint RightHand = 4, LeftHand = 5, Headwear = 1;
+        private const byte VeteranTrojan = 12, PirateGunner = 72;
 
         public EquipmentTests(ServerFixture servers) : base(servers) { }
 
@@ -55,7 +56,7 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task ATwoHandedWeaponPutsBothHandsBackInTheInventory()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 640, 560, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 640, 560, GameMaster, currentClass: VeteranTrojan)).Player;
             var right = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(right.Id, RightHand);
             Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, right.Id));
@@ -180,11 +181,56 @@ namespace Comet.Integration.Tests
         [Fact]
         public async Task TheLeftHandNeedsAOneHandedWeaponInTheRight()
         {
-            await using var player = (await this.PlayingAtAsync(1002, 680, 560, GameMaster)).Player;
+            await using var player = (await this.PlayingAtAsync(1002, 680, 560, GameMaster, currentClass: VeteranTrojan)).Player;
             var blade = await GiveAsync(player, ServerFixture.Blade.Id);
             await player.Game.EquipAsync(blade.Id, LeftHand);
             var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", blade.Id.ToString());
             Assert.Equal("needs_right_hand", rejected.GetProperty("reason").GetString());
+        }
+
+        [Fact]
+        public async Task ASecondWeaponWaitsForTheSecondPromotion()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 660, 600, GameMaster)).Player;
+            var right = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(right.Id, RightHand);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, right.Id));
+            var left = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(left.Id, LeftHand);
+            var rejected = await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", left.Id.ToString());
+            Assert.Equal("class", rejected.GetProperty("reason").GetString());
+            Assert.Equal(0, System.Convert.ToInt32(await this.PositionAsync(left.Id)));
+        }
+
+        [Fact]
+        public async Task APistolIsHeldBesideARapierAndTakenOffWithIt()
+        {
+            await using var pirate = (await this.PlayingAtAsync(1002, 680, 600, GameMaster, currentClass: PirateGunner)).Player;
+            var rapier = await GiveAsync(pirate, ServerFixture.Rapier.Id);
+            var pistol = await GiveAsync(pirate, ServerFixture.Pistol.Id);
+            async Task<string> RejectedAsync(uint itemId) =>
+                (await this.Servers.WaitForEventAsync("game", "item.equip_rejected", "itemId", itemId.ToString()))
+                    .GetProperty("reason").GetString();
+
+            await pirate.Game.EquipAsync(pistol.Id, RightHand);
+            Assert.Equal("left_hand_only", await RejectedAsync(pistol.Id));
+            await pirate.Game.EquipAsync(rapier.Id, LeftHand);
+            Assert.Equal("right_hand_only", await RejectedAsync(rapier.Id));
+
+            await pirate.Game.EquipAsync(rapier.Id, RightHand);
+            Assert.NotNull(await pirate.Game.WaitForItemActionAsync(ItemMessage.Equipped, rapier.Id));
+            await pirate.Game.EquipAsync(pistol.Id, LeftHand);
+            Assert.NotNull(await pirate.Game.WaitForItemActionAsync(ItemMessage.Equipped, pistol.Id));
+
+            var blade = await GiveAsync(pirate, ServerFixture.Blade.Id);
+            await pirate.Game.EquipAsync(blade.Id, RightHand);
+            Assert.Equal("pistol_needs_rapier", await RejectedAsync(blade.Id));
+
+            await pirate.Game.UnequipAsync(rapier.Id, RightHand);
+            Assert.NotNull(await pirate.Game.WaitForItemActionAsync(ItemMessage.Unequip, pistol.Id));
+            Assert.NotNull(await pirate.Game.WaitForItemActionAsync(ItemMessage.Unequip, rapier.Id));
+            Assert.Equal((0, 0), (System.Convert.ToInt32(await this.PositionAsync(rapier.Id)),
+                System.Convert.ToInt32(await this.PositionAsync(pistol.Id))));
         }
 
         [Fact]
