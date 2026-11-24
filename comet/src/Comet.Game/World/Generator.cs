@@ -16,6 +16,10 @@ namespace Comet.Game.World
         [JsonPropertyName("respawn")] public int RespawnSeconds { get; init; }
         [JsonPropertyName("monster")] public uint MonsterID { get; init; }
 
+        public static bool Same(Generator a, Generator b) =>
+            a.ID == b.ID && a.MapID == b.MapID && a.X == b.X && a.Y == b.Y && a.Spread == b.Spread &&
+            a.Amount == b.Amount && a.RespawnSeconds == b.RespawnSeconds && a.MonsterID == b.MonsterID;
+
         private sealed record SpawnFile(List<Generator> Spawns);
 
         public static List<Generator> Load(string path, MonsterTypeTable types)

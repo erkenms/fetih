@@ -26,6 +26,10 @@ namespace Comet.Game.World
         [JsonPropertyName("life")] public uint Life { get; init; }
         [JsonPropertyName("level")] public byte Level { get; init; }
 
+        public static bool Same(Npc a, Npc b) =>
+            a.NpcID == b.NpcID && a.Lookface == b.Lookface && a.Role == b.Role && a.MapID == b.MapID &&
+            a.X == b.X && a.Y == b.Y && a.Life == b.Life && a.Level == b.Level;
+
         public bool IsGoal => this.Role is StakeRole or ScarecrowRole;
         public bool IsGuildWarTarget => this.MapID == Social.GuildWar.MapID && this.Role is PoleRole or GateRole;
     }

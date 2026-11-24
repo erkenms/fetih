@@ -18,8 +18,12 @@ namespace Comet.Game.World
         private static List<Monster> all = new List<Monster>();
         private static Dictionary<uint, Monster> byId = new Dictionary<uint, Monster>();
         private static uint nextId = Monster.FirstID;
+        private static IReadOnlyList<Generator> generators = new List<Generator>();
 
         public static IReadOnlyList<Monster> All => all;
+
+        // The spawn file's generators the world runs
+        public static IReadOnlyList<Generator> Generators => generators;
 
         public static bool TryGet(uint id, out Monster monster) => byId.TryGetValue(id, out monster);
 
@@ -27,10 +31,11 @@ namespace Comet.Game.World
         // ID range are left out. Monsters with no free cell wait for the respawn pass.
         public static (int Placed, int Skipped) Spawn(IEnumerable<Generator> generators, Random random)
         {
+            Monsters.generators = generators.ToList();
             var monsters = new List<Monster>();
             uint next = Monster.FirstID;
             int skipped = 0;
-            foreach (var generator in generators)
+            foreach (var generator in Monsters.generators)
             {
                 if (!Kernel.MonsterTypes.TryGet(generator.MonsterID, out var type) ||
                     !Kernel.Monsters.TryGet(generator.MapID, out var map) ||
@@ -53,6 +58,76 @@ namespace Comet.Game.World
             byId = monsters.ToDictionary(m => m.Identity);
             nextId = next;
             return (monsters.Count(m => m.Alive), skipped);
+        }
+
+        // Swaps the spawn file's generators on a running world. A generator that's the same, of a
+        // monster type that's the same, keeps its monsters; the others' monsters leave players'
+        // screens and the new generators' monsters are placed at once. Scheduled bosses stay.
+        // Monster IDs aren't reused, so a client never mixes an old monster with a new one.
+        public static async Task<(int Kept, int Removed, int Placed, int Skipped)> ReplaceSpawnsAsync(
+            IEnumerable<Generator> replacement, Func<uint, bool> typeChanged, DateTime now, Random random)
+        {
+            var oldById = generators.GroupBy(g => g.ID).ToDictionary(g => g.Key, g => g.First());
+            var spawned = new HashSet<Generator>(generators);
+            var kept = new HashSet<Generator>();
+            var finalGenerators = new List<Generator>();
+            var toSpawn = new List<Generator>();
+            foreach (var generator in replacement)
+            {
+                if (oldById.TryGetValue(generator.ID, out var old) && Generator.Same(old, generator) &&
+                    !typeChanged(old.MonsterID))
+                {
+                    kept.Add(old);
+                    finalGenerators.Add(old);
+                }
+                else
+                {
+                    toSpawn.Add(generator);
+                    finalGenerators.Add(generator);
+                }
+            }
+
+            var monsters = new List<Monster>();
+            int removed = 0;
+            foreach (var monster in all)
+            {
+                if (!spawned.Contains(monster.Generator) || kept.Contains(monster.Generator))
+                {
+                    monsters.Add(monster);
+                    continue;
+                }
+
+                if (monster.Alive || !monster.CorpseRemoved)
+                    await SendToViewAsync(monster, MsgAction.RemoveEntity(monster.Identity));
+                monster.Map.Remove(monster);
+                removed++;
+            }
+
+            int keptCount = monsters.Count;
+            int placed = 0, skipped = 0;
+            var newMonsters = new List<Monster>();
+            foreach (var generator in toSpawn)
+            {
+                if (!Kernel.MonsterTypes.TryGet(generator.MonsterID, out var type) ||
+                    !Kernel.Monsters.TryGet(generator.MapID, out var map) ||
+                    nextId + generator.Amount - 1 > Monster.LastID)
+                {
+                    skipped++;
+                    continue;
+                }
+
+                for (int i = 0; i < generator.Amount; i++)
+                    newMonsters.Add(new Monster(nextId++, type, generator, map) { CorpseRemoved = true });
+            }
+
+            generators = finalGenerators;
+            monsters.AddRange(newMonsters);
+            all = monsters;
+            byId = monsters.ToDictionary(m => m.Identity);
+            foreach (var monster in newMonsters)
+                if (await SpawnNowAsync(monster, now, random))
+                    placed++;
+            return (keptCount, removed, placed, skipped);
         }
 
         // Registers a scheduled monster (initially dead) using the next free monster ID

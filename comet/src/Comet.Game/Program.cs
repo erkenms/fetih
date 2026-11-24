@@ -52,6 +52,7 @@
                 return;
             }
             Log.Information("Initializing server in time zone {TimeZone}...", Clock.Zone.Id);
+            DataFiles.Directory = config.Data.ResolveDirectory();
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
             AccountsRepository.Configuration = config.AccountDatabase;
@@ -314,6 +315,9 @@
 
                 var bossesFile = System.IO.Path.GetFullPath(config.Monsters.BossesFile, DataFiles.PathOf(""));
                 var bossSpawns = BossSpawn.Load(bossesFile, Kernel.MonsterTypes);
+                DataReload.SpawnsFile = spawnsFile;
+                DataReload.DropsFile = dropsFile;
+                DataReload.BossesFile = bossesFile;
                 Kernel.Bosses = new BossSchedule();
                 var (bossesRegistered, bossesSkipped) = Kernel.Bosses.Register(bossSpawns, DateTime.UtcNow);
                 LogEvents.For(typeof(Program), LogEvents.BossesLoaded).Information(

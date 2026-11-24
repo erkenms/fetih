@@ -14,6 +14,7 @@ namespace Comet.Game.Database
         public AuthenticationConfiguration Authentication { get; set; }
         public LoggingConfiguration Logging { get; set; }
         public MapsConfiguration Maps { get; set; }
+        public DataConfiguration Data { get; set; } = new DataConfiguration();
         public SavingConfiguration Saving { get; set; } = new SavingConfiguration();
         public GroundConfiguration Ground { get; set; } = new GroundConfiguration();
         public MonstersConfiguration Monsters { get; set; } = new MonstersConfiguration();
@@ -73,6 +74,17 @@ namespace Comet.Game.Database
 
             public string ResolveClientDirectory() =>
                 System.IO.Path.GetFullPath(this.ClientDirectory, System.AppContext.BaseDirectory);
+        }
+
+        // Where the Data/*.json files are read from, relative to the server's own folder; its
+        // own Data/ copy when empty
+        public class DataConfiguration
+        {
+            public string Directory { get; set; }
+
+            public string ResolveDirectory() => string.IsNullOrEmpty(this.Directory)
+                ? System.IO.Path.Combine(System.AppContext.BaseDirectory, "Data")
+                : System.IO.Path.GetFullPath(this.Directory, System.AppContext.BaseDirectory);
         }
 
         // Online characters are saved this often, besides on logout

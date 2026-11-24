@@ -316,6 +316,8 @@ namespace Comet.Integration.Tests
         public int RpcPort { get; private set; }
         public string LogDirectory { get; }
         public string MapDirectory { get; }
+        // A copy of the game's Data/ folder the server reads, so tests can change and reload it
+        public string DataDirectory => Path.Combine(this.MapDirectory, "data");
         // Each server's events in the order they were read, and how far each log file was read
         private readonly Dictionary<string, List<JsonElement>> ServerEvents = new Dictionary<string, List<JsonElement>>();
         private readonly Dictionary<string, long> LogFiles = new Dictionary<string, long>();
@@ -430,10 +432,12 @@ namespace Comet.Integration.Tests
             // Synthetic map files, so the tests don't need a copy of the client
             this.WriteMaps();
             this.WriteSpawns();
+            CopyDirectory(Path.Combine(this.ServerDirectory("Comet.Game"), "Data"), this.DataDirectory);
 
             // The game server first, so the account server finds its RPC port
             this.StartServer("Comet.Game", this.GameSchema, "game",
-                "--Maps:ClientDirectory=" + this.MapDirectory, "--TimeZone=UTC",
+                "--Maps:ClientDirectory=" + this.MapDirectory, "--Data:Directory=" + this.DataDirectory,
+                "--TimeZone=UTC",
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
                 "--GameNetwork:MaxConnPerIP=1000", "--GameNetwork:MaxAttemptsPerMinute=100000",
                 "--GameNetwork:LoginTimeoutSeconds=" + LoginTimeoutSeconds,
@@ -643,6 +647,22 @@ namespace Comet.Integration.Tests
             await using var db = new MySqlConnection(this.ConnectionString());
             await db.OpenAsync();
             await new MySqlCommand(sql, db).ExecuteNonQueryAsync();
+        }
+
+        private static void CopyDirectory(string from, string to)
+        {
+            Directory.CreateDirectory(to);
+            foreach (var file in Directory.GetFiles(from))
+                File.Copy(file, Path.Combine(to, Path.GetFileName(file)), overwrite: true);
+        }
+
+        // Calls a method of the game server's RPC target, as the account server and the web do
+        public async Task<T> CallGameRpcAsync<T>(string method, params object[] args)
+        {
+            using var tcp = new TcpClient();
+            await tcp.ConnectAsync(Host, this.RpcPort);
+            using var rpc = StreamJsonRpc.JsonRpc.Attach(tcp.GetStream());
+            return await rpc.InvokeAsync<T>(method, args);
         }
 
         private static int FreePort()

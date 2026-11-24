@@ -40,6 +40,18 @@ namespace Comet.Game.World
         public IReadOnlyList<Npc> On(uint mapID) =>
             this.ByMap.TryGetValue(mapID, out var npcs) ? npcs : new List<Npc>();
 
+        public IEnumerable<Npc> All => this.ByMap.Values.SelectMany(l => l);
+
+        // NPCs gone or changed in the next table, and NPCs new or changed in it
+        public (List<Npc> Gone, List<Npc> Shown) Changes(NpcTable next)
+        {
+            var before = this.All.ToDictionary(n => n.NpcID);
+            var after = next.All.ToDictionary(n => n.NpcID);
+            var gone = before.Values.Where(n => !after.TryGetValue(n.NpcID, out var now) || !Npc.Same(n, now)).ToList();
+            var shown = after.Values.Where(n => !before.TryGetValue(n.NpcID, out var was) || !Npc.Same(was, n)).ToList();
+            return (gone, shown);
+        }
+
         public Npc Find(uint mapID, uint npcID) =>
             this.ByMap.TryGetValue(mapID, out var npcs) ? npcs.FirstOrDefault(n => n.NpcID == npcID) : null;
     }

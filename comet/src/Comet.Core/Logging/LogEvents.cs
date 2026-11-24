@@ -197,6 +197,9 @@ namespace Comet.Core.Logging
         public const string PkClaimed = "pk.claimed";
         public const string PkDetainRejected = "pk.detain_rejected";
 
+        public const string DataReloaded = "data.reloaded";
+        public const string DataReloadRejected = "data.reload_rejected";
+
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";
         public const string MapLoadFailed = "map.load_failed";
