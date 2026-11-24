@@ -11,5 +11,6 @@ public static class FeatureRegistry
         new PublicAccount.PublicAccountFeature(),
         new PublicSite.PublicSiteFeature(),
         new Dashboard.DashboardFeature(),
+        new Broadcasts.BroadcastsFeature(),
     ];
 }

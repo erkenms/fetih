@@ -469,6 +469,25 @@ CREATE TABLE `web_audit` (
   KEY `Target` (`TargetType`,`TargetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Scheduled announcements sent periodically by Comet.Web through the game admin RPC.
+DROP TABLE IF EXISTS `web_announcement`;
+CREATE TABLE `web_announcement` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Title` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Channel` varchar(16) NOT NULL,
+  `Message` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `IntervalMinutes` int(10) unsigned NOT NULL,
+  `Enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `StartAt` datetime(3) DEFAULT NULL,
+  `EndAt` datetime(3) DEFAULT NULL,
+  `LastSentAt` datetime(3) DEFAULT NULL,
+  `CreatedBy` int(10) unsigned NOT NULL DEFAULT '0',
+  `CreatedAt` datetime(3) NOT NULL,
+  `UpdatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `Enabled` (`Enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

@@ -564,10 +564,112 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/broadcasts/queue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getBroadcastQueue"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/broadcasts/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendBroadcast"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/broadcasts/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAnnouncements"];
+        put?: never;
+        post: operations["createAnnouncement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/broadcasts/announcements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateAnnouncement"];
+        post?: never;
+        delete: operations["deleteAnnouncement"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/broadcasts/announcements/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["sendAnnouncementNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AnnouncementDto: {
+            /** Format: uint32 */
+            id: number;
+            title: string;
+            channel: components["schemas"]["BroadcastChannel"];
+            message: string;
+            /** Format: uint32 */
+            intervalMinutes: number;
+            enabled: boolean;
+            /** Format: date-time */
+            startAt: null | string;
+            /** Format: date-time */
+            endAt: null | string;
+            /** Format: date-time */
+            lastSentAt: null | string;
+            /** Format: uint32 */
+            createdBy: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
         ApiError: {
             error: string;
         };
@@ -639,6 +741,12 @@ export interface components {
             items: components["schemas"]["AuditEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        /** @enum {unknown} */
+        BroadcastChannel: "Center" | "System" | "TopLeft";
+        BroadcastQueueResponse: {
+            gameConnected: boolean;
+            items: components["schemas"]["QueuedBroadcastItem"][];
         };
         CatalogItem: {
             /** Format: uint32 */
@@ -1209,6 +1317,18 @@ export interface components {
             topArena: components["schemas"]["ArenaRankEntry"][];
             latestNews: components["schemas"]["NewsEntry"][];
         };
+        QueuedBroadcastItem: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint32 */
+            position: number;
+            /** Format: uint32 */
+            characterId: number;
+            senderName: string;
+            message: string;
+            /** Format: uint32 */
+            addition: number;
+        };
         RankingPageOfArenaRankEntry: {
             items: components["schemas"]["ArenaRankEntry"][];
             /** Format: int32 */
@@ -1301,6 +1421,27 @@ export interface components {
             username: string;
             password: string;
             captchaToken?: null | string;
+        };
+        SaveAnnouncementRequest: {
+            title: string;
+            channel: components["schemas"]["BroadcastChannel"];
+            message: string;
+            /** Format: uint32 */
+            intervalMinutes: number;
+            enabled: boolean;
+            /** Format: date-time */
+            startAt: null | string;
+            /** Format: date-time */
+            endAt: null | string;
+        };
+        SendBroadcastRequest: {
+            channel: components["schemas"]["BroadcastChannel"];
+            text: string;
+        };
+        SendBroadcastResponse: {
+            sent: boolean;
+            channel: components["schemas"]["BroadcastChannel"];
+            text: string;
         };
         ServerState: {
             /** Format: date-time */
@@ -2330,6 +2471,162 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DownloadInfoResponse"];
+                };
+            };
+        };
+    };
+    getBroadcastQueue: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BroadcastQueueResponse"];
+                };
+            };
+        };
+    };
+    sendBroadcast: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendBroadcastRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SendBroadcastResponse"];
+                };
+            };
+        };
+    };
+    listAnnouncements: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementDto"][];
+                };
+            };
+        };
+    };
+    createAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementDto"];
+                };
+            };
+        };
+    };
+    updateAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveAnnouncementRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementDto"];
+                };
+            };
+        };
+    };
+    deleteAnnouncement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    sendAnnouncementNow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnnouncementDto"];
                 };
             };
         };
