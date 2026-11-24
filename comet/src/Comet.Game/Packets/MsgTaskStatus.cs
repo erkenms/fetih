@@ -6,7 +6,7 @@ namespace Comet.Game.Packets
     using Comet.Network.Packets;
 
     // 8 + 12n bytes, at most 80 entries: action u16 at 4, entry count u16 at 6, then from 8
-    // each entry is a task ID u32, a status u16 at +4 and padding.
+    // each entry is a task ID u32, a status u16 at +4 and the time left u32 at +8.
     // When the game starts the client sends action 3 listing every task in its mission data,
     // in as many packets as it takes, asking for their status. A server without tasks
     // leaves them as the client already has them: not accepted. Action 4 with status 5 says
