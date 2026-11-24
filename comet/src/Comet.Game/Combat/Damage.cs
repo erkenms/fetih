@@ -94,6 +94,10 @@ namespace Comet.Game.Combat
             return (uint)Math.Min(uint.MaxValue, (ulong)(damage * multiplier));
         }
 
+        // A Block refinery's percent is the chance a physical hit does half
+        public static uint ApplyBlock(uint damage, int blockPercent, Random random) =>
+            damage > 1 && blockPercent > 0 && random.Next(100) < Math.Min(blockPercent, 100) ? damage / 2 : damage;
+
         // Sage Penetration reduces a target's magical defense by its percentage.
         public static int PenetratedMagicDefense(int magicDefense, int penetrationPercent) =>
             Math.Max(0, magicDefense * (100 - Math.Clamp(penetrationPercent, 0, 100)) / 100);

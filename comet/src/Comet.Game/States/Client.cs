@@ -149,6 +149,15 @@ namespace Comet.Game.States
             this.DiffieHellman = new DiffieHellman();
         }
 
+        // MsgItemInfo makes the client a new item, without the refinery states the old one had
+        public override async Task SendAsync(Comet.Network.Packets.IPacket packet)
+        {
+            await base.SendAsync(packet);
+            if (packet is Packets.MsgItemInfo { Action: Packets.MsgItemInfo.ItemAction.Add or Packets.MsgItemInfo.ItemAction.Update } info &&
+                Refinery.HasState(info.Item, DateTime.UtcNow))
+                await base.SendAsync(new Packets.MsgItemStatus(Refinery.Entries(info.Item, DateTime.UtcNow)));
+        }
+
         // Every caller awaits the same save, so a replacing login can wait for it to finish and
         // the disconnect handler can't start a second one.
         public Task LogoutAsync()

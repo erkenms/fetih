@@ -1,11 +1,13 @@
 namespace Comet.Game.Combat
 {
     using System;
+    using System.Collections.Generic;
     using Comet.Game.Items;
     using Comet.Game.States;
 
     // Gems and blessings are percentages kept apart from the flat numbers, as the client's stat
-    // window shows them
+    // window shows them. Worn gear's refinery states add to the sub-classes' percentages; a
+    // magic defense refinery raises magic defense by its percent.
     public sealed record Stats(int MinAttack, int MaxAttack, int Defense, int Dodge, int Range,
         int AttackSpeed, bool Bow, int MagicAttack = 0, int MagicDefense = 0)
     {
@@ -20,6 +22,9 @@ namespace Comet.Game.Combat
         public int Immunity { get; init; }
         public int Penetration { get; init; }
         public int Detoxication { get; init; }
+        public int Block { get; init; }
+        public int Breakthrough { get; init; }
+        public int Counteraction { get; init; }
 
         public int MinDamage => this.MinAttack * (100 + this.AttackPercent) / 100;
         public int MaxDamage => this.MaxAttack * (100 + this.AttackPercent) / 100;
@@ -34,6 +39,8 @@ namespace Comet.Game.Combat
             var character = client.Character;
             int min = character.Strength, max = character.Strength, defense = 0, dodge = 0;
             int magicAttack = 0, magicDefense = 0, attackPercent = 0, magicPercent = 0, tortoise = 0, bless = 0;
+            var refined = new Dictionary<RefineryKind, int>();
+            var now = DateTime.UtcNow;
             if (client.Equipment != null)
             {
                 foreach (var item in client.Equipment.Items)
@@ -67,6 +74,9 @@ namespace Comet.Game.Combat
                         }
                     }
                     bless += item.Bless;
+                    var (kind, power) = Refinery.Active(item, now);
+                    if (kind != RefineryKind.None)
+                        refined[kind] = refined.GetValueOrDefault(kind) + (int)power;
                 }
             }
 
@@ -88,18 +98,23 @@ namespace Comet.Game.Combat
                 max += attackBonus;
                 magicAttack += sub.MagicAttackBonus();
             }
-            dodge = Magic.Buffs.Dodge(client.Effects, dodge, DateTime.UtcNow);
+            dodge = Magic.Buffs.Dodge(client.Effects, dodge, now);
+            magicDefense = magicDefense * (100 + refined.GetValueOrDefault(RefineryKind.MagicDefense)) / 100;
             return new Stats(min, max, defense, dodge, range, speed, bow, magicAttack, magicDefense)
             {
                 AttackPercent = attackPercent,
                 MagicPercent = magicPercent,
                 TortoisePercent = Math.Min(Gems.MaxTortoisePercent, tortoise),
                 BlessPercent = Math.Min(100, bless),
-                CriticalStrike = sub?.CriticalStrikePercent() ?? 0,
-                SkillCriticalStrike = sub?.SkillCriticalStrikePercent() ?? 0,
-                Immunity = sub?.ImmunityPercent() ?? 0,
-                Penetration = sub?.PenetrationPercent() ?? 0,
-                Detoxication = sub?.DetoxicationPercent() ?? 0,
+                CriticalStrike = (sub?.CriticalStrikePercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.CriticalStrike),
+                SkillCriticalStrike = (sub?.SkillCriticalStrikePercent() ?? 0) +
+                    refined.GetValueOrDefault(RefineryKind.SkillCriticalStrike),
+                Immunity = (sub?.ImmunityPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Immunity),
+                Penetration = (sub?.PenetrationPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Penetration),
+                Detoxication = (sub?.DetoxicationPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Detoxication),
+                Block = refined.GetValueOrDefault(RefineryKind.Block),
+                Breakthrough = refined.GetValueOrDefault(RefineryKind.Breakthrough),
+                Counteraction = refined.GetValueOrDefault(RefineryKind.Counteraction),
             };
         }
     }

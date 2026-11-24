@@ -82,9 +82,9 @@ namespace Comet.Game.Packets
             writer.Write((uint)(this.Stats.SkillCriticalStrike * 100)); // 72 skill critical strike (0.01% units)
             writer.Write((uint)(this.Stats.Immunity * 100));            // 76 immunity (0.01% units)
             writer.Write((uint)(this.Stats.Penetration * 100));         // 80 penetration (0.01% units)
-            writer.Write(0u);                                           // 84 block
-            writer.Write(0u);                                           // 88 breakthrough
-            writer.Write(0u);                                           // 92 counteraction
+            writer.Write((uint)(this.Stats.Block * 100));               // 84 block (0.01% units)
+            writer.Write((uint)(this.Stats.Breakthrough * 10));         // 88 breakthrough (0.1% units)
+            writer.Write((uint)(this.Stats.Counteraction * 10));        // 92 counteraction (0.1% units)
             writer.Write((uint)this.Stats.Detoxication);                // 96 detoxication (% units)
             writer.Write(new byte[Size - 100]);                         // 100
             return writer.ToArray();

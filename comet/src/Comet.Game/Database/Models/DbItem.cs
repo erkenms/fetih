@@ -28,5 +28,15 @@ namespace Comet.Game.Database.Models
         // Locked items go only to trade partners; UnlocksAt is set while an unlock waits
         public bool Locked { get; set; }
         public DateTime? UnlocksAt { get; set; }
+
+        // A refinery item's temporary state, until RefineryExpiresAt, and the permanent one
+        // stabilization left; the temporary one hides the permanent one while it lasts
+        public uint RefineryKind { get; set; }
+        public byte RefineryLevel { get; set; }
+        public uint RefineryPower { get; set; }
+        public DateTime? RefineryExpiresAt { get; set; }
+        public uint StableKind { get; set; }
+        public byte StableLevel { get; set; }
+        public uint StablePower { get; set; }
     }
 }

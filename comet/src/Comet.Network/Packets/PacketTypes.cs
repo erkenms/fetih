@@ -24,6 +24,8 @@ namespace Comet.Network.Packets
         MsgDetainItemUpdate = 1035,
         MsgGodExp = 1036,
         MsgPing,
+        // The refinery stabilization window's equipment and Permanent Stones
+        MsgSolidify,
         MsgPlayerAttribInfo = 1040,
         MsgEnemyList = 1041,
         MsgMonsterTransform,
@@ -82,6 +84,8 @@ namespace Comet.Network.Packets
         MsgContribute,
         MsgQuiz,
         MsgRelation = 2071,
+        MsgQuench = 2076,
+        MsgItemStatus,
         MsgChangeName = 2080,
         MsgDeadMark = 2081,
         // Faction contribution-rank paging and refresh sent by CDlgFactionContriRank.

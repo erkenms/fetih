@@ -101,6 +101,13 @@ CREATE TABLE `item` (
   `Package` int(10) unsigned NOT NULL DEFAULT '0',
   `Locked` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `UnlocksAt` datetime DEFAULT NULL,
+  `RefineryKind` int(10) unsigned NOT NULL DEFAULT '0',
+  `RefineryLevel` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `RefineryPower` int(10) unsigned NOT NULL DEFAULT '0',
+  `RefineryExpiresAt` datetime DEFAULT NULL,
+  `StableKind` int(10) unsigned NOT NULL DEFAULT '0',
+  `StableLevel` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `StablePower` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`ItemID`),
   KEY `CharacterID` (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;

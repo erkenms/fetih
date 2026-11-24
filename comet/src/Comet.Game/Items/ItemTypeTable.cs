@@ -43,7 +43,7 @@ namespace Comet.Game.Items
         }
 
         // Decrypted, one record per line: fields end in "@@", with '~' for a space in text.
-        // Only the first 48 fields are read; later clients add more after them.
+        // The first 48 fields are read, and the kind and description at 53 and 54.
         public static ItemTypeTable Parse(byte[] decrypted)
         {
             var types = new Dictionary<uint, ItemType>();
@@ -100,6 +100,8 @@ namespace Comet.Game.Items
                     AttackSpeed = UShort(f[33]),
                     EmoneyPrice = UInt(f[37]),
                     StackLimit = UInt(f[47]),
+                    Kind = f.Length > 54 ? f[53].Replace('~', ' ') : "",
+                    Description = f.Length > 54 ? f[54].Replace('~', ' ') : "",
                 };
             }
             catch (Exception e) when (e is FormatException || e is OverflowException)

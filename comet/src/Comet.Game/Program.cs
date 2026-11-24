@@ -117,6 +117,20 @@
 
             try
             {
+                Kernel.Refineries = RefineryTable.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.RefineryLoaded).Information(
+                    "Loaded {RefineryCount} refinery items from client ini", Kernel.Refineries.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read the refinery files (ini/ItemQuench.ini, ItemQuenchTipInfo.ini, " +
+                    "ItemSolidify.ini, info.ini) from {Directory}", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.ArsenalConfig = Social.ArsenalConfig.Load(config.Maps.ResolveClientDirectory());
             }
             catch (Exception e)

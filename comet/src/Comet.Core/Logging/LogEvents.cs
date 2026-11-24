@@ -107,6 +107,11 @@ namespace Comet.Core.Logging
         public const string ItemEnchantRejected = "item.enchant_rejected";
         public const string ItemComposed = "item.composed";
         public const string ItemComposeRejected = "item.compose_rejected";
+        public const string ItemRefined = "item.refined";
+        public const string ItemRefineRejected = "item.refine_rejected";
+        public const string ItemRefineryExpired = "item.refinery_expired";
+        public const string ItemStabilized = "item.stabilized";
+        public const string RefineryLoaded = "refinery.loaded";
         public const string MiningStarted = "mining.started";
         public const string MiningRejected = "mining.rejected";
         public const string MiningFound = "mining.found";

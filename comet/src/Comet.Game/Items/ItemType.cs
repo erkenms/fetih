@@ -32,5 +32,9 @@ namespace Comet.Game.Items
         public ushort AttackSpeed { get; init; }
         public uint EmoneyPrice { get; init; }
         public uint StackLimit { get; init; }
+
+        // The tooltip's kind line and description (fields 53 and 54), with spaces for '~'
+        public string Kind { get; init; } = "";
+        public string Description { get; init; } = "";
     }
 }

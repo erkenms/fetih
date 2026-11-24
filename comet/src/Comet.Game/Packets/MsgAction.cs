@@ -399,6 +399,8 @@ namespace Comet.Game.Packets
             // Redeem Equipment (CDlgPKDetain) and Claim Prize (CDlgPKReward)
             DetainRedeem = 336,
             DetainClaim = 337,
+            // The refinery stabilization window (CDlgSolidify), which sends MsgSolidify
+            Stabilization = 448,
             Reincarnation = 485,
             ChangeName = 489,
             DegradeEquipment = 506,

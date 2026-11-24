@@ -424,12 +424,14 @@ namespace Comet.Game.Combat
             bool sure = Buffs.HasAccuracy(client.Effects, now);
             if (shooting)
                 await Quivers.UseAsync(client, arrows, 1);
-            Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, shooting, sure));
+            int critical = stats.CriticalStrike;
+            Kernel.Post(target, () => PlayerHitsPlayerAsync(client, target, attack, critical, shooting, sure));
             Schedule(client, run, interval);
         }
 
         // On the target's queue: their defense and dodge decide what the attacker's roll does
-        private static async Task PlayerHitsPlayerAsync(Client attacker, Client target, int attack, bool shooting, bool sure)
+        private static async Task PlayerHitsPlayerAsync(Client attacker, Client target, int attack, int critical,
+            bool shooting, bool sure)
         {
             var character = target.Character;
             var attackerCharacter = attacker.Character;
@@ -443,8 +445,8 @@ namespace Comet.Game.Combat
             uint damage = !shooting && Buffs.Flying(target.Effects, DateTime.UtcNow) ? 0 :
                 !sure && !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
                 stats.Taken(shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense));
-            damage = Damage.ApplyCritical(damage, attacker.SubClasses?.CriticalStrikePercent() ?? 0,
-                stats.Immunity, 1.5, Random.Shared);
+            damage = Damage.ApplyCritical(damage, critical, stats.Immunity, 1.5, Random.Shared);
+            damage = Damage.ApplyBlock(damage, stats.Block, Random.Shared);
             if (!shooting)
                 await FacePlayerTowardAsync(target, attackerCharacter.X, attackerCharacter.Y);
             var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
@@ -535,6 +537,7 @@ namespace Comet.Game.Combat
             bool flownOver = Buffs.Flying(client.Effects, now) && type.AttackRange <= Buffs.MeleeRange;
             uint damage = !flownOver && Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? stats.Taken(
                 Damage.MonsterMelee(type.AttackMin, type.AttackMax, Buffs.Defense(client.Effects, stats.Defense, now), Random.Shared)) : 0;
+            damage = Damage.ApplyBlock(damage, stats.Block, Random.Shared);
             damage = await AbsorbAsync(client, damage, now);
             uint dealt = Math.Min(damage, character.HealthPoints);
             character.HealthPoints -= (ushort)dealt;

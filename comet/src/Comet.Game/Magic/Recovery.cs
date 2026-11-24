@@ -61,6 +61,7 @@ namespace Comet.Game.Magic
             await Transforming.TickAsync(client, now);
             await Training.GodExp.TickAsync(client, now);
             await Training.LuckyTime.TickAsync(client, now);
+            await Items.Refinery.ExpireAsync(client, now);
 
             await Poison.TickAsync(client, now);
             if (client.Life.Dead)

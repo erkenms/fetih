@@ -44,10 +44,13 @@ namespace Comet.Game.States
             return (ushort)Math.Min(health, ushort.MaxValue);
         }
 
-        // The item type's life, its plus level's from itemadd.ini, and its enchantment
+        // The item type's life, its plus level's from itemadd.ini, its enchantment, and an
+        // Intensification refinery's power
         public static int ItemHealth(DbItem item)
         {
             int health = item.Enchant;
+            if (Refinery.Active(item, DateTime.UtcNow) is (RefineryKind.Intensification, var power))
+                health += (int)power;
             if (Kernel.ItemTypes.TryGet(item.TypeID, out var type))
                 health += type.Life;
             if (item.Plus > 0)

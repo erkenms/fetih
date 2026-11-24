@@ -8,17 +8,33 @@ namespace Comet.Game.Npcs
     using Comet.Game.World;
     using static Comet.Game.Packets.MsgUserAttrib;
 
-    // The market's Mark.Controller, CPAdmin and SurgeonMiracle
+    // The market's Mark.Controller, CPAdmin, SurgeonMiracle, NameRegistrar and RefineryStabilizer
     public static class Market
     {
         public const uint MapID = 1036;
         public const uint MarkControllerID = 45, CPAdminID = 2071, SurgeonMiracleID = 3381, NameRegistrarID = 7935;
+        public const uint RefineryStabilizerID = Refinery.StabilizerID;
+        private const byte OpenStabilization = 1, StabilizerFace = 51;
 
         // CPAdmin pays these for a DragonBall and a DragonBall Scroll
         public const uint DragonBallCPs = 215, DragonBallScrollCPs = 2150;
 
         private const byte Leave = 1, DragonBall = 1, DragonBallScroll = 2, ChangeSize = 1, ConfirmSize = 2, OpenChangeName = 1;
         private const byte MarkControllerFace = 156, CPAdminFace = 7, SurgeonFace = 67, NameRegistrarFace = 31;
+
+        // Points per stone from ItemSolidify.ini, points per level from info.ini (help459)
+        public static Task RefineryStabilizerAsync(NpcTalk talk)
+        {
+            if (talk.Option == OpenStabilization)
+                return talk.OpenWindowAsync(MsgAction.Window.Stabilization);
+            return talk.Text("Hey there! I can channel the power of Permanent Stones to stabilize a Refinery, making ")
+                .Text("the temporary Refinery permanent. A Permanent Stone has 10 Stabilization Points and a Big ")
+                .Text("Permanent Stone 100. Each Refinery level needs its own amount of points, and I can only ")
+                .Text("stabilize it with enough of them. Do you want to stabilize a Refinery now?")
+                .Choice("Yes.", OpenStabilization)
+                .Choice("No.", MsgTaskDialog.NoOption)
+                .Face(StabilizerFace).ShowAsync();
+        }
 
         public static Task NameRegistrarAsync(NpcTalk talk)
         {

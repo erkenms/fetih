@@ -44,6 +44,7 @@ namespace Comet.Game.Npcs
                 [Market.CPAdminID] = Market.CPAdminAsync,
                 [Market.SurgeonMiracleID] = Market.SurgeonMiracleAsync,
                 [Market.NameRegistrarID] = Market.NameRegistrarAsync,
+                [Market.RefineryStabilizerID] = Market.RefineryStabilizerAsync,
                 [WuxingOven.OvenID] = WuxingOven.OvenAsync,
                 [WuxingOven.EtherealID] = WuxingOven.EtherealAsync,
                 [GuildWarNpc.ControllerID] = GuildWarNpc.ControllerAsync,

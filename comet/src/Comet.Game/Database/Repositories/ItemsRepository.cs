@@ -107,6 +107,19 @@ namespace Comet.Game.Database.Repositories
                 .SetProperty(x => x.PlusProgress, progress));
         }
 
+        public static async Task SetRefineryAsync(DbItem item)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == item.ItemID).ExecuteUpdateAsync(s => s
+                .SetProperty(x => x.RefineryKind, item.RefineryKind)
+                .SetProperty(x => x.RefineryLevel, item.RefineryLevel)
+                .SetProperty(x => x.RefineryPower, item.RefineryPower)
+                .SetProperty(x => x.RefineryExpiresAt, item.RefineryExpiresAt)
+                .SetProperty(x => x.StableKind, item.StableKind)
+                .SetProperty(x => x.StableLevel, item.StableLevel)
+                .SetProperty(x => x.StablePower, item.StablePower));
+        }
+
         public static async Task DeleteAsync(uint itemID)
         {
             using var db = new ServerDbContext();

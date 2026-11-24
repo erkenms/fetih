@@ -72,7 +72,8 @@ namespace Comet.Game.Magic
                 return;
 
             uint taken = poison.Take(character.HealthPoints);
-            int detox = client.SubClasses?.DetoxicationPercent() ?? 0;
+            int detox = (client.SubClasses?.DetoxicationPercent() ?? 0) +
+                Items.Refinery.Bonus(client.Equipment?.Items, Items.RefineryKind.Detoxication, now);
             if (taken > 0 && detox > 0)
                 taken = Combat.Damage.DetoxifiedPoison(taken, detox);
             character.HealthPoints -= (ushort)taken;
