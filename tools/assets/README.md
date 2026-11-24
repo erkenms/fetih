@@ -2,7 +2,8 @@
 
 ```bash
 dotnet run tools/assets/build.cs [client] [output]   # defaults: _CLIENT/fetih, web/assets
-dotnet run tools/assets/build.cs [client] [output] --maps 1002,1036   # only these maps' tiles
+dotnet run tools/assets/build.cs [client] [output] --maps all          # also the map tiles
+dotnet run tools/assets/build.cs [client] [output] --maps 1002,1036    # only these maps' tiles
 dotnet run tools/assets/build.cs extract <client> <path> [file]   # one client file; .png converts it
 ```
 
@@ -10,7 +11,8 @@ Reads the client and writes what the web app needs into `web/assets/`, which the
 as `/assets`. The output is TQ's art and data: it's gitignored and never committed. Build the
 client first (`dotnet run client/build.cs`), or point the tool at any 5619 client folder.
 
-A run takes about a minute the first time. Later runs only convert images whose source
+A run takes about a minute the first time. Map tiles only come with `--maps`: all of them take
+most of an hour and several GB the first time (Twin City alone is 50 s and 240 MB). Later runs only convert images whose source
 changed (`.build.json` in the output keeps a stamp per file), rewrite JSON only when its
 content changed, and delete outputs the client no longer has. Raise `Catalogs.Version` when
 the conversion itself changes. Map tiles aren't in `.build.json`: each map file's tile folder

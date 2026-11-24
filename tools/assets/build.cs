@@ -7,7 +7,9 @@
 // client's art, so it stays out of git. README.md lists what it holds. Runs again skip the
 // images whose inputs haven't changed, and delete outputs the client no longer has.
 //
-// --maps 1002,1036 renders only those maps' tiles (all by default; unchanged maps are skipped).
+// --maps all renders the map tiles too, --maps 1002,1036 only those maps'. Without it the tiles
+// earlier runs wrote are kept. Rendering every map takes most of an hour and a few GB the
+// first time; later runs skip the maps whose files haven't changed.
 //
 //   dotnet run tools/assets/build.cs extract <client> <path> [destination]
 //
@@ -45,10 +47,10 @@ if (args is ["extract", var clientDir, var file, ..])
     return 0;
 }
 
-HashSet<uint>? onlyMaps = null;
+HashSet<uint>? onlyMaps = [];
 if (Array.IndexOf(args, "--maps") is var mapsAt and >= 0 && mapsAt + 1 < args.Length)
 {
-    onlyMaps = args[mapsAt + 1].Split(',').Select(uint.Parse).ToHashSet();
+    onlyMaps = args[mapsAt + 1] == "all" ? null : args[mapsAt + 1].Split(',').Select(uint.Parse).ToHashSet();
     args = [.. args[..mapsAt], .. args[(mapsAt + 2)..]];
 }
 
