@@ -117,3 +117,8 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
 - **Wanted / bounty** (2026-11-24, `CMsgName::Process`): MsgName 8 and 15 only store a name;
   when a player of that name comes into view the client sends an empty MsgName 13/14. No
   NPC, window or item in 5619 posts or claims a bounty, so the server doesn't implement it.
+- **Quests** (2026-11-24, `CMsgTaskStatus::Process`, `CMissionSystemData`): the quest window
+  runs from `ini/Questinfo.ini`; status 0 accepted, 1 done, 2 not accepted (the default), 5
+  failed. Abandon is MsgTaskDialog 102 with TaskID 20000000 + quest ID; Today's activities'
+  Attend is MsgAction 166 with the `Activity.ini` id. `DailyActivity.ini` isn't loaded. Details
+  in `docs/quests-proposal.md`.
