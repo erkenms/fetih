@@ -84,6 +84,7 @@ namespace Comet.Game.States
 
         // Energy and Skills change only on the player's own queue
         public Magic.Energy Energy { get; } = new Magic.Energy();
+        public Training.LuckyTime.State Luck { get; } = new Training.LuckyTime.State();
         public Magic.Skills Skills { get; set; } = new Magic.Skills();
         public SubClasses SubClasses { get; set; } = new SubClasses();
         public Mount Mount { get; } = new Mount();
@@ -111,7 +112,7 @@ namespace Comet.Game.States
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
             (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0) |
-            Social.GuildWar.StatusOf(this);
+            Social.GuildWar.StatusOf(this) | this.Luck.Status;
 
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }

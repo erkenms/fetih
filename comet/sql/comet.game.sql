@@ -64,6 +64,7 @@ CREATE TABLE `character` (
   `NameChanged` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `ActiveSubClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `StudyPoints` bigint(20) unsigned NOT NULL DEFAULT '0',
+  `LuckyTime` int(10) unsigned NOT NULL DEFAULT '0',
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),

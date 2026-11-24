@@ -55,6 +55,7 @@ namespace Comet.Core.Logging
         public const string CharacterRevived = "character.revived";
         public const string CharacterReviveRejected = "character.revive_rejected";
         public const string CharacterBlessed = "character.blessed";
+        public const string LuckChanged = "character.luck_changed";
         public const string CharacterBlessingEnded = "character.blessing_ended";
         public const string TrainingExpClaimed = "training.exp_claimed";
         public const string TrainingOfflineStarted = "training.offline_started";

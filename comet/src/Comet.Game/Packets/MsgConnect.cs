@@ -176,6 +176,8 @@ namespace Comet.Game.Packets
                     HeavenBlessing.IsBlessed(entered, DateTime.UtcNow))
                     await Training.GodExp.SendAsync(client);
                 await DoubleExp.SendAsync(client, DateTime.UtcNow);
+                if (entered.LuckyTime > 0)
+                    await Training.LuckyTime.SendAsync(client);
             }            
         }
 

@@ -24,7 +24,8 @@ namespace Comet.Game.States
         public const ulong Dodge = 0x4000000;
         public const ulong Fly = 0x8000000;
         public const ulong Intensify = 0x10000000;
-        public const ulong Bless = 0x40000000;
+        public const ulong Bless = 0x40000000;           // the client's LuckDiffuse: praying
+        public const ulong LuckAbsorb = 0x80000000;
         public const ulong HeavenBlessing = 1UL << 33;
         public const ulong TopGuildLeader = 1UL << 34;
         public const ulong TopDeputyLeader = 1UL << 35;

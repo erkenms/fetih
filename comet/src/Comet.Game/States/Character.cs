@@ -55,6 +55,7 @@ namespace Comet.Game.States
             to.NameChanged = from.NameChanged;
             to.ActiveSubClass = from.ActiveSubClass;
             to.StudyPoints = from.StudyPoints;
+            to.LuckyTime = from.LuckyTime;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

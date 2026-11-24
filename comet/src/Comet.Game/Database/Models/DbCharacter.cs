@@ -87,6 +87,7 @@ namespace Comet.Game.Database.Models
         public virtual bool NameChanged { get; set; }
         public virtual byte ActiveSubClass { get; set; }
         public virtual ulong StudyPoints { get; set; }
+        public virtual uint LuckyTime { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

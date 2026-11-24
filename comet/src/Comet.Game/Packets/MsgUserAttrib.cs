@@ -74,6 +74,7 @@ namespace Comet.Game.Packets
             Status = 25,
             Hairstyle = 26,
             XpCircle = 27,
+            LuckyTime = 28,         // milliseconds
             Jewels = 29,
             VipLevel = 39,
             QuizPoints = 40,
