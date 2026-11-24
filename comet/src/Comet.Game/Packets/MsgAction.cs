@@ -219,6 +219,7 @@ namespace Comet.Game.Packets
                 {
                     await Social.Relationships.SendListsAsync(client);
                     await Social.TradePartners.SendListAsync(client);
+                    await Social.Mentors.LoginAsync(client);
                     await client.SendAsync(msg);
                 },
 

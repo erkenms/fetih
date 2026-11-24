@@ -101,6 +101,7 @@ namespace Comet.Game.Items
             (main.Plus, main.PlusProgress) = Add(main.Plus, main.PlusProgress, points);
             await ItemsRepository.SetPlusAsync(main.ItemID, main.Plus, main.PlusProgress);
             await client.SendAsync(new MsgItemInfo(main, MsgItemInfo.ItemAction.Update));
+            await Social.Mentors.RecordCompositionAsync(client, points);
             LogEvents.For(typeof(Composing), LogEvents.ItemComposed).Information(
                 "{Name} composed item {MinorId} (type {MinorType}) into item {ItemId} (type {TypeId}): " +
                 "{Points} points, +{Before} to +{Plus} with {Progress}",

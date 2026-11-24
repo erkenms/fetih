@@ -91,6 +91,17 @@
 
             try
             {
+                Kernel.TutorTypes = Social.TutorTypes.Load(config.Maps.ResolveClientDirectory());
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/tutorType.ini from {Directory}", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.ItemTypes = ItemTypeTable.Load(config.Maps.ResolveClientDirectory());
                 Kernel.ItemAdditions = ItemAdditionTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.ItemTypesLoaded).Information(
@@ -230,6 +241,9 @@
                 await Chat.MessageBoard.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.MessageBoardLoaded).Information(
                     "Loaded {PostCount} message board posts", Chat.MessageBoard.Count);
+                await Social.Mentors.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.MentorsLoaded).Information(
+                    "Loaded {RelationCount} mentor relations", Social.Mentors.Count);
             }
             catch (Exception e)
             {

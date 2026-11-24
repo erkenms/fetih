@@ -51,6 +51,7 @@ namespace Comet.Game
 
         public static ShopTable Shops = new ShopTable(new Shop[0]);
         public static Arena.HonorRewards HonorRewards = new Arena.HonorRewards(new uint[0]);
+        public static Social.TutorTypes TutorTypes = new Social.TutorTypes(new Social.TutorTypes.Bracket[0]);
 
         public static MonsterTypeTable MonsterTypes = new MonsterTypeTable(new MonsterType[0]);
         public static WorldMaps<Monster> Monsters;

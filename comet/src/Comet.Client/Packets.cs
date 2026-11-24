@@ -75,6 +75,9 @@ namespace Comet.Client
         public const ushort MsgMessageBoard = 1111;
         public const ushort MsgTradeBuddyInfo = 2047;
         public const ushort MsgEquipLock = 2048;
+        public const ushort MsgGuide = 2065;
+        public const ushort MsgGuideInfo = 2066;
+        public const ushort MsgContribute = 2067;
         public const ushort Msg2ndPsw = 2261;
     }
 
@@ -1502,6 +1505,87 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(4), action);
             var bytes = Encoding.Latin1.GetBytes(name ?? string.Empty);
             Array.Copy(bytes, 0, packet, 10, Math.Min(bytes.Length, 16));
+            return packet;
+        }
+    }
+
+    public sealed record GuideMessage(uint Action, uint Identity, uint Param, uint Value, string Name)
+    {
+        public const uint InviteApprentice = 1, RequestMentor = 2, LeaveMentor = 3, ExpelApprentice = 4;
+        public const uint AcceptInviteApprentice = 8, AcceptRequestMentor = 9, Remove = 16, ClearBattlePower = 18;
+        public const uint MentorOffline = 22, ApprenticeOffline = 23;
+
+        public static GuideMessage Parse(byte[] packet)
+        {
+            var strings = packet.Length > 20 ? Packet.ReadStrings(packet, 20) : new List<string>();
+            return new GuideMessage(
+                BitConverter.ToUInt32(packet, 4),
+                BitConverter.ToUInt32(packet, 8),
+                BitConverter.ToUInt32(packet, 12),
+                BitConverter.ToUInt32(packet, 16),
+                strings.Count > 0 ? strings[0] : string.Empty);
+        }
+
+        public static byte[] Build(uint action, uint identity, uint param, uint value = 1)
+        {
+            var packet = Packet.Create(PacketTypes.MsgGuide, 24);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), identity);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), param);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), value);
+            return packet;
+        }
+    }
+
+    public sealed record GuideInfoMessage(
+        uint Mode, uint Identity, uint TargetId, uint SharedBattlePower, uint BetrayHour,
+        uint EnrolDate, byte Level, bool Online, ulong Experience, ushort Blessing, ushort Composition,
+        List<string> Strings)
+    {
+        public const uint Mentor = 1, Apprentice = 2, SecondGenApprentice = 4, BattlePower = 6;
+
+        public static GuideInfoMessage Parse(byte[] packet) => new GuideInfoMessage(
+            BitConverter.ToUInt32(packet, 4),
+            BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12),
+            BitConverter.ToUInt32(packet, 20),
+            BitConverter.ToUInt32(packet, 24),
+            BitConverter.ToUInt32(packet, 28),
+            packet[32],
+            packet[56] != 0,
+            BitConverter.ToUInt64(packet, 64),
+            BitConverter.ToUInt16(packet, 72),
+            BitConverter.ToUInt16(packet, 74),
+            packet.Length > 76 ? Packet.ReadStrings(packet, 76) : new List<string>());
+
+        public static byte[] BuildQuery(uint mode, uint identity = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgGuideInfo, 80);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), mode);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), identity);
+            return packet;
+        }
+    }
+
+    public sealed record ContributeMessage(
+        uint Action, uint Generation, ulong Experience, ushort Blessing, ushort Composition, List<string> Strings)
+    {
+        public const uint ClaimExperience = 1, ClaimExperiencePart = 2, ClaimBlessing = 3, ClaimComposition = 4;
+        public const uint Rewards = 5, Apprentices = 6, ResetCurrent = 7, Refresh = 8;
+
+        public static ContributeMessage Parse(byte[] packet) => new ContributeMessage(
+            BitConverter.ToUInt32(packet, 4),
+            BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt64(packet, 24),
+            BitConverter.ToUInt16(packet, 32),
+            BitConverter.ToUInt16(packet, 34),
+            packet.Length > 36 ? Packet.ReadStrings(packet, 36) : new List<string>());
+
+        public static byte[] Build(uint action, ulong experience = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgContribute, 40);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(24), experience);
             return packet;
         }
     }

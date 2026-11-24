@@ -516,6 +516,8 @@ namespace Comet.Integration.Tests
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "HonorRewards.ini"),
                 "RankAmount=3\r\n1=15000/100000\r\n2=14000/90000\r\n3=13000/80000\r\n");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "tutorType.ini"),
+                "70,109,2,10\r\n110,119,3,15\r\n120,129,5,25\r\n130,133,7,35\r\n134,140,10,50\r\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
                 (Blacksmith, new[] { Blade.Id, Glaive.Id }), (Pharmacist, new[] { Potion.Id })));
         }

@@ -330,6 +330,31 @@ CREATE TABLE `detained_item` (
   KEY `HunterID_IDX` (`HunterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Mentor-apprentice relations: one row per apprentice (at most one mentor each). Enrolled is
+-- YYYYMMDD; Experience (level-up time, 600 per EXP ball), Blessing (hours) and Composition
+-- (points, 100 per +1 Stone) are what this apprentice has contributed to the mentor.
+DROP TABLE IF EXISTS `mentor`;
+CREATE TABLE `mentor` (
+  `ApprenticeID` int(10) unsigned NOT NULL,
+  `MentorID` int(10) unsigned NOT NULL,
+  `Enrolled` int(10) unsigned NOT NULL DEFAULT '0',
+  `Experience` int(10) unsigned NOT NULL DEFAULT '0',
+  `Blessing` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Composition` smallint(5) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ApprenticeID`),
+  KEY `MentorID` (`MentorID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Unclaimed mentor rewards accrued from apprentices, kept even if an apprentice leaves.
+DROP TABLE IF EXISTS `mentor_reward`;
+CREATE TABLE `mentor_reward` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Experience` int(10) unsigned NOT NULL DEFAULT '0',
+  `Blessing` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `Composition` smallint(5) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

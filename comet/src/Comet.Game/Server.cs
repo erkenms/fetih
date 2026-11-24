@@ -138,6 +138,7 @@ namespace Comet.Game
                 await Arena.Qualifier.LeaveAsync(actor, "logout");
                 await Social.Relationships.LogoutAsync(actor);
                 await Social.TradePartners.LogoutAsync(actor);
+                await Social.Mentors.LogoutAsync(actor);
             }
             catch (Exception e)
             {

@@ -138,6 +138,13 @@ namespace Comet.Core.Logging
         public const string TradePartnerRemoved = "trade_partner.removed";
         public const string TradePartnerRejected = "trade_partner.rejected";
 
+        public const string MentorsLoaded = "mentor.loaded";
+        public const string MentorRequested = "mentor.requested";
+        public const string MentorAdded = "mentor.added";
+        public const string MentorRemoved = "mentor.removed";
+        public const string MentorRewardClaimed = "mentor.reward_claimed";
+        public const string MentorRejected = "mentor.rejected";
+
         public const string MarriageProposed = "marriage.proposed";
         public const string MarriageMarried = "marriage.married";
         public const string MarriageDivorced = "marriage.divorced";

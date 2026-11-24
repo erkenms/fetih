@@ -450,6 +450,7 @@ namespace Comet.Game.Items
                 "{Name} used item {ItemId} (type {TypeId}) for heaven blessing",
                 client.Character.Name, stone.ItemID, stone.TypeID);
             await HeavenBlessing.AddAsync(client, blessing, "praying_stone");
+            await Social.Mentors.RecordBlessingAsync(client, blessing);
             return true;
         }
 

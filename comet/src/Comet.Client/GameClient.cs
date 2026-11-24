@@ -893,6 +893,36 @@ namespace Comet.Client
         public Task DegradeItemAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, 54));
 
+        public Task GuideAsync(uint action, uint identity, uint param, uint value = 1) =>
+            this.SendAsync(GuideMessage.Build(action, identity, param, value));
+
+        public async Task<GuideMessage> WaitForGuideAsync(Func<GuideMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgGuide && match(GuideMessage.Parse(p)), timeout);
+            return packet == null ? null : GuideMessage.Parse(packet);
+        }
+
+        public Task QueryGuideInfoAsync(uint mode, uint identity = 0) =>
+            this.SendAsync(GuideInfoMessage.BuildQuery(mode, identity));
+
+        public async Task<GuideInfoMessage> WaitForGuideInfoAsync(Func<GuideInfoMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgGuideInfo && match(GuideInfoMessage.Parse(p)), timeout);
+            return packet == null ? null : GuideInfoMessage.Parse(packet);
+        }
+
+        public Task ContributeAsync(uint action, ulong experience = 0) =>
+            this.SendAsync(ContributeMessage.Build(action, experience));
+
+        public async Task<ContributeMessage> WaitForContributeAsync(Func<ContributeMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgContribute && match(ContributeMessage.Parse(p)), timeout);
+            return packet == null ? null : ContributeMessage.Parse(packet);
+        }
+
         private async Task<byte[]> TryReceiveAsync(Func<byte[], bool> match, TimeSpan? timeout)
         {
             try { return await this.ReceiveAsync(match, timeout); }

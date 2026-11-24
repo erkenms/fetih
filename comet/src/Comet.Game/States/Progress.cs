@@ -24,12 +24,16 @@ namespace Comet.Game.States
             if (level == from)
             {
                 await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.Experience, experience));
-                return;
+            }
+            else
+            {
+                character.Level = level;
+                character.AttributePoints = AddPoints(character.AttributePoints, (level - from) * Attributes.PointsPerLevel);
+                await LevelChangedAsync(client, from, reason);
             }
 
-            character.Level = level;
-            character.AttributePoints = AddPoints(character.AttributePoints, (level - from) * Attributes.PointsPerLevel);
-            await LevelChangedAsync(client, from, reason);
+            if (reason is "monster" or "team")
+                await Social.Mentors.RecordExperienceAsync(client, from, amount);
         }
 
         public static async Task<bool> SetLevelAsync(Client client, byte level, string reason)
