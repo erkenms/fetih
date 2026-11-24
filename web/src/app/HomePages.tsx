@@ -1,6 +1,6 @@
-import { Badge, Group, Stack, Text, Title } from '@mantine/core'
+import { Stack, Text, Title } from '@mantine/core'
+import { lazy } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMe } from './auth'
 
 // Placeholder until the public home page task replaces it
 export function PublicHome() {
@@ -13,21 +13,5 @@ export function PublicHome() {
   )
 }
 
-// Placeholder until the dashboard task replaces it
-export function AdminHome() {
-  const { t } = useTranslation()
-  const me = useMe().data
-  return (
-    <Stack>
-      <Title order={2}>{t('home.welcome', { name: me?.username ?? '' })}</Title>
-      <Text c="dimmed">{t(`authority.${me?.authority ?? 1}`)}</Text>
-      <Group gap="xs">
-        {me?.permissions.map((p) => (
-          <Badge key={p} variant="light">
-            {t(`permission.${p}`)}
-          </Badge>
-        ))}
-      </Group>
-    </Stack>
-  )
-}
+// The admin home is the dashboard
+export const AdminHome = lazy(() => import('../features/dashboard/DashboardPage'))

@@ -193,6 +193,26 @@
         }
       }
     },
+    "/api/dashboard": {
+      "get": {
+        "tags": [
+          "DashboardFeature"
+        ],
+        "operationId": "dashboard",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/items": {
       "get": {
         "tags": [
@@ -1818,6 +1838,83 @@
           }
         }
       },
+      "DashboardCounts": {
+        "required": [
+          "accounts",
+          "accountsLastDay",
+          "characters",
+          "charactersLastDay"
+        ],
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accountsLastDay": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "characters": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "charactersLastDay": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DashboardResponse": {
+        "required": [
+          "serverTime",
+          "game",
+          "onlineAccounts",
+          "counts",
+          "logs",
+          "grafanaUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "game": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ServerState"
+              }
+            ]
+          },
+          "onlineAccounts": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/DashboardCounts"
+          },
+          "logs": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LogStatsResponse"
+              }
+            ]
+          },
+          "grafanaUrl": {
+            "type": "string"
+          }
+        }
+      },
       "DownloadInfoResponse": {
         "required": [
           "url",
@@ -2241,6 +2338,46 @@
           }
         }
       },
+      "LoginLine": {
+        "required": [
+          "timestamp",
+          "accountId",
+          "characterId",
+          "name",
+          "level",
+          "ipAddress",
+          "mapId"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "username",
@@ -2253,6 +2390,75 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "LogLine": {
+        "required": [
+          "timestamp",
+          "server",
+          "level",
+          "event",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "server": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "event": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "LogStatsResponse": {
+        "required": [
+          "errors",
+          "warnings",
+          "recentErrors",
+          "logins",
+          "accounts",
+          "recentLogins"
+        ],
+        "type": "object",
+        "properties": {
+          "errors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warnings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recentErrors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LogLine"
+            }
+          },
+          "logins": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "accounts": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recentLogins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoginLine"
+            }
           }
         }
       },
@@ -3694,6 +3900,63 @@
           }
         }
       },
+      "ServerState": {
+        "type": "object",
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "uptimeSeconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "connections": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "players": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mapsLoaded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monsters": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monstersAlive": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "groundItems": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "booths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "broadcastQueue": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monsterTickMilliseconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "slowestMonsterTickMilliseconds": {
+            "type": "number",
+            "format": "double"
+          },
+          "workingSetBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "ShopCatalogEntry": {
         "required": [
           "key",
@@ -4029,6 +4292,9 @@
     },
     {
       "name": "CatalogsFeature"
+    },
+    {
+      "name": "DashboardFeature"
     },
     {
       "name": "HealthFeature"

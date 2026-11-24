@@ -1,0 +1,57 @@
+{
+  "title": "Gösterge paneli",
+  "welcome": "Hoş geldin, {{name}}.",
+  "offline": "Kapalı",
+  "uptime": "{{days}}g {{hours}}s {{minutes}}dk",
+  "lokiDown": "Kayıtlar alınamıyor: Loki'ye ulaşılamıyor.",
+  "openGrafana": "Grafana'da aç",
+  "stat": {
+    "online": "Çevrimiçi",
+    "connections_other": "{{count}} bağlantı",
+    "gameDown": "Oyun sunucusu çalışmıyor.",
+    "uptime": "Çalışma süresi",
+    "since": "{{time}} tarihinden beri",
+    "errors": "Hatalar, son bir saat",
+    "warnings_other": "{{count}} uyarı",
+    "logins": "Girişler, son bir gün",
+    "loginAccounts_other": "{{count}} hesap",
+    "accounts": "Hesaplar",
+    "characters": "Karakterler",
+    "new_other": "Son bir günde {{count}} yeni"
+  },
+  "world": {
+    "title": "Dünya",
+    "maps": "Yüklü haritalar",
+    "monsters": "Canavarlar",
+    "alive": "{{total}} canavardan {{alive}} tanesi canlı",
+    "groundItems": "Yerdeki eşyalar",
+    "booths": "Tezgâhlar",
+    "broadcasts": "Duyuru kuyruğu",
+    "memory": "Bellek",
+    "monsterTick": "Canavar döngüsü",
+    "tick": "{{last}} ms (en yavaş {{slowest}})"
+  },
+  "logins": {
+    "title": "Son girişler",
+    "none": "Son bir günde kimse giriş yapmadı.",
+    "time": "Ne zaman",
+    "character": "Karakter",
+    "account": "Hesap",
+    "ip": "IP",
+    "map": "Harita",
+    "level": "seviye {{level}}",
+    "online": "çevrimiçi"
+  },
+  "errors": {
+    "title": "Son hatalar",
+    "none": "Son bir saatte hata yok."
+  },
+  "grafana": {
+    "title": "Grafana",
+    "note": "Bu paneller Grafana'dan gelir; yalnızca tarayıcının Grafana'ya ulaşabildiği yerde görünür.",
+    "online": "Çevrimiçi oyuncular",
+    "packets": "Saniyede paket",
+    "errors": "Hatalar ve uyarılar",
+    "logins": "Girişler ve çıkışlar"
+  }
+}

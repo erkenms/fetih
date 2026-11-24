@@ -84,6 +84,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["dashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items": {
         parameters: {
             query?: never;
@@ -695,6 +711,25 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        DashboardCounts: {
+            /** Format: int32 */
+            accounts: number;
+            /** Format: int32 */
+            accountsLastDay: number;
+            /** Format: int32 */
+            characters: number;
+            /** Format: int32 */
+            charactersLastDay: number;
+        };
+        DashboardResponse: {
+            /** Format: date-time */
+            serverTime: string;
+            game: null | components["schemas"]["ServerState"];
+            onlineAccounts: number[];
+            counts: components["schemas"]["DashboardCounts"];
+            logs: null | components["schemas"]["LogStatsResponse"];
+            grafanaUrl: string;
+        };
         DownloadInfoResponse: {
             url: null | string;
             version: string;
@@ -819,9 +854,43 @@ export interface components {
             timestamp: string;
             ipAddress: string;
         };
+        LoginLine: {
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: uint32 */
+            accountId: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: int32 */
+            level: number;
+            ipAddress: string;
+            /** Format: uint32 */
+            mapId: number;
+        };
         LoginRequest: {
             username: string;
             password: string;
+        };
+        LogLine: {
+            /** Format: date-time */
+            timestamp: string;
+            server: string;
+            level: string;
+            event: string;
+            message: string;
+        };
+        LogStatsResponse: {
+            /** Format: int32 */
+            errors: number;
+            /** Format: int32 */
+            warnings: number;
+            recentErrors: components["schemas"]["LogLine"][];
+            /** Format: int32 */
+            logins: number;
+            /** Format: int32 */
+            accounts: number;
+            recentLogins: components["schemas"]["LoginLine"][];
         };
         MapCatalogEntry: {
             /** Format: uint32 */
@@ -1233,6 +1302,34 @@ export interface components {
             password: string;
             captchaToken?: null | string;
         };
+        ServerState: {
+            /** Format: date-time */
+            startedAt?: string;
+            /** Format: double */
+            uptimeSeconds?: number;
+            /** Format: int32 */
+            connections?: number;
+            /** Format: int32 */
+            players?: number;
+            /** Format: int32 */
+            mapsLoaded?: number;
+            /** Format: int32 */
+            monsters?: number;
+            /** Format: int32 */
+            monstersAlive?: number;
+            /** Format: int32 */
+            groundItems?: number;
+            /** Format: int32 */
+            booths?: number;
+            /** Format: int32 */
+            broadcastQueue?: number;
+            /** Format: double */
+            monsterTickMilliseconds?: number;
+            /** Format: double */
+            slowestMonsterTickMilliseconds?: number;
+            /** Format: int64 */
+            workingSetBytes?: number;
+        };
         ShopCatalogEntry: {
             key: string;
             source: string;
@@ -1457,6 +1554,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+        };
+    };
+    dashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardResponse"];
                 };
             };
         };

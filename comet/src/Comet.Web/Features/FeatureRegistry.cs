@@ -10,5 +10,6 @@ public static class FeatureRegistry
         new Catalogs.CatalogsFeature(),
         new PublicAccount.PublicAccountFeature(),
         new PublicSite.PublicSiteFeature(),
+        new Dashboard.DashboardFeature(),
     ];
 }
