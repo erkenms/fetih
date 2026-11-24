@@ -3,7 +3,8 @@
 A Conquer Online server for the 5619 client, built on the Comet emulator:
 `comet/src/Comet.Account` (login), `Comet.Game` (world), `Comet.Network` (sockets, ciphers,
 RPC), `Comet.Core` (logging), `Comet.Shared` (RPC types), `Comet.Client` (headless client for
-tests). `client/` builds the patched client. The web app is planned in issue #37.
+tests). `client/` builds the patched client. The web app (issue #37, its plan and rules) is
+`Comet.Web` plus `web/` (React), with client art built by `tools/assets/build.cs`.
 
 ## Rules
 
@@ -16,9 +17,10 @@ tests). `client/` builds the patched client. The web app is planned in issue #37
 ## Commands
 
 ```bash
-podman compose -f comet/compose.yaml up -d   # MariaDB; integration tests need it
+podman compose -f comet/compose.yaml up -d   # MariaDB (integration tests need it), Loki, Grafana :3000
 dotnet test comet/Comet.slnx
-cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account
+cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
+cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
 dotnet run client/build.cs                    # the client, into _CLIENT/fetih
 ```
 
