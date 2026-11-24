@@ -664,12 +664,17 @@ namespace Comet.Client
     }
 
     // An NPC with life: ID at 4, max life 12, life 16, X 20, Y 22, lookface 24, role 26
-    public sealed record GoalSpawn(uint Id, uint MaxLife, uint Life, ushort X, ushort Y, ushort Lookface, ushort Role)
+    public sealed record GoalSpawn(uint Id, uint MaxLife, uint Life, ushort X, ushort Y, ushort Lookface, ushort Role, string Name = null)
     {
-        public static GoalSpawn Parse(byte[] packet) => new GoalSpawn(
-            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
-            BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
-            BitConverter.ToUInt16(packet, 24), BitConverter.ToUInt16(packet, 26));
+        public static GoalSpawn Parse(byte[] packet)
+        {
+            var strings = packet.Length > 36 ? Packet.ReadStrings(packet, 36) : new List<string>();
+            return new GoalSpawn(
+                BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
+                BitConverter.ToUInt16(packet, 20), BitConverter.ToUInt16(packet, 22),
+                BitConverter.ToUInt16(packet, 24), BitConverter.ToUInt16(packet, 26),
+                strings.Count > 0 ? strings[0] : null);
+        }
     }
 
     // One part of an NPC dialog: an option index at 10, the action at 11, strings from 12

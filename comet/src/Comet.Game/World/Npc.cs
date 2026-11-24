@@ -12,6 +12,9 @@ namespace Comet.Game.World
         // Training ground goals: stakes are hit with weapons, scarecrows with spells
         public const byte StakeRole = 21, ScarecrowRole = 22;
 
+        // Guild War structures: pole (role 10) and gates (role 26)
+        public const byte PoleRole = 10, GateRole = 26;
+
         [JsonPropertyName("id")] public uint NpcID { get; init; }
         [JsonPropertyName("lookface")] public ushort Lookface { get; init; }
         [JsonPropertyName("role")] public byte Role { get; init; }
@@ -24,5 +27,6 @@ namespace Comet.Game.World
         [JsonPropertyName("level")] public byte Level { get; init; }
 
         public bool IsGoal => this.Role is StakeRole or ScarecrowRole;
+        public bool IsGuildWarTarget => this.MapID == Social.GuildWar.MapID && this.Role is PoleRole or GateRole;
     }
 }

@@ -205,6 +205,16 @@
                 await Social.Guilds.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.GuildsLoaded).Information(
                     "Loaded {GuildCount} guilds", Social.Guilds.Count);
+                Social.GuildWar.StartDay = config.GuildWar.StartDay;
+                Social.GuildWar.StartHour = config.GuildWar.StartHour;
+                Social.GuildWar.StartMinute = config.GuildWar.StartMinute;
+                Social.GuildWar.EndDay = config.GuildWar.EndDay;
+                Social.GuildWar.EndHour = config.GuildWar.EndHour;
+                Social.GuildWar.EndMinute = config.GuildWar.EndMinute;
+                Social.GuildWar.PoleMaxLife = Math.Max(1u, config.GuildWar.PoleLife);
+                Social.GuildWar.GateMaxLife = Math.Max(1u, config.GuildWar.GateLife);
+                Social.GuildWar.PrizeConquerPoints = config.GuildWar.PrizeConquerPoints;
+                await Social.GuildWar.LoadAsync();
                 await Social.Clans.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ClansLoaded).Information(
                     "Loaded {ClanCount} clans", Social.Clans.Count);
@@ -309,6 +319,7 @@
             Arena.Qualifier.MatchTime = TimeSpan.FromSeconds(Math.Max(1, config.Arena.MatchSeconds));
             Arena.Qualifier.EndTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.EndSeconds));
             _ = Arena.Qualifier.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            _ = Social.GuildWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);

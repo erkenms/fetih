@@ -34,9 +34,9 @@ namespace Comet.Game.Pk
         // No player may attack another here (Twin City, the market, ...)
         public static bool IsPeaceful(uint mapID) => Kernel.MapTypes.Of(mapID).HasFlag(MapFlags.PkDisable);
 
-        // Attacking or killing here is no crime: PK arenas and the jail
+        // Attacking or killing here is no crime: PK arenas, the guild war map and the jail
         public static bool IsFree(uint mapID) =>
-            (Kernel.MapTypes.Of(mapID) & (MapFlags.PkField | MapFlags.PrisonMap)) != 0;
+            (Kernel.MapTypes.Of(mapID) & (MapFlags.PkField | MapFlags.GuildMap | MapFlags.PrisonMap)) != 0;
 
         public static ulong NameStatus(ushort points) =>
             points >= BlackNamePoints ? BlackNameStatus :

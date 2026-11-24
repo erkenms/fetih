@@ -107,7 +107,8 @@ namespace Comet.Game.States
         // Status flags for MsgUserAttrib 25 and MsgPlayer 22: dead, name color, flashing, spells
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
-            (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0);
+            (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0) |
+            Social.GuildWar.StatusOf(this);
 
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }

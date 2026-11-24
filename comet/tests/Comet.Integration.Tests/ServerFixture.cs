@@ -264,7 +264,7 @@ namespace Comet.Integration.Tests
 
         // Players may fight in Desert City; on a PK field it's no crime (Data/maps.json).
         // Twin City and the market forbid it. Not 1005, the arena: NpcTests need it missing.
-        public const uint DesertCity = 1000, PkField = 1080, TrainingGround = 1039;
+        public const uint DesertCity = 1000, PkField = 1080, TrainingGround = 1039, GuildWar = 1038;
 
         // Twin City's mine, where its mine assistant lets players in
         public const uint TwinCityMine = 1028;
@@ -431,6 +431,9 @@ namespace Comet.Integration.Tests
                 "--Pk:FlashSeconds=" + PkFlashSeconds, "--Pk:DecaySeconds=" + PkDecaySeconds,
                 "--Arena:InviteSeconds=" + ArenaInviteSeconds, "--Arena:CountdownSeconds=" + ArenaCountdownSeconds,
                 "--Arena:EndSeconds=" + ArenaEndSeconds, "--Magic:MinimumCastMilliseconds=0",
+                "--GuildWar:StartDay=Monday", "--GuildWar:StartHour=0", "--GuildWar:StartMinute=0",
+                "--GuildWar:EndDay=Monday", "--GuildWar:EndHour=0", "--GuildWar:EndMinute=0",
+                "--GuildWar:PoleLife=2000", "--GuildWar:GateLife=1000",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
                 "--AccountDatabase:Username=" + DbUser, "--AccountDatabase:Password=" + DbPassword);
@@ -454,20 +457,21 @@ namespace Comet.Integration.Tests
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z"), (TrainingGround, "map/map/tg.7z"),
-                    (TwinCityMine, "map/map/mine-four.7z")));
+                    (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
                 portals: new[] { StablePortal, UnlinkedPortal }));
             File.WriteAllBytes(Path.Combine(maps, "horse.DMap"), MapFiles.DMap(52, 52));
             File.WriteAllBytes(Path.Combine(maps, "market.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(maps, "jobcenter.DMap"), MapFiles.DMap(96, 96));
-            File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(300, 300));
+            File.WriteAllBytes(Path.Combine(maps, "desert.DMap"), MapFiles.DMap(700, 700));
             File.WriteAllBytes(Path.Combine(maps, "pkfield.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "jail.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "offlinetg.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "tg.DMap"), MapFiles.DMap(500, 500));
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "mine-four.DMap"), MapFiles.DMap(184, 184));
+            File.WriteAllBytes(Path.Combine(maps, "gw.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,

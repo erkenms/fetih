@@ -224,6 +224,13 @@ namespace Comet.Core.Logging
         public const string FlowersLoaded = "flowers.loaded";
         public const string FlowerSent = "flowers.sent";
         public const string FlowerRejected = "flowers.rejected";
+        public const string GuildWarLoaded = "guildwar.loaded";
+        public const string GuildWarStarted = "guildwar.started";
+        public const string GuildWarEnded = "guildwar.ended";
+        public const string GuildWarCaptured = "guildwar.captured";
+        public const string GuildWarGateChanged = "guildwar.gate_changed";
+        public const string GuildWarPrizeClaimed = "guildwar.prize_claimed";
+        public const string GuildWarLoopFailed = "guildwar.loop_failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

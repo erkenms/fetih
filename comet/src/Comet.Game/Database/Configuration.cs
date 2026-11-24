@@ -23,6 +23,7 @@ namespace Comet.Game.Database
         public PkConfiguration Pk { get; set; } = new PkConfiguration();
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
+        public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
 
         // The zone whose midnight starts a new day, as an IANA or Windows ID; the machine's
         // own zone when empty
@@ -137,6 +138,20 @@ namespace Comet.Game.Database
             public int CountdownSeconds { get; set; } = 10;
             public int MatchSeconds { get; set; } = 300;
             public int EndSeconds { get; set; } = 3;
+        }
+
+        // Weekly Guild War window in the server's local time zone, plus pole/gate life and prize
+        public class GuildWarConfiguration
+        {
+            public System.DayOfWeek StartDay { get; set; } = System.DayOfWeek.Saturday;
+            public int StartHour { get; set; } = 20;
+            public int StartMinute { get; set; } = 0;
+            public System.DayOfWeek EndDay { get; set; } = System.DayOfWeek.Sunday;
+            public int EndHour { get; set; } = 20;
+            public int EndMinute { get; set; } = 0;
+            public uint PoleLife { get; set; } = 20_000_000;
+            public uint GateLife { get; set; } = 10_000_000;
+            public uint PrizeConquerPoints { get; set; } = 3_000;
         }
 
         public ServerConfiguration(string[] args)

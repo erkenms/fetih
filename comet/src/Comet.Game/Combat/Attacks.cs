@@ -72,7 +72,8 @@ namespace Comet.Game.Combat
                 request.SenderID != client.ID ? "wrong_id" :
                 client.Life.Dead ? "dead" :
                 !IsMonster(request.TargetID) && !Kernel.Players.TryGet(request.TargetID, out _) &&
-                    Training.TrainingGround.FindGoal(client, request.TargetID) == null ? "unknown_target" :
+                    Training.TrainingGround.FindGoal(client, request.TargetID) == null &&
+                    Social.GuildWar.FindTarget(client, request.TargetID) == null ? "unknown_target" :
                 null;
             if (reason != null)
             {
@@ -134,6 +135,11 @@ namespace Comet.Game.Combat
             if (Training.TrainingGround.FindGoal(client, client.AttackTarget) is Npc goal)
             {
                 await SwingAtGoalAsync(client, goal, run, now);
+                return;
+            }
+            if (Social.GuildWar.FindTarget(client, client.AttackTarget) is Npc gwTarget)
+            {
+                await SwingAtGuildWarAsync(client, gwTarget, run, now);
                 return;
             }
             if (!IsMonster(client.AttackTarget))
@@ -332,6 +338,48 @@ namespace Comet.Game.Combat
             await Training.TrainingGround.AfterHitAsync(client, goal, damage,
                 fatal != null ? "fatal_strike" : shooting ? "shoot" : "melee");
             if (fatal != null)
+                Stop(client);
+            else
+                Schedule(client, run, interval);
+        }
+
+        private static async Task SwingAtGuildWarAsync(Client client, Npc target, int run, DateTime now)
+        {
+            var character = client.Character;
+            var stats = Stats.Of(client);
+            var arrows = client.Equipment?[ItemPosition.LeftHand];
+            bool shooting = client.AttackShooting;
+            int distance = MonsterAI.Distance(character.X, character.Y, target.X, target.Y);
+            string reason = Social.GuildWar.Problem(client, target) ?? WeaponProblem(stats, shooting, arrows, distance);
+            if (reason != null)
+            {
+                Stop(client);
+                Reject(client, target.NpcID, reason);
+                return;
+            }
+
+            var interval = Interval(client, stats, now);
+            client.NextAttackAt = now + interval;
+            if (!shooting && await Casting.TryPassiveAsync(client, target.NpcID, target.X, target.Y, now))
+            {
+                Schedule(client, run, interval);
+                return;
+            }
+            await Durability.WearOnAttackAsync(client);
+            uint damage = shooting
+                ? Damage.Archery(stats.MinDamage, stats.MaxDamage, character.Level, target.Level, 0, Random.Shared)
+                : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, target.Level, 0, Random.Shared);
+            damage = Buffs.AgainstMonster(client.Effects, damage, now);
+            if (shooting)
+                await Quivers.UseAsync(client, arrows, 1);
+
+            var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,
+                client.ID, target.NpcID, target.X, target.Y, damage);
+            await client.SendAsync(hit);
+            await Movement.SendToViewAsync(client, hit);
+            await Social.GuildWar.AfterHitAsync(client, target, damage, shooting ? "shoot" : "melee");
+
+            if (Social.GuildWar.Problem(client, target) != null)
                 Stop(client);
             else
                 Schedule(client, run, interval);

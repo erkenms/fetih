@@ -261,7 +261,9 @@ namespace Comet.Game.Items
 
         public static async Task ShowNpcAsync(Client client, Npc npc)
         {
-            if (npc.Life > 0)
+            if (npc.IsGuildWarTarget)
+                await client.SendAsync(Social.GuildWar.SpawnPacket(npc));
+            else if (npc.Life > 0)
                 await client.SendAsync(new MsgNpcInfoEx(npc, Training.TrainingGround.LifeOf(npc)));
             else
                 await client.SendAsync(new MsgNpcInfo(npc));

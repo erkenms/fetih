@@ -60,6 +60,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "window" }, Authority.GameMaster, WindowUsage, WindowAsync),
             new Command(new[] { "weather" }, Authority.GameMaster, WeatherUsage, WeatherAsync),
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
+            new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -619,6 +620,35 @@ namespace Comet.Game.Chat
                 ? $"Arena season {season} saved with top {top}; {rewarded} players got honor; reset {reset} records."
                 : $"Arena season reset {reset} records (nobody fought).");
             return true;
+        }
+
+        private static async Task<bool> GuildWarAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, "/guildwar <start|end|status>");
+            switch (args[0].ToLowerInvariant())
+            {
+                case "start":
+                    if (await Social.GuildWar.StartAsync(DateTime.UtcNow, manual: true))
+                        await Talk.NoticeAsync(client, "Guild War started.");
+                    else
+                        await Talk.NoticeAsync(client, "Guild War is already running.");
+                    return true;
+                case "end":
+                    if (await Social.GuildWar.EndAsync(DateTime.UtcNow, manual: true))
+                        await Talk.NoticeAsync(client, $"Guild War ended. Winner: {Social.GuildWar.WinnerGuildName ?? "none"}.");
+                    else
+                        await Talk.NoticeAsync(client, "Guild War is not running.");
+                    return true;
+                case "status":
+                    await Talk.NoticeAsync(client,
+                        $"Guild War active={Social.GuildWar.Active}, holder={Social.GuildWar.HolderGuildName ?? "none"}, " +
+                        $"winner={Social.GuildWar.WinnerGuildName ?? "none"}, claimed={Social.GuildWar.RewardClaimed}, " +
+                        $"schedule={Social.GuildWar.ScheduleText}.");
+                    return true;
+                default:
+                    return await UsageAsync(client, "/guildwar <start|end|status>");
+            }
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)

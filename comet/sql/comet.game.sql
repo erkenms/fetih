@@ -283,6 +283,18 @@ CREATE TABLE `flower` (
   PRIMARY KEY (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Guild War state (single row, ID = 1): the guild that won the last war, the guild currently
+-- holding the pole, whether the winning leader has claimed the prize, and when the war was won.
+DROP TABLE IF EXISTS `guild_war`;
+CREATE TABLE `guild_war` (
+  `ID` int(10) unsigned NOT NULL,
+  `WinnerGuildID` int(10) unsigned NOT NULL DEFAULT '0',
+  `HolderGuildID` int(10) unsigned NOT NULL DEFAULT '0',
+  `RewardClaimed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `WonAt` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

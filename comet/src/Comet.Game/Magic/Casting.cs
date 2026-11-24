@@ -320,7 +320,9 @@ namespace Comet.Game.Magic
         private static int TripleAttackOdds(Client client, uint targetID) => AgainstPlayer(client, targetID) ? 300 : 100;
 
         private static bool AgainstPlayer(Client client, uint targetID) =>
-            !Attacks.IsMonster(targetID) && Training.TrainingGround.FindGoal(client, targetID) == null;
+            !Attacks.IsMonster(targetID) &&
+            Training.TrainingGround.FindGoal(client, targetID) == null &&
+            Social.GuildWar.FindTarget(client, targetID) == null;
 
         // Windstorm: at its percent, a third against players, a rapier swing is a combo of three
         // hits of a swing each, shown as the skill
@@ -637,8 +639,11 @@ namespace Comet.Game.Magic
                 }
                 if (victim.Goal != null)
                 {
-                    experience += (uint)Math.Min(uint.MaxValue,
-                        await Training.TrainingGround.AfterHitAsync(client, victim.Goal, victim.Damage, "magic"));
+                    if (victim.Goal.IsGuildWarTarget)
+                        await Social.GuildWar.AfterHitAsync(client, victim.Goal, victim.Damage, "magic");
+                    else
+                        experience += (uint)Math.Min(uint.MaxValue,
+                            await Training.TrainingGround.AfterHitAsync(client, victim.Goal, victim.Damage, "magic"));
                     continue;
                 }
 
@@ -781,6 +786,12 @@ namespace Comet.Game.Magic
                 if (reason == null)
                     victim = new Victim(null, null, goal, goal.X, goal.Y);
             }
+            else if (Social.GuildWar.FindTarget(client, targetID) is Npc gwTarget)
+            {
+                reason = Social.GuildWar.Problem(client, gwTarget);
+                if (reason == null)
+                    victim = new Victim(null, null, gwTarget, gwTarget.X, gwTarget.Y);
+            }
             else if (Attacks.IsMonster(targetID))
             {
                 Monster monster = null;
@@ -876,8 +887,12 @@ namespace Comet.Game.Magic
         {
             var character = client.Character;
             if (goals)
+            {
                 foreach (var goal in Training.TrainingGround.InView(client, spell: !swing))
                     yield return new Victim(null, null, goal, goal.X, goal.Y);
+                foreach (var gwTarget in Social.GuildWar.InView(client))
+                    yield return new Victim(null, null, gwTarget, gwTarget.X, gwTarget.Y);
+            }
             if (Kernel.Monsters != null && Kernel.Monsters.TryGet(character.MapID, out var monsters))
                 foreach (var monster in monsters.InView(character.X, character.Y))
                     if (monster.Alive && (!monster.IsGuard || client.Pk.Mode == PkMode.Free) &&
@@ -996,9 +1011,12 @@ namespace Comet.Game.Magic
         {
             int level = client.Character.Level;
             if (spell.Sort == MagicSort.DecLife)
+            {
+                uint life = goal.IsGuildWarTarget ? Social.GuildWar.LifeOf(goal) : Training.TrainingGround.LifeOf(goal);
                 return spell.IsPassive
-                    ? Math.Max(ShareOf(Training.TrainingGround.LifeOf(goal), spell), AgainstGoal(client, stats, Swing(spell), goal, now))
-                    : ShareOf(Training.TrainingGround.LifeOf(goal), spell);
+                    ? Math.Max(ShareOf(life, spell), AgainstGoal(client, stats, Swing(spell), goal, now))
+                    : ShareOf(life, spell);
+            }
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
                     ? Damage.Magic(stats.MagicDamage, spell.Power, level, goal.Level) : 0;

@@ -42,6 +42,10 @@ namespace Comet.Game.Npcs
                 [Market.SurgeonMiracleID] = Market.SurgeonMiracleAsync,
                 [WuxingOven.OvenID] = WuxingOven.OvenAsync,
                 [WuxingOven.EtherealID] = WuxingOven.EtherealAsync,
+                [GuildWarNpc.ControllerID] = GuildWarNpc.ControllerAsync,
+                [Social.GuildWar.LeftGateID] = GuildWarNpc.LeftGateAsync,
+                [Social.GuildWar.RightGateID] = GuildWarNpc.RightGateAsync,
+                [GuildWarNpc.BeastGuardID] = GuildWarNpc.BeastGuardAsync,
             };
 
         static Dialogs()
@@ -50,6 +54,10 @@ namespace Comet.Game.Npcs
                 Scripts[boxer] = Training.TrainingGround.BoxerAsync;
             foreach (var assistant in Mines.AssistantIDs)
                 Scripts[assistant] = Mines.AssistantAsync;
+            foreach (var conductor in GuildWarNpc.Conductors.Keys)
+                Scripts[conductor] = GuildWarNpc.ConductorAsync;
+            foreach (var stone in GuildWarNpc.FlameStones.Keys)
+                Scripts[stone] = GuildWarNpc.FlameStoneAsync;
         }
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

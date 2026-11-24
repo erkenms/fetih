@@ -66,13 +66,6 @@
       ],
     },
     {
-      "id": 380, "fare": 0, "face": 123, // GuildController, Twin City
-      "text": ["What can I do for you?"],
-      "destinations": [
-        { "name": "Enter the guild area.", "map": 1038, "x": 350, "y": 339 },
-      ],
-    },
-    {
       "id": 10054, "fare": 0, "face": 7, // GeneralPeace, Twin City's west road
       "text": ["This is the way to the Desert City. Although you are excellent, it is dangerous to go ahead."],
       "destinations": [
@@ -107,27 +100,6 @@
       "text": ["Would you like to go to the Guild Arena in Twin City? I can teleport you there for 500 silver."],
       "destinations": [
         { "name": "Please teleport me there.", "map": 1038, "x": 350, "y": 339 },
-      ],
-    },
-    {
-      "id": 101617, "fare": 1000, "face": 130, // GuildConductor1, guild area, to Bird Island
-      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
-      "destinations": [
-        { "name": "Please teleport me there.", "map": 1015, "x": 744, "y": 630 },
-      ],
-    },
-    {
-      "id": 101615, "fare": 1000, "face": 130, // GuildConductor2, guild area, to Desert City
-      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
-      "destinations": [
-        { "name": "Please teleport me there.", "map": 1000, "x": 492, "y": 669 },
-      ],
-    },
-    {
-      "id": 101613, "fare": 1000, "face": 130, // GuildConductor3, guild area, to Ape City
-      "text": ["Are you heading for the next teleporter? I can teleport you there for 1,000 silver."],
-      "destinations": [
-        { "name": "Please teleport me there.", "map": 1020, "x": 571, "y": 585 },
       ],
     },
   ]

@@ -39,6 +39,9 @@ namespace Comet.Game.Social
 
         public static int Count => ById.Count;
 
+        public static Guild Find(uint guildID) =>
+            ById.TryGetValue(guildID, out var guild) ? guild : null;
+
         public static Membership Of(uint characterID) =>
             ByMember.TryGetValue(characterID, out var membership) ? membership : null;
 
@@ -244,6 +247,7 @@ namespace Comet.Game.Social
                         await Talk.NoticeAsync(player, $"The guild {guild.Name} has been disbanded.");
                     }
                 }
+                await GuildWar.OnGuildDisbandedAsync(guild.ID);
                 LogEvents.For(typeof(Guilds), LogEvents.GuildDisbanded).Information(
                     "{Name} disbanded guild {Guild} (guild {GuildId}, {MemberCount} members)",
                     client.Character.Name, guild.Name, guild.ID, guild.Members.Count);
