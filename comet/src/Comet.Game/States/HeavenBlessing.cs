@@ -19,12 +19,23 @@ namespace Comet.Game.States
         // Maps where the dead go back to their reborn point anyway
         private const MapFlags NoReviveHere = MapFlags.PrisonMap | MapFlags.PkField | MapFlags.PkGame | MapFlags.GuildMap;
 
-        // PrayingStone(S), (M) and (L), by their itemtype descriptions
+        // PrayingStone(S), (M) and (L), and the other stones, jades and notes that give a
+        // blessing, by their itemtype descriptions
         public static TimeSpan? StoneDuration(uint typeID) => typeID switch
         {
             1200000 => TimeSpan.FromDays(3),
             1200001 => TimeSpan.FromDays(7),
             1200002 => TimeSpan.FromDays(30),
+            720098 => TimeSpan.FromHours(1),      // 1hourBlessingStone
+            720099 => TimeSpan.FromHours(3),      // 3hoursBlessingStone
+            722576 => TimeSpan.FromHours(4),      // WishNote
+            722117 => TimeSpan.FromDays(1),       // WishJade
+            720357 => TimeSpan.FromDays(3),       // 3DaysBlessing
+            722118 => TimeSpan.FromDays(3),       // WishDiamond
+            722385 => TimeSpan.FromDays(3),       // DignityStone
+            722386 => TimeSpan.FromDays(7),       // MajestyStone
+            723817 => TimeSpan.FromDays(7),       // 7Days`BlessingStone
+            >= 729172 and <= 729179 => TimeSpan.FromDays(7), // the NationalBlessings
             _ => null,
         };
 

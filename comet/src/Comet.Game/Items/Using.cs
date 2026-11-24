@@ -15,7 +15,7 @@ namespace Comet.Game.Items
     using Comet.Game.World;
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
-    // EXP balls, EXP potions, PK amulets, hair dyes, fireworks, silver/CP packs, item packs,
+    // EXP balls and pills, EXP potions, PK amulets, hair dyes, fireworks, silver/CP packs, item packs,
     // skill books, and quivers (which go on the left hand). Runs on the
     // player's own packet queue, like Progress.
     public static class Using
@@ -31,6 +31,22 @@ namespace Comet.Game.Items
 
         public static int ExpBallsUsedOn(DbCharacter character, DateTime today) =>
             character.ExpBallDay == today.Date ? character.ExpBallsUsed : 0;
+
+        // Items worth a stated number of EXP balls, by itemtype.dat. They aren't EXP balls, so
+        // neither the daily limit nor the level cap applies.
+        private static readonly Dictionary<uint, double> ExpBallWorth = new Dictionary<uint, double>
+        {
+            [720668] = 1.0 / 6,   // MagicBall
+            [720669] = 5.0 / 6,   // SuperBall
+            [720713] = 1,         // ElitePKEXPPack
+            [720954] = 1,         // TeamArenaPack
+            [720981] = 1,         // SkillTeamPKPack
+            [720670] = 5.0 / 3,   // UltraBall
+            [720680] = 2.5,       // HeavenPill
+            [720686] = 10.0 / 3,  // MysteryPill
+            [720692] = 5,         // WindPill
+            [720698] = 25.0 / 3,  // MoonPill
+        };
 
         public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
         public const int ScrollGems = 10;
@@ -77,6 +93,30 @@ namespace Comet.Game.Items
             [723721] = 100_000_000, // Class9MoneyBag
             [723722] = 300_000_000, // Class10MoneyBag
             [723723] = 500_000_000, // TopMoneyBag
+            [721067] = 5_000,       // RedMoneyBag
+            [721068] = 10_000,      // PurpleMoneyBag
+            [721069] = 15_000,      // BlueMoneyBag
+            [721070] = 25_000,      // GreenMoneyBag
+            [721073] = 50_000,      // ScarletMoneyBag
+            [727923] = 50_000,      // SilverPackI
+            [721074] = 100_000,     // LilacMoneyBag
+            [727924] = 100_000,     // SilverPackII
+            [721075] = 150_000,     // VioletMoneyBag
+            [721076] = 200_000,     // RainbowMoneyBag
+            [727925] = 200_000,     // SilverPackIII
+            [721077] = 250_000,     // FancyMoneyBag
+            [727929] = 250_000,     // SilverChestI
+            [727930] = 500_000,     // SilverChestII
+            [727939] = 500_000,     // VioletSilverPack
+            [727931] = 1_000_000,   // SilverChestIII
+            [727938] = 1_000_000,   // JasperSilverBox
+            [727937] = 2_000_000,   // AmberSilverBox
+            [727926] = 2_700_000,   // PrimeSilverCard
+            [727932] = 13_500_000,  // PureSilverPack
+            [727927] = 13_800_000,  // SupremeSilverCard
+            [727936] = 27_000_000,  // LunarSilverBox
+            [727933] = 69_000_000,  // LegendarySilverPack
+            [727935] = 138_000_000, // SolarSilverBox
         };
 
         // CP bags, packs, and lottery prize packs whose exact CP amount is stated in itemtype.dat
@@ -110,6 +150,52 @@ namespace Comet.Game.Items
             [720667] = 13_800,  // FantasyCPPack
             [729250] = 22_500,  // 1stPrize
             [729251] = 45_000,  // TopPrize
+            [727336] = 1,           // EbonyCPBox
+            [729910] = 1,           // CPMiniBag
+            [720996] = 2,           // SmallCPBox
+            [720997] = 5,           // MediumCPBox
+            [721016] = 5,           // GreenCPBag
+            [720998] = 8,           // LargeCPBox
+            [721017] = 10,          // BlueCPBag
+            [721018] = 20,          // PurpleCPBag
+            [721019] = 25,          // TanCPBag
+            [721026] = 50,          // FlameCPBag
+            [721027] = 100,         // StarCPBag
+            [721028] = 200,         // CyanCPBag
+            [721029] = 250,         // SnowCPBag
+            [721036] = 270,         // SilverCPBag
+            [721037] = 400,         // PlumCPBag
+            [720681] = 500,         // DeityCPPack
+            [721038] = 500,         // JadeCPBag
+            [720682] = 1_000,       // FlowerCPPack
+            [720687] = 1_000,       // CloudCPPack
+            [721039] = 1_000,       // LightCPBag
+            [721044] = 1_350,       // AzureCPBag
+            [720683] = 2_000,       // HeartCPPack
+            [720688] = 2_000,       // JewelCPPack
+            [721045] = 2_000,       // LilacCPBag
+            [720693] = 2_500,       // FogCPPack
+            [721046] = 2_500,       // VioletCPBag
+            [721047] = 2_700,       // MoonCPBag
+            [720689] = 4_000,       // ShadowCPPack
+            [721048] = 4_000,       // OliverCPBag
+            [720694] = 5_000,       // MoonCPPack
+            [721049] = 5_000,       // PinkCPBag
+            [721056] = 5_400,       // GrayCPBag
+            [720695] = 10_000,      // EarthCPPack
+            [721057] = 10_000,      // ScarletCPBag
+            [720678] = 13_500,      // LifeCPPack
+            [721058] = 13_500,      // GarnetCPBag
+            [720684] = 27_000,      // ButterflyCPPack
+            [721059] = 27_000,      // SunCPBag
+            [720690] = 54_000,      // RainbowCPPack
+            [721060] = 54_000,      // RainbowCPBag
+            [720679] = 69_000,      // FrostCPPack
+            [720696] = 135_000,     // ZephyrCPPack
+            [721066] = 135_000,     // FancyCPBag
+            [720685] = 138_000,     // NimbusCPPack
+            [720691] = 276_000,     // KylinCPPack
+            [720697] = 690_000,     // PilgrimCPPack
         };
 
         // Hair dyes from Shop.dat; the color is the hundreds digit of Hairstyle (3 black to 9 white)
@@ -156,6 +242,10 @@ namespace Comet.Game.Items
         public static bool TryGetHairDye(uint typeID, out byte color) => HairDyes.TryGetValue(typeID, out color);
         public static bool TryGetFirework(uint typeID, out string text) => Fireworks.TryGetValue(typeID, out text);
         public static bool TryGetPkReducer(uint typeID, out PkReducer reducer) => PkReducers.TryGetValue(typeID, out reducer);
+        public static bool TryGetExpBallWorth(uint typeID, out double balls) => ExpBallWorth.TryGetValue(typeID, out balls);
+        public static IEnumerable<KeyValuePair<uint, uint>> AllSilverBags => SilverBags;
+        public static IEnumerable<KeyValuePair<uint, uint>> AllConquerPointPacks => ConquerPointPacks;
+        public static IEnumerable<KeyValuePair<uint, double>> AllExpBallWorths => ExpBallWorth;
 
         public static async Task<bool> UseAsync(Client client, uint itemID)
         {
@@ -175,6 +265,8 @@ namespace Comet.Game.Items
                 return await DrinkAsync(client, item, type);
             if (System.Array.IndexOf(ExpBalls, item.TypeID) >= 0)
                 return await ExpBallAsync(client, item);
+            if (ExpBallWorth.TryGetValue(item.TypeID, out var balls))
+                return await ExpBallWorthAsync(client, item, balls);
             if (Magic.Learning.BookOf(item.TypeID) is ushort magic)
                 return await ReadBookAsync(client, item, magic);
             if (ItemPacks.TryGetValue(item.TypeID, out var pack))
@@ -297,6 +389,22 @@ namespace Comet.Game.Items
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
                 "{Name} used item {ItemId} (type {TypeId}) for {Experience} experience",
                 character.Name, ball.ItemID, ball.TypeID, experience);
+            return true;
+        }
+
+        private static async Task<bool> ExpBallWorthAsync(Client client, DbItem item, double balls)
+        {
+            var character = client.Character;
+            ulong experience = Kernel.Experience.ExperienceOfTime(
+                character.Level, character.Experience, ExperienceTable.BallTime * balls);
+            if (experience == 0)
+                return Reject(client, item.ItemID, item.TypeID, "max_level");
+
+            await UseUpAsync(client, item);
+            await Progress.AwardExperienceAsync(client, experience, "exp_item");
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Experience} experience",
+                character.Name, item.ItemID, item.TypeID, experience);
             return true;
         }
 

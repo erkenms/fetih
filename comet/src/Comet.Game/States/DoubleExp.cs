@@ -24,6 +24,8 @@ namespace Comet.Game.States
             [728201] = new Potion(500, TimeSpan.FromMinutes(120)),  // SuperExpPotion
             [720393] = new Potion(300, TimeSpan.FromMinutes(120)),  // ExpPill
             [720394] = new Potion(500, TimeSpan.FromMinutes(120)),  // ExpAmrita
+            [722703] = new Potion(200, TimeSpan.FromMinutes(30)),   // VitalityPill
+            [722955] = new Potion(200, TimeSpan.FromMinutes(60)),   // SupremeSpanishRice
         };
 
         private static readonly ConcurrentDictionary<uint, Bonus> Active = new ConcurrentDictionary<uint, Bonus>();

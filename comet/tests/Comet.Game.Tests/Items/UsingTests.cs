@@ -1,11 +1,14 @@
 namespace Comet.Game.Tests.Items
 {
     using System;
+    using System.Linq;
+    using System.Text.RegularExpressions;
     using Comet.Game.Database.Models;
     using Comet.Game.Items;
     using Comet.Game.Magic;
     using Comet.Game.Packets;
     using Comet.Game.States;
+    using Comet.Game.Tests.World;
     using Xunit;
 
     public class UsingTests
@@ -101,6 +104,32 @@ namespace Comet.Game.Tests.Items
             Assert.Equal(Learning.WideStrike, Learning.BookOf(721278));
             Assert.Equal(Learning.Halt, Learning.BookOf(721273));
             Assert.Equal(Learning.Phoenix, Learning.BookOf(721287));
+
+            Assert.True(Using.TryGetExpBallWorth(720692, out var wind));
+            Assert.Equal(5, wind);
+            Assert.Equal(TimeSpan.FromHours(4), HeavenBlessing.StoneDuration(722576));
+            Assert.Equal(TimeSpan.FromDays(7), HeavenBlessing.StoneDuration(729175));
+            Assert.Null(HeavenBlessing.StoneDuration(729180));
+            Assert.True(DoubleExp.TryGetPotion(722703, out var vitality));
+            Assert.Equal((200u, TimeSpan.FromMinutes(30)), (vitality.Percent, vitality.Duration));
+        }
+
+        // Every bag's amount is the one its client description states
+        [RealClientFact]
+        public void SilverAndConquerPointAmountsMatchTheClientDescriptions()
+        {
+            var types = ItemTypeTable.Load(RealClientFactAttribute.Directory);
+            string Text(uint id) => types.TryGet(id, out var type) ? type.Name + ": " + type.Description.Replace(",", "") : "";
+
+            var wrong = Using.AllSilverBags
+                .Where(bag => !Regex.IsMatch(Text(bag.Key), $@"\b{bag.Value}\s+(silvers?|gold)\b", RegexOptions.IgnoreCase))
+                .Concat(Using.AllConquerPointPacks
+                    .Where(pack => !Regex.IsMatch(Text(pack.Key), $@"\b{pack.Value}\s+CPs?\b", RegexOptions.IgnoreCase)))
+                .Select(entry => $"{entry.Key} {Text(entry.Key)}")
+                .ToList();
+            Assert.Empty(wrong);
+
+            Assert.All(Using.AllExpBallWorths, pill => Assert.Contains("EXP Ball", Text(pill.Key)));
         }
     }
 }
