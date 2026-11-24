@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # The game serves /metrics on the host's loopback (Metrics in Comet.Game.config)
+  - job_name: game
+    static_configs:
+      - targets: ["host.containers.internal:9818"]
+        labels:
+          server: game

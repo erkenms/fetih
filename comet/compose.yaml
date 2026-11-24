@@ -12,3 +12,80 @@ services:
       # Auto-seed schemas on first run
       - ./sql/comet.account.sql:/docker-entrypoint-initdb.d/01-account.sql:ro
       - ./sql/comet.game.sql:/docker-entrypoint-initdb.d/02-game.sql:ro
+
+  # Logs and metrics. Everything binds to loopback; Grafana is http://localhost:3000
+  loki:
+    container_name: comet-loki
+    mem_limit: 384m
+    environment:
+      GOMEMLIMIT: 320MiB
+    image: docker.io/grafana/loki:3.5.0
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki.yaml
+    ports:
+      - "127.0.0.1:3100:3100"
+    volumes:
+      - ./observability/loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/loki
+
+  alloy:
+    container_name: comet-alloy
+    mem_limit: 192m
+    image: docker.io/grafana/alloy:v1.9.1
+    restart: unless-stopped
+    command: run --disable-reporting --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
+    volumes:
+      - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - ./src:/comet/src:ro
+      - alloy-data:/var/lib/alloy/data
+    depends_on:
+      - loki
+
+  prometheus:
+    container_name: comet-prometheus
+    mem_limit: 192m
+    environment:
+      GOMEMLIMIT: 160MiB
+    image: docker.io/prom/prometheus:v3.4.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=30d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+
+  grafana:
+    container_name: comet-grafana
+    mem_limit: 192m
+    image: docker.io/grafana/grafana:12.0.2
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      # Viewers need no login: Grafana is only reachable from this machine, and the web
+      # links and embeds its panels
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/overview.json
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+      - prometheus
+
+volumes:
+  loki-data:
+  alloy-data:
+  prometheus-data:
+  grafana-data:
