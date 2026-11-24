@@ -18,6 +18,11 @@ namespace Comet.Game.Items
 
         public static int Grade(byte socket) => Kind(socket) < 0 ? 0 : socket % 10;
 
+        // No socket, an empty one, or a gem of a kind the game has
+        public static bool IsSocketValue(byte socket) =>
+            socket is NoSocket or EmptySocket ||
+            Kind(socket) is Phoenix or Dragon or Fury or Rainbow or Kylin or Violet or Moon or Tortoise or Thunder or Glory;
+
         // What one gem adds, in percent: of attack, magic attack, hit rate, experience, durability,
         // weapon experience, magic experience, or off damage taken
         public static int Percent(byte socket) => (Kind(socket), Grade(socket)) switch

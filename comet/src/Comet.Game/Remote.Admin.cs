@@ -349,15 +349,18 @@ namespace Comet.Game
             string detail = $"{args.Count} of type {args.TypeID} +{args.Plus} -{args.Bless} gems {args.Gem1},{args.Gem2}";
             if (!Kernel.ItemTypes.TryGet(args.TypeID, out var type))
                 return Logged(LogEvents.GmGiveItem, args, args.CharacterID, detail, AdminResult.Fail(AdminErrors.UnknownItemType));
-            if (args.Count < 1 || args.Count > Inventory.Capacity || args.Plus > MaxPlus || args.Bless > MaxBless)
+            byte gem1 = args.Gem1 ?? type.Gem1, gem2 = args.Gem2 ?? type.Gem2;
+            if (args.Count < 1 || args.Count > Inventory.Capacity || args.Plus > MaxPlus || args.Bless > MaxBless ||
+                args.Gem1 is byte g1 && !Gems.IsSocketValue(g1) || args.Gem2 is byte g2 && !Gems.IsSocketValue(g2) ||
+                gem1 == Gems.NoSocket && gem2 != Gems.NoSocket)
                 return Logged(LogEvents.GmGiveItem, args, args.CharacterID, detail, AdminResult.Fail(AdminErrors.Invalid));
 
             void Shape(DbItem item)
             {
                 item.Plus = args.Plus;
                 item.Bless = args.Bless;
-                item.Gem1 = args.Gem1 ?? item.Gem1;
-                item.Gem2 = args.Gem2 ?? item.Gem2;
+                item.Gem1 = gem1;
+                item.Gem2 = gem2;
             }
 
             var result = await OnCharacterAsync(args.CharacterID,

@@ -247,6 +247,8 @@ namespace Comet.Integration.Tests
 
             Assert.Equal(AdminErrors.UnknownItemType, (await rpc.Admin.GiveItem(new GiveItemArgs { ActorAccountID = Actor, CharacterID = id, TypeID = 1 })).Error);
             Assert.Equal(AdminErrors.InventoryFull, (await rpc.Admin.GiveItem(new GiveItemArgs { ActorAccountID = Actor, CharacterID = id, TypeID = blade.Id, Count = 40 })).Error);
+            Assert.Equal(AdminErrors.Invalid, (await rpc.Admin.GiveItem(new GiveItemArgs { ActorAccountID = Actor, CharacterID = id, TypeID = blade.Id, Gem1 = 84 })).Error);
+            Assert.Equal(AdminErrors.Invalid, (await rpc.Admin.GiveItem(new GiveItemArgs { ActorAccountID = Actor, CharacterID = id, TypeID = blade.Id, Gem1 = 0, Gem2 = 255 })).Error);
             Assert.Equal(AdminErrors.NotFound, (await rpc.Admin.TakeItem(new TakeItemArgs { ActorAccountID = Actor, CharacterID = id, ItemID = offlineItem })).Error);
         }
 
