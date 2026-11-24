@@ -84,6 +84,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["searchItems"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getItemsByIds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getItem"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -112,12 +160,89 @@ export interface components {
             /** Format: int32 */
             total: number;
         };
+        CatalogItem: {
+            /** Format: uint32 */
+            id?: number;
+            name?: string;
+            type?: null | string;
+            description?: null | string;
+            icon?: null | string;
+            groundIcon?: null | string;
+            category?: components["schemas"]["ItemCategory"];
+            quality?: components["schemas"]["ItemQuality"];
+            /** Format: uint8 */
+            requiredProfession?: number;
+            /** Format: uint8 */
+            requiredWeaponSkill?: number;
+            /** Format: uint8 */
+            requiredLevel?: number;
+            /** Format: uint8 */
+            requiredGender?: number;
+            /** Format: uint16 */
+            requiredStrength?: number;
+            /** Format: uint16 */
+            requiredAgility?: number;
+            /** Format: uint16 */
+            requiredVitality?: number;
+            /** Format: uint16 */
+            requiredSpirit?: number;
+            /** Format: uint8 */
+            monopoly?: number;
+            /** Format: uint32 */
+            price?: number;
+            /** Format: uint32 */
+            emoneyPrice?: number;
+            /** Format: uint32 */
+            actionId?: number;
+            /** Format: uint16 */
+            minAttack?: number;
+            /** Format: uint16 */
+            maxAttack?: number;
+            /** Format: uint16 */
+            defense?: number;
+            /** Format: uint16 */
+            magicAttack?: number;
+            /** Format: uint16 */
+            magicDefense?: number;
+            /** Format: uint16 */
+            dexterity?: number;
+            /** Format: uint16 */
+            dodge?: number;
+            /** Format: uint16 */
+            life?: number;
+            /** Format: uint16 */
+            mana?: number;
+            /** Format: uint16 */
+            amount?: number;
+            /** Format: uint16 */
+            amountLimit?: number;
+            /** Format: uint8 */
+            gem1?: number;
+            /** Format: uint8 */
+            gem2?: number;
+            /** Format: uint16 */
+            attackRange?: number;
+            /** Format: uint16 */
+            attackSpeed?: number;
+            /** Format: uint32 */
+            stackLimit?: number;
+        };
         HealthResponse: {
             gameDatabase: boolean;
             accountDatabase: boolean;
             gameServer: boolean;
             /** Format: date-time */
             serverTime: string;
+        };
+        /** @enum {unknown} */
+        ItemCategory: "Weapon" | "Armor" | "Headwear" | "Necklace" | "Ring" | "Boots" | "Shield" | "Garment" | "Steed" | "Crop" | "Bottle" | "Arrow" | "Gem" | "Consumable" | "Other";
+        /** @enum {unknown} */
+        ItemQuality: "None" | "Normal" | "Refined" | "Unique" | "Elite" | "Super";
+        ItemSearchPage: {
+            items: components["schemas"]["CatalogItem"][];
+            /** Format: int32 */
+            total: number;
+            assetsAvailable: boolean;
         };
         LoginRequest: {
             username: string;
@@ -267,6 +392,89 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+        };
+    };
+    searchItems: {
+        parameters: {
+            query?: {
+                q?: string;
+                category?: components["schemas"]["ItemCategory"];
+                quality?: components["schemas"]["ItemQuality"];
+                profession?: number;
+                minLevel?: number;
+                maxLevel?: number;
+                type?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemSearchPage"];
+                };
+            };
+        };
+    };
+    getItemsByIds: {
+        parameters: {
+            query?: {
+                ids?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"][];
+                };
+            };
+        };
+    };
+    getItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogItem"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };

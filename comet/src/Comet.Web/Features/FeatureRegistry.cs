@@ -6,5 +6,6 @@ public static class FeatureRegistry
     [
         new Health.HealthFeature(),
         new Audit.AuditFeature(),
+        new Items.ItemsFeature(),
     ];
 }

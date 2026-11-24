@@ -192,6 +192,171 @@
           }
         }
       }
+    },
+    "/api/items": {
+      "get": {
+        "tags": [
+          "ItemsFeature"
+        ],
+        "operationId": "searchItems",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ItemCategory"
+            }
+          },
+          {
+            "name": "quality",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ItemQuality"
+            }
+          },
+          {
+            "name": "profession",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "minLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "maxLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemSearchPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/items/batch": {
+      "get": {
+        "tags": [
+          "ItemsFeature"
+        ],
+        "operationId": "getItemsByIds",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CatalogItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/items/{id}": {
+      "get": {
+        "tags": [
+          "ItemsFeature"
+        ],
+        "operationId": "getItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -298,6 +463,160 @@
           }
         }
       },
+      "CatalogItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "groundIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "$ref": "#/components/schemas/ItemCategory"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/ItemQuality"
+          },
+          "requiredProfession": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "requiredWeaponSkill": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "requiredLevel": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "requiredGender": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "requiredStrength": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "requiredAgility": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "requiredVitality": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "requiredSpirit": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "monopoly": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "price": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "emoneyPrice": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "actionId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "minAttack": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "maxAttack": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "defense": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "magicAttack": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "magicDefense": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "dexterity": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "dodge": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "life": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "mana": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "amountLimit": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "gem1": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem2": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "attackRange": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "attackSpeed": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "stackLimit": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "gameDatabase",
@@ -319,6 +638,58 @@
           "serverTime": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ItemCategory": {
+        "enum": [
+          "Weapon",
+          "Armor",
+          "Headwear",
+          "Necklace",
+          "Ring",
+          "Boots",
+          "Shield",
+          "Garment",
+          "Steed",
+          "Crop",
+          "Bottle",
+          "Arrow",
+          "Gem",
+          "Consumable",
+          "Other"
+        ]
+      },
+      "ItemQuality": {
+        "enum": [
+          "None",
+          "Normal",
+          "Refined",
+          "Unique",
+          "Elite",
+          "Super"
+        ]
+      },
+      "ItemSearchPage": {
+        "required": [
+          "items",
+          "total",
+          "assetsAvailable"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CatalogItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetsAvailable": {
+            "type": "boolean"
           }
         }
       },
@@ -389,6 +760,9 @@
     },
     {
       "name": "HealthFeature"
+    },
+    {
+      "name": "ItemsFeature"
     }
   ]
 }
