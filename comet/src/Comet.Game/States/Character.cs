@@ -53,6 +53,8 @@ namespace Comet.Game.States
             to.SecondPassword = from.SecondPassword;
             to.MutedUntil = from.MutedUntil;
             to.NameChanged = from.NameChanged;
+            to.ActiveSubClass = from.ActiveSubClass;
+            to.StudyPoints = from.StudyPoints;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

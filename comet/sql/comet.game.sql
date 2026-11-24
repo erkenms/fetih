@@ -62,6 +62,8 @@ CREATE TABLE `character` (
   `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
   `MutedUntil` datetime DEFAULT NULL,
   `NameChanged` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  `ActiveSubClass` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `StudyPoints` bigint(20) unsigned NOT NULL DEFAULT '0',
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),
@@ -353,6 +355,18 @@ CREATE TABLE `mentor_reward` (
   `Blessing` smallint(5) unsigned NOT NULL DEFAULT '0',
   `Composition` smallint(5) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Sub-classes a character has learned (1 Martial Artist, 2 Warlock, 3 Chi Master, 4 Sage,
+-- 5 Apothecary, 6 Performer, 9 Wrangler). Level (1..9) is raised with study points, and Phase
+-- (1..9) is promoted once character level, rebirths, and sub-class level meet SubProfessionInfo.ini.
+DROP TABLE IF EXISTS `subclass`;
+CREATE TABLE `subclass` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `SubClassID` tinyint(3) unsigned NOT NULL,
+  `Level` tinyint(3) unsigned NOT NULL DEFAULT '1',
+  `Phase` tinyint(3) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`CharacterID`,`SubClassID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

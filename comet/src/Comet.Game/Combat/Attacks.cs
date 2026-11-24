@@ -186,6 +186,7 @@ namespace Comet.Game.Combat
                     ? Damage.Archery(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Dodge, Random.Shared)
                     : Damage.Melee(stats.MinDamage, stats.MaxDamage, character.Level, type.Level, type.Defense, Random.Shared);
             damage = Buffs.AgainstMonster(client.Effects, damage, now);
+            damage = Damage.ApplyCritical(damage, stats.CriticalStrike, 0, 1.5, Random.Shared);
             if (fatal != null && damage > 0)
                 damage = (uint)Math.Min(uint.MaxValue, (ulong)damage * (uint)fatal.PowerPercent / 100);
             if (shooting)
@@ -442,6 +443,8 @@ namespace Comet.Game.Combat
             uint damage = !shooting && Buffs.Flying(target.Effects, DateTime.UtcNow) ? 0 :
                 !sure && !Damage.Hits(stats.Dodge, targetIsMonster: false, Random.Shared) ? 0 :
                 stats.Taken(shooting ? Damage.PlayerArchery(attack, stats.Dodge) : Damage.PlayerMelee(attack, defense));
+            damage = Damage.ApplyCritical(damage, attacker.SubClasses?.CriticalStrikePercent() ?? 0,
+                stats.Immunity, 1.5, Random.Shared);
             if (!shooting)
                 await FacePlayerTowardAsync(target, attackerCharacter.X, attackerCharacter.Y);
             var hit = new MsgInteract(shooting ? InteractionType.Shoot : InteractionType.Attack,

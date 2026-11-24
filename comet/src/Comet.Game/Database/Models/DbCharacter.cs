@@ -85,6 +85,8 @@ namespace Comet.Game.Database.Models
         // Until when (UTC) a moderator's /mute keeps the player from chatting; null if not muted
         public virtual DateTime? MutedUntil { get; set; }
         public virtual bool NameChanged { get; set; }
+        public virtual byte ActiveSubClass { get; set; }
+        public virtual ulong StudyPoints { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

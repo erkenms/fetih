@@ -62,6 +62,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
             new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
+            new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
         };
 
         public static bool IsCommand(Client client, string text) =>
@@ -697,6 +698,15 @@ namespace Comet.Game.Chat
                 default:
                     return await UsageAsync(client, "/boss <list|spawn <id>>");
             }
+        }
+
+        private static async Task<bool> StudyAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !ulong.TryParse(args[0], out ulong amount) || amount == 0)
+                return await UsageAsync(client, "/study <amount>");
+            await SubClasses.AwardStudyPointsAsync(client, amount);
+            await Talk.NoticeAsync(client, $"Study points: {client.Character.StudyPoints}.");
+            return true;
         }
 
         private static async Task<bool> MoveAsync(Client client, uint map, ushort x, ushort y)

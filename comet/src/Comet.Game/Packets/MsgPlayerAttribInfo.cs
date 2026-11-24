@@ -77,8 +77,16 @@ namespace Comet.Game.Packets
             writer.Write((uint)this.Stats.MagicPercent);    // 52
             writer.Write((uint)this.Stats.TortoisePercent); // 56 damage taken off
             writer.Write(0u);                               // 60 curse
-            writer.Write((uint)this.Stats.BlessPercent);    // 64
-            writer.Write(new byte[Size - 68]);              // 68
+            writer.Write((uint)this.Stats.BlessPercent);                // 64
+            writer.Write((uint)(this.Stats.CriticalStrike * 100));      // 68 critical strike (0.01% units)
+            writer.Write((uint)(this.Stats.SkillCriticalStrike * 100)); // 72 skill critical strike (0.01% units)
+            writer.Write((uint)(this.Stats.Immunity * 100));            // 76 immunity (0.01% units)
+            writer.Write((uint)(this.Stats.Penetration * 100));         // 80 penetration (0.01% units)
+            writer.Write(0u);                                           // 84 block
+            writer.Write(0u);                                           // 88 breakthrough
+            writer.Write(0u);                                           // 92 counteraction
+            writer.Write((uint)this.Stats.Detoxication);                // 96 detoxication (% units)
+            writer.Write(new byte[Size - 100]);                         // 100
             return writer.ToArray();
         }
     }

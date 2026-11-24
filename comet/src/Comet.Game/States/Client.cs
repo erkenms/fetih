@@ -85,6 +85,7 @@ namespace Comet.Game.States
         // Energy and Skills change only on the player's own queue
         public Magic.Energy Energy { get; } = new Magic.Energy();
         public Magic.Skills Skills { get; set; } = new Magic.Skills();
+        public SubClasses SubClasses { get; set; } = new SubClasses();
         public Mount Mount { get; } = new Mount();
         public DateTime NextCastAt { get; set; }
 

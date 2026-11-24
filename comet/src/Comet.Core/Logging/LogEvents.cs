@@ -80,6 +80,13 @@ namespace Comet.Core.Logging
         public const string ItemWarehouseRejected = "item.warehouse_rejected";
         public const string ShopsLoaded = "item.shops_loaded";
         public const string HonorRewardsLoaded = "arena.honor_rewards_loaded";
+        public const string SubClassesLoaded = "subclass.loaded";
+        public const string SubClassLearned = "subclass.learned";
+        public const string SubClassUpgraded = "subclass.upgraded";
+        public const string SubClassPromoted = "subclass.promoted";
+        public const string SubClassActivated = "subclass.activated";
+        public const string SubClassRejected = "subclass.rejected";
+        public const string SubClassStudyPoints = "subclass.study_points";
         public const string ItemLocked = "item.locked";
         public const string ItemUnlockStarted = "item.unlock_started";
         public const string ItemUnlocked = "item.unlocked";

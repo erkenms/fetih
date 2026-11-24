@@ -997,7 +997,9 @@ namespace Comet.Game.Magic
                     : ShareOf(monster.Health, spell);
             if (!spell.IsPercent)
                 return Random.Shared.Next(100) < spell.Percent
-                    ? Damage.Magic(stats.MagicDamage, spell.Power, level, type.Level) : 0;
+                    ? Damage.ApplyCritical(Damage.Magic(stats.MagicDamage, spell.Power, level, type.Level),
+                        stats.SkillCriticalStrike, 0, 2.0, Random.Shared)
+                    : 0;
             if (!Buffs.HasAccuracy(client.Effects, now) && !Damage.Hits(type.Dodge, targetIsMonster: true, Random.Shared))
                 return 0;
             uint damage = stats.Bow
@@ -1034,8 +1036,13 @@ namespace Comet.Game.Magic
                     ? Math.Max(ShareOf(target.Character.HealthPoints, spell), AgainstPlayer(client, stats, Swing(spell), target, now))
                     : ShareOf(target.Character.HealthPoints, spell);
             if (!spell.IsPercent)
-                return Random.Shared.Next(100) < spell.Percent
-                    ? targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, targetStats.MagicDefense)) : 0;
+            {
+                if (Random.Shared.Next(100) >= spell.Percent)
+                    return 0;
+                int mdef = Damage.PenetratedMagicDefense(targetStats.MagicDefense, stats.Penetration);
+                uint dmg = targetStats.Taken(Damage.PlayerMagic(stats.MagicDamage, spell.Power, mdef));
+                return Damage.ApplyCritical(dmg, stats.SkillCriticalStrike, targetStats.Immunity, 2.0, Random.Shared);
+            }
             // Whirlwind Kick reaches flyers, as the client's description says
             if (!stats.Bow && spell.Sort != MagicSort.WhirlwindKick && Buffs.Flying(target.Effects, now))
                 return 0;

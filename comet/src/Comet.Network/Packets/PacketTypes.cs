@@ -106,6 +106,7 @@ namespace Comet.Network.Packets
         // Faction recruiting ad-list paging sent by CFactionRecruitMgr::QueryAdList.
         MsgSynRecruitAdvertisingList = 2226,
         Msg2ndPsw = 2261,
+        MsgSubPro = 2320,
         MsgAura = 2410,
         MsgWalk = 10005,
         MsgAction = 10010,

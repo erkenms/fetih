@@ -129,6 +129,7 @@ namespace Comet.Game.Packets
                 var items = await ItemsRepository.LoadAsync(character.CharacterID);
                 client.Inventory = new Inventory(items.Where(i => i.Position == (byte)ItemPosition.Inventory));
                 client.Equipment = new Equipment(items.Where(i => Equipment.IsEquipped(i.Position)));
+                await SubClasses.LoadAsync(client);
                 // Logging out dead revives the character; nothing is above its maximum
                 ushort maxHealth = Attributes.MaxHealth(client), maxMana = Attributes.MaxMana(client);
                 if (client.Character.HealthPoints == 0 || client.Character.HealthPoints > maxHealth)
@@ -156,7 +157,8 @@ namespace Comet.Game.Packets
                     entered.Level, client.IPAddress, entered.MapID, entered.X, entered.Y,
                     Kernel.Players.Count);
                 await client.SendAsync(MsgTalk.LoginOk);
-                await client.SendAsync(new MsgUserInfo(client.Character));
+                await client.SendAsync(new MsgUserInfo(client.Character, client.SubClasses.AllSubProfMask()));
+                await SubClasses.SendAllAsync(client);
                 await client.SendAsync(MsgData.ServerTime(Clock.Local(DateTime.UtcNow)));
                 await Nobility.Peerage.LoginAsync(client);
                 await Flowers.FlowerRanking.LoginAsync(client);

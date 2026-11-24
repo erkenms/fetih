@@ -81,6 +81,28 @@ namespace Comet.Game.Combat
         public static int Roll(int min, int max, Random random) =>
             max <= min ? min : random.Next(min, max + 1);
 
+        // Martial Artist: 1.5x physical attack; Warlock: 2x magical attack; Chi Master Immunity
+        // subtracts from the attacker's critical chance.
+        public static uint ApplyCritical(uint damage, int critPercent, int immunityPercent,
+            double multiplier, Random random)
+        {
+            if (damage == 0)
+                return 0;
+            int chance = Math.Clamp(critPercent - Math.Max(0, immunityPercent), 0, 100);
+            if (chance <= 0 || random.Next(100) >= chance)
+                return damage;
+            return (uint)Math.Min(uint.MaxValue, (ulong)(damage * multiplier));
+        }
+
+        // Sage Penetration reduces a target's magical defense by its percentage.
+        public static int PenetratedMagicDefense(int magicDefense, int penetrationPercent) =>
+            Math.Max(0, magicDefense * (100 - Math.Clamp(penetrationPercent, 0, 100)) / 100);
+
+        // Apothecary Detoxication reduces poison damage received by its percentage.
+        public static uint DetoxifiedPoison(uint poisonDamage, int detoxicationPercent) =>
+            poisonDamage == 0 ? 0 :
+            (uint)Math.Max(1, (ulong)poisonDamage * (uint)(100 - Math.Clamp(detoxicationPercent, 0, 100)) / 100);
+
         private static uint AtLeastOne(double damage) => (uint)Math.Max(1, damage);
     }
 }

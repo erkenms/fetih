@@ -72,12 +72,11 @@ namespace Comet.Client
             return string.Join("@@", fields) + "@@\r\n";
         }
 
-        // XOR with a 128-byte key from MSVC rand() seeded with 0x2537, after rotating each
-        // byte left by its offset modulo 8
-        public static byte[] Encrypt(byte[] data)
+        // XOR with a 128-byte key from MSVC rand() seeded with 0x2537 (or a custom seed such as
+        // 0x4D2 for levexp.dat), after rotating each byte left by its offset modulo 8
+        public static byte[] Encrypt(byte[] data, uint seed = 0x2537)
         {
             var key = new List<byte>();
-            uint seed = 0x2537;
             for (int i = 0; i < 128; i++)
             {
                 seed = seed * 214013 + 2531011;

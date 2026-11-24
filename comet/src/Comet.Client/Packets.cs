@@ -79,6 +79,7 @@ namespace Comet.Client
         public const ushort MsgGuideInfo = 2066;
         public const ushort MsgContribute = 2067;
         public const ushort Msg2ndPsw = 2261;
+        public const ushort MsgSubPro = 2320;
     }
 
     public static class TalkChannels
@@ -162,6 +163,8 @@ namespace Comet.Client
     {
         public ushort PkPoints { get; init; }
         public byte Nobility { get; init; }
+        public byte ActiveSubClass { get; init; }
+        public ulong AllSubProf { get; init; }
         public string Spouse { get; init; }
 
         public static UserInfo Parse(byte[] packet)
@@ -178,6 +181,8 @@ namespace Comet.Client
             {
                 PkPoints = BitConverter.ToUInt16(packet, 66),
                 Nobility = packet[72],
+                ActiveSubClass = packet[97],
+                AllSubProf = BitConverter.ToUInt64(packet, 98),
                 Spouse = strings.Count > 2 ? strings[2] : string.Empty,
             };
         }
@@ -1002,6 +1007,11 @@ namespace Comet.Client
         public uint MagicPercent { get; init; }
         public uint ReducePercent { get; init; }
         public uint BlessPercent { get; init; }
+        public uint CriticalStrike { get; init; }
+        public uint SkillCriticalStrike { get; init; }
+        public uint Immunity { get; init; }
+        public uint Penetration { get; init; }
+        public uint Detoxication { get; init; }
 
         public static byte[] Build(uint id)
         {
@@ -1021,6 +1031,11 @@ namespace Comet.Client
             MagicPercent = BitConverter.ToUInt32(packet, 52),
             ReducePercent = BitConverter.ToUInt32(packet, 56),
             BlessPercent = BitConverter.ToUInt32(packet, 64),
+            CriticalStrike = BitConverter.ToUInt32(packet, 68),
+            SkillCriticalStrike = BitConverter.ToUInt32(packet, 72),
+            Immunity = BitConverter.ToUInt32(packet, 76),
+            Penetration = BitConverter.ToUInt32(packet, 80),
+            Detoxication = BitConverter.ToUInt32(packet, 96),
         };
     }
 
@@ -1587,6 +1602,47 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(4), action);
             BitConverter.TryWriteBytes(packet.AsSpan(24), experience);
             return packet;
+        }
+    }
+
+    public sealed record SubProEntry(byte SubClass, byte Phase, byte Level);
+
+    public sealed record SubProMessage(ushort Action, byte SubClass, byte Phase,
+        ulong StudyPoints, ulong AddedStudyPoints, List<SubProEntry> Entries)
+    {
+        public const ushort RequestSwitch = 0, Switch = 1, RequestUpgrade = 2, Upgrade = 3,
+            Learn = 4, Promote = 5, RequestInfo = 6, Show = 7, StudyPointsAction = 8,
+            RequestLearn = 9, RequestPromote = 10;
+
+        public static byte[] Build(ushort action, byte subClass = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgSubPro, 29);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            packet[6] = subClass;
+            return packet;
+        }
+
+        public static SubProMessage Parse(byte[] packet)
+        {
+            ushort action = BitConverter.ToUInt16(packet, 4);
+            var entries = new List<SubProEntry>();
+            if (action == Show)
+            {
+                ulong study = BitConverter.ToUInt64(packet, 6);
+                uint count = BitConverter.ToUInt32(packet, 22);
+                for (int i = 0; i < count && 26 + (i + 1) * 3 <= packet.Length; i++)
+                {
+                    int o = 26 + i * 3;
+                    entries.Add(new SubProEntry(packet[o], packet[o + 1], packet[o + 2]));
+                }
+                return new SubProMessage(action, 0, 0, study, 0, entries);
+            }
+            if (action == StudyPointsAction)
+            {
+                return new SubProMessage(action, 0, 0,
+                    BitConverter.ToUInt64(packet, 6), BitConverter.ToUInt64(packet, 14), entries);
+            }
+            return new SubProMessage(action, packet[6], packet.Length > 7 ? packet[7] : (byte)0, 0, 0, entries);
         }
     }
 }

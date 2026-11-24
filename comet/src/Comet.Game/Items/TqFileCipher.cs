@@ -6,11 +6,15 @@ namespace Comet.Game.Items
     {
         private static readonly byte[] Key = CreateKey(0x2537);
 
-        public static void Decrypt(byte[] data)
+        public static void Decrypt(byte[] data) => Decrypt(data, Key);
+
+        public static void Decrypt(byte[] data, uint seed) => Decrypt(data, CreateKey(seed));
+
+        private static void Decrypt(byte[] data, byte[] key)
         {
             for (int i = 0; i < data.Length; i++)
             {
-                int b = data[i] ^ Key[i % Key.Length];
+                int b = data[i] ^ key[i % key.Length];
                 int shift = i % 8;
                 data[i] = (byte)((b >> shift) | (b << (8 - shift)));
             }

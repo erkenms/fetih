@@ -102,6 +102,20 @@
 
             try
             {
+                Kernel.SubClasses = SubClassTable.Load(config.Maps.ResolveClientDirectory());
+                LogEvents.For(typeof(Program), LogEvents.SubClassesLoaded).Information(
+                    "Loaded {SubClassCount} sub-classes from client ini", Kernel.SubClasses.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/SubProfessionInfo.ini or ini/levexp.dat from {Directory}",
+                    config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.ItemTypes = ItemTypeTable.Load(config.Maps.ResolveClientDirectory());
                 Kernel.ItemAdditions = ItemAdditionTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.ItemTypesLoaded).Information(

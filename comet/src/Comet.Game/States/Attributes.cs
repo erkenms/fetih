@@ -23,10 +23,10 @@ namespace Comet.Game.States
         // A transformed player's is the monster's life
         public static ushort MaxHealth(Client client) => client.Transformation is { } t
             ? (ushort)Math.Min(t.Type.Life, ushort.MaxValue)
-            : MaxHealth(client.Character, client.Equipment);
+            : MaxHealth(client.Character, client.Equipment, client.SubClasses?.MaxHealthBonus() ?? 0);
 
-        // Worn items add their own health after the trojans' bonus
-        public static ushort MaxHealth(DbCharacter character, Equipment equipment)
+        // Worn items and Wrangler sub-class add their own health after the trojans' bonus
+        public static ushort MaxHealth(DbCharacter character, Equipment equipment, int subClassBonus = 0)
         {
             int health = character.Vitality * 24
                 + (character.Strength + character.Agility + character.Spirit) * 3;
@@ -40,7 +40,7 @@ namespace Comet.Game.States
                 15 => health * 115 / 100,
                 _ => health
             };
-            health += equipment?.Items.Sum(ItemHealth) ?? 0;
+            health += (equipment?.Items.Sum(ItemHealth) ?? 0) + subClassBonus;
             return (ushort)Math.Min(health, ushort.MaxValue);
         }
 

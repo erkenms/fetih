@@ -189,6 +189,8 @@ namespace Comet.Game.Items
                 return await LaunchFireworkAsync(client, item, fireworkText);
             if (PkReducers.TryGetValue(item.TypeID, out var pkReducer))
                 return await ReducePkAsync(client, item, pkReducer);
+            if (item.TypeID is 720774 or 720775)
+                return await UseStudyBookAsync(client, item);
 
             var scroll = Kernel.MapTypes.ScrollPointOf(item.TypeID);
             if (scroll == null)
@@ -213,6 +215,17 @@ namespace Comet.Game.Items
 
         // Stancher to Mil.Ginseng (1000000 to 1002050): their life and mana fields are the HP and MP they restore
         public static bool IsPotion(ItemType type) => type.ID / 10000 == 100 && (type.Life > 0 || type.Mana > 0);
+
+        // StudyBook(Arena) 720774 and StudyBook(Race) 720775: itemtype.dat says 50 Study Points
+        private static async Task<bool> UseStudyBookAsync(Client client, DbItem book)
+        {
+            await UseUpAsync(client, book);
+            await SubClasses.AwardStudyPointsAsync(client, 50);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) and gained 50 study points",
+                client.Character.Name, book.ItemID, book.TypeID);
+            return true;
+        }
 
         // Up to full HP and MP; a potion that would restore nothing is kept
         private static async Task<bool> DrinkAsync(Client client, DbItem potion, ItemType type)

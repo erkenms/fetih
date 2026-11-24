@@ -923,6 +923,16 @@ namespace Comet.Client
             return packet == null ? null : ContributeMessage.Parse(packet);
         }
 
+        public Task SendSubProAsync(ushort action, byte subClass = 0) =>
+            this.SendAsync(SubProMessage.Build(action, subClass));
+
+        public async Task<SubProMessage> WaitForSubProAsync(Func<SubProMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSubPro && match(SubProMessage.Parse(p)), timeout);
+            return packet == null ? null : SubProMessage.Parse(packet);
+        }
+
         private async Task<byte[]> TryReceiveAsync(Func<byte[], bool> match, TimeSpan? timeout)
         {
             try { return await this.ReceiveAsync(match, timeout); }

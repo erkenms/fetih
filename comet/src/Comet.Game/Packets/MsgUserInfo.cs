@@ -28,10 +28,12 @@ namespace Comet.Game.Packets
         public byte AncestorClass { get; set; }
         public uint QuizPoints { get; set; }
         public ushort EnlightenPoints { get; set; }
+        public byte ActiveSubClass { get; set; }
+        public ulong AllSubProf { get; set; }
         public string CharacterName { get; set; }
         public string SpouseName { get; set; }
 
-        public MsgUserInfo(DbCharacter character)
+        public MsgUserInfo(DbCharacter character, ulong allSubProf = 0)
         {
             base.Type = PacketType.MsgUserInfo;
             this.CharacterID = character.CharacterID;
@@ -55,6 +57,8 @@ namespace Comet.Game.Packets
             this.Rebirths = character.Rebirths;
             this.EnlightenPoints = character.EnlightenPoints;
             this.QuizPoints = character.QuizPoints;
+            this.ActiveSubClass = character.ActiveSubClass;
+            this.AllSubProf = allSubProf;
             this.CharacterName = character.Name;
             this.SpouseName = string.IsNullOrEmpty(character.Spouse) ? Social.Marriage.None : character.Spouse;
         }
@@ -92,9 +96,8 @@ namespace Comet.Game.Packets
             writer.Write((uint)0);                  // 87
             writer.Write((ushort)0);                // 91 title
             writer.Write((uint)0);                  // 93 bound CPs
-            writer.Write((byte)0);                  // 97
-            writer.Write((uint)0);                  // 98 sub-professions
-            writer.Write((uint)0);                  // 102
+            writer.Write(this.ActiveSubClass);      // 97 active sub-class
+            writer.Write(this.AllSubProf);          // 98 sub-class phases (base-10 packed u64)
             writer.Write((uint)0);                  // 106
             writer.Write(new List<string>{          // 110
                 this.CharacterName,

@@ -87,6 +87,12 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CpBag = (729911, "CPBag", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) AmritaBundle = (720010, "Amrita", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Amrita = (1000030, "Amrita", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Bomb = (721261, "Bomb", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) YinYangFruit = (711188, "YinYangFruit", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) LuckyAmulet = (723087, "LuckyAmulet", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Orchid = (753001, "1Orchid", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) Saddle = (723903, "Saddle", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) StudyBookArena = (720774, "StudyBook(Arena)", 1, 0);
         // The vigor of a +1 steed, from the test itemadd.ini
         public const ushort SteedVigor = 50;
         // A necklace's health is all from its plus: a +1 HeartNecklace's, by its key in the test itemadd.ini
@@ -490,7 +496,8 @@ namespace Comet.Integration.Tests
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
-                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies }, new[] { Potion, ManaPotion, Bottle },
+                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies,
+                    Bomb, YinYangFruit, LuckyAmulet, Orchid, Saddle, StudyBookArena }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
@@ -521,9 +528,57 @@ namespace Comet.Integration.Tests
                 "RankAmount=3\r\n1=15000/100000\r\n2=14000/90000\r\n3=13000/80000\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "tutorType.ini"),
                 "70,109,2,10\r\n110,119,3,15\r\n120,129,5,25\r\n130,133,7,35\r\n134,140,10,50\r\n");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "SubProfessionInfo.ini"), TestSubProfessionInfoIni());
+            File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "levexp.dat"),
+                ItemFiles.Encrypt(System.Text.Encoding.Latin1.GetBytes(TestLevExpTxt()), 0x4D2));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
                 (Blacksmith, new[] { Blade.Id, Glaive.Id }), (Pharmacist, new[] { Potion.Id })));
         }
+
+        private static string TestSubProfessionInfoIni()
+        {
+            var sb = new System.Text.StringBuilder();
+            var specs = new (int Id, string Title, uint Npc, int[] Effects)[]
+            {
+                (1, "Martial Artist", 7778, new[] { 1, 2, 3, 4, 6, 8, 10, 12, 15 }),
+                (2, "Warlock", 7779, new[] { 1, 2, 3, 4, 6, 8, 10, 12, 15 }),
+                (3, "Chi Master", 7781, new[] { 1, 2, 3, 4, 6, 8, 10, 12, 15 }),
+                (4, "Sage", 7780, new[] { 1, 2, 3, 4, 6, 8, 10, 12, 15 }),
+                (5, "Apothecary", 7777, new[] { 8, 16, 24, 32, 40, 48, 56, 64, 72 }),
+                (6, "Performer", 7776, new[] { 100, 200, 300, 400, 500, 600, 700, 800, 1000 }),
+                (9, "Wrangler", 8616, new[] { 100, 200, 300, 400, 500, 600, 800, 1000, 1200 }),
+            };
+            int[] reqLv = { 70, 90, 110, 120, 90, 110, 120, 120, 130 };
+            int[] reqMeto = { 0, 0, 0, 0, 1, 1, 1, 2, 2 };
+            foreach (var (id, title, npc, effects) in specs)
+            {
+                sb.AppendLine($"[{id}]");
+                sb.AppendLine($"title={title}");
+                sb.AppendLine("UplimitLev=9");
+                sb.AppendLine($"AccessionNpcID={npc}");
+                for (int p = 1; p <= 9; p++)
+                {
+                    sb.AppendLine($"[{id * 10 + p}]");
+                    sb.AppendLine($"title=P{p} {title}");
+                    sb.AppendLine($"req_lv={reqLv[p - 1]}");
+                    sb.AppendLine($"req_meto={reqMeto[p - 1]}");
+                    sb.AppendLine($"req_joblv={(p == 1 ? 0 : p)}");
+                    sb.AppendLine($"EffectProportion={effects[p - 1]}");
+                }
+            }
+            return sb.ToString();
+        }
+
+        private static string TestLevExpTxt() => string.Join("\r\n", new[]
+        {
+            "1 1 300 0 0", "1 2 900 0 0", "1 3 1800 0 0", "1 4 2700 0 0", "1 5 3600 0 0", "1 6 5100 0 0", "1 7 6900 0 0", "1 8 8700 0 0", "1 9 0 0 0",
+            "2 1 300 0 0", "2 2 900 0 0", "2 3 1800 0 0", "2 4 2700 0 0", "2 5 3600 0 0", "2 6 5100 0 0", "2 7 6900 0 0", "2 8 8700 0 0", "2 9 0 0 0",
+            "3 1 600 0 0", "3 2 1800 0 0", "3 3 3600 0 0", "3 4 5400 0 0", "3 5 7200 0 0", "3 6 10200 0 0", "3 7 13800 0 0", "3 8 17400 0 0", "3 9 0 0 0",
+            "4 1 400 0 0", "4 2 1200 0 0", "4 3 2400 0 0", "4 4 3600 0 0", "4 5 4800 0 0", "4 6 6800 0 0", "4 7 9200 0 0", "4 8 11600 0 0", "4 9 0 0 0",
+            "5 1 100 0 0", "5 2 200 0 0", "5 3 300 0 0", "5 4 400 0 0", "5 5 500 0 0", "5 6 1000 0 0", "5 7 4000 0 0", "5 8 9000 0 0", "5 9 0 0 0",
+            "6 1 400 0 0", "6 2 1200 0 0", "6 3 2400 0 0", "6 4 3600 0 0", "6 5 4800 0 0", "6 6 6800 0 0", "6 7 9200 0 0", "6 8 11600 0 0", "6 9 0 0 0",
+            "9 1 400 0 0", "9 2 1200 0 0", "9 3 2400 0 0", "9 4 3600 0 0", "9 5 4800 0 0", "9 6 6800 0 0", "9 7 9200 0 0", "9 8 11600 0 0", "9 9 0 0 0",
+        });
 
         private void WriteSpawns()
         {

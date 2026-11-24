@@ -15,6 +15,11 @@ namespace Comet.Game.Combat
         public int MagicPercent { get; init; }
         public int TortoisePercent { get; init; }
         public int BlessPercent { get; init; }
+        public int CriticalStrike { get; init; }
+        public int SkillCriticalStrike { get; init; }
+        public int Immunity { get; init; }
+        public int Penetration { get; init; }
+        public int Detoxication { get; init; }
 
         public int MinDamage => this.MinAttack * (100 + this.AttackPercent) / 100;
         public int MaxDamage => this.MaxAttack * (100 + this.AttackPercent) / 100;
@@ -75,6 +80,14 @@ namespace Comet.Game.Combat
             if (client.Transformation is { } transformed)
                 (min, max, defense, dodge) = (transformed.Type.AttackMin, transformed.Type.AttackMax,
                     transformed.Type.Defense, transformed.Type.Dodge);
+            var sub = client.SubClasses;
+            if (sub != null)
+            {
+                int attackBonus = sub.AttackBonus();
+                min += attackBonus;
+                max += attackBonus;
+                magicAttack += sub.MagicAttackBonus();
+            }
             dodge = Magic.Buffs.Dodge(client.Effects, dodge, DateTime.UtcNow);
             return new Stats(min, max, defense, dodge, range, speed, bow, magicAttack, magicDefense)
             {
@@ -82,6 +95,11 @@ namespace Comet.Game.Combat
                 MagicPercent = magicPercent,
                 TortoisePercent = Math.Min(Gems.MaxTortoisePercent, tortoise),
                 BlessPercent = Math.Min(100, bless),
+                CriticalStrike = sub?.CriticalStrikePercent() ?? 0,
+                SkillCriticalStrike = sub?.SkillCriticalStrikePercent() ?? 0,
+                Immunity = sub?.ImmunityPercent() ?? 0,
+                Penetration = sub?.PenetrationPercent() ?? 0,
+                Detoxication = sub?.DetoxicationPercent() ?? 0,
             };
         }
     }

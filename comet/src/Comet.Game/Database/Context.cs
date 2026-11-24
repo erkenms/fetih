@@ -29,6 +29,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbDetainedItem> DetainedItems { get; set; }
         public virtual DbSet<DbMentor> Mentors { get; set; }
         public virtual DbSet<DbMentorReward> MentorRewards { get; set; }
+        public virtual DbSet<DbSubClass> SubClasses { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -65,6 +66,7 @@ namespace Comet.Game.Database
             builder.Entity<DbDetainedItem>(e => e.HasKey(x => x.DetainID));
             builder.Entity<DbMentor>(e => e.HasKey(x => x.ApprenticeID));
             builder.Entity<DbMentorReward>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbSubClass>(e => e.HasKey(x => new { x.CharacterID, x.SubClassID }));
         }
 
         public static bool Ping()

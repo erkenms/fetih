@@ -62,6 +62,8 @@ namespace Comet.Game.Npcs
                 Scripts[conductor] = GuildWarNpc.ConductorAsync;
             foreach (var stone in GuildWarNpc.FlameStones.Keys)
                 Scripts[stone] = GuildWarNpc.FlameStoneAsync;
+            foreach (var master in SubClassMasters.AllIDs)
+                Scripts[master] = SubClassMasters.TalkAsync;
         }
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

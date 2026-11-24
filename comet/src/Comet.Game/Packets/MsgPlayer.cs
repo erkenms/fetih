@@ -40,12 +40,16 @@ namespace Comet.Game.Packets
         public bool Boss { get; set; }
         public ushort FirstClass { get; set; }
         public ushort SecondClass { get; set; }
+        public byte ActiveSubClass { get; set; }
+        public ulong AllSubProf { get; set; }
 
         public MsgPlayer(Client client) : this(client.Character, client.Equipment)
         {
             this.Mesh = client.Life.Mesh(client.Character);
             this.Status = client.Status;
             this.Away = client.Away;
+            this.ActiveSubClass = client.Character.ActiveSubClass;
+            this.AllSubProf = client.SubClasses?.AllSubProfMask() ?? 0;
             if (Social.Guilds.Of(client.ID) is Social.Guilds.Membership guild)
             {
                 this.GuildID = guild.Guild.ID;
@@ -174,9 +178,8 @@ namespace Comet.Game.Packets
             writer.Write(new byte[3]);              // 186
             writer.Write((byte)(this.Boss ? 1 : 0)); // 189
             writer.Write(new byte[16]);             // 190 helmet, armor, weapon art
-            writer.Write((byte)0);                  // 206 sub-profession
-            writer.Write(0u);                       // 207 sub-profession levels
-            writer.Write(0u);                       // 211
+            writer.Write(this.ActiveSubClass);      // 206 active sub-class
+            writer.Write(this.AllSubProf);          // 207 sub-class phases (base-10 packed u64)
             writer.Write(this.FirstClass);          // 215
             writer.Write(this.SecondClass);         // 217
             writer.Write(this.CurrentClass);        // 219
