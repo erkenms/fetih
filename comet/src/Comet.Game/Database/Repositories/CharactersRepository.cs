@@ -79,6 +79,7 @@ namespace Comet.Game.Database.Repositories
             await db.FamilyMembers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Arena.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Nobility.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Flowers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Characters.Where(x => x.Spouse == name).ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, none));
             await db.Characters.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await tx.CommitAsync();
