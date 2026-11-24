@@ -1461,6 +1461,9 @@ namespace Comet.Client
                     packet[o + 8] != 0));
             }
             return new DetainItemUpdateMessage(page, entries);
+        }
+    }
+
     public sealed record MeteSpecialMessage(int Profession, int Body)
     {
         public const int Success = 1, Dead = 2, NotMaxRank = 3, NotSecondReborn = 4, LevelLow = 5, NoItem = 6;

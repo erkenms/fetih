@@ -78,6 +78,12 @@ namespace Comet.Game.Database.Repositories
             await db.Characters
                 .Where(x => x.Spouse == oldName)
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, newName));
+            await db.DetainedItems
+                .Where(x => x.TargetID == characterID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.TargetName, newName));
+            await db.DetainedItems
+                .Where(x => x.HunterID == characterID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.HunterName, newName));
             await tx.CommitAsync();
         }
 
