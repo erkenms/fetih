@@ -71,6 +71,13 @@ namespace Comet.Game.Database.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Amount, amount));
         }
 
+        public static async Task SetStackAmountAsync(uint itemID, ushort stackAmount)
+        {
+            using var db = new ServerDbContext();
+            await db.Items.Where(x => x.ItemID == itemID)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.StackAmount, stackAmount));
+        }
+
         public static async Task SetAmountsAsync(IReadOnlyCollection<(uint ItemID, ushort Amount)> amounts)
         {
             if (amounts.Count == 0)

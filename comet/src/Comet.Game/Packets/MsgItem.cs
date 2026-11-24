@@ -141,6 +141,9 @@ namespace Comet.Game.Packets
                     Shopping.BuyAsync(client, msg.CharacterID, msg.Command, msg.Argument),
                 [ItemActionType.ShopSell] = (msg, client) => Shopping.SellAsync(client, msg.CharacterID, msg.Command),
 
+                // The split window: the stack in the ID field, how many leave it in Command
+                [ItemActionType.InventorySplit] = (msg, client) => Stacking.SplitAsync(client, msg.CharacterID, msg.Command),
+
                 // The item to repair, at a shopkeeper
                 [ItemActionType.EquipmentRepair] = (msg, client) => Durability.RepairAsync(client, msg.CharacterID),
                 [ItemActionType.EquipmentRepairAll] = (msg, client) => Durability.RepairAllAsync(client),
@@ -169,6 +172,8 @@ namespace Comet.Game.Packets
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);
 
+        // The 5619 client never sends 7, 8 or 25: splitting is 49, and it has no merge (new
+        // items go on stacks with room)
         public enum ItemActionType
         {
             ShopPurchase = 1,
@@ -201,6 +206,7 @@ namespace Comet.Game.Packets
             InventoryDrop = 37,
             DropSilver = 38,
             DisplayGears = 46,
+            InventorySplit = 49,
             EquipmentDegrade = 54,
         }
     }

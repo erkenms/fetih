@@ -91,6 +91,7 @@ CREATE TABLE `item` (
   `Position` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Amount` smallint(5) unsigned NOT NULL DEFAULT '0',
   `AmountLimit` smallint(5) unsigned NOT NULL DEFAULT '0',
+  `StackAmount` smallint(5) unsigned NOT NULL DEFAULT '1',
   `Gem1` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Gem2` tinyint(3) unsigned NOT NULL DEFAULT '0',
   `Plus` tinyint(3) unsigned NOT NULL DEFAULT '0',

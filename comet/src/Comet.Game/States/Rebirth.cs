@@ -67,7 +67,7 @@ namespace Comet.Game.States
             byte from = character.CurrentClass, level = character.Level;
             string reason = Unmet(client, life, newClass);
             var item = reason == null ? client.Inventory.Items.FirstOrDefault(i => i.TypeID == RequiredItem(life)) : null;
-            if (reason == null && (item == null || !client.Inventory.Remove(item)))
+            if (reason == null && (item == null || !client.Inventory.TakeOne(item)))
                 reason = "no_item";
             if (reason != null)
             {
@@ -76,8 +76,7 @@ namespace Comet.Game.States
                     character.Name, life, from, newClass, npc, reason);
                 return reason;
             }
-            await ItemsRepository.DeleteAsync(item.ItemID);
-            await client.SendAsync(MsgItem.Removed(item.ItemID));
+            await ItemActions.SaveTakenAsync(client, item);
 
             if (life == 1)
                 character.FirstLifeLevel = level;

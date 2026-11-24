@@ -446,7 +446,7 @@ namespace Comet.Client
 
     // Item ID, type, amount and its limit, then the action and position as ushorts
     // The sockets are the bytes at 24 and 25, the plus at 33, the enchantment at 36, Locked the
-    // byte at 46 and the plus progress the uint at 52
+    // byte at 46, the plus progress the uint at 52 and the stack amount the ushort at 64
     public sealed record ItemInfo(uint Id, uint TypeId, ushort Amount, ushort AmountLimit, ushort Action, ushort Position)
     {
         public bool Locked { get; init; }
@@ -455,6 +455,7 @@ namespace Comet.Client
         public byte Plus { get; init; }
         public byte Enchant { get; init; }
         public uint PlusProgress { get; init; }
+        public ushort StackAmount { get; init; }
 
         public static ItemInfo Parse(byte[] packet) => new ItemInfo(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
@@ -467,6 +468,7 @@ namespace Comet.Client
             Plus = packet.Length > 36 ? packet[33] : (byte)0,
             Enchant = packet.Length > 36 ? packet[36] : (byte)0,
             PlusProgress = packet.Length >= 56 ? BitConverter.ToUInt32(packet, 52) : 0,
+            StackAmount = packet.Length >= 66 ? BitConverter.ToUInt16(packet, 64) : (ushort)0,
         };
     }
 
@@ -602,7 +604,7 @@ namespace Comet.Client
     {
         public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
             StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Fireworks = 26, Ping = 27, Drop = 37,
-            DropSilver = 38, DisplayGears = 46;
+            DropSilver = 38, DisplayGears = 46, Split = 49;
 
         public const uint Repair = 14, RepairAll = 15, Enchant = 28,
             RedeemEquipment = 32, ClaimDetained = 33;

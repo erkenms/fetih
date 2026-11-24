@@ -85,9 +85,12 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   or MsgAction the server received (answer MsgData 3; a mismatch makes the client report).
   Reports come as MsgInteract 16/19/23/30/33/34/38 or MsgAction 127-150 with the cheat code in
   Data; the server logs them.
-- **Items** (2026-11-24): MsgItem 49 is the split dialog (`CDlgDevideItem`, item ID and
-  amount), splitting the stack count (`CItem::GetOverlay`), which the server doesn't model yet.
-  Nothing sends a merge. MsgItem 15 is the VIP (level 2+) whole-body repair.
+- **Items** (2026-11-24): MsgItem 49 is the split dialog (`CDlgDevideItem`, in the Windows
+  5619 exe too): the stack's ID, then how many leave it; the client wants a stack of 2+ and a
+  free slot. Nothing sends 7, 8, 25 or a merge; `CHero::IsPropFull` only asks whether a new item
+  would fit on a stack (itemtype field 47, `max_overlay`). Arrows' stack is their durability.
+  The count is a u16 at 64 in MsgItemInfo, 72 in MsgItemInfoEx, 44 in each MsgPackage entry
+  (Mac 1133). MsgItem 15 is the VIP (level 2+) whole-body repair.
 - **Black list** (2026-11-24): client-only (`CDlgBlack`, `BlackNameRecord` in the hero config,
   up to 50 names, chat dropped in `CMsgTalk::ProcessCheckedMsg`); no packet. MsgEnemyList 1041
   is the Enemy window asking for the list when opened.

@@ -241,6 +241,10 @@ namespace Comet.Client
         public Task RepairAsync(uint itemId) =>
             this.SendAsync(ItemMessage.Build(itemId, 0, ItemMessage.Repair));
 
+        // The stack in the ID field, how many leave it for a new stack in Command
+        public Task SplitAsync(uint itemId, uint amount) =>
+            this.SendAsync(ItemMessage.Build(itemId, amount, ItemMessage.Split));
+
         public Task RepairAllAsync() =>
             this.SendAsync(ItemMessage.Build(0, 0, ItemMessage.RepairAll));
 

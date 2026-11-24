@@ -11,7 +11,8 @@ namespace Comet.Game.Packets
 
     // Warehouse contents: NPC ID @4, action byte @8, kind byte
     // @9, capacity u32 @12, item ID @16, item count byte @20, then 52 bytes per item: ID @0,
-    // type @4, gems @9/10, plus @17, bless @18, enchant @20, locked @26, color @27.
+    // type @4, gems @9/10, plus @17, bless @18, enchant @20, locked @26, color @27, stack amount
+    // u16 @44.
     public sealed class MsgPackage : MsgBase<Client>
     {
         public const int ItemSize = 52;
@@ -71,6 +72,7 @@ namespace Comet.Game.Packets
                 entry[20] = item.Enchant;
                 entry[26] = (byte)(item.Locked ? 1 : 0);
                 entry[27] = item.Color;
+                BitConverter.TryWriteBytes(entry[44..], item.StackAmount);
             }
 
             var writer = new PacketWriter();

@@ -5,6 +5,7 @@ namespace Comet.Game.States
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.Packets;
 
     // A class is a line (tens; every taoist class from 100 is one line) and a rank (ones).
@@ -93,7 +94,7 @@ namespace Comet.Game.States
             string reason = Unmet(client, line, element);
             uint itemType = reason == null ? RequiredItem(from) : 0;
             var item = itemType == 0 ? null : client.Inventory.Items.FirstOrDefault(i => i.TypeID == itemType);
-            if (itemType != 0 && (item == null || !client.Inventory.Remove(item)))
+            if (itemType != 0 && (item == null || !client.Inventory.TakeOne(item)))
                 reason = "no_item";
             if (reason != null)
             {
@@ -104,10 +105,7 @@ namespace Comet.Game.States
             }
 
             if (item != null)
-            {
-                await ItemsRepository.DeleteAsync(item.ItemID);
-                await client.SendAsync(MsgItem.Removed(item.ItemID));
-            }
+                await ItemActions.SaveTakenAsync(client, item);
 
             byte to = Next(from, element).Value;
             await Progress.SetClassAsync(client, to);

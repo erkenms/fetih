@@ -408,13 +408,14 @@ namespace Comet.Game.Items
             return true;
         }
 
-        // The pack's own slot holds one of the items it yields
+        // The pack's own slot holds one of the items it yields, unless more packs stay on it
         private static async Task<bool> OpenPackAsync(Client client, DbItem pack, PackEntry[] entries)
         {
             int total = entries.Sum(e => e.Count);
-            if (client.Inventory.FreeSlots < total - 1)
+            int needed = pack.StackAmount > 1 ? total : total - 1;
+            if (client.Inventory.FreeSlots < needed)
             {
-                await Talk.NoticeAsync(client, $"You need {total - 1} free inventory slots for that.");
+                await Talk.NoticeAsync(client, $"You need {needed} free inventory slots for that.");
                 return Reject(client, pack.ItemID, pack.TypeID, "inventory_full");
             }
             var resolved = new List<(ItemType Type, int Count)>(entries.Length);
@@ -575,12 +576,7 @@ namespace Comet.Game.Items
             return true;
         }
 
-        private static async Task UseUpAsync(Client client, DbItem item)
-        {
-            client.Inventory.Remove(item);
-            await ItemsRepository.DeleteAsync(item.ItemID);
-            await client.SendAsync(MsgItem.Removed(item.ItemID));
-        }
+        private static Task UseUpAsync(Client client, DbItem item) => ItemActions.SpendOneAsync(client, item);
 
         private static bool Reject(Client client, uint itemID, uint typeID, string reason)
         {

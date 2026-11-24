@@ -44,6 +44,7 @@ namespace Comet.Game.Packets
             body[44] = this.Item.Enchant;
             // 53: suspicious
             body[56] = this.Item.Color;
+            BitConverter.TryWriteBytes(span[72..], this.Item.StackAmount);
 
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);

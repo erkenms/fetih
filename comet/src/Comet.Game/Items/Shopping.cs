@@ -27,7 +27,9 @@ namespace Comet.Game.Items
                 return Reject(client, "buy", npcID, typeID, "not_sold_here");
             if (shop.MoneyType != Shop.Silver)
                 return Reject(client, "buy", npcID, typeID, "not_for_silver");
-            if (amount > client.Inventory.FreeSlots)
+            ushort stackLimit = ItemActions.StackLimit(typeID);
+            if (amount > Inventory.Capacity * stackLimit ||
+                client.Inventory.SlotsFor(typeID, (int)amount, stackLimit) > client.Inventory.FreeSlots)
                 return Reject(client, "buy", npcID, typeID, "inventory_full");
             long cost = (long)type.Price * amount;
             if (cost > character.Silver)
@@ -65,15 +67,16 @@ namespace Comet.Game.Items
                 return Reject(client, "sell", npcID, item.TypeID, "inscribed");
             }
 
-            uint price = Kernel.ItemTypes.TryGet(item.TypeID, out var type) ? SellPrice(type.Price, item.Amount, item.AmountLimit) : 0;
-            if ((long)character.Silver + price > uint.MaxValue)
+            ulong price = Kernel.ItemTypes.TryGet(item.TypeID, out var type)
+                ? (ulong)SellPrice(type.Price, item.Amount, item.AmountLimit) * item.StackAmount : 0;
+            if (character.Silver + price > uint.MaxValue)
                 return Reject(client, "sell", npcID, item.TypeID, "too_much_silver");
 
             if (!client.Inventory.Remove(item))
                 return Reject(client, "sell", npcID, item.TypeID, "not_in_inventory");
             await ItemsRepository.DeleteAsync(item.ItemID);
             await client.SendAsync(MsgItem.Removed(item.ItemID));
-            await Progress.ChangeSilverAsync(client, price, "sell");
+            await Progress.ChangeSilverAsync(client, (long)price, "sell");
             LogEvents.For(typeof(Shopping), LogEvents.ItemSold).Information(
                 "{Name} sold item {ItemId} (type {TypeId}) to NPC {NpcId} for {Price} silver",
                 character.Name, item.ItemID, item.TypeID, npcID, price);

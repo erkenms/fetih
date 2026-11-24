@@ -39,6 +39,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperBlade = (410309, "SuperBlade", 1099, 0);
         // Their HP and MP, as in the 5619 client's itemtype.dat
         public static readonly (uint Id, string Name, ushort Life, ushort Mana) Potion = (1000000, "Stancher", 70, 0);
+        public const ushort PotionStack = 5;
         public static readonly (uint Id, string Name, ushort Life, ushort Mana) ManaPotion = (1001000, "Agrypnotic", 0, 70);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Beads = (610003, "WillowPrayerBeads", 1698, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
@@ -521,7 +522,8 @@ namespace Comet.Integration.Tests
                     {
                         [HeadgearRefinery.Id] = ("Headgear", "Level 1 Refinery item. Right click to refine a headgear."),
                         [BladeRefinery.Id] = ("1-Handed", "Level 1 Refinery item. Right click to refine a 1-Handed Weapon."),
-                    }));
+                    },
+                    new Dictionary<uint, ushort> { [Potion.Id] = PotionStack }));
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemQuench.ini"),
                 $"{HeadgearRefinery.Id}\r\n{BladeRefinery.Id}\r\n\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemQuenchTipInfo.ini"),

@@ -7,6 +7,7 @@ namespace Comet.Game.States
     using Comet.Core.Logging;
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.Packets;
     using Comet.Game.World;
 
@@ -124,8 +125,7 @@ namespace Comet.Game.States
             var itemReq = SubClassTable.LearnItemOf(id);
             if (itemReq != null)
             {
-                int owned = client.Inventory.Items.Count(i => i.TypeID == itemReq.ItemTypeId);
-                if (owned < itemReq.Count)
+                if (client.Inventory.CountOf(itemReq.ItemTypeId) < itemReq.Count)
                     return "no_item";
             }
             return null;
@@ -143,25 +143,8 @@ namespace Comet.Game.States
             }
 
             var itemReq = SubClassTable.LearnItemOf(id);
-            if (itemReq != null)
-            {
-                var toSpend = client.Inventory.Items
-                    .Where(i => i.TypeID == itemReq.ItemTypeId)
-                    .Take(itemReq.Count)
-                    .ToList();
-                if (toSpend.Count < itemReq.Count)
-                    return "no_item";
-                foreach (var item in toSpend)
-                {
-                    if (!client.Inventory.Remove(item))
-                        return "no_item";
-                }
-                foreach (var item in toSpend)
-                {
-                    await ItemsRepository.DeleteAsync(item.ItemID);
-                    await client.SendAsync(MsgItem.Removed(item.ItemID));
-                }
-            }
+            if (itemReq != null && !await ItemActions.TakeAsync(client, itemReq.ItemTypeId, itemReq.Count, $"sub-class {id}"))
+                return "no_item";
 
             client.SubClasses.Set(id, level: 1, phase: 1);
             await SubClassesRepository.SaveAsync(new DbSubClass

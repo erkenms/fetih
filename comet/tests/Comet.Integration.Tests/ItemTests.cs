@@ -35,8 +35,8 @@ namespace Comet.Integration.Tests
         {
             var (player, email) = await this.PlayingAtAsync(1002, 640, 540, GameMaster);
             await using var _ = player;
-            await CommandAsync(player, $"/item {ServerFixture.Potion.Id} 39");
-            await CommandAsync(player, $"/item {ServerFixture.Potion.Id} 2");
+            await CommandAsync(player, $"/item {ServerFixture.Blade.Id} 39");
+            await CommandAsync(player, $"/item {ServerFixture.Blade.Id} 2");
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("inventory is full")));
 
             var count = await this.Servers.QueryGameScalarAsync(

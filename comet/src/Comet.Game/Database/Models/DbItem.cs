@@ -12,6 +12,10 @@ namespace Comet.Game.Database.Models
         public byte Position { get; set; }
         public ushort Amount { get; set; }
         public ushort AmountLimit { get; set; }
+
+        // How many of the type the slot holds, up to its itemtype stack limit
+        public ushort StackAmount { get; set; } = 1;
+
         public byte Gem1 { get; set; }
         public byte Gem2 { get; set; }
         public byte Plus { get; set; }

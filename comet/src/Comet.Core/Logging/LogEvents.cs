@@ -103,6 +103,8 @@ namespace Comet.Core.Logging
         public const string ItemRepaired = "item.repaired";
         public const string ItemRepairRejected = "item.repair_rejected";
         public const string ItemSpent = "item.spent";
+        public const string ItemSplit = "item.split";
+        public const string ItemSplitRejected = "item.split_rejected";
         public const string ItemEnchanted = "item.enchanted";
         public const string ItemEnchantRejected = "item.enchant_rejected";
         public const string ItemComposed = "item.composed";
