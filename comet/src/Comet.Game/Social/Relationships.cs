@@ -15,6 +15,7 @@ namespace Comet.Game.Social
     public static class Relationships
     {
         public const int MaxFriends = 50;
+        public const int MaxEnemies = 5;
 
         private static readonly SemaphoreSlim Gate = new SemaphoreSlim(1, 1);
 
@@ -170,6 +171,27 @@ namespace Comet.Game.Social
             LogEvents.For(typeof(Relationships), LogEvents.FriendRemoved).Information(
                 "{Name} ended the friendship with {Friend} (characters {CharacterId} and {FriendId})",
                 client.Character.Name, name, client.ID, friendID);
+        }
+
+        public static async Task AddEnemyAsync(Client victim, Client killer)
+        {
+            var victimCharacter = victim?.Character;
+            var killerCharacter = killer?.Character;
+            if (victimCharacter == null || killerCharacter == null || victim == killer)
+                return;
+            await Gate.WaitAsync();
+            try
+            {
+                if (victim.Enemies.ContainsKey(killer.ID) || victim.Enemies.Count >= MaxEnemies)
+                    return;
+                await RelationshipsRepository.AddEnemyAsync(victim.ID, killer.ID);
+                victim.Enemies[killer.ID] = (killerCharacter.Name, killerCharacter.Mesh);
+                await victim.SendAsync(new MsgFriend(FriendAction.EnemyAdd, killer.ID, killerCharacter.Name, true));
+                LogEvents.For(typeof(Relationships), LogEvents.EnemyAdded).Information(
+                    "{Name} added {Enemy} to their enemies (characters {CharacterId} and {EnemyId})",
+                    victimCharacter.Name, killerCharacter.Name, victim.ID, killer.ID);
+            }
+            finally { Gate.Release(); }
         }
 
         private static async Task DeleteEnemyAsync(Client client, uint enemyID)

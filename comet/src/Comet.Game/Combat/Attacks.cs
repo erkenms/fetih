@@ -447,7 +447,10 @@ namespace Comet.Game.Combat
             bool guilty = Pking.IsGuilty(target, DateTime.UtcNow);
             await Death.DieAsync(target, attacker.ID, attackerCharacter.Name);
             if (!await Arena.Qualifier.OnKillAsync(attacker, target))
+            {
                 await Pking.OnKillAsync(attacker, target, guilty);
+                await Social.Relationships.AddEnemyAsync(target, attacker);
+            }
         }
 
         // What's left of the damage after the player's Azure Shield, which may end; during

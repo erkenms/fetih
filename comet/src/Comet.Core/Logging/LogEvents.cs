@@ -124,6 +124,7 @@ namespace Comet.Core.Logging
         public const string FriendAdded = "friend.added";
         public const string FriendRemoved = "friend.removed";
         public const string FriendRejected = "friend.rejected";
+        public const string EnemyAdded = "enemy.added";
         public const string EnemyRemoved = "enemy.removed";
 
         public const string TradePartnerRequested = "trade_partner.requested";

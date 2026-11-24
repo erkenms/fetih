@@ -38,6 +38,13 @@ namespace Comet.Game.Database.Repositories
                 f.CharacterID == friendID && f.FriendID == characterID).ExecuteDeleteAsync();
         }
 
+        public static async Task AddEnemyAsync(uint characterID, uint enemyID)
+        {
+            using var db = new ServerDbContext();
+            db.Enemies.Add(new DbEnemy { CharacterID = characterID, EnemyID = enemyID });
+            await db.SaveChangesAsync();
+        }
+
         public static async Task RemoveEnemyAsync(uint characterID, uint enemyID)
         {
             using var db = new ServerDbContext();
