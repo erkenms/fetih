@@ -1,0 +1,187 @@
+{
+  "nav": {
+    "rankings": "Rankings",
+    "news": "News",
+    "download": "Download"
+  },
+  "home": {
+    "title": "fetih",
+    "subtitle": "Classic 5619 Conquer Online server",
+    "online": "{{count}} online",
+    "offline": "Server offline",
+    "guildWar": "Guild War",
+    "holder": "Pole holder: {{name}}",
+    "winner": "Last winner: {{name}}",
+    "noGuildWar": "No guild currently holds the pole.",
+    "browseRankings": "Browse rankings",
+    "downloadClient": "Download client",
+    "viewAll": "View all",
+    "topPlayers": "Top Players",
+    "topNobility": "Top Nobility",
+    "topGuilds": "Top Guilds",
+    "arenaLeaders": "Arena Leaders",
+    "latestNews": "Latest Updates",
+    "noData": "No entries yet."
+  },
+  "rankings": {
+    "title": "Rankings",
+    "subtitle": "Server leaderboards, refreshed every minute.",
+    "tabs": {
+      "level": "Level",
+      "nobility": "Nobility",
+      "guilds": "Guilds",
+      "arena": "Arena",
+      "flowers": "Flowers",
+      "pk": "PK Points",
+      "families": "Families"
+    },
+    "filters": {
+      "class": "Class",
+      "allClasses": "All classes",
+      "guildSort": "Sort by",
+      "sortFund": "Silver fund",
+      "sortMembers": "Members",
+      "arenaKind": "Mode",
+      "arenaPoints": "Current points",
+      "arenaHonor": "Current honor",
+      "arenaSeason": "Past seasons",
+      "season": "Season",
+      "flowerKind": "Flower type",
+      "redRose": "Red Roses",
+      "lily": "Lilies",
+      "orchid": "Orchids",
+      "tulip": "Tulips",
+      "totalFlowers": "Total"
+    },
+    "columns": {
+      "rank": "#",
+      "player": "Player",
+      "level": "Level",
+      "rebirths": "Rebirths",
+      "class": "Class",
+      "guild": "Guild",
+      "nobilityRank": "Title",
+      "donation": "Donation",
+      "leader": "Leader",
+      "members": "Members",
+      "fund": "Silver fund",
+      "cpFund": "CP fund",
+      "points": "Points",
+      "honor": "Honor",
+      "record": "W / L",
+      "amount": "Amount",
+      "pkPoints": "PK Points",
+      "family": "Family",
+      "occupiedMaps": "Maps"
+    },
+    "badges": {
+      "holder": "Pole Holder",
+      "winner": "GW Winner"
+    },
+    "empty": "No entries found.",
+    "total": "{{count}} total"
+  },
+  "character": {
+    "title": "Character Profile",
+    "notFound": "Character not found.",
+    "level": "Level {{level}}",
+    "rebirths": "{{count}} Rebirths",
+    "class": "Class",
+    "lineage": "Previous / Ancestor",
+    "spouse": "Spouse",
+    "registered": "Created",
+    "guild": "Guild",
+    "family": "Family",
+    "nobility": "Nobility",
+    "nobilityPlace": "#{{place}} on board",
+    "pkPoints": "PK Points",
+    "virtue": "Virtue",
+    "quizPoints": "Quiz Points",
+    "arena": "Arena",
+    "arenaPoints": "Points",
+    "arenaHonor": "Total Honor",
+    "arenaRecord": "Wins / Losses",
+    "flowers": "Flowers",
+    "subclasses": "Subclasses",
+    "phase": "Phase {{phase}}",
+    "active": "Active",
+    "none": "None"
+  },
+  "guild": {
+    "title": "Guild Profile",
+    "notFound": "Guild not found.",
+    "level": "Level {{level}}",
+    "leader": "Leader",
+    "fund": "Silver Fund",
+    "cpFund": "CP Fund",
+    "created": "Founded",
+    "announcement": "Announcement",
+    "allies": "Allies",
+    "enemies": "Enemies",
+    "noRelations": "None",
+    "members": "Members ({{count}})",
+    "rank": "Rank",
+    "joined": "Joined"
+  },
+  "news": {
+    "title": "Server Updates",
+    "subtitle": "Recent changes from the repository history.",
+    "empty": "No updates found."
+  },
+  "download": {
+    "title": "Download Client",
+    "subtitle": "Get the 5619 game client to join fetih.",
+    "version": "Client version: {{version}}",
+    "downloadButton": "Download client",
+    "unavailable": "Direct download link is not configured yet. Build locally with dotnet run client/build.cs.",
+    "stepsTitle": "Getting started",
+    "steps": {
+      "register": "Create an account on the site.",
+      "extract": "Download and extract the client archive.",
+      "launch": "Launch Conquer.exe and log in with your email and password."
+    }
+  },
+  "classes": {
+    "trojan": "Trojan",
+    "warrior": "Warrior",
+    "archer": "Archer",
+    "ninja": "Ninja",
+    "monk": "Monk",
+    "pirate": "Pirate",
+    "taoist": "Taoist",
+    "waterTaoist": "Water Taoist",
+    "fireTaoist": "Fire Taoist",
+    "unknown": "Unknown"
+  },
+  "nobilityRanks": {
+    "King": "King",
+    "Prince": "Prince",
+    "Duke": "Duke",
+    "Earl": "Earl",
+    "Baron": "Baron",
+    "Knight": "Knight",
+    "Commoner": "Commoner"
+  },
+  "guildRanks": {
+    "leader": "Guild Leader",
+    "deputyLeader": "Deputy Leader",
+    "member": "Member",
+    "none": "None"
+  },
+  "clanRanks": {
+    "leader": "Clan Leader",
+    "spouse": "Spouse",
+    "member": "Member",
+    "none": "None"
+  },
+  "subClasses": {
+    "martialArtist": "Martial Artist",
+    "warlock": "Warlock",
+    "chiMaster": "Chi Master",
+    "sage": "Sage",
+    "apothecary": "Apothecary",
+    "performer": "Performer",
+    "wrangler": "Wrangler",
+    "unknown": "Unknown"
+  }
+}

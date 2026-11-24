@@ -324,12 +324,284 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/home": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicHome"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLevelRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/nobility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getNobilityRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/guilds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGuildRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/arena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getArenaRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/arena/seasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getArenaSeasons"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/arena/seasons/{season}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getArenaSeasonRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/flowers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFlowerRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/pk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPkRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/rankings/families": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getFamilyRanking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/characters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicCharacter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/guilds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicGuild"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/news": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicNews"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDownloadInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ApiError: {
             error: string;
+        };
+        ArenaRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            honorTotal: number;
+            /** Format: uint32 */
+            winsToday: number;
+            /** Format: uint32 */
+            lossesToday: number;
+            /** Format: uint32 */
+            winsTotal: number;
+            /** Format: uint32 */
+            lossesTotal: number;
+        };
+        ArenaSeasonInfo: {
+            /** Format: uint32 */
+            season: number;
+            /** Format: int32 */
+            entries: number;
+        };
+        ArenaSeasonRankEntry: {
+            /** Format: uint32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            wins: number;
+            /** Format: uint32 */
+            losses: number;
         };
         AuditEntry: {
             /** Format: uint64 */
@@ -423,6 +695,10 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        DownloadInfoResponse: {
+            url: null | string;
+            version: string;
+        };
         FaceEntry: {
             /** Format: uint32 */
             id: number;
@@ -431,6 +707,77 @@ export interface components {
         FacesCatalogResponse: {
             npc: components["schemas"]["FaceEntry"][];
             player: components["schemas"]["FaceEntry"][];
+        };
+        FamilyRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            familyId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            leaderId: number;
+            leaderName: null | string;
+            /** Format: int32 */
+            memberCount: number;
+            /** Format: uint64 */
+            fund: number;
+            /** Format: int32 */
+            occupiedMaps: number;
+        };
+        FlowerRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint32 */
+            amount: number;
+            /** Format: uint32 */
+            redRoses: number;
+            /** Format: uint32 */
+            lilies: number;
+            /** Format: uint32 */
+            orchids: number;
+            /** Format: uint32 */
+            tulips: number;
+        };
+        GuildRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            guildId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            leaderId: number;
+            leaderName: null | string;
+            /** Format: int32 */
+            memberCount: number;
+            /** Format: uint64 */
+            fund: number;
+            /** Format: uint32 */
+            conquerPointsFund: number;
+            isGuildWarHolder: boolean;
+            isGuildWarWinner: boolean;
+        };
+        GuildWarSummary: {
+            /** Format: uint32 */
+            holderGuildId: null | number;
+            holderGuildName: null | string;
+            /** Format: uint32 */
+            winnerGuildId: null | number;
+            winnerGuildName: null | string;
+            /** Format: date-time */
+            wonAt: null | string;
         };
         HealthResponse: {
             gameDatabase: boolean;
@@ -448,6 +795,24 @@ export interface components {
             /** Format: int32 */
             total: number;
             assetsAvailable: boolean;
+        };
+        LevelRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint32 */
+            guildId: null | number;
+            guildName: null | string;
         };
         LoginHistoryEntry: {
             /** Format: date-time */
@@ -576,8 +941,57 @@ export interface components {
             /** Format: date-time */
             registered: string;
         };
+        NewsEntry: {
+            hash: string;
+            shortHash: string;
+            /** Format: date-time */
+            date: string;
+            subject: string;
+            body: null | string;
+        };
+        NewsPage: {
+            items: components["schemas"]["NewsEntry"][];
+            /** Format: int32 */
+            total: number;
+        };
+        NobilityRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            nobilityRank: string;
+            /** Format: uint64 */
+            donation: number;
+        };
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
+        PkRankEntry: {
+            /** Format: int32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint16 */
+            pkPoints: number;
+            /** Format: uint32 */
+            guildId: null | number;
+            guildName: null | string;
+        };
         PublicAccountConfigResponse: {
             captchaEnabled: boolean;
             captchaProvider: null | string;
@@ -588,6 +1002,231 @@ export interface components {
             maxPasswordLength: number;
             /** Format: int32 */
             maxUsernameLength: number;
+        };
+        PublicCharacterArena: {
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            honorTotal: number;
+            /** Format: uint32 */
+            winsTotal: number;
+            /** Format: uint32 */
+            lossesTotal: number;
+        };
+        PublicCharacterFamily: {
+            /** Format: uint32 */
+            familyId: number;
+            name: string;
+            /** Format: uint16 */
+            rank: number;
+        };
+        PublicCharacterFlowers: {
+            /** Format: uint32 */
+            redRoses: number;
+            /** Format: uint32 */
+            lilies: number;
+            /** Format: uint32 */
+            orchids: number;
+            /** Format: uint32 */
+            tulips: number;
+        };
+        PublicCharacterGuild: {
+            /** Format: uint32 */
+            guildId: number;
+            name: string;
+            /** Format: uint16 */
+            rank: number;
+        };
+        PublicCharacterNobility: {
+            rank: string;
+            /** Format: int32 */
+            position: null | number;
+            /** Format: uint64 */
+            donation: number;
+        };
+        PublicCharacterResponse: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint32 */
+            mesh: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint8 */
+            previousClass: number;
+            /** Format: uint8 */
+            ancestorClass: number;
+            spouse: null | string;
+            /** Format: uint16 */
+            pkPoints: number;
+            /** Format: uint32 */
+            virtue: number;
+            /** Format: uint32 */
+            quizPoints: number;
+            /** Format: date-time */
+            registered: string;
+            guild: null | components["schemas"]["PublicCharacterGuild"];
+            family: null | components["schemas"]["PublicCharacterFamily"];
+            nobility: null | components["schemas"]["PublicCharacterNobility"];
+            flowers: null | components["schemas"]["PublicCharacterFlowers"];
+            arena: null | components["schemas"]["PublicCharacterArena"];
+            subClasses: components["schemas"]["PublicCharacterSubClass"][];
+        };
+        PublicCharacterSubClass: {
+            /** Format: uint8 */
+            subClassId: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            phase: number;
+            active: boolean;
+        };
+        PublicGuildMember: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint16 */
+            avatar: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint16 */
+            rank: number;
+            /** Format: uint32 */
+            joined: number;
+        };
+        PublicGuildRelation: {
+            /** Format: uint32 */
+            guildId: number;
+            name: string;
+        };
+        PublicGuildResponse: {
+            /** Format: uint32 */
+            guildId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            leaderId: number;
+            leaderName: null | string;
+            announcement: null | string;
+            /** Format: uint64 */
+            fund: number;
+            /** Format: uint32 */
+            conquerPointsFund: number;
+            /** Format: uint32 */
+            created: number;
+            isGuildWarHolder: boolean;
+            isGuildWarWinner: boolean;
+            allies: components["schemas"]["PublicGuildRelation"][];
+            enemies: components["schemas"]["PublicGuildRelation"][];
+            members: components["schemas"]["PublicGuildMember"][];
+        };
+        PublicHomeResponse: {
+            gameOnline: boolean;
+            /** Format: int32 */
+            onlinePlayers: null | number;
+            guildWar: null | components["schemas"]["GuildWarSummary"];
+            topPlayers: components["schemas"]["LevelRankEntry"][];
+            topNobility: components["schemas"]["NobilityRankEntry"][];
+            topGuilds: components["schemas"]["GuildRankEntry"][];
+            topArena: components["schemas"]["ArenaRankEntry"][];
+            latestNews: components["schemas"]["NewsEntry"][];
+        };
+        RankingPageOfArenaRankEntry: {
+            items: components["schemas"]["ArenaRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfArenaSeasonRankEntry: {
+            items: components["schemas"]["ArenaSeasonRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfFamilyRankEntry: {
+            items: components["schemas"]["FamilyRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfFlowerRankEntry: {
+            items: components["schemas"]["FlowerRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfGuildRankEntry: {
+            items: components["schemas"]["GuildRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfLevelRankEntry: {
+            items: components["schemas"]["LevelRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfNobilityRankEntry: {
+            items: components["schemas"]["NobilityRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
+        };
+        RankingPageOfPkRankEntry: {
+            items: components["schemas"]["PkRankEntry"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            /** Format: date-time */
+            cachedAt: string;
         };
         RegisterRequest: {
             username: string;
@@ -1239,6 +1878,341 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getPublicHome: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicHomeResponse"];
+                };
+            };
+        };
+    };
+    getLevelRanking: {
+        parameters: {
+            query?: {
+                baseClass?: number;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfLevelRankEntry"];
+                };
+            };
+        };
+    };
+    getNobilityRanking: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfNobilityRankEntry"];
+                };
+            };
+        };
+    };
+    getGuildRanking: {
+        parameters: {
+            query?: {
+                sort?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfGuildRankEntry"];
+                };
+            };
+        };
+    };
+    getArenaRanking: {
+        parameters: {
+            query?: {
+                kind?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfArenaRankEntry"];
+                };
+            };
+        };
+    };
+    getArenaSeasons: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArenaSeasonInfo"][];
+                };
+            };
+        };
+    };
+    getArenaSeasonRanking: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path: {
+                season: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfArenaSeasonRankEntry"];
+                };
+            };
+        };
+    };
+    getFlowerRanking: {
+        parameters: {
+            query?: {
+                kind?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfFlowerRankEntry"];
+                };
+            };
+        };
+    };
+    getPkRanking: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfPkRankEntry"];
+                };
+            };
+        };
+    };
+    getFamilyRanking: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RankingPageOfFamilyRankEntry"];
+                };
+            };
+        };
+    };
+    getPublicCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicCharacterResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getPublicGuild: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicGuildResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getPublicNews: {
+        parameters: {
+            query?: {
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewsPage"];
+                };
+            };
+        };
+    };
+    getDownloadInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DownloadInfoResponse"];
                 };
             };
         };

@@ -9,5 +9,6 @@ public static class FeatureRegistry
         new Items.ItemsFeature(),
         new Catalogs.CatalogsFeature(),
         new PublicAccount.PublicAccountFeature(),
+        new PublicSite.PublicSiteFeature(),
     ];
 }

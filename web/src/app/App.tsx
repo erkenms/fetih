@@ -45,6 +45,8 @@ function toRoute(feature: FeatureRoute): RouteObject {
   }
 }
 
+const publicHomeRoute = featureRoutes.find((r) => r.area === 'public' && r.path === '')
+
 const router = createBrowserRouter([
   {
     path: '/admin',
@@ -63,9 +65,9 @@ const router = createBrowserRouter([
     path: '/',
     element: <PublicLayout />,
     children: [
-      { index: true, element: <PublicHome /> },
+      { index: true, element: publicHomeRoute ? toRoute(publicHomeRoute).element : <PublicHome /> },
       { path: 'login', element: <LoginPage /> },
-      ...featureRoutes.filter((r) => r.area === 'public').map(toRoute),
+      ...featureRoutes.filter((r) => r.area === 'public' && r.path !== '').map(toRoute),
       { path: '*', element: <NotFound /> },
     ],
   },
