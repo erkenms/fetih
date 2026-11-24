@@ -166,6 +166,10 @@ namespace Comet.Core.Logging
         public const string PkKill = "pk.kill";
         public const string PkJailed = "pk.jailed";
         public const string PkReleased = "pk.released";
+        public const string PkDetained = "pk.detained";
+        public const string PkRedeemed = "pk.redeemed";
+        public const string PkClaimed = "pk.claimed";
+        public const string PkDetainRejected = "pk.detain_rejected";
 
         public const string MapIndexLoaded = "map.index_loaded";
         public const string MapLoaded = "map.loaded";

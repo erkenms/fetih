@@ -26,6 +26,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbFlower> Flowers { get; set; }
         public virtual DbSet<DbGuildWar> GuildWar { get; set; }
         public virtual DbSet<DbMessageBoard> MessageBoard { get; set; }
+        public virtual DbSet<DbDetainedItem> DetainedItems { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -59,6 +60,7 @@ namespace Comet.Game.Database
             builder.Entity<DbFlower>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbGuildWar>(e => e.HasKey(x => x.ID));
             builder.Entity<DbMessageBoard>(e => e.HasKey(x => new { x.Channel, x.CharacterID }));
+            builder.Entity<DbDetainedItem>(e => e.HasKey(x => x.DetainID));
         }
 
         public static bool Ping()

@@ -76,6 +76,7 @@ namespace Comet.Game.Items
         // The riding crop
         Crop = 18,
         Warehouse = 230,
+        Detained = 250,
         Ground = 254,
     }
 }

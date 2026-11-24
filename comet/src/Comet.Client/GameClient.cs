@@ -842,6 +842,31 @@ namespace Comet.Client
         public Task EmoteAsync(uint characterId, uint stance, int direction) =>
             this.SendAsync(ActionMessage.Build(characterId, ActionMessage.Emote, command: stance, direction: direction));
 
+        public Task QueryDetainedAsync(uint characterId, uint page) =>
+            this.SendAsync(ActionMessage.Build(characterId, ActionMessage.DetainQuery, command: page));
+
+        public Task RedeemDetainedAsync(uint detainId) =>
+            this.SendAsync(ItemMessage.Build(detainId, 0, ItemMessage.RedeemEquipment));
+
+        public Task ClaimDetainedAsync(uint detainId) =>
+            this.SendAsync(ItemMessage.Build(detainId, 0, ItemMessage.ClaimDetained));
+
+        public async Task<DetainItemInfoMessage> WaitForDetainItemInfoAsync(
+            Func<DetainItemInfoMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgDetainItemInfo && match(DetainItemInfoMessage.Parse(p)), timeout);
+            return packet == null ? null : DetainItemInfoMessage.Parse(packet);
+        }
+
+        public async Task<DetainItemUpdateMessage> WaitForDetainItemUpdateAsync(
+            Func<DetainItemUpdateMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgDetainItemUpdate && match(DetainItemUpdateMessage.Parse(p)), timeout);
+            return packet == null ? null : DetainItemUpdateMessage.Parse(packet);
+        }
+
         private async Task<byte[]> TryReceiveAsync(Func<byte[], bool> match, TimeSpan? timeout)
         {
             try { return await this.ReceiveAsync(match, timeout); }

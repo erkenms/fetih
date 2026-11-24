@@ -160,6 +160,10 @@ namespace Comet.Game.Packets
                 [ItemActionType.BoothRemove] = (msg, client) => Vending.UnlistAsync(client, msg),
                 [ItemActionType.BoothQuery] = (msg, client) => Vending.ShowAsync(client, msg.CharacterID),
                 [ItemActionType.BoothPurchase] = (msg, client) => Vending.BuyAsync(client, msg),
+
+                // Detained equipment: redeem for CPs (32) or claim ransom/expired gear (33), detain ID in CharacterID
+                [ItemActionType.RedeemEquipment] = (msg, client) => Pk.Detaining.RedeemAsync(client, msg.CharacterID),
+                [ItemActionType.ClaimDetained] = (msg, client) => Pk.Detaining.ClaimAsync(client, msg.CharacterID),
             };
 
         public static bool Handles(ItemActionType action) => Handlers.ContainsKey(action);
@@ -191,6 +195,8 @@ namespace Comet.Game.Packets
             ClientPing = 27,
             EquipmentEnchant,
             BoothSellPoints,
+            RedeemEquipment = 32,
+            ClaimDetained = 33,
             InventoryDrop = 37,
             DropSilver = 38,
             DisplayGears = 46,

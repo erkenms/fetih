@@ -20,6 +20,8 @@ namespace Comet.Network.Packets
         MsgFuse,
         MsgTeamAward,
         MsgData = 1033,
+        MsgDetainItemInfo = 1034,
+        MsgDetainItemUpdate = 1035,
         MsgGodExp = 1036,
         MsgPing,
         MsgPlayerAttribInfo = 1040,

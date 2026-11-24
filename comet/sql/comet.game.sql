@@ -309,6 +309,26 @@ CREATE TABLE `message_board` (
   KEY `Channel_Syndicate_Posted` (`Channel`,`SyndicateID`,`PostedAt`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Worn equipment detained from red- and black-name players on PK death.
+-- Redeemed = 0: item is held at position 250 until TargetID redeems it for Cost CPs within
+-- 7 days, or HunterID claims the item after expiry.
+-- Redeemed = 1: TargetID redeemed the item; HunterID can claim Cost CPs.
+DROP TABLE IF EXISTS `detained_item`;
+CREATE TABLE `detained_item` (
+  `DetainID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ItemID` int(10) unsigned NOT NULL DEFAULT '0',
+  `TargetID` int(10) unsigned NOT NULL,
+  `TargetName` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `HunterID` int(10) unsigned NOT NULL,
+  `HunterName` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `Cost` int(10) unsigned NOT NULL DEFAULT '0',
+  `DetainedAt` datetime NOT NULL,
+  `Redeemed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`DetainID`),
+  KEY `TargetID_IDX` (`TargetID`),
+  KEY `HunterID_IDX` (`HunterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

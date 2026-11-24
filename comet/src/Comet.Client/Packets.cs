@@ -18,6 +18,8 @@ namespace Comet.Client
         public const ushort MsgTeam = 1023;
         public const ushort MsgTeamMember = 1026;
         public const ushort MsgData = 1033;
+        public const ushort MsgDetainItemInfo = 1034;
+        public const ushort MsgDetainItemUpdate = 1035;
         public const ushort MsgGemEmbed = 1027;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
@@ -337,9 +339,11 @@ namespace Comet.Client
         public const ushort CharacterAway = 161;
         public const ushort ClientCommand = 116, Observe = 117;
         public const ushort PartnerInfo = 152;
+        public const ushort DetainQuery = 153;
         public const ushort ChangeAvatar = 151;
         public const ushort CreateBooth = 111, CloseBooth = 114;
-        public const uint WarehouseWindow = 4, ComposeWindow = 2, EnchantWindow = 1091;
+        public const uint WarehouseWindow = 4, ComposeWindow = 2, EnchantWindow = 1091,
+            DetainRedeemWindow = 336, DetainClaimWindow = 337;
         public const ushort Mine = 99;
         public const ushort SpellAbortXp = 93;
         public const ushort CharacterDelete = 95;
@@ -583,7 +587,8 @@ namespace Comet.Client
             StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Fireworks = 26, Ping = 27, Drop = 37,
             DropSilver = 38, DisplayGears = 46;
 
-        public const uint Repair = 14, RepairAll = 15, Enchant = 28;
+        public const uint Repair = 14, RepairAll = 15, Enchant = 28,
+            RedeemEquipment = 32, ClaimDetained = 33;
 
         // Booths: viewing has the booth's ID first; adding has the item and its price,
         // removing and buying the item and the booth's ID
@@ -1406,6 +1411,54 @@ namespace Comet.Client
             msg[10] = (byte)bytes.Length;
             bytes.CopyTo(msg, 11);
             return msg;
+        }
+    }
+
+    public sealed record DetainItemInfoMessage(
+        uint DetainId, uint ItemId, uint TypeId, byte Mode, uint TargetId, string TargetName,
+        uint HunterId, string HunterName, int Ransom, uint Cost, uint Days)
+    {
+        public const byte DetainPage = 0, ClaimPage = 1, ReadyToClaim = 2;
+
+        public static DetainItemInfoMessage Parse(byte[] packet) => new DetainItemInfoMessage(
+            BitConverter.ToUInt32(packet, 4),
+            BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12),
+            packet[20],
+            BitConverter.ToUInt32(packet, 56),
+            ReadNullTerminated(packet, 60, 16),
+            BitConverter.ToUInt32(packet, 76),
+            ReadNullTerminated(packet, 80, 16),
+            BitConverter.ToInt32(packet, 100),
+            BitConverter.ToUInt32(packet, 104),
+            BitConverter.ToUInt32(packet, 108));
+
+        private static string ReadNullTerminated(byte[] packet, int offset, int max)
+        {
+            int end = Array.IndexOf(packet, (byte)0, offset, max);
+            int len = end < 0 ? max : end - offset;
+            return Encoding.ASCII.GetString(packet, offset, len);
+        }
+    }
+
+    public sealed record DetainItemUpdateEntry(uint DetainId, uint Days, bool Keep);
+
+    public sealed record DetainItemUpdateMessage(uint Page, List<DetainItemUpdateEntry> Entries)
+    {
+        public static DetainItemUpdateMessage Parse(byte[] packet)
+        {
+            uint page = BitConverter.ToUInt32(packet, 4);
+            int count = BitConverter.ToInt32(packet, 8);
+            var entries = new List<DetainItemUpdateEntry>(count);
+            for (int i = 0; i < count && 12 + (i + 1) * 12 <= packet.Length; i++)
+            {
+                int o = 12 + i * 12;
+                entries.Add(new DetainItemUpdateEntry(
+                    BitConverter.ToUInt32(packet, o),
+                    BitConverter.ToUInt32(packet, o + 4),
+                    packet[o + 8] != 0));
+            }
+            return new DetainItemUpdateMessage(page, entries);
         }
     }
 }

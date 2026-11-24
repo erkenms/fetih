@@ -69,6 +69,13 @@ namespace Comet.Game.Database.Repositories
         {
             using var db = new ServerDbContext();
             using var tx = await db.Database.BeginTransactionAsync();
+            var hunterDetainedItemIDs = await db.DetainedItems
+                .Where(x => x.HunterID == characterID && !x.Redeemed && x.ItemID != 0)
+                .Select(x => x.ItemID)
+                .ToListAsync();
+            if (hunterDetainedItemIDs.Count > 0)
+                await db.Items.Where(x => hunterDetainedItemIDs.Contains(x.ItemID)).ExecuteDeleteAsync();
+            await db.DetainedItems.Where(x => x.TargetID == characterID || x.HunterID == characterID).ExecuteDeleteAsync();
             await db.Items.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Friends.Where(x => x.CharacterID == characterID || x.FriendID == characterID).ExecuteDeleteAsync();
             await db.Enemies.Where(x => x.CharacterID == characterID || x.EnemyID == characterID).ExecuteDeleteAsync();

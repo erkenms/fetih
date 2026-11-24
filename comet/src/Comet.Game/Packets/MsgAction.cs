@@ -247,6 +247,7 @@ namespace Comet.Game.Packets
                     await Visibility.EnterAsync(client);
                     if (Pk.Pking.Status(client) != 0)
                         await Pk.Pking.SendStatusAsync(client);
+                    await Pk.Detaining.LoginAsync(client);
                     await SecondPassword.LoginAsync(client);
                 },
 
@@ -254,6 +255,7 @@ namespace Comet.Game.Packets
                 [ActionType.CharacterAvatar] = (msg, client) => Npcs.Beautician.ChangeAsync(client, msg.Command),
 
                 [ActionType.CharacterPartnerInfo] = (msg, client) => Social.TradePartners.InfoAsync(client, msg),
+                [ActionType.DetainQuery] = (msg, client) => Pk.Detaining.QueryAsync(client, msg.Command),
 
                 // Asks for the stat window, sent after login and each equipment change.
                 // Answered with the player's own stats, not echoed.
@@ -378,6 +380,7 @@ namespace Comet.Game.Packets
             RelationshipsFriend = 148,
             CharacterAvatar = 151,
             CharacterPartnerInfo,
+            DetainQuery = 153,
             NinjaStep = 156,
             ClientCustomDialog = 160,
             CharacterAway = 161,
@@ -392,6 +395,9 @@ namespace Comet.Game.Packets
             // sends MsgDataArray.
             Compose = 2,
             Warehouse = 4,
+            // Redeem Equipment (CDlgPKDetain) and Claim Prize (CDlgPKReward)
+            DetainRedeem = 336,
+            DetainClaim = 337,
         }
 
         // Commands for ClientCommand that open a window: the client posts Command as its own

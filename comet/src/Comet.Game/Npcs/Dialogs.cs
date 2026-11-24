@@ -18,6 +18,8 @@ namespace Comet.Game.Npcs
             {
                 [TwinCity.GuardID] = TwinCity.GuardAsync,
                 [Pk.Jail.WardenID] = Pk.Jail.WardenAsync,
+                [Pk.Detaining.PrizeOfficerMarketID] = Pk.Detaining.PrizeOfficerAsync,
+                [Pk.Detaining.PrizeOfficerJailID] = Pk.Detaining.PrizeOfficerAsync,
                 [GuildDirector.ID] = GuildDirector.TalkAsync,
                 [ClanManager.ID] = ClanManager.TalkAsync,
                 [MountTrainer.ID] = MountTrainer.TalkAsync,

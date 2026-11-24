@@ -88,6 +88,8 @@ namespace Comet.Game.Pk
                 killer.Character.Name, victim.Character.Name, killer.Character.MapID,
                 crime ? "crime" : "no_crime");
 
+            if (victimPoints >= RedNamePoints)
+                await Detaining.OnKillAsync(killer, victim);
             if (victimPoints >= BlackNamePoints)
                 await Jail.SendAsync(victim, "killed");
             if (!crime)
