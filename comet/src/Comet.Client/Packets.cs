@@ -14,6 +14,7 @@ namespace Comet.Client
         public const ushort MsgItem = 1009;
         public const ushort MsgName = 1015;
         public const ushort MsgFriend = 1019;
+        public const ushort MsgEnemyList = 1041;
         public const ushort MsgTeam = 1023;
         public const ushort MsgTeamMember = 1026;
         public const ushort MsgData = 1033;
@@ -765,6 +766,37 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(4), id);
             packet[8] = action;
             Packet.WriteText(packet, 20, Encoding.Latin1.GetBytes(name), 16);
+            return packet;
+        }
+    }
+
+    public sealed record EnemyListEntry(uint Id, string Name, bool IsOnline, uint Nobility, int Gender);
+
+    // Character ID at 4, count at 8, 32-byte entries from 12
+    public sealed record EnemyListMessage(uint UserId, IReadOnlyList<EnemyListEntry> Entries)
+    {
+        public static EnemyListMessage Parse(byte[] packet)
+        {
+            uint userId = BitConverter.ToUInt32(packet, 4);
+            int count = BitConverter.ToInt32(packet, 8);
+            var entries = new List<EnemyListEntry>(count);
+            for (int i = 0; i < count; i++)
+            {
+                int offset = 12 + i * 32;
+                entries.Add(new EnemyListEntry(
+                    BitConverter.ToUInt32(packet, offset + 4),
+                    Packet.ReadText(packet, offset + 16, 16),
+                    packet[offset] != 0,
+                    BitConverter.ToUInt32(packet, offset + 8),
+                    BitConverter.ToInt32(packet, offset + 12)));
+            }
+            return new EnemyListMessage(userId, entries);
+        }
+
+        public static byte[] Build(uint userId)
+        {
+            var packet = Packet.Create(PacketTypes.MsgEnemyList, 44);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), userId);
             return packet;
         }
     }

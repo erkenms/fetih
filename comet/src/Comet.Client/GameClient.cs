@@ -648,6 +648,15 @@ namespace Comet.Client
             return packet == null ? null : FriendMessage.Parse(packet);
         }
 
+        public Task RequestEnemyListAsync(uint userId) => this.SendAsync(EnemyListMessage.Build(userId));
+
+        public async Task<EnemyListMessage> WaitForEnemyListAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgEnemyList, timeout);
+            return packet == null ? null : EnemyListMessage.Parse(packet);
+        }
+
         public Task LockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Lock));
 
         public Task UnlockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Unlock));

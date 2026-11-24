@@ -46,7 +46,8 @@ namespace Comet.Game.States
         public uint ClanInvite { get; set; }
 
         public ConcurrentDictionary<uint, string> Friends { get; } = new ConcurrentDictionary<uint, string>();
-        public ConcurrentDictionary<uint, string> Enemies { get; } = new ConcurrentDictionary<uint, string>();
+        public ConcurrentDictionary<uint, (string Name, uint Mesh)> Enemies { get; } =
+            new ConcurrentDictionary<uint, (string Name, uint Mesh)>();
         public ConcurrentDictionary<uint, Social.TradePartner> TradePartners { get; } =
             new ConcurrentDictionary<uint, Social.TradePartner>();
 

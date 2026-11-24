@@ -23,8 +23,8 @@ namespace Comet.Game.Social
             var (friends, enemies) = await RelationshipsRepository.LoadAsync(client.ID);
             foreach (var (id, name) in friends)
                 client.Friends[id] = name;
-            foreach (var (id, name) in enemies)
-                client.Enemies[id] = name;
+            foreach (var (id, name, mesh) in enemies)
+                client.Enemies[id] = (name, mesh);
         }
 
         // Login step 76: the lists, and telling the others this player is online
@@ -32,9 +32,29 @@ namespace Comet.Game.Social
         {
             foreach (var (id, name) in client.Friends)
                 await client.SendAsync(new MsgFriend(FriendAction.GetInfo, id, name, IsOnline(id)));
-            foreach (var (id, name) in client.Enemies)
-                await client.SendAsync(new MsgFriend(FriendAction.EnemyAdd, id, name, IsOnline(id)));
+            foreach (var (id, enemy) in client.Enemies)
+                await client.SendAsync(new MsgFriend(FriendAction.EnemyAdd, id, enemy.Name, IsOnline(id)));
             await AnnounceAsync(client, online: true);
+        }
+
+        public static async Task SendEnemyListAsync(Client client)
+        {
+            if (client.Character == null)
+                return;
+            var entries = client.Enemies
+                .Select(e =>
+                {
+                    bool online = Kernel.Players.TryGet(e.Key, out var target) && target.Character != null;
+                    string name = online ? target.Character.Name : e.Value.Name;
+                    uint mesh = online ? target.Character.Mesh : e.Value.Mesh;
+                    uint nobility = (uint)Nobility.Peerage.RankOf(e.Key);
+                    int gender = Items.Requirements.Gender(mesh);
+                    return new MsgEnemyList.Entry(e.Key, name, online, nobility, gender);
+                })
+                .OrderByDescending(e => e.Online)
+                .ThenBy(e => e.ID)
+                .Take(MsgEnemyList.MaxEntries);
+            await client.SendAsync(new MsgEnemyList(client.ID, entries));
         }
 
         public static Task LogoutAsync(Client client) => AnnounceAsync(client, online: false);
@@ -154,7 +174,7 @@ namespace Comet.Game.Social
 
         private static async Task DeleteEnemyAsync(Client client, uint enemyID)
         {
-            if (!client.Enemies.TryGetValue(enemyID, out var name))
+            if (!client.Enemies.TryGetValue(enemyID, out var enemy))
             {
                 Reject(client, "delete_enemy", enemyID, "not_enemy");
                 return;
@@ -162,10 +182,10 @@ namespace Comet.Game.Social
 
             await RelationshipsRepository.RemoveEnemyAsync(client.ID, enemyID);
             client.Enemies.TryRemove(enemyID, out _);
-            await client.SendAsync(new MsgFriend(FriendAction.EnemyDelete, enemyID, name, false));
+            await client.SendAsync(new MsgFriend(FriendAction.EnemyDelete, enemyID, enemy.Name, false));
             LogEvents.For(typeof(Relationships), LogEvents.EnemyRemoved).Information(
                 "{Name} removed {Enemy} from their enemies (characters {CharacterId} and {EnemyId})",
-                client.Character.Name, name, client.ID, enemyID);
+                client.Character.Name, enemy.Name, client.ID, enemyID);
         }
 
         // Friends see the player come and go, and so do players who have them as an enemy

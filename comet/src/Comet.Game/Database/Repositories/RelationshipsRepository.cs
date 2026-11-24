@@ -8,7 +8,7 @@ namespace Comet.Game.Database.Repositories
 
     public static class RelationshipsRepository
     {
-        public static async Task<(List<(uint ID, string Name)> Friends, List<(uint ID, string Name)> Enemies)>
+        public static async Task<(List<(uint ID, string Name)> Friends, List<(uint ID, string Name, uint Mesh)> Enemies)>
             LoadAsync(uint characterID)
         {
             using var db = new ServerDbContext();
@@ -16,10 +16,10 @@ namespace Comet.Game.Database.Repositories
                 .Join(db.Characters, f => f.FriendID, c => c.CharacterID, (f, c) => new { c.CharacterID, c.Name })
                 .ToListAsync();
             var enemies = await db.Enemies.Where(e => e.CharacterID == characterID)
-                .Join(db.Characters, e => e.EnemyID, c => c.CharacterID, (e, c) => new { c.CharacterID, c.Name })
+                .Join(db.Characters, e => e.EnemyID, c => c.CharacterID, (e, c) => new { c.CharacterID, c.Name, c.Mesh })
                 .ToListAsync();
             return (friends.Select(f => (f.CharacterID, f.Name)).ToList(),
-                enemies.Select(e => (e.CharacterID, e.Name)).ToList());
+                enemies.Select(e => (e.CharacterID, e.Name, e.Mesh)).ToList());
         }
 
         public static async Task AddFriendsAsync(uint characterID, uint friendID)

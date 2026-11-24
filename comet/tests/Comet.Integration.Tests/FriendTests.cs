@@ -81,5 +81,40 @@ namespace Comet.Integration.Tests
             await this.Servers.WaitForEventAsync("game", "enemy.removed", "name", victim.User.Name);
             Assert.Equal(0, await this.RowsAsync("enemy", "EnemyID", victim.User.Id, killer.User.Id));
         }
+
+        [Fact]
+        public async Task EnemyListReturnsOnlineAndOfflineEnemiesAndReflectsDeletion()
+        {
+            await using var onlineKiller = (await this.PlayingAtAsync(1002, 224, 280)).Player;
+            var (offlineKiller, _) = await this.PlayingAtAsync(1002, 225, 280);
+            await offlineKiller.DisposeAsync();
+            var (victim, email) = await this.PlayingAtAsync(1002, 226, 280);
+            await victim.DisposeAsync();
+
+            await this.Servers.ExecuteGameSqlAsync(
+                "INSERT INTO enemy (CharacterID, EnemyID) VALUES (@v, @a), (@v, @b)",
+                ("@v", victim.User.Id), ("@a", onlineKiller.User.Id), ("@b", offlineKiller.User.Id));
+
+            await using var back = await this.Servers.PlayAsync(email, Password);
+            await back.Game.RequestEnemyListAsync(back.User.Id);
+            var list = await back.Game.WaitForEnemyListAsync();
+            Assert.NotNull(list);
+            Assert.Equal(back.User.Id, list.UserId);
+            Assert.Equal(2, list.Entries.Count);
+
+            var onlineEntry = Assert.Single(list.Entries, e => e.Id == onlineKiller.User.Id);
+            Assert.Equal((onlineKiller.User.Name, true, 1), (onlineEntry.Name, onlineEntry.IsOnline, onlineEntry.Gender));
+            var offlineEntry = Assert.Single(list.Entries, e => e.Id == offlineKiller.User.Id);
+            Assert.Equal((offlineKiller.User.Name, false, 1), (offlineEntry.Name, offlineEntry.IsOnline, offlineEntry.Gender));
+
+            await back.Game.FriendAsync(FriendMessage.EnemyDelete, onlineKiller.User.Id);
+            Assert.NotNull(await back.Game.WaitForFriendAsync(f => f.Action == FriendMessage.EnemyDelete && f.Id == onlineKiller.User.Id));
+
+            await back.Game.RequestEnemyListAsync(back.User.Id);
+            var afterDelete = await back.Game.WaitForEnemyListAsync();
+            Assert.NotNull(afterDelete);
+            var remaining = Assert.Single(afterDelete.Entries);
+            Assert.Equal(offlineKiller.User.Id, remaining.Id);
+        }
     }
 }

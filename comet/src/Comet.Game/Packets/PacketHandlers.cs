@@ -25,6 +25,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgTrade] = () => new MsgTrade(),
                 [PacketType.MsgTeam] = () => new MsgTeam(),
                 [PacketType.MsgFriend] = () => new MsgFriend(),
+                [PacketType.MsgEnemyList] = () => new MsgEnemyList(),
                 [PacketType.MsgInteract] = () => new MsgInteract(),
                 [PacketType.MsgSyndicate] = () => new MsgSyndicate(),
                 [PacketType.MsgSynMemberList] = () => new MsgSynMemberList(),

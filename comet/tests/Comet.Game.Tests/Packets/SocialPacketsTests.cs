@@ -79,5 +79,45 @@ namespace Comet.Game.Tests.Packets
             msg.Decode(Comet.Client.FriendMessage.Build(Comet.Client.FriendMessage.Apply, 1000002, "Bora"));
             Assert.Equal((MsgFriend.FriendAction.Apply, 1000002u, "Bora"), (msg.Action, msg.ID, msg.Name));
         }
+
+        [Fact]
+        public void EnemyListDecodesClientRequestAndEncodesEntries()
+        {
+            var request = new MsgEnemyList();
+            request.Decode(Convert.FromHexString(
+                "2C00110441420F00000000000000000000000000000000000000000000000000000000000000000000000000"));
+            Assert.Equal(1000001u, request.UserID);
+            Assert.True(PacketHandlers.Handles(Comet.Network.Packets.PacketType.MsgEnemyList));
+
+            var empty = new MsgEnemyList(1000001, Array.Empty<MsgEnemyList.Entry>()).Encode();
+            Assert.Equal(MsgEnemyList.MinSize, empty.Length);
+            Assert.Equal(1041, BitConverter.ToUInt16(empty, 2));
+            Assert.Equal(1000001u, BitConverter.ToUInt32(empty, 4));
+            Assert.Equal(0, BitConverter.ToInt32(empty, 8));
+
+            var filled = new MsgEnemyList(1000001, new[]
+            {
+                new MsgEnemyList.Entry(1000002, "Bora", true, 12, 1),
+                new MsgEnemyList.Entry(1000003, "Selin", false, 3, 2),
+            }).Encode();
+            Assert.Equal(12 + 2 * 32, filled.Length);
+            Assert.Equal(1041, BitConverter.ToUInt16(filled, 2));
+            Assert.Equal(1000001u, BitConverter.ToUInt32(filled, 4));
+            Assert.Equal(2, BitConverter.ToInt32(filled, 8));
+
+            Assert.Equal(1, filled[12]);
+            Assert.Equal(1000002u, BitConverter.ToUInt32(filled, 16));
+            Assert.Equal(12u, BitConverter.ToUInt32(filled, 20));
+            Assert.Equal(1, BitConverter.ToInt32(filled, 24));
+            Assert.Equal("Bora", Encoding.ASCII.GetString(filled, 28, 4));
+            Assert.Equal(0, filled[32]);
+
+            Assert.Equal(0, filled[44]);
+            Assert.Equal(1000003u, BitConverter.ToUInt32(filled, 48));
+            Assert.Equal(3u, BitConverter.ToUInt32(filled, 52));
+            Assert.Equal(2, BitConverter.ToInt32(filled, 56));
+            Assert.Equal("Selin", Encoding.ASCII.GetString(filled, 60, 5));
+            Assert.Equal(0, filled[65]);
+        }
     }
 }
