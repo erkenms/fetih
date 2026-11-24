@@ -159,3 +159,11 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   server sends only 2218 and 2222 so far. Schedule and groups come from `ini/Activity.ini`; the
   waiting rooms 2075-2078 named in GameMapEx.ini aren't in GameMap.dat, so the server uses 2068
   (`pk.7z`). Prize packs 720714-720729 (group + 4 × place), per-match EXP pack 720713.
+- **Map drawing** (2026-11-24, Mac 1133): `CGameMap::SetMapSize` sets the origin to
+  (32·width, 16), and `Cell2World` is (32·(x − y), 16·(x + y)) plus it. `GetBgWorldPos`
+  puts the puzzle background's top left at (32·width − bgWidth/2, 16·height − bgHeight/2),
+  16 lower when the height is odd; the background is the .pul's tiles times the GameMap.dat
+  puzzle size. A terrain scene part sits at its object's cell plus its cell offset and is
+  drawn at that cell's pixel plus its pixel offset; a cover (DMap object 4) is drawn at its
+  cell's pixel minus its offset. Scene parts whose picture is a `.msk` are masks only.
+  `tools/assets/Maps/` renders maps this way.

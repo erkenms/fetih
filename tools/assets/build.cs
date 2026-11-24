@@ -7,12 +7,15 @@
 // client's art, so it stays out of git. README.md lists what it holds. Runs again skip the
 // images whose inputs haven't changed, and delete outputs the client no longer has.
 //
+// --maps 1002,1036 renders only those maps' tiles (all by default; unchanged maps are skipped).
+//
 //   dotnet run tools/assets/build.cs extract <client> <path> [destination]
 //
 // copies one client file (loose or from a .wdf package) out, as it is, or as PNG when the
 // destination ends in .png.
 #:project ../../comet/src/Comet.Game/Comet.Game.csproj
 #:package StbImageSharp@2.30.15
+#:package SkiaSharp@3.119.1
 #:property PublishAot=false
 #:property Nullable=enable
 #:include lib/Wdf.cs
@@ -21,6 +24,8 @@
 #:include lib/Png.cs
 #:include lib/Output.cs
 #:include lib/Catalogs.cs
+#:include Maps/MapFiles.cs
+#:include Maps/MapTiles.cs
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -40,6 +45,13 @@ if (args is ["extract", var clientDir, var file, ..])
     return 0;
 }
 
+HashSet<uint>? onlyMaps = null;
+if (Array.IndexOf(args, "--maps") is var mapsAt and >= 0 && mapsAt + 1 < args.Length)
+{
+    onlyMaps = args[mapsAt + 1].Split(',').Select(uint.Parse).ToHashSet();
+    args = [.. args[..mapsAt], .. args[(mapsAt + 2)..]];
+}
+
 var client = Path.GetFullPath(args.Length > 0 ? args[0] : Path.Combine(root, "_CLIENT", "fetih"));
 var output = Path.GetFullPath(args.Length > 1 ? args[1] : Path.Combine(root, "web", "assets"));
 if (!File.Exists(Path.Combine(client, "ini", "itemtype.dat")))
@@ -51,13 +63,17 @@ Directory.CreateDirectory(output);
 var outputs = new Output(output, Catalogs.Version);
 var catalogs = new Catalogs(files, outputs, Path.Combine(root, "comet", "src", "Comet.Game", "Data"));
 catalogs.BuildAll();
+var mapTiles = new MapTiles(files, outputs);
+mapTiles.Build(onlyMaps);
 var removed = outputs.Finish();
 
 foreach (var error in outputs.Errors.Order().Take(20))
     Console.Error.WriteLine($"  can't read {error}");
 if (outputs.Errors.Count > 20)
     Console.Error.WriteLine($"  ...and {outputs.Errors.Count - 20} more");
-foreach (var line in catalogs.Summary)
+foreach (var error in mapTiles.Errors.Distinct().Order().Take(20))
+    Console.Error.WriteLine($"  map: {error}");
+foreach (var line in catalogs.Summary.Concat(mapTiles.Summary))
     Console.WriteLine(line);
 Console.WriteLine($"{outputs.Written} written, {outputs.Skipped} unchanged, {removed} removed, " +
     $"{outputs.Errors.Count} unreadable, in {clock.Elapsed.TotalSeconds:0.0}s -> {output}");

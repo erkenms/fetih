@@ -2,6 +2,7 @@
 
 ```bash
 dotnet run tools/assets/build.cs [client] [output]   # defaults: _CLIENT/fetih, web/assets
+dotnet run tools/assets/build.cs [client] [output] --maps 1002,1036   # only these maps' tiles
 dotnet run tools/assets/build.cs extract <client> <path> [file]   # one client file; .png converts it
 ```
 
@@ -12,7 +13,8 @@ client first (`dotnet run client/build.cs`), or point the tool at any 5619 clien
 A run takes about a minute the first time. Later runs only convert images whose source
 changed (`.build.json` in the output keeps a stamp per file), rewrite JSON only when its
 content changed, and delete outputs the client no longer has. Raise `Catalogs.Version` when
-the conversion itself changes.
+the conversion itself changes. Map tiles aren't in `.build.json`: each map file's tile folder
+has a `.stamp` of its inputs instead, and `MapTiles.Version` plays the same part.
 
 ## Reading the client
 
@@ -46,4 +48,7 @@ so the web shows a placeholder for a missing field.
 | `faces.json`, `faces/npc/<n>.png`, `faces/player/<n>.png` | `ani/NpcFace.Ani`, `ani/PlayerFace.Ani` | The numbered faces: `{"npc": {"<n>": "faces/npc/<n>.png"}, "player": {...}}`. NPC faces are the avatar an NPC dialog shows; player faces the one picked when creating a character. |
 | `maps.json` | `ini/GameMap.dat`, `ini/GameMapEx.ini`, `Comet.Game/Data/maps.json`, `ani/MiniMap.Ani` | Every map the client has: `id`, `name` (as the client shows it), `serverName` and `aliases` (the server's `/tp` names), `file` (the map file, `.7z` or `.dmap`), `puzzleSize`, `minimap`. |
 | `minimaps/<id>.png` | `data/MiniMap/*` | The minimap. The client splits big ones into four quarters (`a` top left, `b` top right, `c` bottom left, `d` bottom right); they're joined into one picture. |
+| `maps/<id>/meta.json` | `ini/GameMap.dat`, the map's DMap | Where the map's tiles are and how a cell lands on them: `width`, `height` (the background in pixels), `tileSize`, `maxZoom` (the zoom with one tile pixel per background pixel), `cell` (64×32), `mapSize` (cells), `origin` and `background` (world pixels), `puzzle` (`width`, `height` in tiles, `gridSize`), and `ground` and `covers`, the Leaflet URL templates of the two pyramids. A cell (x, y) is at background pixel (32·(x − y) + origin.x − background.x, 16·(x + y) + origin.y − background.y). |
+| `maps/tiles/<map file>/ground/{z}/{x}/{y}.webp` | `map/puzzle/*.pul` and its .ani, terrain scenes | The background with the terrain objects' scene parts drawn on it, as 256×256 tiles. Maps that share a map file share these. Tiles with nothing on them are left out. |
+| `maps/tiles/<map file>/covers/{z}/{x}/{y}.webp` | the DMap's cover objects | Buildings, trees and roofs, which the client draws over the roles, on a transparent layer. |
 | `.build.json` | | The build's own record of what it wrote. |
