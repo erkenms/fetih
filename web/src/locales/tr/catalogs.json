@@ -1,0 +1,177 @@
+{
+  "nav": {
+    "monsters": "Canavarlar",
+    "spells": "Büyüler",
+    "maps": "Haritalar",
+    "faces": "Yüzler",
+    "shops": "Mağazalar"
+  },
+  "pickers": {
+    "clear": "Temizle",
+    "empty": "Sonuç bulunamadı.",
+    "monster": {
+      "label": "Canavar",
+      "placeholder": "Ad veya ID ile canavar ara..."
+    },
+    "spell": {
+      "label": "Büyü",
+      "placeholder": "Ad veya ID ile büyü ara..."
+    },
+    "map": {
+      "label": "Harita",
+      "placeholder": "Ad, takma ad veya ID ile harita ara..."
+    },
+    "lookface": {
+      "label": "Görünüm",
+      "placeholder": "Yüz ID",
+      "direction": "Yön",
+      "browse": "Gözat",
+      "modalTitle": "Yüz seç",
+      "filterPlaceholder": "Yüz ID ile filtrele..."
+    }
+  },
+  "monsters": {
+    "title": "Canavarlar",
+    "description": "Sunucu verisi ve istemci canavar kataloğundaki canavar tanımları.",
+    "searchPlaceholder": "Ad veya ID ile ara...",
+    "source": {
+      "label": "Kaynak",
+      "all": "Tümü",
+      "server": "Sunucu",
+      "client": "İstemci"
+    },
+    "bossOnly": "Sadece bosslar",
+    "boss": "Boss",
+    "minLevel": "Min seviye",
+    "maxLevel": "Maks seviye",
+    "column": {
+      "id": "ID",
+      "name": "Ad",
+      "level": "Seviye",
+      "life": "Can",
+      "attack": "Saldırı",
+      "lookface": "Görünüm",
+      "source": "Kaynak"
+    },
+    "detail": {
+      "serverStats": "Sunucu değerleri",
+      "clientStats": "İstemci değerleri",
+      "defense": "Savunma",
+      "dexterity": "Çeviklik",
+      "dodge": "Kaçınma",
+      "attackRange": "Saldırı menzili",
+      "viewRange": "Görüş menzili",
+      "attackSpeed": "Saldırı hızı",
+      "moveSpeed": "Hareket hızı",
+      "dropMoney": "Düşen para",
+      "magicType": "Büyü türü",
+      "magicHitRate": "Büyü isabet oranı",
+      "zoomPercent": "Yakınlaştırma %",
+      "clientLevel": "İstemci seviyesi",
+      "clientMaxLife": "İstemci maks can"
+    },
+    "empty": "Bu filtrelere uyan canavar yok.",
+    "total": "{{count}} canavar"
+  },
+  "spells": {
+    "title": "Büyüler",
+    "description": "İstemci büyü kataloğundaki büyüler ve silah yetenekleri.",
+    "searchPlaceholder": "Ad veya tür ile ara...",
+    "sortLabel": "Tür",
+    "allSorts": "Tüm türler",
+    "xpOnly": "Sadece XP yetenekleri",
+    "xp": "XP",
+    "column": {
+      "icon": "Simge",
+      "type": "Tür",
+      "name": "Ad",
+      "sort": "Sınıf",
+      "levels": "Seviye",
+      "flags": "Özellikler"
+    },
+    "flags": {
+      "crime": "Suç",
+      "ground": "Alan",
+      "multi": "Çoklu",
+      "xp": "XP yeteneği"
+    },
+    "levels": {
+      "title": "Seviyeler",
+      "level": "Sv",
+      "needLevel": "Gerekli Sv",
+      "mana": "MP",
+      "stamina": "SP",
+      "power": "Güç",
+      "range": "Menzil",
+      "distance": "Mesafe",
+      "delay": "Gecikme (ms)",
+      "needExp": "Gerekli Exp"
+    },
+    "empty": "Bu filtrelere uyan büyü yok.",
+    "total": "{{count}} büyü"
+  },
+  "maps": {
+    "title": "Haritalar",
+    "description": "Sunucu adları, takma adlar ve bayraklarla zenginleştirilmiş GameMap.dat haritaları.",
+    "searchPlaceholder": "ID, ad veya takma ad ile ara...",
+    "hasMinimapOnly": "Sadece mini haritalı olanlar",
+    "column": {
+      "minimap": "Mini harita",
+      "id": "ID",
+      "name": "İstemci adı",
+      "serverName": "Sunucu adı",
+      "aliases": "Takma adlar",
+      "flags": "Bayraklar"
+    },
+    "detail": {
+      "file": "Dosya",
+      "puzzleSize": "Puzzle boyutu",
+      "rebornMap": "Doğuş haritası",
+      "flags": "Bayraklar",
+      "noMinimap": "Mini harita yok"
+    },
+    "empty": "Bu filtrelere uyan harita yok.",
+    "total": "{{count}} harita"
+  },
+  "faces": {
+    "title": "Yüzler",
+    "description": "İstemciden çıkarılan NPC ve oyuncu yüz görselleri.",
+    "tabs": {
+      "npc": "NPC yüzleri ({{count}})",
+      "player": "Oyuncu yüzleri ({{count}})"
+    },
+    "filterPlaceholder": "Yüz ID ile filtrele...",
+    "pickerTest": "Seçici önizlemesi",
+    "selected": "Seçilen: #{{id}}",
+    "empty": "Bu filtreye uyan yüz yok."
+  },
+  "shops": {
+    "title": "Mağazalar",
+    "description": "İstemci mağaza dosyalarının (Shop.dat ve mağaza INI dosyaları) salt okunur görünümü.",
+    "searchPlaceholder": "Mağaza, NPC ID veya eşya ara...",
+    "sourceLabel": "Kaynak dosya",
+    "allSources": "Tüm dosyalar",
+    "itemCount": "{{count}} eşya",
+    "npcId": "NPC #{{id}}",
+    "location": "Harita {{map}} ({{x}}, {{y}})",
+    "selectPrompt": "Eşyalarını görmek için bir mağaza seçin.",
+    "currency": {
+      "silver": "Gümüş",
+      "cp": "CP",
+      "bound_cp": "Bağlı CP",
+      "honor": "Onur",
+      "race_points": "Yarış Puanı"
+    },
+    "column": {
+      "icon": "Simge",
+      "id": "Eşya ID",
+      "name": "Ad",
+      "price": "Fiyat",
+      "category": "Kategori",
+      "tags": "Etiketler",
+      "description": "Açıklama"
+    },
+    "empty": "Bu filtrelere uyan mağaza yok.",
+    "total": "{{count}} mağaza"
+  }
+}

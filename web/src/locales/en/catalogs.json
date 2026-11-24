@@ -1,0 +1,177 @@
+{
+  "nav": {
+    "monsters": "Monsters",
+    "spells": "Spells",
+    "maps": "Maps",
+    "faces": "Faces",
+    "shops": "Shops"
+  },
+  "pickers": {
+    "clear": "Clear",
+    "empty": "No matches.",
+    "monster": {
+      "label": "Monster",
+      "placeholder": "Search monster by name or ID..."
+    },
+    "spell": {
+      "label": "Spell",
+      "placeholder": "Search spell by name or ID..."
+    },
+    "map": {
+      "label": "Map",
+      "placeholder": "Search map by name, alias, or ID..."
+    },
+    "lookface": {
+      "label": "Lookface",
+      "placeholder": "Face ID",
+      "direction": "Dir",
+      "browse": "Browse",
+      "modalTitle": "Choose face",
+      "filterPlaceholder": "Filter by face ID..."
+    }
+  },
+  "monsters": {
+    "title": "Monsters",
+    "description": "Monster definitions from server data and the client monster catalog.",
+    "searchPlaceholder": "Search by name or ID...",
+    "source": {
+      "label": "Source",
+      "all": "All",
+      "server": "Server",
+      "client": "Client"
+    },
+    "bossOnly": "Bosses only",
+    "boss": "Boss",
+    "minLevel": "Min level",
+    "maxLevel": "Max level",
+    "column": {
+      "id": "ID",
+      "name": "Name",
+      "level": "Level",
+      "life": "Life",
+      "attack": "Attack",
+      "lookface": "Lookface",
+      "source": "Source"
+    },
+    "detail": {
+      "serverStats": "Server stats",
+      "clientStats": "Client stats",
+      "defense": "Defense",
+      "dexterity": "Dexterity",
+      "dodge": "Dodge",
+      "attackRange": "Attack range",
+      "viewRange": "View range",
+      "attackSpeed": "Attack speed",
+      "moveSpeed": "Move speed",
+      "dropMoney": "Drop money",
+      "magicType": "Magic type",
+      "magicHitRate": "Magic hit rate",
+      "zoomPercent": "Zoom %",
+      "clientLevel": "Client level",
+      "clientMaxLife": "Client max life"
+    },
+    "empty": "No monsters match these filters.",
+    "total": "{{count}} monsters"
+  },
+  "spells": {
+    "title": "Spells",
+    "description": "Spells and weapon skills from the client magic catalog.",
+    "searchPlaceholder": "Search by name or type...",
+    "sortLabel": "Sort",
+    "allSorts": "All sorts",
+    "xpOnly": "XP skills only",
+    "xp": "XP",
+    "column": {
+      "icon": "Icon",
+      "type": "Type",
+      "name": "Name",
+      "sort": "Sort",
+      "levels": "Levels",
+      "flags": "Flags"
+    },
+    "flags": {
+      "crime": "Crime",
+      "ground": "Ground",
+      "multi": "Multi",
+      "xp": "XP skill"
+    },
+    "levels": {
+      "title": "Levels",
+      "level": "Lv",
+      "needLevel": "Req Lv",
+      "mana": "MP",
+      "stamina": "SP",
+      "power": "Power",
+      "range": "Range",
+      "distance": "Distance",
+      "delay": "Delay (ms)",
+      "needExp": "Req Exp"
+    },
+    "empty": "No spells match these filters.",
+    "total": "{{count}} spells"
+  },
+  "maps": {
+    "title": "Maps",
+    "description": "Maps from GameMap.dat enriched with server names, aliases, and flags.",
+    "searchPlaceholder": "Search by ID, name, or alias...",
+    "hasMinimapOnly": "With minimap only",
+    "column": {
+      "minimap": "Minimap",
+      "id": "ID",
+      "name": "Client name",
+      "serverName": "Server name",
+      "aliases": "Aliases",
+      "flags": "Flags"
+    },
+    "detail": {
+      "file": "File",
+      "puzzleSize": "Puzzle size",
+      "rebornMap": "Reborn map",
+      "flags": "Flags",
+      "noMinimap": "No minimap available"
+    },
+    "empty": "No maps match these filters.",
+    "total": "{{count}} maps"
+  },
+  "faces": {
+    "title": "Faces",
+    "description": "NPC and player face avatars extracted from the client.",
+    "tabs": {
+      "npc": "NPC faces ({{count}})",
+      "player": "Player faces ({{count}})"
+    },
+    "filterPlaceholder": "Filter by face ID...",
+    "pickerTest": "Test pickers",
+    "selected": "Selected: #{{id}}",
+    "empty": "No faces match this filter."
+  },
+  "shops": {
+    "title": "Shops",
+    "description": "Read-only view of client shop files (Shop.dat and shop INI files).",
+    "searchPlaceholder": "Search shop, NPC ID, or item...",
+    "sourceLabel": "Source file",
+    "allSources": "All files",
+    "itemCount": "{{count}} items",
+    "npcId": "NPC #{{id}}",
+    "location": "Map {{map}} ({{x}}, {{y}})",
+    "selectPrompt": "Select a shop to view its items.",
+    "currency": {
+      "silver": "Silver",
+      "cp": "CP",
+      "bound_cp": "Bound CP",
+      "honor": "Honor",
+      "race_points": "Race Points"
+    },
+    "column": {
+      "icon": "Icon",
+      "id": "Item ID",
+      "name": "Name",
+      "price": "Price",
+      "category": "Category",
+      "tags": "Tags",
+      "description": "Description"
+    },
+    "empty": "No shops match these filters.",
+    "total": "{{count}} shops"
+  }
+}

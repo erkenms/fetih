@@ -132,6 +132,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalogs/monsters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogMonsters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/monsters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCatalogMonster"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/spells": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogSpells"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/spells/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCatalogSpell"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/maps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogMaps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/maps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCatalogMap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/faces": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogFaces"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/catalogs/shops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogShops"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -227,6 +355,15 @@ export interface components {
             /** Format: uint32 */
             stackLimit?: number;
         };
+        FaceEntry: {
+            /** Format: uint32 */
+            id: number;
+            path: string;
+        };
+        FacesCatalogResponse: {
+            npc: components["schemas"]["FaceEntry"][];
+            player: components["schemas"]["FaceEntry"][];
+        };
         HealthResponse: {
             gameDatabase: boolean;
             accountDatabase: boolean;
@@ -248,6 +385,25 @@ export interface components {
             username: string;
             password: string;
         };
+        MapCatalogEntry: {
+            /** Format: uint32 */
+            id: number;
+            name: null | string;
+            serverName: null | string;
+            aliases: string[];
+            file: null | string;
+            /** Format: int32 */
+            puzzleSize: null | number;
+            minimap: null | string;
+            flags: null | string;
+            /** Format: uint32 */
+            rebornMap: null | number;
+        };
+        MapCatalogPage: {
+            items: components["schemas"]["MapCatalogEntry"][];
+            /** Format: int32 */
+            total: number;
+        };
         MeResponse: {
             /** Format: uint32 */
             accountId: number;
@@ -256,8 +412,154 @@ export interface components {
             authority: number;
             permissions: components["schemas"]["Permission"][];
         };
+        MonsterCatalogEntry: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            /** Format: uint32 */
+            lookface: null | number;
+            /** Format: int32 */
+            level: null | number;
+            /** Format: int32 */
+            life: null | number;
+            /** Format: int32 */
+            attackMin: null | number;
+            /** Format: int32 */
+            attackMax: null | number;
+            /** Format: int32 */
+            defense: null | number;
+            /** Format: int32 */
+            dexterity: null | number;
+            /** Format: int32 */
+            dodge: null | number;
+            /** Format: int32 */
+            attackRange: null | number;
+            /** Format: int32 */
+            viewRange: null | number;
+            /** Format: int32 */
+            attackSpeed: null | number;
+            /** Format: int32 */
+            moveSpeed: null | number;
+            /** Format: int32 */
+            attackUser: null | number;
+            /** Format: int32 */
+            dropMoney: null | number;
+            /** Format: uint32 */
+            dropHp: null | number;
+            /** Format: uint32 */
+            dropMp: null | number;
+            boss: boolean;
+            /** Format: uint32 */
+            magicType: null | number;
+            /** Format: int32 */
+            magicHitRate: null | number;
+            inServer: boolean;
+            inClient: boolean;
+            /** Format: int32 */
+            clientLevel: null | number;
+            /** Format: int32 */
+            clientMaxLife: null | number;
+            clientBoss: null | boolean;
+            /** Format: int32 */
+            zoomPercent: null | number;
+        };
+        MonsterCatalogPage: {
+            items: components["schemas"]["MonsterCatalogEntry"][];
+            /** Format: int32 */
+            total: number;
+        };
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
+        ShopCatalogEntry: {
+            key: string;
+            source: string;
+            /** Format: uint32 */
+            npcId: null | number;
+            name: string;
+            currency: string;
+            /** Format: uint32 */
+            mapId: null | number;
+            /** Format: uint16 */
+            x: null | number;
+            /** Format: uint16 */
+            y: null | number;
+            /** Format: int32 */
+            itemCount: number;
+            items: components["schemas"]["ShopItemEntry"][];
+        };
+        ShopCatalogResponse: {
+            shops: components["schemas"]["ShopCatalogEntry"][];
+            sources: string[];
+        };
+        ShopItemEntry: {
+            /** Format: uint32 */
+            itemId: number;
+            itemName: null | string;
+            itemIcon: null | string;
+            /** Format: uint32 */
+            price: null | number;
+            currency: null | string;
+            category: null | string;
+            tags: string[];
+            description: null | string;
+        };
+        SpellCatalogEntry: {
+            /** Format: uint16 */
+            type: number;
+            name: string;
+            sort: string;
+            icon: null | string;
+            crime: boolean;
+            ground: boolean;
+            multi: boolean;
+            /** Format: uint32 */
+            target: number;
+            /** Format: uint32 */
+            useXp: number;
+            /** Format: uint32 */
+            weaponSubtype: number;
+            /** Format: uint32 */
+            autoActive: number;
+            levels: components["schemas"]["SpellLevelEntry"][];
+        };
+        SpellCatalogPage: {
+            items: components["schemas"]["SpellCatalogEntry"][];
+            /** Format: int32 */
+            total: number;
+            sorts: string[];
+        };
+        SpellLevelEntry: {
+            /** Format: uint16 */
+            level: number;
+            /** Format: uint16 */
+            useMana: number;
+            /** Format: uint8 */
+            useStamina: number;
+            /** Format: int32 */
+            power: number;
+            /** Format: uint32 */
+            percent: number;
+            /** Format: uint32 */
+            stepSeconds: number;
+            /** Format: uint32 */
+            activeTimes: number;
+            /** Format: uint32 */
+            range: number;
+            /** Format: uint32 */
+            distance: number;
+            /** Format: int32 */
+            status: number;
+            /** Format: uint32 */
+            needExperience: number;
+            /** Format: uint8 */
+            needLevel: number;
+            /** Format: uint32 */
+            useItem: number;
+            /** Format: uint16 */
+            useItemCount: number;
+            /** Format: uint32 */
+            delayMilliseconds: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -475,6 +777,222 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listCatalogMonsters: {
+        parameters: {
+            query?: {
+                search?: string;
+                boss?: boolean;
+                minLevel?: number;
+                maxLevel?: number;
+                source?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterCatalogPage"];
+                };
+            };
+        };
+    };
+    getCatalogMonster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterCatalogEntry"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listCatalogSpells: {
+        parameters: {
+            query?: {
+                search?: string;
+                sort?: string;
+                xpOnly?: boolean;
+                hasIcon?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpellCatalogPage"];
+                };
+            };
+        };
+    };
+    getCatalogSpell: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SpellCatalogEntry"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listCatalogMaps: {
+        parameters: {
+            query?: {
+                search?: string;
+                hasMinimap?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapCatalogPage"];
+                };
+            };
+        };
+    };
+    getCatalogMap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapCatalogEntry"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listCatalogFaces: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FacesCatalogResponse"];
+                };
+            };
+        };
+    };
+    listCatalogShops: {
+        parameters: {
+            query?: {
+                search?: string;
+                source?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShopCatalogResponse"];
                 };
             };
         };

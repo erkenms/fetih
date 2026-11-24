@@ -1,5 +1,6 @@
 import type { FeatureRoute } from './feature'
 import { auditRoute } from '../features/audit'
+import { catalogRoutes } from '../features/catalogs'
 import { healthRoute } from '../features/health'
 import { itemsRoute } from '../features/items'
 
@@ -8,4 +9,5 @@ export const featureRoutes: FeatureRoute[] = [
   healthRoute,
   auditRoute,
   itemsRoute,
+  ...catalogRoutes,
 ]

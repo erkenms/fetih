@@ -357,6 +357,384 @@
           }
         }
       }
+    },
+    "/api/catalogs/monsters": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "listCatalogMonsters",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "boss",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "minLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "maxLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterCatalogPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/monsters/{id}": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "getCatalogMonster",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterCatalogEntry"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/spells": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "listCatalogSpells",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "xpOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "hasIcon",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellCatalogPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/spells/{type}": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "getCatalogSpell",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpellCatalogEntry"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/maps": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "listCatalogMaps",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasMinimap",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapCatalogPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/maps/{id}": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "getCatalogMap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapCatalogEntry"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/faces": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "listCatalogFaces",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacesCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/catalogs/shops": {
+      "get": {
+        "tags": [
+          "CatalogsFeature"
+        ],
+        "operationId": "listCatalogShops",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShopCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -617,6 +995,43 @@
           }
         }
       },
+      "FaceEntry": {
+        "required": [
+          "id",
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "path": {
+            "type": "string"
+          }
+        }
+      },
+      "FacesCatalogResponse": {
+        "required": [
+          "npc",
+          "player"
+        ],
+        "type": "object",
+        "properties": {
+          "npc": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FaceEntry"
+            }
+          },
+          "player": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FaceEntry"
+            }
+          }
+        }
+      },
       "HealthResponse": {
         "required": [
           "gameDatabase",
@@ -708,6 +1123,95 @@
           }
         }
       },
+      "MapCatalogEntry": {
+        "required": [
+          "id",
+          "name",
+          "serverName",
+          "aliases",
+          "file",
+          "puzzleSize",
+          "minimap",
+          "flags",
+          "rebornMap"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serverName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "file": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "puzzleSize": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "minimap": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "flags": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rebornMap": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "MapCatalogPage": {
+        "required": [
+          "items",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapCatalogEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "MeResponse": {
         "required": [
           "accountId",
@@ -736,6 +1240,228 @@
           }
         }
       },
+      "MonsterCatalogEntry": {
+        "required": [
+          "id",
+          "name",
+          "lookface",
+          "level",
+          "life",
+          "attackMin",
+          "attackMax",
+          "defense",
+          "dexterity",
+          "dodge",
+          "attackRange",
+          "viewRange",
+          "attackSpeed",
+          "moveSpeed",
+          "attackUser",
+          "dropMoney",
+          "dropHp",
+          "dropMp",
+          "boss",
+          "magicType",
+          "magicHitRate",
+          "inServer",
+          "inClient",
+          "clientLevel",
+          "clientMaxLife",
+          "clientBoss",
+          "zoomPercent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lookface": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "level": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "life": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "attackMin": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "attackMax": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "defense": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "dexterity": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "dodge": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "attackRange": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "viewRange": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "attackSpeed": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "moveSpeed": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "attackUser": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "dropMoney": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "dropHp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "dropMp": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "boss": {
+            "type": "boolean"
+          },
+          "magicType": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "magicHitRate": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "inServer": {
+            "type": "boolean"
+          },
+          "inClient": {
+            "type": "boolean"
+          },
+          "clientLevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "clientMaxLife": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "clientBoss": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "zoomPercent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MonsterCatalogPage": {
+        "required": [
+          "items",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterCatalogEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "Permission": {
         "enum": [
           "AdminArea",
@@ -748,6 +1474,330 @@
           "Studio",
           "ManageAccounts"
         ]
+      },
+      "ShopCatalogEntry": {
+        "required": [
+          "key",
+          "source",
+          "npcId",
+          "name",
+          "currency",
+          "mapId",
+          "x",
+          "y",
+          "itemCount",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "npcId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "mapId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "x": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "y": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "itemCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopItemEntry"
+            }
+          }
+        }
+      },
+      "ShopCatalogResponse": {
+        "required": [
+          "shops",
+          "sources"
+        ],
+        "type": "object",
+        "properties": {
+          "shops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopCatalogEntry"
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ShopItemEntry": {
+        "required": [
+          "itemId",
+          "itemName",
+          "itemIcon",
+          "price",
+          "currency",
+          "category",
+          "tags",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "itemName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "price": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SpellCatalogEntry": {
+        "required": [
+          "type",
+          "name",
+          "sort",
+          "icon",
+          "crime",
+          "ground",
+          "multi",
+          "target",
+          "useXp",
+          "weaponSubtype",
+          "autoActive",
+          "levels"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sort": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "crime": {
+            "type": "boolean"
+          },
+          "ground": {
+            "type": "boolean"
+          },
+          "multi": {
+            "type": "boolean"
+          },
+          "target": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "useXp": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "weaponSubtype": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "autoActive": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellLevelEntry"
+            }
+          }
+        }
+      },
+      "SpellCatalogPage": {
+        "required": [
+          "items",
+          "total",
+          "sorts"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SpellCatalogEntry"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sorts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SpellLevelEntry": {
+        "required": [
+          "level",
+          "useMana",
+          "useStamina",
+          "power",
+          "percent",
+          "stepSeconds",
+          "activeTimes",
+          "range",
+          "distance",
+          "status",
+          "needExperience",
+          "needLevel",
+          "useItem",
+          "useItemCount",
+          "delayMilliseconds"
+        ],
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "useMana": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "useStamina": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "power": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "percent": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "stepSeconds": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "activeTimes": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "range": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "distance": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "needExperience": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "needLevel": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "useItem": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "useItemCount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "delayMilliseconds": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
       }
     }
   },
@@ -757,6 +1807,9 @@
     },
     {
       "name": "AuthEndpoints"
+    },
+    {
+      "name": "CatalogsFeature"
     },
     {
       "name": "HealthFeature"
