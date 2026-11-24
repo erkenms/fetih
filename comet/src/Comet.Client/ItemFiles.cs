@@ -41,23 +41,26 @@ namespace Comet.Client
             ItemTypeDat(items, new (uint, string, ushort, ushort)[0]);
 
         // Items with HP (life) and MP (mana), with durability 1: what potions restore and
-        // what bottles add. Dexterity, when given, is by item ID: a steed's or crop's vigor.
+        // what bottles add. Dexterity, when given, is by item ID: a steed's or crop's vigor;
+        // texts the kind line and description (fields 53 and 54).
         public static byte[] ItemTypeDat(
             (uint Id, string Name, ushort Amount, byte Level)[] items,
             (uint Id, string Name, ushort Life, ushort Mana)[] potions,
-            IReadOnlyDictionary<uint, ushort> dexterity = null)
+            IReadOnlyDictionary<uint, ushort> dexterity = null,
+            IReadOnlyDictionary<uint, (string Kind, string Description)> texts = null)
         {
             var text = new StringBuilder();
             foreach (var (id, name, amount, level) in items)
                 text.Append(Record(id, name, amount, level, 0, 0,
-                    dexterity != null && dexterity.TryGetValue(id, out var d) ? d : (ushort)0));
+                    dexterity != null && dexterity.TryGetValue(id, out var d) ? d : (ushort)0,
+                    texts != null && texts.TryGetValue(id, out var t) ? t : ("None", "None")));
             foreach (var (id, name, life, mana) in potions)
                 text.Append(Record(id, name, 1, 0, life, mana, 0));
             return Encrypt(Encoding.Latin1.GetBytes(text.ToString()));
         }
 
         private static string Record(uint id, string name, ushort amount, byte level, ushort life, ushort mana,
-            ushort dexterity)
+            ushort dexterity, (string Kind, string Description) text = default)
         {
             var fields = Enumerable.Repeat("0", 61).ToArray();
             fields[0] = id.ToString();
@@ -68,7 +71,8 @@ namespace Comet.Client
             fields[19] = life.ToString();
             fields[20] = mana.ToString();
             fields[21] = fields[22] = amount.ToString();
-            fields[53] = fields[54] = "None";
+            fields[53] = (text.Kind ?? "None").Replace(' ', '~');
+            fields[54] = (text.Description ?? "None").Replace(' ', '~');
             return string.Join("@@", fields) + "@@\r\n";
         }
 

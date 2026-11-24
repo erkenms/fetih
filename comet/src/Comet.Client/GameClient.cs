@@ -3,6 +3,7 @@ namespace Comet.Client
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Security.Cryptography;
     using System.Text;
     using System.Threading.Tasks;
@@ -924,6 +925,20 @@ namespace Comet.Client
             var packet = await this.TryReceiveAsync(p =>
                 BitConverter.ToUInt16(p, 2) == PacketTypes.MsgChangeName, timeout);
             return packet == null ? null : ChangeNameMessage.Parse(packet);
+        }
+
+        public Task RefineAsync(uint targetId, uint refineryItemId) =>
+            this.SendAsync(QuenchMessage.Build(targetId, refineryItemId));
+
+        public Task StabilizeAsync(uint equipmentId, params uint[] stoneIds) =>
+            this.SendAsync(SolidifyMessage.Build(equipmentId, stoneIds));
+
+        public async Task<ItemStatusEntry> WaitForItemStatusAsync(Func<ItemStatusEntry, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgItemStatus &&
+                ItemStatusMessage.Parse(p).Entries.Any(match), timeout);
+            return packet == null ? null : ItemStatusMessage.Parse(packet).Entries.First(match);
         }
 
         public Task DegradeItemAsync(uint itemId) =>

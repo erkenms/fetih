@@ -122,3 +122,15 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   failed. Abandon is MsgTaskDialog 102 with TaskID 20000000 + quest ID; Today's activities'
   Attend is MsgAction 166 with the `Activity.ini` id. `DailyActivity.ini` isn't loaded. Details
   in `docs/quests-proposal.md`.
+- **Refinery** (2026-11-24, Mac client `CMsgItemStatus`, `CDlgSolidify`, `CQuenchStatusMgr`):
+  using an item from `ini/ItemQuench.ini` turns the cursor into a picker (command 0x28); clicking
+  gear asks to confirm, then MsgQuench 2076 (mode u16 at 4, gear at 8, refinery item at 12). The
+  client only checks it's equipment; which gear fits is itemtype field 53 ("Headgear", "Bow"...).
+  MsgItemStatus 2077: count at 4, 28-byte entries (item, mode, kind, level, power, seconds left,
+  unused); modes 0 set temporary, 1 clear it, 3 set permanent, 4 both and refresh the window, 5-9
+  artifacts. Kind is the `ItemQuenchTipInfo.ini` section 301-319 (`CHero::GetMaxLife` adds power
+  only for 301). MsgItemInfo makes a new client item, so states are sent again after it. Window
+  448 (MsgAction 126) posts command 3513, the stabilization window, which sends MsgSolidify 1038
+  (mode at 4, gear at 8, count at 12, stones from 16); points from `ini/ItemSolidify.ini`, needed
+  per level from `ini/info.ini` [Solidify]. Battle power ignores refinery. Not confirmed in the
+  Windows client.

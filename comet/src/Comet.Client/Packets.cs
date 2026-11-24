@@ -20,6 +20,9 @@ namespace Comet.Client
         public const ushort MsgData = 1033;
         public const ushort MsgDetainItemInfo = 1034;
         public const ushort MsgDetainItemUpdate = 1035;
+        public const ushort MsgSolidify = 1038;
+        public const ushort MsgQuench = 2076;
+        public const ushort MsgItemStatus = 2077;
         public const ushort MsgGemEmbed = 1027;
         public const ushort MsgTrade = 1056;
         public const ushort MsgMapItem = 1101;
@@ -1750,6 +1753,49 @@ namespace Comet.Client
                 BitConverter.ToUInt32(packet, 32),
                 BitConverter.ToUInt32(packet, 36),
                 items);
+        }
+    }
+
+    // A refinery item used on gear (mode 0), as the 5619 client sends it after the confirmation
+    public static class QuenchMessage
+    {
+        public static byte[] Build(uint targetId, uint refineryItemId)
+        {
+            var packet = Packet.Create(PacketTypes.MsgQuench, 16);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), targetId);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), refineryItemId);
+            return packet;
+        }
+    }
+
+    // The stabilization window's gear and Permanent Stones (mode 0)
+    public static class SolidifyMessage
+    {
+        public static byte[] Build(uint equipmentId, params uint[] stoneIds)
+        {
+            var packet = Packet.Create(PacketTypes.MsgSolidify, 20 + 4 * stoneIds.Length);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), equipmentId);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), (uint)stoneIds.Length);
+            for (int i = 0; i < stoneIds.Length; i++)
+                BitConverter.TryWriteBytes(packet.AsSpan(16 + 4 * i), stoneIds[i]);
+            return packet;
+        }
+    }
+
+    public sealed record ItemStatusEntry(uint ItemId, uint Mode, uint Kind, uint Level, uint Power, uint Seconds);
+
+    // Refinery states: a count at 4, then 28 bytes each
+    public sealed record ItemStatusMessage(IReadOnlyList<ItemStatusEntry> Entries)
+    {
+        public static ItemStatusMessage Parse(byte[] packet)
+        {
+            var entries = new List<ItemStatusEntry>();
+            int count = (int)BitConverter.ToUInt32(packet, 4);
+            for (int i = 0, at = 8; i < count && at + 28 <= packet.Length; i++, at += 28)
+                entries.Add(new ItemStatusEntry(BitConverter.ToUInt32(packet, at), BitConverter.ToUInt32(packet, at + 4),
+                    BitConverter.ToUInt32(packet, at + 8), BitConverter.ToUInt32(packet, at + 12),
+                    BitConverter.ToUInt32(packet, at + 16), BitConverter.ToUInt32(packet, at + 20)));
+            return new ItemStatusMessage(entries);
         }
     }
 }

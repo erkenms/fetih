@@ -95,6 +95,11 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Orchid = (753001, "1Orchid", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Saddle = (723903, "Saddle", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) StudyBookArena = (720774, "StudyBook(Arena)", 1, 0);
+        // Refinery items and stones as in the 5619 client's itemtype.dat and refinery ini files
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) HeadgearRefinery = (724440, "Intensification(Normal)Material", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) BladeRefinery = (724405, "CriticalStrike(Normal)Material", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) PermanentStone = (723694, "PermanentStone", 1, 0);
+        public const uint HeadgearRefineryPower = 200;
         // The vigor of a +1 steed, from the test itemadd.ini
         public const ushort SteedVigor = 50;
         // A necklace's health is all from its plus: a +1 HeartNecklace's, by its key in the test itemadd.ini
@@ -504,8 +509,24 @@ namespace Comet.Integration.Tests
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
                     Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies,
-                    Bomb, YinYangFruit, LuckyAmulet, Orchid, Saddle, StudyBookArena }, new[] { Potion, ManaPotion, Bottle },
-                    new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
+                    Bomb, YinYangFruit, LuckyAmulet, Orchid, Saddle, StudyBookArena,
+                    HeadgearRefinery, BladeRefinery, PermanentStone }, new[] { Potion, ManaPotion, Bottle },
+                    new Dictionary<uint, ushort> { [Crop.Id] = CropVigor },
+                    new Dictionary<uint, (string, string)>
+                    {
+                        [HeadgearRefinery.Id] = ("Headgear", "Level 1 Refinery item. Right click to refine a headgear."),
+                        [BladeRefinery.Id] = ("1-Handed", "Level 1 Refinery item. Right click to refine a 1-Handed Weapon."),
+                    }));
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemQuench.ini"),
+                $"{HeadgearRefinery.Id}\r\n{BladeRefinery.Id}\r\n\r\n");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemQuenchTipInfo.ini"),
+                "[301]\r\nName=Intensification\r\nLevel=1\r\nPower=800\r\n\r\n" +
+                "[307]\r\nName=Critical~Strike\r\nLevel=1\r\nPower=5\r\n\r\n" +
+                $"[{HeadgearRefinery.Id}]\r\nName=Intensification\r\nLevel=1\r\nPower={HeadgearRefineryPower}\r\n\r\n" +
+                $"[{BladeRefinery.Id}]\r\nName=Critical~Strike\r\nLevel=1\r\nPower=2\r\n");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemSolidify.ini"), $"{PermanentStone.Id} 10\r\n723695 100\r\n");
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "info.ini"),
+                "[Solidify]\r\nlev1=10    // points\r\nlev2=30\r\nlev3=70\r\nlev4=150\r\nlev5=270\r\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             // Gale Bomb's throw, as the client's: 250ms, then 2ms for each world unit
