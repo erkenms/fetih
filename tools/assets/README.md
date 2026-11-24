@@ -17,8 +17,9 @@ the conversion itself changes.
 ## Reading the client
 
 - Files are looked up by their client path (`data/ItemMinIcon/111300.dds`), without case:
-  first loose in the client folder, then in `data.wdf`, then in `c3.wdf`. Loose files win
-  because they're the ones later patches added (the packages are older).
+  first loose in the client folder, then in `data.wdf`, then in `c3.wdf`. Loose first is an
+  assumption, not traced in the client: 195 files differ between a loose copy and a packed
+  one, and the loose copies are newer (2006 against 2005), so they look like patches.
 - `lib/Wdf.cs` reads the packages. They index files only by a hash of the lowercased path,
   so a file can be found but not listed; the paths come from the client's `ani/*.ani` files.
 - `lib/Dds.cs` decodes DXT1, DXT3, DXT5 and uncompressed DDS. Some `.dds` files are really
