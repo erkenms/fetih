@@ -407,6 +407,27 @@ CREATE TABLE `broadcast` (
   KEY `Position` (`Position`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Changes made from the web app: who (account), what (Action like "character.give_item"),
+-- on what (TargetType and TargetID), and the target's state before and after as JSON.
+DROP TABLE IF EXISTS `web_audit`;
+CREATE TABLE `web_audit` (
+  `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `Timestamp` datetime(3) NOT NULL,
+  `AccountID` int(10) unsigned NOT NULL,
+  `Username` varchar(127) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `IPAddress` varchar(45) DEFAULT NULL,
+  `Action` varchar(64) NOT NULL,
+  `TargetType` varchar(32) DEFAULT NULL,
+  `TargetID` varchar(64) DEFAULT NULL,
+  `Summary` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `Before` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  `After` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `Timestamp` (`Timestamp`),
+  KEY `AccountID` (`AccountID`),
+  KEY `Target` (`TargetType`,`TargetID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
