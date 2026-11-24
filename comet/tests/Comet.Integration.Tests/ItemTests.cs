@@ -321,7 +321,7 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
-        public async Task MoneyBagCpBagDrugBundleAndTransformItemWork()
+        public async Task MoneyBagCpBagAndDrugBundleWork()
         {
             await using var player = (await this.PlayingAtAsync(1002, 750, 940, GameMaster)).Player;
 
@@ -344,12 +344,6 @@ namespace Comet.Integration.Tests
                 "SELECT COUNT(*) FROM item WHERE CharacterID = @id AND TypeID = @type",
                 ("@id", player.User.Id), ("@type", ServerFixture.Amrita.Id));
             Assert.Equal(3L, (long)amritas);
-
-            var brand = await GiveAsync(player, ServerFixture.TurtledoveBrand.Id);
-            await player.Game.UseAsync(brand.Id);
-            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, brand.Id));
-            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
-                a.Values.TryGetValue(UserAttribMessage.Mesh, out var m) && m / 10000000 == 304));
         }
     }
 }

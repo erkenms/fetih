@@ -16,7 +16,7 @@ namespace Comet.Game.Items
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
     // EXP balls, EXP potions, PK amulets, hair dyes, fireworks, silver/CP packs, item packs,
-    // transformation items, skill books, and quivers (which go on the left hand). Runs on the
+    // skill books, and quivers (which go on the left hand). Runs on the
     // player's own packet queue, like Progress.
     public static class Using
     {
@@ -37,7 +37,6 @@ namespace Comet.Game.Items
 
         public sealed record PackEntry(uint TypeID, int Count);
         public sealed record PkReducer(ushort Amount, ushort MinPoints, bool ForbidJail, TimeSpan Cooldown);
-        public sealed record TransformItem(uint[] MonsterTypeIDs, uint Seconds);
 
         // Fixed-content scrolls, 3-in-1 drug bundles, and gift packs from itemtype.dat
         private static readonly Dictionary<uint, PackEntry[]> ItemPacks = new Dictionary<uint, PackEntry[]>
@@ -150,17 +149,6 @@ namespace Comet.Game.Items
         private static readonly ConcurrentDictionary<uint, DateTime> PenitenceCooldowns =
             new ConcurrentDictionary<uint, DateTime>();
 
-        // Transformation items whose monster type exists in Data/monsters.json
-        private static readonly uint[] RandomDisguiseMonsters = { 1, 2, 6, 8 }; // Pheasant, Turtledove, WingedSnake, Ratling
-        private static readonly Dictionary<uint, TransformItem> TransformItems = new Dictionary<uint, TransformItem>
-        {
-            [722498] = new TransformItem(new[] { 2u }, 300),                    // PhoenixTransformationBrand (Turtledove)
-            [722499] = new TransformItem(new[] { 8u }, 300),                    // HanumanTransformationBrand (Ratling)
-            [722520] = new TransformItem(new[] { 6u }, 300),                    // FairyTransformationBrand (WingedSnake)
-            [722684] = new TransformItem(new[] { 3310u }, 300),                 // TreasureBag (CuteBunny)
-            [727240] = new TransformItem(RandomDisguiseMonsters, 300),          // EasterSweet
-            [723724] = new TransformItem(RandomDisguiseMonsters, 300),          // DisguiseAmulet
-        };
 
         public static bool TryGetPack(uint typeID, out PackEntry[] entries) => ItemPacks.TryGetValue(typeID, out entries);
         public static bool TryGetSilverBag(uint typeID, out uint silver) => SilverBags.TryGetValue(typeID, out silver);
@@ -168,7 +156,6 @@ namespace Comet.Game.Items
         public static bool TryGetHairDye(uint typeID, out byte color) => HairDyes.TryGetValue(typeID, out color);
         public static bool TryGetFirework(uint typeID, out string text) => Fireworks.TryGetValue(typeID, out text);
         public static bool TryGetPkReducer(uint typeID, out PkReducer reducer) => PkReducers.TryGetValue(typeID, out reducer);
-        public static bool TryGetTransform(uint typeID, out TransformItem transform) => TransformItems.TryGetValue(typeID, out transform);
 
         public static async Task<bool> UseAsync(Client client, uint itemID)
         {
@@ -202,8 +189,6 @@ namespace Comet.Game.Items
                 return await LaunchFireworkAsync(client, item, fireworkText);
             if (PkReducers.TryGetValue(item.TypeID, out var pkReducer))
                 return await ReducePkAsync(client, item, pkReducer);
-            if (TransformItems.TryGetValue(item.TypeID, out var transform))
-                return await TransformAsync(client, item, transform);
 
             var scroll = Kernel.MapTypes.ScrollPointOf(item.TypeID);
             if (scroll == null)
@@ -436,21 +421,6 @@ namespace Comet.Game.Items
             return true;
         }
 
-        private static async Task<bool> TransformAsync(Client client, DbItem item, TransformItem transform)
-        {
-            if (client.Life.Dead)
-                return Reject(client, item.ItemID, item.TypeID, "dead");
-            uint monsterID = transform.MonsterTypeIDs[Random.Shared.Next(transform.MonsterTypeIDs.Length)];
-            if (!Kernel.MonsterTypes.TryGet(monsterID, out var monster))
-                return Reject(client, item.ItemID, item.TypeID, "unknown_monster");
-
-            await UseUpAsync(client, item);
-            await Magic.Transforming.StartAsync(client, monster, transform.Seconds, DateTime.UtcNow);
-            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
-                "{Name} used item {ItemId} (type {TypeId}) to transform into {MonsterName}",
-                client.Character.Name, item.ItemID, item.TypeID, monster.Name);
-            return true;
-        }
 
         // A book that can't teach its reader stays in the inventory
         private static async Task<bool> ReadBookAsync(Client client, DbItem book, ushort magic)

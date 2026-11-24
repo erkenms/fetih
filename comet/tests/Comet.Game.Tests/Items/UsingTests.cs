@@ -97,10 +97,6 @@ namespace Comet.Game.Tests.Items
             Assert.Equal((30, 30, true, TimeSpan.FromHours(1)),
                 ((int)amulet.Amount, (int)amulet.MinPoints, amulet.ForbidJail, amulet.Cooldown));
 
-            Assert.True(Using.TryGetTransform(722498, out var dove));
-            Assert.Equal(new[] { 2u }, dove.MonsterTypeIDs);
-            Assert.Equal(300u, dove.Seconds);
-
             // Alternate weapon skill books map to their spells
             Assert.Equal(Learning.WideStrike, Learning.BookOf(721278));
             Assert.Equal(Learning.Halt, Learning.BookOf(721273));

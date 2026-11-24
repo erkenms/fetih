@@ -84,7 +84,6 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CpBag = (729911, "CPBag", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) AmritaBundle = (720010, "Amrita", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Amrita = (1000030, "Amrita", 1, 0);
-        public static readonly (uint Id, string Name, ushort Amount, byte Level) TurtledoveBrand = (722498, "PhoenixTransformationBrand", 1, 0);
         // The vigor of a +1 steed, from the test itemadd.ini
         public const ushort SteedVigor = 50;
         // A necklace's health is all from its plus: a +1 HeartNecklace's, by its key in the test itemadd.ini
@@ -471,7 +470,7 @@ namespace Comet.Integration.Tests
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
-                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, TurtledoveBrand }, new[] { Potion, ManaPotion, Bottle },
+                    Class1MoneyBag, CpBag, AmritaBundle, Amrita }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor }));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
