@@ -89,8 +89,13 @@ namespace Comet.Game.Packets
         public override Task ProcessAsync(Client client) => this.Action switch
         {
             InteractionType.MagicAttack => Magic.Casting.CastAsync(client, this.MagicType, this.TargetID, this.X, this.Y),
+            InteractionType.CounterKillSwitch => Magic.Casting.CastAsync(client, Magic.CounterKill.Type, this.TargetID, this.X, this.Y),
             InteractionType.Court => Social.Marriage.CourtAsync(client, this),
             InteractionType.Marry => Social.Marriage.MarryAsync(client, this),
+            // Client anti-cheat reports pick one of these seven action numbers at random
+            (InteractionType)16 or (InteractionType)19 or (InteractionType)23 or
+                (InteractionType)30 or (InteractionType)33 or (InteractionType)34 or
+                (InteractionType)38 => Task.CompletedTask,
             _ => Attacks.RequestAsync(client, this),
         };
 

@@ -480,6 +480,9 @@ namespace Comet.Client
         public Task CastAsync(uint characterId, ushort magicType, uint targetId, int x, int y, ushort level = 0) =>
             this.SendAsync(InteractMessage.BuildMagic(characterId, magicType, level, targetId, x, y));
 
+        public Task SwitchCounterKillAsync(uint characterId) =>
+            this.SendAsync(InteractMessage.Build(InteractMessage.CounterKillSwitch, characterId, 1, 0, 0));
+
         public async Task<MagicEffect> WaitForEffectAsync(Func<MagicEffect, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>
