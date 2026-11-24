@@ -12,13 +12,24 @@ namespace Comet.Game.Npcs
     public static class Market
     {
         public const uint MapID = 1036;
-        public const uint MarkControllerID = 45, CPAdminID = 2071, SurgeonMiracleID = 3381;
+        public const uint MarkControllerID = 45, CPAdminID = 2071, SurgeonMiracleID = 3381, NameRegistrarID = 7935;
 
         // CPAdmin pays these for a DragonBall and a DragonBall Scroll
         public const uint DragonBallCPs = 215, DragonBallScrollCPs = 2150;
 
-        private const byte Leave = 1, DragonBall = 1, DragonBallScroll = 2, ChangeSize = 1, ConfirmSize = 2;
-        private const byte MarkControllerFace = 156, CPAdminFace = 7, SurgeonFace = 67;
+        private const byte Leave = 1, DragonBall = 1, DragonBallScroll = 2, ChangeSize = 1, ConfirmSize = 2, OpenChangeName = 1;
+        private const byte MarkControllerFace = 156, CPAdminFace = 7, SurgeonFace = 67, NameRegistrarFace = 31;
+
+        public static Task NameRegistrarAsync(NpcTalk talk)
+        {
+            if (talk.Option == OpenChangeName)
+                return talk.OpenWindowAsync(MsgAction.Window.ChangeName);
+            return talk.Text($"Good day! If you want to turn a new page in your life, you can pay me {NameChange.CostCPs} CPs to get a new name. ")
+                .Text("But choose carefully, as every player has only one chance in a lifetime! Your new name will take effect after you relog.")
+                .Choice("Okay, here's my CPs!", OpenChangeName)
+                .Choice("I'll think about it.", MsgTaskDialog.NoOption)
+                .Face(NameRegistrarFace).ShowAsync();
+        }
 
         // Back to where the player came in from; Twin City when that isn't known, as after
         // logging in at the market

@@ -15,7 +15,7 @@ namespace Comet.Game.Npcs
 
         // Options: a menu page, then a slot, then the confirmation, each slot's position added
         // to the step's base
-        private const byte LevelMenu = 1, LevelMenuMore = 2, QualityMenu = 3, QualityMenuMore = 4;
+        private const byte LevelMenu = 1, LevelMenuMore = 2, QualityMenu = 3, QualityMenuMore = 4, DegradeMenu = 5;
         private const byte LevelAsk = 20, LevelDo = 10, QualityAsk = 30, QualityDo = 40, More = 1, Back = 0;
         private const byte Face = 6, DragonBallFace = 28;
 
@@ -32,6 +32,9 @@ namespace Comet.Game.Npcs
                     await SlotsAsync(talk, Face, option == LevelMenuMore ? LevelAsk : QualityAsk, firstHalf: false,
                         option == LevelMenuMore ? LevelMenu : QualityMenu);
                     return;
+                case DegradeMenu:
+                    await talk.OpenWindowAsync(MsgAction.Window.DegradeEquipment);
+                    return;
             }
 
             if (Slot(option, LevelAsk) is { } levelSlot)
@@ -44,9 +47,10 @@ namespace Comet.Game.Npcs
                 await DoAsync(talk, qualityDo, Upgrade.Quality, DragonBall, DragonBallCostOf(talk, qualityDo), Face);
             else
                 await talk.Text("Hello! I can always succeed in upgrading item quality, but I ask for a few more " +
-                        "dragonballs than Artisan Wind. I can also upgrade item levels. How can I help you?")
+                        "dragonballs than Artisan Wind. I can also upgrade or degrade item levels. How can I help you?")
                     .Choice("Upgrade Quality", QualityMenu)
                     .Choice("Upgrade Level", LevelMenu)
+                    .Choice("Degrade Equipment", DegradeMenu)
                     .Face(Face).ShowAsync();
         }
 

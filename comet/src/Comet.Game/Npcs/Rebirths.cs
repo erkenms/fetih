@@ -9,15 +9,34 @@ namespace Comet.Game.Npcs
     // points back to allot
     public static class Rebirths
     {
-        public const uint EternityID = 300500, AlexID = 3600, CelestialTaoID = 350050;
+        public const uint EternityID = 300500, AlexID = 3600, CelestialTaoID = 350050, SeerID = 46;
 
         // Option FirstClass + i chooses Rebirth.Classes[i], Confirm + i is reborn into it
         private const byte MoreClasses = 1, FirstClass = 10, Confirm = 20, Reallot = 1, ConfirmReallot = 2;
+        private const byte OpenReincarnation = 1, WhereDew = 2, SeerFace = 6;
         private const int ClassesPerPage = 4;
 
         public static Task EternityAsync(NpcTalk talk) => TalkAsync(talk, 1, "a Celestial Stone");
 
         public static Task AlexAsync(NpcTalk talk) => TalkAsync(talk, 2, "an Exemption Token");
+
+        public static Task SeerAsync(NpcTalk talk)
+        {
+            if (talk.Option == OpenReincarnation)
+                return talk.OpenWindowAsync(MsgAction.Window.Reincarnation);
+            if (talk.Option == WhereDew)
+                return talk.Text("You can get Oblivion Dew from the Shopping Mall or special quests.")
+                    .Choice("I see.", MsgTaskDialog.NoOption)
+                    .Face(SeerFace).ShowAsync();
+
+            return talk.Text("From now on, have total control of your life! If you've been Reborn twice and are at least Level 110, just bring me some Oblivion Dew and I'll help you become Reincarnated! ")
+                .Text("After the Reincarnation, your class skills will revert to level 1, but they'll return to their previous levels when you reach Level 110, again. ")
+                .Text("If your classes have been the same for all three lives, including your current one, you can learn the Pure Skills from your class trainer, in the job center.")
+                .Choice("I want to get Reincarnated.", OpenReincarnation)
+                .Choice("Where can I get the Dew?", WhereDew)
+                .Choice("Not now.", MsgTaskDialog.NoOption)
+                .Face(SeerFace).ShowAsync();
+        }
 
         private static async Task TalkAsync(NpcTalk talk, byte life, string item)
         {

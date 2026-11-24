@@ -27,6 +27,12 @@ namespace Comet.Game.States
             return this.ById.Remove(characterID, player);
         }
 
+        public void Rename(uint characterID, string oldName, string newName, T player)
+        {
+            this.ByName.TryRemove(new KeyValuePair<string, T>(oldName, player));
+            this.ByName[newName] = player;
+        }
+
         public bool TryGet(uint characterID, out T player) =>
             this.ById.TryGet(characterID, out player);
 

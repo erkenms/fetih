@@ -147,6 +147,7 @@ namespace Comet.Game.Packets
 
                 // Ethereal's enchant window: the gear in the ID field, the gem in Command
                 [ItemActionType.EquipmentEnchant] = (msg, client) => Enchanting.EnchantAsync(client, msg, Random.Shared),
+                [ItemActionType.EquipmentDegrade] = (msg, client) => Upgrading.DegradeAsync(client, msg.CharacterID),
 
                 // Warehouse silver; the amount in Command
                 [ItemActionType.BankQuery] = (msg, client) => Storing.ShowSilverAsync(client, msg),
@@ -200,6 +201,7 @@ namespace Comet.Game.Packets
             InventoryDrop = 37,
             DropSilver = 38,
             DisplayGears = 46,
+            EquipmentDegrade = 54,
         }
     }
 }

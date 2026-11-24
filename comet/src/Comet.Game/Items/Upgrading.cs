@@ -20,6 +20,9 @@ namespace Comet.Game.Items
         // Gear past this required level can't be raised further with meteors
         public const int MaxUpgradeLevel = 120;
 
+        // CPs charged by the degrade equipment window (dialog 506, MsgItem 54)
+        public const uint DegradeCPs = 54;
+
         public enum Upgrade { Level, Quality }
 
         // The slots the upgrade NPCs offer
@@ -86,6 +89,54 @@ namespace Comet.Game.Items
                 "type {OldTypeId} to {TypeId}", character.Name, upgrade.ToString().ToLowerInvariant(), item.ItemID,
                 position, npc, cost, gemType, oldType, item.TypeID);
             return null;
+        }
+
+        // Lowers an inventory item to its lowest level tier for 54 CPs, keeping quality, plus,
+        // bless, enchant and sockets. Sent by the degrade window (MsgItem 54).
+        public static async Task<string> DegradeAsync(Client client, uint itemID)
+        {
+            var character = client.Character;
+            if (character == null || client.Inventory == null)
+                return "not_found";
+
+            var item = client.Inventory.Find(itemID);
+            if (item == null)
+                return RejectDegrade(client, itemID, "not_found");
+            if (item.Amount < item.AmountLimit)
+            {
+                await Chat.Talk.NoticeAsync(client, "You must repair this equipment, first!");
+                return RejectDegrade(client, itemID, "needs_repair");
+            }
+            if (LowestLevel(item.TypeID) is not ItemType lowest)
+            {
+                await Chat.Talk.NoticeAsync(client, "This equipment can't be degraded!");
+                return RejectDegrade(client, itemID, "lowest");
+            }
+            if (character.Jewels < DegradeCPs)
+            {
+                await Chat.Talk.NoticeAsync(client, "You don't have enough CPs!");
+                return RejectDegrade(client, itemID, "no_cps");
+            }
+
+            await Progress.ChangeConquerPointsAsync(client, -DegradeCPs, "degrade");
+            uint oldType = item.TypeID;
+            item.TypeID = lowest.ID;
+            item.Amount = lowest.Amount;
+            item.AmountLimit = lowest.AmountLimit;
+            await ItemsRepository.SetUpgradeAsync(item);
+            await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Update));
+
+            LogEvents.For(typeof(Upgrading), LogEvents.ItemDegraded).Information(
+                "{Name} degraded item {ItemId} from {OldTypeId} to {TypeId} for {Cost} CPs",
+                character.Name, item.ItemID, oldType, item.TypeID, DegradeCPs);
+            return null;
+        }
+
+        private static string RejectDegrade(Client client, uint itemID, string reason)
+        {
+            LogEvents.For(typeof(Upgrading), LogEvents.ItemDegradeRejected).Information(
+                "{Name} can't degrade item {ItemId}: {Reason}", client.Character?.Name, itemID, reason);
+            return reason;
         }
 
         // Normal and lower become refined, then unique, elite and super, at the same level

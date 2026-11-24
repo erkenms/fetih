@@ -36,6 +36,7 @@ namespace Comet.Network.Packets
         MsgEncryptCode,
         // Faction award-rank queries and settings sent by the award/rank dialogs.
         MsgSelfSynMemAwardRank = 1063,
+        MsgMeteSpecial = 1066,
         MsgPCNum = 1100,
         MsgMapItem,
         MsgPackage,
@@ -81,6 +82,7 @@ namespace Comet.Network.Packets
         MsgContribute,
         MsgQuiz,
         MsgRelation = 2071,
+        MsgChangeName = 2080,
         MsgDeadMark = 2081,
         // Faction contribution-rank paging and refresh sent by CDlgFactionContriRank.
         MsgFactionRankInfo = 2101,

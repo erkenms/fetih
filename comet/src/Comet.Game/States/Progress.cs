@@ -1,6 +1,7 @@
 namespace Comet.Game.States
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Packets;
@@ -199,6 +200,16 @@ namespace Comet.Game.States
 
             if (character.Level > from)
                 await ShowLevelUpAsync(client);
+
+            // Reaching level 110 after 2nd rebirth restores spells lowered by rebirth/reincarnation
+            if (character.Rebirths >= Rebirth.MaxRebirths && from < Rebirth.ReincarnationLevel &&
+                character.Level >= Rebirth.ReincarnationLevel && client.Skills != null)
+            {
+                foreach (var (magic, learned) in client.Skills.AllSpells())
+                    if (learned.OldLevel > learned.Level)
+                        await Magic.Casting.SetAsync(client, magic,
+                            new Magic.SkillLevel(learned.OldLevel, 0, 0), learned.Level, "epiphany");
+            }
 
             LogEvents.For(typeof(Progress), LogEvents.CharacterLevel).Information(
                 "{Name} went from level {FromLevel} to {Level} ({Reason})",

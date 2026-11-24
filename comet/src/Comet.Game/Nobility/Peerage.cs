@@ -82,6 +82,15 @@ namespace Comet.Game.Nobility
             await client.SendAsync(MsgPeerage.Info(client.ID, donation, StandingOf(client.ID)));
         }
 
+        public static void Rename(uint characterID, string name)
+        {
+            lock (Sync)
+            {
+                if (Donors.TryGetValue(characterID, out var donor))
+                    Donors[characterID] = donor with { Name = name };
+            }
+        }
+
         private static async Task DonateAsync(Client client, ulong amount, ushort currency)
         {
             var character = client.Character;

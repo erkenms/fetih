@@ -71,6 +71,20 @@ namespace Comet.Game.Social
             }
         }
 
+        public static async Task RenameAsync(uint characterID, string name)
+        {
+            await Gate.WaitAsync();
+            try
+            {
+                if (ByMember.TryGetValue(characterID, out var membership))
+                    membership.Member.Name = name;
+            }
+            finally
+            {
+                Gate.Release();
+            }
+        }
+
         public static async Task HandleAsync(Client client, MsgSyndicate msg)
         {
             if (client.Character == null)

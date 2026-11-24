@@ -40,7 +40,11 @@ namespace Comet.Core.Logging
         public const string CharacterPromotionRejected = "character.promotion_rejected";
         public const string CharacterReborn = "character.reborn";
         public const string CharacterRebirthRejected = "character.rebirth_rejected";
+        public const string CharacterReincarnated = "character.reincarnated";
+        public const string CharacterReincarnateRejected = "character.reincarnate_rejected";
         public const string CharacterReallotted = "character.reallotted";
+        public const string CharacterRenamed = "character.renamed";
+        public const string CharacterRenameRejected = "character.rename_rejected";
         public const string CharacterSilver = "character.silver";
         public const string CharacterAvatar = "character.avatar";
         public const string CharacterAvatarRejected = "character.avatar_rejected";
@@ -82,6 +86,8 @@ namespace Comet.Core.Logging
         public const string ItemLockRejected = "item.lock_rejected";
         public const string ItemUpgraded = "item.upgraded";
         public const string ItemUpgradeRejected = "item.upgrade_rejected";
+        public const string ItemDegraded = "item.degraded";
+        public const string ItemDegradeRejected = "item.degrade_rejected";
         public const string ItemEmbedded = "item.embedded";
         public const string ItemEmbedRejected = "item.embed_rejected";
         public const string ItemBroken = "item.broken";

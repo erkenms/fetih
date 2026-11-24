@@ -55,6 +55,8 @@ namespace Comet.Game.Packets
                 [PacketType.MsgRank] = () => new MsgRank(),
                 [PacketType.MsgPigeon] = () => new MsgPigeon(),
                 [PacketType.MsgMessageBoard] = () => new MsgMessageBoard(),
+                [PacketType.MsgMeteSpecial] = () => new MsgMeteSpecial(),
+                [PacketType.MsgChangeName] = () => new MsgChangeName(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

@@ -52,6 +52,7 @@ namespace Comet.Game.States
             to.FlowerSentDay = from.FlowerSentDay;
             to.SecondPassword = from.SecondPassword;
             to.MutedUntil = from.MutedUntil;
+            to.NameChanged = from.NameChanged;
             to.HealthPoints = from.HealthPoints;
             to.Jewels = from.Jewels;
             to.KillPoints = from.KillPoints;

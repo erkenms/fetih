@@ -65,6 +65,22 @@ namespace Comet.Game.Database.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, none));
         }
 
+        public static async Task RenameAsync(uint characterID, string oldName, string newName, uint jewels)
+        {
+            using var db = new ServerDbContext();
+            using var tx = await db.Database.BeginTransactionAsync();
+            await db.Characters
+                .Where(x => x.CharacterID == characterID)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(x => x.Name, newName)
+                    .SetProperty(x => x.NameChanged, true)
+                    .SetProperty(x => x.Jewels, jewels));
+            await db.Characters
+                .Where(x => x.Spouse == oldName)
+                .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, newName));
+            await tx.CommitAsync();
+        }
+
         public static async Task DeleteAsync(uint characterID, string name, string none)
         {
             using var db = new ServerDbContext();

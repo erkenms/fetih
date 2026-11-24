@@ -23,6 +23,8 @@ namespace Comet.Game.Database.Models
         public virtual uint AccountID { get; private set; }
         public virtual string Name { get; private set; }
         public virtual string Spouse { get; set; } = "None";
+
+        public void Rename(string name) => this.Name = name;
         public virtual uint Mesh { get; set; }
         public virtual ushort Avatar { get; set; }
         public virtual ushort Hairstyle { get; set; }
@@ -82,6 +84,7 @@ namespace Comet.Game.Database.Models
 
         // Until when (UTC) a moderator's /mute keeps the player from chatting; null if not muted
         public virtual DateTime? MutedUntil { get; set; }
+        public virtual bool NameChanged { get; set; }
         public virtual DateTime Registered { get; set; }
     }
 }

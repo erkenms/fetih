@@ -61,6 +61,7 @@ CREATE TABLE `character` (
   `FlowerSentDay` date DEFAULT NULL,
   `SecondPassword` int(10) unsigned NOT NULL DEFAULT '0',
   `MutedUntil` datetime DEFAULT NULL,
+  `NameChanged` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `Registered` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`CharacterID`,`AccountID`),
   UNIQUE KEY `CharacterID_UNIQUE` (`CharacterID`),

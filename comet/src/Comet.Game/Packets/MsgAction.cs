@@ -398,6 +398,9 @@ namespace Comet.Game.Packets
             // Redeem Equipment (CDlgPKDetain) and Claim Prize (CDlgPKReward)
             DetainRedeem = 336,
             DetainClaim = 337,
+            Reincarnation = 485,
+            ChangeName = 489,
+            DegradeEquipment = 506,
         }
 
         // Commands for ClientCommand that open a window: the client posts Command as its own

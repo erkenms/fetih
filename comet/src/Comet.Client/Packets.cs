@@ -25,7 +25,9 @@ namespace Comet.Client
         public const ushort MsgMapItem = 1101;
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
+        public const ushort MsgChangeName = 2080;
         public const ushort MsgDeadMark = 2081;
+        public const ushort MsgMeteSpecial = 1066;
         public const ushort MsgAura = 2410;
         public const ushort MsgPeerage = 2064;
         public const ushort MsgQualifyingInteractive = 2205;
@@ -1459,6 +1461,45 @@ namespace Comet.Client
                     packet[o + 8] != 0));
             }
             return new DetainItemUpdateMessage(page, entries);
+    public sealed record MeteSpecialMessage(int Profession, int Body)
+    {
+        public const int Success = 1, Dead = 2, NotMaxRank = 3, NotSecondReborn = 4, LevelLow = 5, NoItem = 6;
+
+        public static MeteSpecialMessage Parse(byte[] packet) => new MeteSpecialMessage(
+            BitConverter.ToInt32(packet, 4),
+            BitConverter.ToInt32(packet, 8));
+
+        public static byte[] Build(int profession, int body)
+        {
+            var packet = Packet.Create(PacketTypes.MsgMeteSpecial, 12);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), profession);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), body);
+            return packet;
+        }
+    }
+
+    public sealed record ChangeNameMessage(ushort Action, ushort UsedCount, ushort RemainingCount, string Name)
+    {
+        public const ushort Change = 0, Success = 1, Duplicate = 2, Query = 3, Close = 5;
+
+        public static ChangeNameMessage Parse(byte[] packet)
+        {
+            int end = Array.IndexOf(packet, (byte)0, 10, 16);
+            int len = end < 0 ? 16 : end - 10;
+            return new ChangeNameMessage(
+                BitConverter.ToUInt16(packet, 4),
+                BitConverter.ToUInt16(packet, 6),
+                BitConverter.ToUInt16(packet, 8),
+                Encoding.Latin1.GetString(packet, 10, len));
+        }
+
+        public static byte[] Build(ushort action, string name = "")
+        {
+            var packet = Packet.Create(PacketTypes.MsgChangeName, 26);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            var bytes = Encoding.Latin1.GetBytes(name ?? string.Empty);
+            Array.Copy(bytes, 0, packet, 10, Math.Min(bytes.Length, 16));
+            return packet;
         }
     }
 }

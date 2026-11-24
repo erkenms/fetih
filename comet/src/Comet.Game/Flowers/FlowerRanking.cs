@@ -114,6 +114,18 @@ namespace Comet.Game.Flowers
             await client.SendAsync(MsgFlower.Info(character.CharacterID, record, today));
         }
 
+        public static void Rename(uint characterID, string name)
+        {
+            lock (Sync)
+            {
+                if (Records.TryGetValue(characterID, out var record) && record.Name != name)
+                {
+                    Records[characterID] = record with { Name = name };
+                    Rebuild();
+                }
+            }
+        }
+
         public static async Task HandleSendAsync(Client client, MsgFlower msg)
         {
             if (client.Character == null)

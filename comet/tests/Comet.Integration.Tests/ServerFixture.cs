@@ -41,6 +41,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Beads = (610003, "WillowPrayerBeads", 1698, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Glaive = (510301, "Glaive", 1099, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Helmet = (111003, "IronHelmet", 3899, 15);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetRefinedLowest = (111006, "IronHelmet", 3899, 15);
         // The helmet a level up, then refined: both sure upgrades
         public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetLevelUp = (111013, "IronHelmet", 3899, 20);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) HelmetRefined = (111016, "IronHelmet", 3899, 20);
@@ -51,6 +52,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExpBall = (723700, "ExpBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CelestialStone = (721259, "CelestialStone", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExemptionToken = (723701, "ExemptionToken", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) OblivionDew = (711083, "OblivionDew", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) MeteorScroll = (720027, "MeteorScroll", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ThunderBook = (725000, "Thunder", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperDragonGem = (700013, "SuperDragonGem", 1, 0);
@@ -481,7 +483,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
-                    HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald,
+                    HelmetRefinedLowest, HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald, OblivionDew,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
@@ -504,9 +506,11 @@ namespace Comet.Integration.Tests
                     Dodge, IronShirt, Intensify, Bless, AzureShield, ShurikenVortex, FatalStrike, PoisonStar, GapingWounds, CounterKill, FreezingArrow, PoisonousArrows, Dash, Golem,
                     DragonWhirl, StarArrow, Perseverance, GuardsSpell));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "magictypeop.dat"), MagicFiles.MagicTypeOpDat(
+                (0, 0, 11, 4, new ushort[] { Cyclone.Type }),
                 (1, 15, 21, 0, new ushort[] { Hercules.Type }),
                 (1, 15, 21, 2, new ushort[] { Thunder.Type, FastBlade.Type }),
                 (1, 15, 21, 7, new ushort[] { IronShirt.Type }),
+                (2, 25, 11, 2, new ushort[] { Thunder.Type }),
                 (2, 25, 11, 7, new ushort[] { Bless.Type })));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "WeaponSkillLevelExp.ini"),
                 MagicFiles.WeaponSkillLevelExpIni(0, 100, 1000));

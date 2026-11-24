@@ -867,6 +867,32 @@ namespace Comet.Client
             return packet == null ? null : DetainItemUpdateMessage.Parse(packet);
         }
 
+        public Task ReincarnateAsync(int profession, int body) =>
+            this.SendAsync(MeteSpecialMessage.Build(profession, body));
+
+        public async Task<MeteSpecialMessage> WaitForReincarnationAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMeteSpecial, timeout);
+            return packet == null ? null : MeteSpecialMessage.Parse(packet);
+        }
+
+        public Task QueryNameChangeAsync() =>
+            this.SendAsync(ChangeNameMessage.Build(ChangeNameMessage.Query));
+
+        public Task ChangeNameAsync(string name) =>
+            this.SendAsync(ChangeNameMessage.Build(ChangeNameMessage.Change, name));
+
+        public async Task<ChangeNameMessage> WaitForNameChangeAsync(TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgChangeName, timeout);
+            return packet == null ? null : ChangeNameMessage.Parse(packet);
+        }
+
+        public Task DegradeItemAsync(uint itemId) =>
+            this.SendAsync(ItemMessage.Build(itemId, 0, 54));
+
         private async Task<byte[]> TryReceiveAsync(Func<byte[], bool> match, TimeSpan? timeout)
         {
             try { return await this.ReceiveAsync(match, timeout); }

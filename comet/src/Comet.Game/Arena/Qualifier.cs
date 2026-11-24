@@ -99,6 +99,15 @@ namespace Comet.Game.Arena
             await PersistSeasonAsync(closed, saves, rewarded);
         }
 
+        public static void Rename(uint characterID, string name)
+        {
+            lock (Sync)
+            {
+                if (Records.TryGetValue(characterID, out var record))
+                    record.Name = name;
+            }
+        }
+
         public static async Task HandleAsync(Client client, MsgQualifyingInteractive msg)
         {
             if (client.Character == null)

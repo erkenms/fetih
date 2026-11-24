@@ -18,8 +18,8 @@ namespace Comet.Game.States
     // magictypeop.dat; worn gear goes back to its lowest level.
     public static class Rebirth
     {
-        public const byte MaxRebirths = 2, NewLevel = 15, WaterSaint = 135;
-        public const uint CelestialStone = 721259, ExemptionToken = 723701;
+        public const byte MaxRebirths = 2, NewLevel = 15, WaterSaint = 135, ReincarnationLevel = 110;
+        public const uint CelestialStone = 721259, ExemptionToken = 723701, OblivionDew = 711083;
 
         // What a new life may be, in the order the NPCs offer them
         public static readonly byte[] Classes = { 11, 21, 41, 51, 61, 71, 132, 142 };
@@ -127,6 +127,147 @@ namespace Comet.Game.States
                 character.Name, life, level, from, newClass, character.AttributePoints, npc, item.TypeID);
             await client.SaveAsync("rebirth");
             return null;
+        }
+
+        // Reincarnation (MsgMeteSpecial 1066): a 2nd-reborn master at level 110+ spends an
+        // Oblivion Dew to shift their 3-life class history (dropping AncestorClass) and start
+        // at level 15 in the chosen class without gaining bonus rebirths/BP.
+        public static async Task<string> ReincarnateAsync(Client client, byte newClass, int body)
+        {
+            var character = client.Character;
+            if (character == null)
+                return "not_found";
+
+            byte from = character.CurrentClass, level = character.Level;
+            if (client.Life.Dead)
+                return await RejectReincarnateAsync(client, newClass, "dead", MsgMeteSpecial.Result.Dead);
+            if (character.Rebirths < MaxRebirths)
+                return await RejectReincarnateAsync(client, newClass, "not_second_reborn", MsgMeteSpecial.Result.NotSecondReborn);
+            if (Promotion.Rank(from) < Promotion.MaxRank)
+                return await RejectReincarnateAsync(client, newClass, "promotion", MsgMeteSpecial.Result.NotMaxRank);
+            if (level < ReincarnationLevel)
+                return await RejectReincarnateAsync(client, newClass, "level", MsgMeteSpecial.Result.LevelLow);
+            if (!Classes.Contains(newClass))
+                return await RejectReincarnateAsync(client, newClass, "class", null);
+
+            var dew = client.Inventory.Items.FirstOrDefault(i => i.TypeID == OblivionDew);
+            if (dew == null || !client.Inventory.Remove(dew))
+                return await RejectReincarnateAsync(client, newClass, "no_item", MsgMeteSpecial.Result.NoItem);
+
+            await ItemsRepository.DeleteAsync(dew.ItemID);
+            await client.SendAsync(MsgItem.Removed(dew.ItemID));
+
+            byte dropped = character.AncestorClass;
+            character.AncestorClass = character.PreviousClass;
+            character.PreviousClass = from;
+            character.CurrentClass = newClass;
+            character.SecondLifeLevel = level;
+            character.Level = NewLevel;
+            character.Experience = 0;
+
+            uint? newMesh = BodyMesh(character.Mesh, body);
+            if (newMesh is uint mesh)
+                character.Mesh = mesh;
+
+            Attributes.SetStarting(character);
+            character.AttributePoints = (ushort)(LifePoints(1, character.AncestorClass, character.FirstLifeLevel) +
+                LifePoints(2, from, level));
+
+            await ChangeSpellsAsync(client, MaxRebirths, from, newClass);
+            await ForgetDroppedLifeAsync(client, dropped, from, newClass);
+            await LowerGearAsync(client);
+            character.HealthPoints = Attributes.MaxHealth(client);
+            character.ManaPoints = Attributes.MaxMana(client);
+
+            var self = new MsgUserAttrib(client.ID)
+                .Append(AttributeType.Class, character.CurrentClass)
+                .Append(AttributeType.Level, character.Level)
+                .Append(AttributeType.Experience, character.Experience)
+                .Append(AttributeType.Strength, character.Strength)
+                .Append(AttributeType.Agility, character.Agility)
+                .Append(AttributeType.Vitality, character.Vitality)
+                .Append(AttributeType.Spirit, character.Spirit)
+                .Append(AttributeType.AttributePoints, character.AttributePoints)
+                .Append(AttributeType.MaxHealth, character.HealthPoints)
+                .Append(AttributeType.Health, character.HealthPoints)
+                .Append(AttributeType.MaxMana, character.ManaPoints)
+                .Append(AttributeType.Mana, character.ManaPoints);
+            var view = new MsgUserAttrib(client.ID)
+                .Append(AttributeType.Class, character.CurrentClass)
+                .Append(AttributeType.Level, character.Level);
+            if (newMesh.HasValue)
+            {
+                uint visibleMesh = client.Life.Mesh(character);
+                self.Append(AttributeType.Mesh, visibleMesh);
+                view.Append(AttributeType.Mesh, visibleMesh);
+            }
+            await client.SendAsync(self);
+            await Movement.SendToViewAsync(client, view);
+            await Equipping.ShowLookAsync(client);
+            await Progress.ShowLevelUpAsync(client);
+            await client.SendAsync(new MsgMeteSpecial(MsgMeteSpecial.Result.Success));
+
+            LogEvents.For(typeof(Rebirth), LogEvents.CharacterReincarnated).Information(
+                "{Name} reincarnated at level {FromLevel} from {FromClass} into {Class} " +
+                "(lives {Ancestor}/{Previous}/{Current}, {Points} points)",
+                character.Name, level, from, newClass, character.AncestorClass, character.PreviousClass,
+                character.CurrentClass, character.AttributePoints);
+            await client.SaveAsync("reincarnation");
+            return null;
+        }
+
+        private static async Task<string> RejectReincarnateAsync(Client client, byte newClass, string reason,
+            MsgMeteSpecial.Result? reply)
+        {
+            LogEvents.For(typeof(Rebirth), LogEvents.CharacterReincarnateRejected).Information(
+                "{Name} can't reincarnate from class {FromClass} into {Class}: {Reason}",
+                client.Character?.Name, client.Character?.CurrentClass, newClass, reason);
+            if (reply is MsgMeteSpecial.Result code)
+                await client.SendAsync(new MsgMeteSpecial(code));
+            return reason;
+        }
+
+        // The client sends body 1/2 for female (agile/muscular) and 3/4 for male (agile/muscular);
+        // keep the player's gender and only apply a matching body.
+        private static uint? BodyMesh(uint currentMesh, int body)
+        {
+            bool female = currentMesh is (uint)BodyType.AgileFemale or (uint)BodyType.MuscularFemale;
+            return (female, body) switch
+            {
+                (true, 1) => (uint)BodyType.AgileFemale,
+                (true, 2) => (uint)BodyType.MuscularFemale,
+                (false, 3) => (uint)BodyType.AgileMale,
+                (false, 4) => (uint)BodyType.MuscularMale,
+                _ => null,
+            };
+        }
+
+        private static byte BaseClass(byte cls)
+        {
+            int line = cls / 10;
+            return line switch
+            {
+                13 => 132,
+                14 => 142,
+                _ when line > 0 => (byte)(line * 10 + 1),
+                _ => 0,
+            };
+        }
+
+        private static async Task ForgetDroppedLifeAsync(Client client, byte dropped, byte from, byte to)
+        {
+            byte droppedBase = BaseClass(dropped);
+            if (droppedBase == 0)
+                return;
+            var kept = Kernel.MagicOps.Of(MaxRebirths, from, to, Operation.Restart)
+                .Concat(Kernel.MagicOps.Of(MaxRebirths, from, to, Operation.Learn))
+                .ToHashSet();
+            foreach (var magic in Kernel.MagicOps.Of(0, 0, droppedBase, Operation.FirstLife))
+                if (!kept.Contains(magic) && client.Skills.TryGetSpell(magic, out _))
+                    await Casting.ForgetAsync(client, magic, "reincarnation");
+            foreach (var magic in Kernel.MagicOps.Of(0, droppedBase, droppedBase, Operation.Pure))
+                if (!kept.Contains(magic) && client.Skills.TryGetSpell(magic, out _))
+                    await Casting.ForgetAsync(client, magic, "reincarnation");
         }
 
         private static async Task ChangeSpellsAsync(Client client, byte life, byte from, byte to)
