@@ -25,6 +25,7 @@ namespace Comet.Game.Database
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
         public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
+        public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
         // The zone whose midnight starts a new day, as an IANA or Windows ID; the machine's
         // own zone when empty

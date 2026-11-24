@@ -32,6 +32,7 @@ namespace Comet.Game.States
                 return;
             var results = await Task.WhenAll(players.Select(p => p.SaveAsync("periodic")));
             int saved = results.Count(r => r);
+            GameMetrics.SaveRoundDone(watch.Elapsed, saved, players.Count);
             LogEvents.For(typeof(SaveLoop), LogEvents.CharacterSaveRound).Information(
                 "Saved {Saved} of {Online} online characters in {DurationMs} ms",
                 saved, players.Count, watch.ElapsedMilliseconds);

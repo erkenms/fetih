@@ -24,11 +24,17 @@ namespace Comet.Network.Sockets
         public static bool IsTraced(string ipAddress, uint accountID) =>
             all || addresses.Contains(ipAddress) || (accountID != 0 && accounts.Contains(accountID));
 
-        public static void In(TcpServerActor actor, ReadOnlySpan<byte> packet) =>
+        public static void In(TcpServerActor actor, ReadOnlySpan<byte> packet)
+        {
+            PacketMetrics.In(packet);
             Write(actor, LogEvents.PacketIn, packet);
+        }
 
-        public static void Out(TcpServerActor actor, ReadOnlySpan<byte> packet) =>
+        public static void Out(TcpServerActor actor, ReadOnlySpan<byte> packet)
+        {
+            PacketMetrics.Out(packet);
             Write(actor, LogEvents.PacketOut, packet);
+        }
 
         private static void Write(TcpServerActor actor, string eventName, ReadOnlySpan<byte> packet)
         {
