@@ -154,6 +154,45 @@ namespace Comet.Game.Social
         public static Task SendDonationsAsync(Client client) =>
             client.SendAsync(new MsgSynpOffer(Of(client.ID)?.Member));
 
+        public static async Task SendDonationRankingAsync(
+            Client client, MsgFactionRankInfo.FactionRankType rankType, byte pageIndex)
+        {
+            if ((byte)rankType >= MsgFactionRankInfo.MaxRankTypes)
+                return;
+            await Gate.WaitAsync();
+            try
+            {
+                var guild = Of(client.ID)?.Guild;
+                if (guild == null)
+                    return;
+                var ranked = guild.Members.Values
+                    .OrderByDescending(m => DonationFor(m, rankType))
+                    .ThenByDescending(m => m.TotalDonation)
+                    .ThenByDescending(m => m.Rank)
+                    .ThenBy(m => m.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToList();
+                int start = pageIndex * MsgFactionRankInfo.PageSize;
+                var reply = new MsgFactionRankInfo
+                {
+                    RankType = rankType,
+                    PageIndex = pageIndex,
+                    MaxRankSize = (ushort)Math.Min(ranked.Count, ushort.MaxValue),
+                };
+                for (int i = 0; i < MsgFactionRankInfo.PageSize && start + i < ranked.Count; i++)
+                    reply.Entries.Add((ranked[start + i], (uint)(start + i)));
+                await client.SendAsync(reply);
+            }
+            finally { Gate.Release(); }
+        }
+
+        private static uint DonationFor(GuildMember member, MsgFactionRankInfo.FactionRankType rankType) => rankType switch
+        {
+            MsgFactionRankInfo.FactionRankType.Silver => member.SilverDonation,
+            MsgFactionRankInfo.FactionRankType.ConquerPoints => member.ConquerPointsDonation,
+            MsgFactionRankInfo.FactionRankType.Total => member.TotalDonation,
+            _ => 0u,
+        };
+
         public static List<Client> OthersOf(Client client)
         {
             var guild = Of(client.ID)?.Guild;

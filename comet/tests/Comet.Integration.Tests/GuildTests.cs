@@ -120,5 +120,57 @@ namespace Comet.Integration.Tests
             await first.Game.SyndicateAsync(SyndicateMessage.Enemy, 0, secondName);
             Assert.NotNull(await first.Game.WaitForNameAsync(n => n.Action == NameMessage.SetEnemy && n.Data == secondID));
         }
+
+        [Fact]
+        public async Task DonationRankingReturnsMembersInOrderBySelectedColumn()
+        {
+            const uint Jewels = 29;
+            await using var leader = (await this.FounderAsync(406, 396)).Player;
+            await using var member = (await this.PlayingAtAsync(1002, 407, 396, GameMaster)).Player;
+            var guildID = await CreateAsync(leader, NewGuildName());
+            await RecruitAsync(leader, member, guildID);
+
+            await CommandAsync(leader, "/jewel 100");
+            Assert.NotNull(await leader.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Jewels, out var v) && v == 100));
+            await CommandAsync(member, "/silver 5000");
+            Assert.NotNull(await member.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Silver, out var v) && v == 6_000));
+            await CommandAsync(member, "/jewel 25");
+            Assert.NotNull(await member.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Jewels, out var v) && v == 25));
+
+            // Member donates more silver; leader donates more CPs
+            await leader.Game.SyndicateAsync(SyndicateMessage.DonateSilver, 300);
+            Assert.NotNull(await leader.Game.WaitForGuildInfoAsync(i => i.Donation == 300));
+            await leader.Game.SyndicateAsync(SyndicateMessage.DonateConquerPoints, 80);
+            Assert.NotNull(await leader.Game.WaitForGuildInfoAsync(i => i.ConquerPointsFund == 80));
+
+            await member.Game.SyndicateAsync(SyndicateMessage.DonateSilver, 900);
+            Assert.NotNull(await member.Game.WaitForGuildInfoAsync(i => i.Donation == 900));
+            await member.Game.SyndicateAsync(SyndicateMessage.DonateConquerPoints, 20);
+            Assert.NotNull(await member.Game.WaitForGuildInfoAsync(i => i.ConquerPointsFund == 100));
+
+            var bySilver = await leader.Game.QueryGuildDonationRankingAsync(0);
+            Assert.NotNull(bySilver);
+            Assert.Equal((byte)0, bySilver.RankType);
+            Assert.Equal((ushort)2, bySilver.MaxRankSize);
+            Assert.Equal(new[] { (member.User.Name, 0u, 900u, 20u, 920u), (leader.User.Name, 1u, 300u, 80u, 380u) },
+                bySilver.Entries.Select(e => (e.Name, e.Position, e.Silver, e.ConquerPoints, e.Total)));
+
+            var byCps = await leader.Game.QueryGuildDonationRankingAsync(1);
+            Assert.NotNull(byCps);
+            Assert.Equal((byte)1, byCps.RankType);
+            Assert.Equal(new[] { (leader.User.Name, 0u, 80u), (member.User.Name, 1u, 20u) },
+                byCps.Entries.Select(e => (e.Name, e.Position, e.ConquerPoints)));
+
+            var byTotal = await member.Game.QueryGuildDonationRankingAsync(9);
+            Assert.NotNull(byTotal);
+            Assert.Equal(new[] { (member.User.Name, 0u, 920u), (leader.User.Name, 1u, 380u) },
+                byTotal.Entries.Select(e => (e.Name, e.Position, e.Total)));
+
+            // Unimplemented column (arsenal = 4) still answers with zero for that column
+            var byArsenal = await leader.Game.QueryGuildDonationRankingAsync(4);
+            Assert.NotNull(byArsenal);
+            Assert.Equal((ushort)2, byArsenal.MaxRankSize);
+            Assert.All(byArsenal.Entries, e => Assert.Equal(0u, e.Arsenal));
+        }
     }
 }

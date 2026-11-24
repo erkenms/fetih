@@ -35,6 +35,7 @@ namespace Comet.Client
         public const ushort MsgSynpOffer = 1058;
         public const ushort MsgSyndicateAttributeInfo = 1106;
         public const ushort MsgSyndicate = 1107;
+        public const ushort MsgFactionRankInfo = 2101;
         public const ushort MsgSynMemberList = 2102;
         public const ushort MsgFamily = 1312;
         public const ushort MsgPackage = 1102;
@@ -1088,6 +1089,47 @@ namespace Comet.Client
             BitConverter.ToUInt64(packet, 12), BitConverter.ToUInt32(packet, 20),
             BitConverter.ToUInt32(packet, 24), BitConverter.ToUInt32(packet, 28),
             Packet.ReadText(packet, 32, 16), BitConverter.ToUInt32(packet, 48));
+    }
+
+    // One page of guild donation ranking (2101): rank type at 4, page at 5, count at 6,
+    // total ranked members (u16) at 8, 68-byte entries from 12
+    public sealed record GuildDonationRankEntry(uint CharacterId, uint Rank, uint Position,
+        uint Silver, uint ConquerPoints, uint Guide, uint Pk, uint Arsenal,
+        uint Rose, uint Orchid, uint Lily, uint Tulip, uint Total, string Name);
+
+    public sealed record GuildDonationRanking(byte RankType, byte PageIndex, ushort MaxRankSize,
+        List<GuildDonationRankEntry> Entries)
+    {
+        public static byte[] BuildQuery(byte rankType, byte pageIndex = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgFactionRankInfo, 80);
+            packet[4] = rankType;
+            packet[5] = pageIndex;
+            return packet;
+        }
+
+        public static GuildDonationRanking Parse(byte[] packet)
+        {
+            var entries = new List<GuildDonationRankEntry>();
+            byte count = packet[6];
+            for (int i = 0, at = 12; i < count; i++, at += 68)
+                entries.Add(new GuildDonationRankEntry(
+                    BitConverter.ToUInt32(packet, at),
+                    BitConverter.ToUInt32(packet, at + 4),
+                    BitConverter.ToUInt32(packet, at + 8),
+                    BitConverter.ToUInt32(packet, at + 12),
+                    BitConverter.ToUInt32(packet, at + 16),
+                    BitConverter.ToUInt32(packet, at + 20),
+                    BitConverter.ToUInt32(packet, at + 24),
+                    BitConverter.ToUInt32(packet, at + 28),
+                    BitConverter.ToUInt32(packet, at + 32),
+                    BitConverter.ToUInt32(packet, at + 36),
+                    BitConverter.ToUInt32(packet, at + 40),
+                    BitConverter.ToUInt32(packet, at + 44),
+                    BitConverter.ToUInt32(packet, at + 48),
+                    Packet.ReadText(packet, at + 52, 16)));
+            return new GuildDonationRanking(packet[4], packet[5], BitConverter.ToUInt16(packet, 8), entries);
+        }
     }
 
     // One page of guild members: first index at 8, count at 12, 48-byte entries from 16 with

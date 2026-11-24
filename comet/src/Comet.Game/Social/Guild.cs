@@ -23,8 +23,9 @@ namespace Comet.Game.Social
         public uint ConquerPointsDonation { get; set; }
         public uint Joined { get; }
 
-        // The member list shows one donation; CPs have their own line in the donation tab
-        public uint TotalDonation => this.SilverDonation;
+        // Sum of tracked guild donation columns (silver + CPs; guide, PK and arsenal are not tracked yet)
+        public uint TotalDonation =>
+            (uint)Math.Min((ulong)this.SilverDonation + this.ConquerPointsDonation, uint.MaxValue);
 
         public GuildMember(uint characterID, string name, byte level, GuildRank rank, uint joined)
         {

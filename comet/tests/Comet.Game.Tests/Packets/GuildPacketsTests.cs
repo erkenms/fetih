@@ -75,6 +75,64 @@ namespace Comet.Game.Tests.Packets
         }
 
         [Fact]
+        public void FactionRankInfoDecodesQueryAndEncodes68ByteEntries()
+        {
+            // Real 80-byte query from the 5619 client (rank type 4, page 0)
+            var query = new byte[80];
+            BitConverter.TryWriteBytes(query.AsSpan(0), (ushort)80);
+            BitConverter.TryWriteBytes(query.AsSpan(2), (ushort)2101);
+            query[4] = (byte)MsgFactionRankInfo.FactionRankType.Arsenal;
+            query[5] = 2;
+
+            var decoded = new MsgFactionRankInfo();
+            decoded.Decode(query);
+            Assert.Equal(MsgFactionRankInfo.FactionRankType.Arsenal, decoded.RankType);
+            Assert.Equal((byte)2, decoded.PageIndex);
+
+            var guild = NewGuild();
+            guild.Members[1000001].SilverDonation = 1500;
+            guild.Members[1000001].ConquerPointsDonation = 40;
+            guild.Members[1000002].ConquerPointsDonation = 250;
+
+            var reply = new MsgFactionRankInfo
+            {
+                RankType = MsgFactionRankInfo.FactionRankType.Silver,
+                PageIndex = 0,
+                MaxRankSize = 2,
+            };
+            reply.Entries.Add((guild.Members[1000001], 0));
+            reply.Entries.Add((guild.Members[1000002], 1));
+
+            var bytes = reply.Encode();
+            Assert.Equal(MsgFactionRankInfo.HeaderSize + 2 * MsgFactionRankInfo.EntrySize, bytes.Length);
+            Assert.Equal(2101, BitConverter.ToUInt16(bytes, 2));
+            Assert.Equal((byte)MsgFactionRankInfo.FactionRankType.Silver, bytes[4]);
+            Assert.Equal((byte)0, bytes[5]);
+            Assert.Equal((byte)2, bytes[6]);
+            Assert.Equal((ushort)2, BitConverter.ToUInt16(bytes, 8));
+
+            int first = MsgFactionRankInfo.HeaderSize;
+            Assert.Equal(1000001u, BitConverter.ToUInt32(bytes, first));
+            Assert.Equal(1000u, BitConverter.ToUInt32(bytes, first + 4));
+            Assert.Equal(0u, BitConverter.ToUInt32(bytes, first + 8));
+            Assert.Equal(1500u, BitConverter.ToUInt32(bytes, first + 12));
+            Assert.Equal(40u, BitConverter.ToUInt32(bytes, first + 16));
+            for (int off = 20; off <= 44; off += 4)
+                Assert.Equal(0u, BitConverter.ToUInt32(bytes, first + off));
+            Assert.Equal(1540u, BitConverter.ToUInt32(bytes, first + 48));
+            Assert.Equal("Altay", Encoding.ASCII.GetString(bytes, first + 52, 5));
+
+            int second = first + MsgFactionRankInfo.EntrySize;
+            Assert.Equal(1000002u, BitConverter.ToUInt32(bytes, second));
+            Assert.Equal(200u, BitConverter.ToUInt32(bytes, second + 4));
+            Assert.Equal(1u, BitConverter.ToUInt32(bytes, second + 8));
+            Assert.Equal(900u, BitConverter.ToUInt32(bytes, second + 12));
+            Assert.Equal(250u, BitConverter.ToUInt32(bytes, second + 16));
+            Assert.Equal(1150u, BitConverter.ToUInt32(bytes, second + 48));
+            Assert.Equal("Berk", Encoding.ASCII.GetString(bytes, second + 52, 4));
+        }
+
+        [Fact]
         public void TheSummaryNamesTheLeaderLevelAndMembers()
         {
             Assert.Equal("Lions Altay 1 2", NewGuild().Summary);

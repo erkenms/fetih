@@ -601,6 +601,15 @@ namespace Comet.Client
             return packet == null ? null : GuildMember.ParseList(packet);
         }
 
+        public async Task<GuildDonationRanking> QueryGuildDonationRankingAsync(
+            byte rankType, byte pageIndex = 0, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(GuildDonationRanking.BuildQuery(rankType, pageIndex));
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFactionRankInfo && p[4] == rankType, timeout);
+            return packet == null ? null : GuildDonationRanking.Parse(packet);
+        }
+
         public Task FamilyAsync(uint action, uint data, string text = null) =>
             this.SendAsync(FamilyMessage.Build(action, data, text));
 

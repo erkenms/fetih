@@ -28,6 +28,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgEnemyList] = () => new MsgEnemyList(),
                 [PacketType.MsgInteract] = () => new MsgInteract(),
                 [PacketType.MsgSyndicate] = () => new MsgSyndicate(),
+                [PacketType.MsgFactionRankInfo] = () => new MsgFactionRankInfo(),
                 [PacketType.MsgSynMemberList] = () => new MsgSynMemberList(),
                 [PacketType.MsgSynpOffer] = () => new MsgSynpOffer(),
                 [PacketType.MsgFamily] = () => new MsgFamily(),
