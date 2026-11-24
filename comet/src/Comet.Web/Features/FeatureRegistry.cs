@@ -8,5 +8,6 @@ public static class FeatureRegistry
         new Audit.AuditFeature(),
         new Items.ItemsFeature(),
         new Catalogs.CatalogsFeature(),
+        new PublicAccount.PublicAccountFeature(),
     ];
 }

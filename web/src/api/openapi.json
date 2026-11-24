@@ -735,6 +735,139 @@
           }
         }
       }
+    },
+    "/api/public/account/config": {
+      "get": {
+        "tags": [
+          "PublicAccountFeature"
+        ],
+        "operationId": "publicAccountConfig",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicAccountConfigResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/account/register": {
+      "post": {
+        "tags": [
+          "PublicAccountFeature"
+        ],
+        "operationId": "registerAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/account/profile": {
+      "get": {
+        "tags": [
+          "PublicAccountFeature"
+        ],
+        "operationId": "getMyAccount",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyAccountResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/public/account/password": {
+      "post": {
+        "tags": [
+          "PublicAccountFeature"
+        ],
+        "operationId": "changeMyPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -995,6 +1128,21 @@
           }
         }
       },
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        }
+      },
       "FaceEntry": {
         "required": [
           "id",
@@ -1105,6 +1253,22 @@
           },
           "assetsAvailable": {
             "type": "boolean"
+          }
+        }
+      },
+      "LoginHistoryEntry": {
+        "required": [
+          "timestamp",
+          "ipAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": "string"
           }
         }
       },
@@ -1462,6 +1626,111 @@
           }
         }
       },
+      "MyAccountResponse": {
+        "required": [
+          "accountId",
+          "username",
+          "authority",
+          "status",
+          "registered",
+          "characters",
+          "logins"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "authority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyCharacterSummary"
+            }
+          },
+          "logins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoginHistoryEntry"
+            }
+          }
+        }
+      },
+      "MyCharacterSummary": {
+        "required": [
+          "characterId",
+          "name",
+          "level",
+          "rebirths",
+          "currentClass",
+          "mapId",
+          "silver",
+          "jewels",
+          "vipLevel",
+          "spouse",
+          "registered"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "jewels": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "vipLevel": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "spouse": {
+            "type": "string"
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "Permission": {
         "enum": [
           "AdminArea",
@@ -1474,6 +1743,67 @@
           "Studio",
           "ManageAccounts"
         ]
+      },
+      "PublicAccountConfigResponse": {
+        "required": [
+          "captchaEnabled",
+          "captchaProvider",
+          "captchaSiteKey",
+          "minPasswordLength",
+          "maxPasswordLength",
+          "maxUsernameLength"
+        ],
+        "type": "object",
+        "properties": {
+          "captchaEnabled": {
+            "type": "boolean"
+          },
+          "captchaProvider": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "captchaSiteKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minPasswordLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxPasswordLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxUsernameLength": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "captchaToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
       },
       "ShopCatalogEntry": {
         "required": [
@@ -1816,6 +2146,9 @@
     },
     {
       "name": "ItemsFeature"
+    },
+    {
+      "name": "PublicAccountFeature"
     }
   ]
 }

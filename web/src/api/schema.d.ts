@@ -260,6 +260,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/account/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["publicAccountConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/account/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/account/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/account/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changeMyPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -355,6 +419,10 @@ export interface components {
             /** Format: uint32 */
             stackLimit?: number;
         };
+        ChangePasswordRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
         FaceEntry: {
             /** Format: uint32 */
             id: number;
@@ -380,6 +448,11 @@ export interface components {
             /** Format: int32 */
             total: number;
             assetsAvailable: boolean;
+        };
+        LoginHistoryEntry: {
+            /** Format: date-time */
+            timestamp: string;
+            ipAddress: string;
         };
         LoginRequest: {
             username: string;
@@ -468,8 +541,59 @@ export interface components {
             /** Format: int32 */
             total: number;
         };
+        MyAccountResponse: {
+            /** Format: uint32 */
+            accountId: number;
+            username: string;
+            /** Format: int32 */
+            authority: number;
+            /** Format: int32 */
+            status: number;
+            /** Format: date-time */
+            registered: string;
+            characters: components["schemas"]["MyCharacterSummary"][];
+            logins: components["schemas"]["LoginHistoryEntry"][];
+        };
+        MyCharacterSummary: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint32 */
+            mapId: number;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: uint32 */
+            jewels: number;
+            /** Format: uint32 */
+            vipLevel: number;
+            spouse: string;
+            /** Format: date-time */
+            registered: string;
+        };
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
+        PublicAccountConfigResponse: {
+            captchaEnabled: boolean;
+            captchaProvider: null | string;
+            captchaSiteKey: null | string;
+            /** Format: int32 */
+            minPasswordLength: number;
+            /** Format: int32 */
+            maxPasswordLength: number;
+            /** Format: int32 */
+            maxUsernameLength: number;
+        };
+        RegisterRequest: {
+            username: string;
+            password: string;
+            captchaToken?: null | string;
+        };
         ShopCatalogEntry: {
             key: string;
             source: string;
@@ -993,6 +1117,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ShopCatalogResponse"];
+                };
+            };
+        };
+    };
+    publicAccountConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicAccountConfigResponse"];
+                };
+            };
+        };
+    };
+    registerAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getMyAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyAccountResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    changeMyPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
         };
