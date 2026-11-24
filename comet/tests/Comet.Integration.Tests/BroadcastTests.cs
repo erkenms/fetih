@@ -89,5 +89,33 @@ namespace Comet.Integration.Tests
                 TimeSpan.FromSeconds(10));
             Assert.NotNull(received);
         }
+
+        [Fact]
+        public async Task QueuedBroadcastsAreSavedAndRemovedOnceShown()
+        {
+            await using var sender = (await this.PlayingAtAsync(1002, 436, 380, GameMaster, level: 50)).Player;
+            await CommandAsync(sender, "/jewel 100");
+            Assert.NotNull(await sender.Game.WaitForAttribAsync(a => a.Values.TryGetValue(Jewels, out var v) && v == 100));
+
+            for (int i = 1; i <= 4; i++)
+            {
+                await sender.Game.PigeonAsync(PigeonMessage.Send, 0, $"persist-{i}");
+                Assert.NotNull(await sender.Game.WaitForPigeonAsync(p => p.Action == PigeonMessage.Send));
+            }
+
+            var saved = Convert.ToInt64(await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM broadcast WHERE Message = 'persist-4'"));
+            Assert.Equal(1, saved);
+
+            var deadline = DateTime.UtcNow.AddSeconds(60);
+            long left;
+            do
+            {
+                await Task.Delay(500);
+                left = Convert.ToInt64(await this.Servers.QueryGameScalarAsync(
+                    "SELECT COUNT(*) FROM broadcast WHERE Message LIKE 'persist-%'"));
+            } while (left > 0 && DateTime.UtcNow < deadline);
+            Assert.Equal(0, left);
+        }
     }
 }

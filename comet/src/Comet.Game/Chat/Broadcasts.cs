@@ -3,10 +3,13 @@ namespace Comet.Game.Chat
     using System;
     using System.Collections.Generic;
     using System.Drawing;
+    using System.Linq;
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
+    using Comet.Game.Database.Models;
+    using Comet.Game.Database.Repositories;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using static Comet.Game.Packets.MsgPigeon;
@@ -115,6 +118,22 @@ namespace Comet.Game.Chat
             }
         }
 
+        public List<Entry> Snapshot()
+        {
+            lock (this.Sync) return new List<Entry>(this.Entries);
+        }
+
+        // Replaces the queue with entries saved earlier, in order, and carries the ID counter on.
+        public void Load(IEnumerable<Entry> entries)
+        {
+            lock (this.Sync)
+            {
+                this.Entries.Clear();
+                this.Entries.AddRange(entries);
+                this.NextID = this.Entries.Count == 0 ? 1 : this.Entries.Max(e => e.ID) + 1;
+            }
+        }
+
         public void Clear()
         {
             lock (this.Sync)
@@ -141,6 +160,45 @@ namespace Comet.Game.Chat
         public static TimeSpan Interval = TimeSpan.FromSeconds(60);
 
         private static readonly BroadcastQueue Queue = new BroadcastQueue();
+        private static readonly SemaphoreSlim SaveLock = new SemaphoreSlim(1, 1);
+
+        public static int Count => Queue.Count;
+
+        public static async Task LoadAsync()
+        {
+            var rows = await BroadcastRepository.LoadAsync();
+            Queue.Load(rows.OrderBy(r => r.Position).Select(r =>
+                new BroadcastQueue.Entry(r.ID, r.CharacterID, r.SenderName, r.Message, r.Addition)));
+        }
+
+        // The queue is small, so every change rewrites it whole. Taking the snapshot inside the
+        // lock keeps concurrent saves from writing an older order over a newer one.
+        private static async Task PersistAsync()
+        {
+            await SaveLock.WaitAsync();
+            try
+            {
+                var rows = Queue.Snapshot().Select((e, i) => new DbBroadcast
+                {
+                    ID = e.ID,
+                    Position = (uint)i,
+                    CharacterID = e.CharacterID,
+                    SenderName = e.SenderName,
+                    Message = e.Message,
+                    Addition = e.Addition
+                }).ToList();
+                await BroadcastRepository.ReplaceAsync(rows);
+            }
+            catch (Exception e)
+            {
+                LogEvents.For(typeof(Broadcasts), LogEvents.BroadcastLoopFailed).Error(
+                    e, "Can't save the broadcast queue");
+            }
+            finally
+            {
+                SaveLock.Release();
+            }
+        }
 
         public static Task HandleAsync(Client client, MsgPigeon msg)
         {
@@ -195,6 +253,7 @@ namespace Comet.Game.Chat
             }
 
             var (entry, rank) = Queue.Enqueue(character.CharacterID, character.Name, text);
+            await PersistAsync();
             await client.SendAsync(new MsgPigeon(PigeonAction.Send, (uint)rank));
             LogEvents.For(typeof(Broadcasts), LogEvents.BroadcastQueued).Information(
                 "{Name} queued broadcast {BroadcastId} at rank {Rank}: {Text}",
@@ -238,6 +297,7 @@ namespace Comet.Game.Chat
                 return;
             }
 
+            await PersistAsync();
             var action = top ? PigeonAction.UrgentTop : PigeonAction.Urgent;
             await client.SendAsync(new MsgPigeon(action, (uint)newRank));
             LogEvents.For(typeof(Broadcasts), LogEvents.BroadcastUrgent).Information(
@@ -289,6 +349,7 @@ namespace Comet.Game.Chat
             if (!Queue.TryDequeue(now, Interval, out var entry))
                 return false;
 
+            await PersistAsync();
             var msg = new MsgTalk(0, TalkChannel.Broadcast, Color.White,
                 MsgTalk.ALLUSERS, entry.SenderName, entry.Message);
             foreach (var player in Kernel.Players.Values)

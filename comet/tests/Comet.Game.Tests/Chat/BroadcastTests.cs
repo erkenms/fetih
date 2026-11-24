@@ -1,6 +1,7 @@
 namespace Comet.Game.Tests.Chat
 {
     using System;
+    using System.Linq;
     using Comet.Game.Chat;
     using Comet.Game.Packets;
     using Xunit;
@@ -123,6 +124,24 @@ namespace Comet.Game.Tests.Chat
             Assert.False(queue.TryDequeue(t0.AddSeconds(59), interval, out _));
             Assert.True(queue.TryDequeue(t0.AddSeconds(60), interval, out var second));
             Assert.Equal("m2", second.Message);
+        }
+
+        [Fact]
+        public void LoadedQueueKeepsSavedOrderAndContinuesIds()
+        {
+            var queue = new BroadcastQueue();
+            for (uint i = 1; i <= 4; i++)
+                queue.Enqueue(100 + i, $"P{i}", $"msg {i}");
+            Assert.True(queue.TryPromote(4, 104, int.MaxValue, Broadcasts.UrgentTopCost, out _));
+
+            var restarted = new BroadcastQueue();
+            restarted.Load(queue.Snapshot());
+
+            Assert.Equal(new uint[] { 4, 1, 2, 3 }, restarted.Snapshot().Select(e => e.ID).ToArray());
+            Assert.Equal(15u, restarted.Snapshot()[0].Addition);
+            var (next, rank) = restarted.Enqueue(7, "New", "after restart");
+            Assert.Equal(5u, next.ID);
+            Assert.Equal(5, rank);
         }
     }
 }

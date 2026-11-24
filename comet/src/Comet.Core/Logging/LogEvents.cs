@@ -275,6 +275,7 @@ namespace Comet.Core.Logging
         public const string BroadcastUrgent = "broadcast.urgent";
         public const string BroadcastSent = "broadcast.sent";
         public const string BroadcastRejected = "broadcast.rejected";
+        public const string BroadcastsLoaded = "broadcast.loaded";
         public const string BroadcastLoopFailed = "broadcast.loop_failed";
         public const string MessageBoardLoaded = "message_board.loaded";
         public const string MessageBoardPosted = "message_board.posted";

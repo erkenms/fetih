@@ -269,6 +269,9 @@
                 await Social.Mentors.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.MentorsLoaded).Information(
                     "Loaded {RelationCount} mentor relations", Social.Mentors.Count);
+                await Chat.Broadcasts.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.BroadcastsLoaded).Information(
+                    "Loaded {BroadcastCount} queued broadcasts", Chat.Broadcasts.Count);
             }
             catch (Exception e)
             {
