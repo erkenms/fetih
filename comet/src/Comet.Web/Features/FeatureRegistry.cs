@@ -13,5 +13,6 @@ public static class FeatureRegistry
         new Dashboard.DashboardFeature(),
         new Broadcasts.BroadcastsFeature(),
         new Logs.LogsFeature(),
+        new Changes.ChangesFeature(),
     ];
 }

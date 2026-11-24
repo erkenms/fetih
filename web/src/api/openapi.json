@@ -1980,6 +1980,156 @@
           }
         }
       }
+    },
+    "/api/changes": {
+      "get": {
+        "tags": [
+          "ChangesFeature"
+        ],
+        "operationId": "getChanges",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChangesSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/changes/{file}/diff": {
+      "get": {
+        "tags": [
+          "ChangesFeature"
+        ],
+        "operationId": "getChangeDiff",
+        "parameters": [
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileDiffResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/changes/{file}/reload": {
+      "post": {
+        "tags": [
+          "ChangesFeature"
+        ],
+        "operationId": "reloadDataFile",
+        "parameters": [
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReloadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/changes/{file}/discard": {
+      "post": {
+        "tags": [
+          "ChangesFeature"
+        ],
+        "operationId": "discardDataFile",
+        "parameters": [
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscardResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2481,6 +2631,39 @@
           }
         }
       },
+      "ChangesSummaryResponse": {
+        "required": [
+          "gitAvailable",
+          "gameConnected",
+          "dataDirectory",
+          "files",
+          "allProblems"
+        ],
+        "type": "object",
+        "properties": {
+          "gitAvailable": {
+            "type": "boolean"
+          },
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "dataDirectory": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataFileChange"
+            }
+          },
+          "allProblems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationProblemDto"
+            }
+          }
+        }
+      },
       "DashboardCounts": {
         "required": [
           "accounts",
@@ -2555,6 +2738,57 @@
           },
           "grafanaUrl": {
             "type": "string"
+          }
+        }
+      },
+      "DataFileChange": {
+        "required": [
+          "file",
+          "gitStatus",
+          "addedLines",
+          "removedLines",
+          "reloadable",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "gitStatus": {
+            "type": "string"
+          },
+          "addedLines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "removedLines": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reloadable": {
+            "type": "boolean"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationProblemDto"
+            }
+          }
+        }
+      },
+      "DiscardResponse": {
+        "required": [
+          "file",
+          "discarded"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "discarded": {
+            "type": "boolean"
           }
         }
       },
@@ -2663,6 +2897,32 @@
           "occupiedMaps": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "FileDiffResponse": {
+        "required": [
+          "file",
+          "gitStatus",
+          "diff",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "gitStatus": {
+            "type": "string"
+          },
+          "diff": {
+            "type": "string"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidationProblemDto"
+            }
           }
         }
       },
@@ -4643,6 +4903,42 @@
           }
         }
       },
+      "ReloadResponse": {
+        "required": [
+          "file",
+          "applied",
+          "errors",
+          "warnings",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SaveAnnouncementRequest": {
         "required": [
           "title",
@@ -5141,6 +5437,41 @@
             "type": "boolean"
           }
         }
+      },
+      "ValidationProblemDto": {
+        "required": [
+          "file",
+          "entry",
+          "line",
+          "message",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "entry": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "line": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          }
+        }
       }
     }
   },
@@ -5156,6 +5487,9 @@
     },
     {
       "name": "CatalogsFeature"
+    },
+    {
+      "name": "ChangesFeature"
     },
     {
       "name": "DashboardFeature"

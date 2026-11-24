@@ -692,6 +692,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/changes/{file}/diff": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getChangeDiff"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/changes/{file}/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reloadDataFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/changes/{file}/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["discardDataFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -867,6 +931,13 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        ChangesSummaryResponse: {
+            gitAvailable: boolean;
+            gameConnected: boolean;
+            dataDirectory: string;
+            files: components["schemas"]["DataFileChange"][];
+            allProblems: components["schemas"]["ValidationProblemDto"][];
+        };
         DashboardCounts: {
             /** Format: int32 */
             accounts: number;
@@ -885,6 +956,20 @@ export interface components {
             counts: components["schemas"]["DashboardCounts"];
             logs: null | components["schemas"]["LogStatsResponse"];
             grafanaUrl: string;
+        };
+        DataFileChange: {
+            file: string;
+            gitStatus: string;
+            /** Format: int32 */
+            addedLines: number;
+            /** Format: int32 */
+            removedLines: number;
+            reloadable: boolean;
+            problems: components["schemas"]["ValidationProblemDto"][];
+        };
+        DiscardResponse: {
+            file: string;
+            discarded: boolean;
         };
         DownloadInfoResponse: {
             url: null | string;
@@ -916,6 +1001,12 @@ export interface components {
             fund: number;
             /** Format: int32 */
             occupiedMaps: number;
+        };
+        FileDiffResponse: {
+            file: string;
+            gitStatus: string;
+            diff: string;
+            problems: components["schemas"]["ValidationProblemDto"][];
         };
         FlowerRankEntry: {
             /** Format: int32 */
@@ -1487,6 +1578,13 @@ export interface components {
             password: string;
             captchaToken?: null | string;
         };
+        ReloadResponse: {
+            file: string;
+            applied: boolean;
+            errors: string[];
+            warnings: string[];
+            summary: null | string;
+        };
         SaveAnnouncementRequest: {
             title: string;
             channel: components["schemas"]["BroadcastChannel"];
@@ -1636,6 +1734,15 @@ export interface components {
             /** Format: date-time */
             to: string;
             truncated: boolean;
+        };
+        ValidationProblemDto: {
+            file: string;
+            /** Format: int32 */
+            entry: null | number;
+            /** Format: int32 */
+            line: null | number;
+            message: string;
+            level: string;
         };
     };
     responses: never;
@@ -2846,6 +2953,128 @@ export interface operations {
             };
             /** @description Service Unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getChanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangesSummaryResponse"];
+                };
+            };
+        };
+    };
+    getChangeDiff: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FileDiffResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reloadDataFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReloadResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    discardDataFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DiscardResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
