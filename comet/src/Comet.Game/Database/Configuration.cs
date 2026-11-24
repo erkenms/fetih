@@ -24,6 +24,7 @@ namespace Comet.Game.Database
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
         public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
+        public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
 
         // The zone whose midnight starts a new day, as an IANA or Windows ID; the machine's
         // own zone when empty
@@ -152,6 +153,12 @@ namespace Comet.Game.Database
             public uint PoleLife { get; set; } = 20_000_000;
             public uint GateLife { get; set; } = 10_000_000;
             public uint PrizeConquerPoints { get; set; } = 3_000;
+        }
+
+        // How often the next queued broadcast message is released to the server
+        public class BroadcastConfiguration
+        {
+            public int IntervalSeconds { get; set; } = 60;
         }
 
         public ServerConfiguration(string[] args)

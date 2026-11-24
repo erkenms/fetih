@@ -25,6 +25,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbNobility> Nobility { get; set; }
         public virtual DbSet<DbFlower> Flowers { get; set; }
         public virtual DbSet<DbGuildWar> GuildWar { get; set; }
+        public virtual DbSet<DbMessageBoard> MessageBoard { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
@@ -57,6 +58,7 @@ namespace Comet.Game.Database
             builder.Entity<DbNobility>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbFlower>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbGuildWar>(e => e.HasKey(x => x.ID));
+            builder.Entity<DbMessageBoard>(e => e.HasKey(x => new { x.Channel, x.CharacterID }));
         }
 
         public static bool Ping()

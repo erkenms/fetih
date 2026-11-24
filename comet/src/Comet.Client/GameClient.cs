@@ -657,6 +657,37 @@ namespace Comet.Client
             return packet == null ? null : EnemyListMessage.Parse(packet);
         }
 
+        public Task PigeonAsync(byte action, uint param = 0, string text = null, byte currency = 1) =>
+            this.SendAsync(PigeonMessage.Build(action, param, text, currency));
+
+        public async Task<PigeonMessage> WaitForPigeonAsync(Func<PigeonMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPigeon && match(PigeonMessage.Parse(p)), timeout);
+            return packet == null ? null : PigeonMessage.Parse(packet);
+        }
+
+        public async Task<PigeonQueryMessage> WaitForPigeonQueryAsync(
+            Func<PigeonQueryMessage, bool> match = null, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPigeonQuery &&
+                (match == null || match(PigeonQueryMessage.Parse(p))), timeout);
+            return packet == null ? null : PigeonQueryMessage.Parse(packet);
+        }
+
+        public Task MessageBoardAsync(ushort index, ushort channel, byte action, string name = null) =>
+            this.SendAsync(MessageBoardMessage.Build(index, channel, action, name));
+
+        public async Task<MessageBoardMessage> WaitForMessageBoardAsync(
+            Func<MessageBoardMessage, bool> match = null, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgMessageBoard &&
+                (match == null || match(MessageBoardMessage.Parse(p))), timeout);
+            return packet == null ? null : MessageBoardMessage.Parse(packet);
+        }
+
         public Task LockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Lock));
 
         public Task UnlockAsync(uint itemId) => this.SendAsync(EquipLockMessage.Build(itemId, EquipLockMessage.Unlock));

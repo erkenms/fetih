@@ -434,6 +434,7 @@ namespace Comet.Integration.Tests
                 "--GuildWar:StartDay=Monday", "--GuildWar:StartHour=0", "--GuildWar:StartMinute=0",
                 "--GuildWar:EndDay=Monday", "--GuildWar:EndHour=0", "--GuildWar:EndMinute=0",
                 "--GuildWar:PoleLife=2000", "--GuildWar:GateLife=1000",
+                "--Broadcast:IntervalSeconds=2",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
                 "--AccountDatabase:Username=" + DbUser, "--AccountDatabase:Password=" + DbPassword);

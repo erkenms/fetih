@@ -65,6 +65,9 @@ namespace Comet.Client
         public const ushort MsgTrainingInfo = 2043;
         public const ushort MsgTraining = 2044;
         public const ushort MsgTradeBuddy = 2046;
+        public const ushort MsgPigeon = 2050;
+        public const ushort MsgPigeonQuery = 2051;
+        public const ushort MsgMessageBoard = 1111;
         public const ushort MsgTradeBuddyInfo = 2047;
         public const ushort MsgEquipLock = 2048;
         public const ushort Msg2ndPsw = 2261;
@@ -85,6 +88,12 @@ namespace Comet.Client
         public const ushort Vendor = 2104;
         public const ushort Register = 2100;
         public const ushort Login = 2101;
+        public const ushort TradeBoard = 2201;
+        public const ushort FriendBoard = 2202;
+        public const ushort TeamBoard = 2203;
+        public const ushort GuildBoard = 2204;
+        public const ushort OthersBoard = 2205;
+        public const ushort Broadcast = 2500;
     }
 
     public sealed record TalkMessage(ushort Channel, string Sender, string Recipient, string Text)
@@ -1257,6 +1266,104 @@ namespace Comet.Client
             BitConverter.TryWriteBytes(packet.AsSpan(8), owner);
             BitConverter.TryWriteBytes(packet.AsSpan(12), aura);
             return packet;
+        }
+    }
+
+    public sealed record PigeonMessage(byte Action, byte Currency, uint Param, List<string> Strings)
+    {
+        public const byte QueryAll = 1, QueryMine = 2, Send = 3, UrgentTop = 4, Urgent = 5, Remove = 6;
+
+        public static PigeonMessage Parse(byte[] packet) => new PigeonMessage(
+            packet[4], packet[5], BitConverter.ToUInt32(packet, 8),
+            packet.Length > 12 ? Packet.ReadStrings(packet, 12) : new List<string>());
+
+        public static byte[] Build(byte action, uint param = 0, string text = null, byte currency = 1)
+        {
+            if (text == null)
+            {
+                var packet = Packet.Create(PacketTypes.MsgPigeon, 15);
+                packet[4] = action;
+                packet[5] = currency;
+                BitConverter.TryWriteBytes(packet.AsSpan(8), param);
+                return packet;
+            }
+
+            var bytes = Encoding.Latin1.GetBytes(text);
+            var msg = Packet.Create(PacketTypes.MsgPigeon, 14 + bytes.Length);
+            msg[4] = action;
+            msg[5] = currency;
+            BitConverter.TryWriteBytes(msg.AsSpan(8), param);
+            msg[12] = 1;
+            msg[13] = (byte)bytes.Length;
+            bytes.CopyTo(msg, 14);
+            return msg;
+        }
+    }
+
+    public sealed record PigeonQueryEntry(
+        uint Id, uint Position, uint CharacterId, string Sender, uint Addition, string Message);
+
+    public sealed record PigeonQueryMessage(uint Page, ushort Append, List<PigeonQueryEntry> Entries)
+    {
+        public static PigeonQueryMessage Parse(byte[] packet)
+        {
+            uint page = BitConverter.ToUInt32(packet, 4);
+            ushort append = BitConverter.ToUInt16(packet, 8);
+            ushort count = BitConverter.ToUInt16(packet, 10);
+            var entries = new List<PigeonQueryEntry>(count);
+            for (int i = 0; i < count && 12 + (i + 1) * 112 <= packet.Length; i++)
+            {
+                int o = 12 + i * 112;
+                entries.Add(new PigeonQueryEntry(
+                    BitConverter.ToUInt32(packet, o),
+                    BitConverter.ToUInt32(packet, o + 4),
+                    BitConverter.ToUInt32(packet, o + 8),
+                    ReadNullTerminated(packet, o + 12, 16),
+                    BitConverter.ToUInt32(packet, o + 28),
+                    ReadNullTerminated(packet, o + 32, 80)));
+            }
+            return new PigeonQueryMessage(page, append, entries);
+        }
+
+        private static string ReadNullTerminated(byte[] packet, int offset, int max)
+        {
+            int end = Array.IndexOf(packet, (byte)0, offset, max);
+            int len = end < 0 ? max : end - offset;
+            return Encoding.Latin1.GetString(packet, offset, len);
+        }
+    }
+
+    public sealed record MessageBoardMessage(ushort Index, ushort Channel, byte Action, List<string> Strings)
+    {
+        public const byte Delete = 1, GetList = 2, List = 3, GetWords = 4;
+
+        public static MessageBoardMessage Parse(byte[] packet) => new MessageBoardMessage(
+            BitConverter.ToUInt16(packet, 4),
+            BitConverter.ToUInt16(packet, 6),
+            packet[8],
+            packet.Length > 9 ? Packet.ReadStrings(packet, 9) : new List<string>());
+
+        public static byte[] Build(ushort index, ushort channel, byte action, string name = null)
+        {
+            if (name == null)
+            {
+                var packet = Packet.Create(PacketTypes.MsgMessageBoard, 10);
+                BitConverter.TryWriteBytes(packet.AsSpan(4), index);
+                BitConverter.TryWriteBytes(packet.AsSpan(6), channel);
+                packet[8] = action;
+                packet[9] = 0;
+                return packet;
+            }
+
+            var bytes = Encoding.Latin1.GetBytes(name);
+            var msg = Packet.Create(PacketTypes.MsgMessageBoard, 11 + bytes.Length);
+            BitConverter.TryWriteBytes(msg.AsSpan(4), index);
+            BitConverter.TryWriteBytes(msg.AsSpan(6), channel);
+            msg[8] = action;
+            msg[9] = 1;
+            msg[10] = (byte)bytes.Length;
+            bytes.CopyTo(msg, 11);
+            return msg;
         }
     }
 }

@@ -295,6 +295,20 @@ CREATE TABLE `guild_war` (
   PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Message board posts (Trade, Friend, Team, Guild, Others). One active post per character
+-- per channel; Guild posts are scoped by SyndicateID.
+DROP TABLE IF EXISTS `message_board`;
+CREATE TABLE `message_board` (
+  `Channel` smallint(5) unsigned NOT NULL,
+  `CharacterID` int(10) unsigned NOT NULL,
+  `SyndicateID` int(10) unsigned NOT NULL DEFAULT '0',
+  `AuthorName` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `Message` varchar(255) NOT NULL,
+  `PostedAt` datetime NOT NULL,
+  PRIMARY KEY (`Channel`,`CharacterID`),
+  KEY `Channel_Syndicate_Posted` (`Channel`,`SyndicateID`,`PostedAt`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

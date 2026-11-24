@@ -239,6 +239,15 @@ namespace Comet.Core.Logging
 
         public const string ChatMessage = "chat.message";
         public const string ChatRejected = "chat.rejected";
+        public const string BroadcastQueued = "broadcast.queued";
+        public const string BroadcastUrgent = "broadcast.urgent";
+        public const string BroadcastSent = "broadcast.sent";
+        public const string BroadcastRejected = "broadcast.rejected";
+        public const string BroadcastLoopFailed = "broadcast.loop_failed";
+        public const string MessageBoardLoaded = "message_board.loaded";
+        public const string MessageBoardPosted = "message_board.posted";
+        public const string MessageBoardDeleted = "message_board.deleted";
+        public const string MessageBoardRejected = "message_board.rejected";
         public const string GmCommand = "gm.command";
         public const string ChatCommand = "chat.command";
 

@@ -133,6 +133,14 @@ namespace Comet.Game.Chat
                     await Items.Vending.HawkAsync(client, msg);
                     break;
 
+                case TalkChannel.TradeBoard:
+                case TalkChannel.FriendBoard:
+                case TalkChannel.TeamBoard:
+                case TalkChannel.GuildBoard:
+                case TalkChannel.OthersBoard:
+                    await MessageBoard.PostAsync(client, msg);
+                    break;
+
                 default:
                     LogEvents.For(typeof(Talk), LogEvents.PacketUnhandled).Warning(
                         "Unhandled packet {PacketType} channel {Channel} ({Length} bytes)",

@@ -227,6 +227,9 @@
                 await Flowers.FlowerRanking.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.FlowersLoaded).Information(
                     "Loaded {RecordCount} flower records", Flowers.FlowerRanking.Count);
+                await Chat.MessageBoard.LoadAsync();
+                LogEvents.For(typeof(Program), LogEvents.MessageBoardLoaded).Information(
+                    "Loaded {PostCount} message board posts", Chat.MessageBoard.Count);
             }
             catch (Exception e)
             {
@@ -320,6 +323,8 @@
             Arena.Qualifier.EndTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.EndSeconds));
             _ = Arena.Qualifier.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Social.GuildWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Chat.Broadcasts.Interval = TimeSpan.FromSeconds(Math.Max(1, config.Broadcast.IntervalSeconds));
+            _ = Chat.Broadcasts.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);
