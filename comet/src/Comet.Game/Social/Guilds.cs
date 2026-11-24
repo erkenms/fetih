@@ -9,7 +9,9 @@ namespace Comet.Game.Social
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Chat;
+    using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
+    using Comet.Game.Items;
     using Comet.Game.Packets;
     using Comet.Game.States;
     using Comet.Game.World;
@@ -33,6 +35,8 @@ namespace Comet.Game.Social
         private static readonly ConcurrentDictionary<uint, Guild> ById = new ConcurrentDictionary<uint, Guild>();
         private static readonly ConcurrentDictionary<uint, Membership> ByMember =
             new ConcurrentDictionary<uint, Membership>();
+        private static readonly ConcurrentDictionary<uint, uint> ByInscribedItem =
+            new ConcurrentDictionary<uint, uint>();
 
         // Guild asking for an alliance → the guild asked
         private static readonly Dictionary<uint, uint> AllyRequests = new Dictionary<uint, uint>();
@@ -45,9 +49,19 @@ namespace Comet.Game.Social
         public static Membership Of(uint characterID) =>
             ByMember.TryGetValue(characterID, out var membership) ? membership : null;
 
+        public static bool IsInscribed(uint itemID) => ByInscribedItem.ContainsKey(itemID);
+
+        public static uint ArsenalSyndicateOf(uint itemID) =>
+            ByInscribedItem.TryGetValue(itemID, out var guildID) ? guildID : 0u;
+
+        public static uint BattlePowerOf(uint characterID) =>
+            ByMember.TryGetValue(characterID, out var membership)
+                ? ArsenalConfig.SharedBattlePower(membership.Guild.Arsenal.TotalBattlePower, membership.Member.Rank)
+                : 0u;
+
         public static async Task LoadAsync()
         {
-            var (guilds, members, relations) = await GuildsRepository.LoadAsync();
+            var (guilds, members, relations, poles, totems) = await GuildsRepository.LoadAsync();
             foreach (var row in guilds)
                 ById[row.SyndicateID] = Guild.FromRow(row);
             foreach (var row in members)
@@ -68,6 +82,31 @@ namespace Comet.Game.Social
                 if (!ById.TryGetValue(row.SyndicateID, out var guild) || !ById.ContainsKey(row.TargetID))
                     continue;
                 (row.Kind == Guild.RelationAlly ? guild.Allies : guild.Enemies).Add(row.TargetID);
+            }
+            foreach (var row in poles)
+            {
+                if (!ById.TryGetValue(row.SyndicateID, out var guild) || row.Type >= ArsenalConfig.PoleCount)
+                    continue;
+                guild.Arsenal.Unlock((TotemPoleType)row.Type, row.Enhancement, row.EnhancementExpiration);
+            }
+            foreach (var row in totems)
+            {
+                if (!ById.TryGetValue(row.Totem.SyndicateID, out var guild) || row.Totem.Type >= ArsenalConfig.PoleCount)
+                    continue;
+                var poleType = (TotemPoleType)row.Totem.Type;
+                var pole = guild.Arsenal.Get(poleType);
+                if (pole == null)
+                    continue;
+                pole.Items[row.Totem.ItemID] = new TotemEntry(
+                    row.Totem.ItemID, row.Totem.CharacterID, row.OwnerName, poleType,
+                    row.TypeID, row.Plus, row.Gem1, row.Gem2);
+                ByInscribedItem[row.Totem.ItemID] = guild.ID;
+            }
+            uint today = Guild.Today;
+            foreach (var guild in ById.Values)
+            {
+                guild.Arsenal.Recalculate(Kernel.ArsenalConfig, today, guild.Members);
+                guild.Level = guild.Arsenal.GuildLevel;
             }
         }
 
@@ -130,12 +169,21 @@ namespace Comet.Game.Social
             await Gate.WaitAsync();
             try
             {
-                if (Of(client.ID)?.Member is GuildMember member)
+                if (Of(client.ID) is Membership membership)
                 {
-                    member.Name = client.Character.Name;
-                    member.Level = client.Character.Level;
+                    membership.Member.Name = client.Character.Name;
+                    membership.Member.Level = client.Character.Level;
+                    foreach (var pole in membership.Guild.Arsenal.Poles.Values)
+                        foreach (var entry in pole.Items.Values)
+                            if (entry.CharacterID == client.ID)
+                                entry.OwnerName = client.Character.Name;
                 }
                 await SendInfoAsync(client);
+                if (Of(client.ID) is Membership m)
+                {
+                    uint bp = ArsenalConfig.SharedBattlePower(m.Guild.Arsenal.TotalBattlePower, m.Member.Rank);
+                    await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.GuildBattlePower, bp));
+                }
             }
             finally { Gate.Release(); }
         }
@@ -208,6 +256,7 @@ namespace Comet.Game.Social
         {
             MsgFactionRankInfo.FactionRankType.Silver => member.SilverDonation,
             MsgFactionRankInfo.FactionRankType.ConquerPoints => member.ConquerPointsDonation,
+            MsgFactionRankInfo.FactionRankType.Arsenal => member.ArsenalDonation,
             MsgFactionRankInfo.FactionRankType.Total => member.TotalDonation,
             MsgFactionRankInfo.FactionRankType.Rose => FlowerTotal(member, Flowers.FlowerKind.RedRose),
             MsgFactionRankInfo.FactionRankType.Orchid => FlowerTotal(member, Flowers.FlowerKind.Orchid),
@@ -292,6 +341,18 @@ namespace Comet.Game.Social
                     return "not_leader";
                 }
                 var guild = membership.Guild;
+                var removedByOwner = new Dictionary<uint, List<(TotemPoleType Pole, uint ItemID)>>();
+                foreach (var pole in guild.Arsenal.Poles.Values)
+                {
+                    foreach (var entry in pole.Items.Values)
+                    {
+                        ByInscribedItem.TryRemove(entry.ItemID, out _);
+                        if (!removedByOwner.TryGetValue(entry.CharacterID, out var list))
+                            removedByOwner[entry.CharacterID] = list = new List<(TotemPoleType, uint)>();
+                        list.Add((pole.Type, entry.ItemID));
+                    }
+                    pole.Items.Clear();
+                }
                 await GuildsRepository.DeleteAsync(guild.ID);
                 ById.TryRemove(guild.ID, out _);
                 foreach (var other in ById.Values)
@@ -307,6 +368,17 @@ namespace Comet.Game.Social
                     ByMember.TryRemove(member.CharacterID, out _);
                     if (Online(member.CharacterID) is Client player)
                     {
+                        if (removedByOwner.TryGetValue(member.CharacterID, out var removedItems))
+                        {
+                            foreach (var (poleType, itemID) in removedItems)
+                                await player.SendAsync(new MsgTotemPole
+                                {
+                                    Action = MsgTotemPole.TotemPoleAction.Remove,
+                                    TotemType = (uint)poleType,
+                                    ItemID = itemID,
+                                });
+                        }
+                        await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower, 0));
                         await player.SendAsync(new MsgSyndicate(SyndicateAction.Disband, guild.ID));
                         await RefreshAsync(player);
                         await Talk.NoticeAsync(player, $"The guild {guild.Name} has been disbanded.");
@@ -347,8 +419,14 @@ namespace Comet.Game.Social
                 await GuildsRepository.SaveMemberAsync(target.ToRow(guild.ID));
                 await GuildsRepository.SaveAsync(guild.ToRow());
                 await RefreshAsync(client);
+                await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.GuildBattlePower,
+                    ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, membership.Member.Rank)));
                 if (Online(target.CharacterID) is Client player)
+                {
                     await RefreshAsync(player);
+                    await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower,
+                        ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, target.Rank)));
+                }
                 await NotifyAsync(guild, $"{client.Character.Name} has passed the leadership of the guild to {target.Name}.");
                 LogRank(client, guild, target, "transfer");
                 return null;
@@ -448,6 +526,8 @@ namespace Comet.Game.Social
             guild.Members[client.ID] = member;
             ByMember[client.ID] = new Membership(guild, member);
             await RefreshAsync(client);
+            await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.GuildBattlePower,
+                ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, member.Rank)));
             await NotifyAsync(guild, $"{character.Name} has joined the guild.");
             LogEvents.For(typeof(Guilds), LogEvents.GuildJoined).Information(
                 "{Name} joined guild {Guild} (guild {GuildId}, recruited by {Recruiter})",
@@ -469,11 +549,36 @@ namespace Comet.Game.Social
 
         private static async Task RemoveAsync(Guild guild, GuildMember member, string reason, string by)
         {
+            var removedItems = new List<(TotemPoleType Pole, uint ItemID)>();
+            foreach (var pole in guild.Arsenal.Poles.Values)
+            {
+                foreach (var entry in pole.Items.Values.Where(e => e.CharacterID == member.CharacterID).ToList())
+                {
+                    pole.Items.Remove(entry.ItemID);
+                    ByInscribedItem.TryRemove(entry.ItemID, out _);
+                    removedItems.Add((pole.Type, entry.ItemID));
+                }
+            }
+            if (removedItems.Count > 0)
+                await GuildsRepository.RemoveMemberTotemsAsync(member.CharacterID);
+
             await GuildsRepository.RemoveMemberAsync(member.CharacterID);
             guild.Members.Remove(member.CharacterID);
             ByMember.TryRemove(member.CharacterID, out _);
+
+            if (removedItems.Count > 0)
+                await RecalculateArsenalAsync(guild);
+
             if (Online(member.CharacterID) is Client player)
             {
+                foreach (var (poleType, itemID) in removedItems)
+                    await player.SendAsync(new MsgTotemPole
+                    {
+                        Action = MsgTotemPole.TotemPoleAction.Remove,
+                        TotemType = (uint)poleType,
+                        ItemID = itemID,
+                    });
+                await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower, 0));
                 await RefreshAsync(player);
                 if (reason == "kicked")
                     await Talk.NoticeAsync(player, $"You have been expelled from the guild {guild.Name}.");
@@ -706,7 +811,11 @@ namespace Comet.Game.Social
             target.Rank = rank;
             await GuildsRepository.SaveMemberAsync(target.ToRow(guild.ID));
             if (Online(target.CharacterID) is Client player)
+            {
                 await RefreshAsync(player);
+                await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower,
+                    ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, target.Rank)));
+            }
             await NotifyAsync(guild, rank == GuildRank.DeputyLeader
                 ? $"{client.Character.Name} has appointed {target.Name} as deputy leader."
                 : $"{target.Name} is no longer a deputy leader.");
@@ -825,5 +934,420 @@ namespace Comet.Game.Social
         private static void Reject(Client client, string kind, string target, string reason) =>
             LogEvents.For(typeof(Guilds), LogEvents.GuildRejected).Warning(
                 "{Name} can't {Kind} {Target}: {Reason}", client.Character?.Name, kind, target, reason);
+
+        public static async Task HandleTotemPoleAsync(Client client, MsgTotemPole msg)
+        {
+            if (client.Character == null)
+                return;
+            await Gate.WaitAsync();
+            try
+            {
+                switch (msg.Action)
+                {
+                    case MsgTotemPole.TotemPoleAction.Unlock:
+                        await UnlockArsenalAsync(client, msg.TotemType);
+                        break;
+                    case MsgTotemPole.TotemPoleAction.Inscribe:
+                        await InscribeItemAsync(client, msg.TotemType, msg.ItemID);
+                        break;
+                    case MsgTotemPole.TotemPoleAction.Remove:
+                        await RemoveInscribedItemAsync(client, msg.TotemType, msg.ItemID);
+                        break;
+                    case MsgTotemPole.TotemPoleAction.Enhance:
+                        await EnhanceArsenalAsync(client, msg.TotemType, msg.Enhancement);
+                        break;
+                    case MsgTotemPole.TotemPoleAction.Refresh:
+                        await SendArsenalInfoAsync(client);
+                        break;
+                    default:
+                        LogEvents.For(typeof(Guilds), LogEvents.PacketUnhandled).Warning(
+                            "Unhandled packet {PacketType} action {Action} ({Length} bytes): {Hex}",
+                            msg.Type, msg.Action, msg.Length, Convert.ToHexString(msg.Encode()));
+                        break;
+                }
+            }
+            finally { Gate.Release(); }
+        }
+
+        public static async Task SendWeaponsInfoAsync(Client client, MsgWeaponsInfo msg)
+        {
+            if (client.Character == null || msg.TotemType >= ArsenalConfig.PoleCount)
+                return;
+            await Gate.WaitAsync();
+            try
+            {
+                var guild = Of(client.ID)?.Guild;
+                if (guild == null)
+                    return;
+                var poleType = (TotemPoleType)msg.TotemType;
+                var pole = guild.Arsenal.Get(poleType);
+                if (pole == null)
+                    return;
+
+                uint today = Guild.Today;
+                var config = Kernel.ArsenalConfig;
+                var ordered = pole.Items.Values
+                    .OrderByDescending(e => e.Donation(config))
+                    .ThenBy(e => e.ItemID)
+                    .ToList();
+
+                uint beginAt = Math.Max(1u, msg.BeginAt);
+                uint endAt = Math.Max(beginAt, msg.EndAt);
+                var reply = new MsgWeaponsInfo
+                {
+                    Action = 0,
+                    BeginAt = beginAt,
+                    EndAt = endAt,
+                    TotemType = msg.TotemType,
+                    TotalCount = (uint)ordered.Count,
+                    BattlePower = pole.DonationBattlePower,
+                    Enhancement = pole.ActiveEnhancement(today),
+                    EnhancementExpiration = pole.ActiveExpiration(today),
+                    Donation = (uint)Math.Min(pole.Donation, uint.MaxValue),
+                };
+
+                for (uint pos = beginAt; pos <= endAt && pos <= (uint)ordered.Count; pos++)
+                {
+                    var entry = ordered[(int)(pos - 1)];
+                    reply.Items.Add(new MsgWeaponsInfo.WeaponEntry(
+                        ItemID: entry.ItemID,
+                        Position: pos,
+                        OwnerName: entry.OwnerName,
+                        TypeID: entry.TypeID,
+                        Quality: (byte)ItemSlots.Quality(entry.TypeID),
+                        Plus: entry.Plus,
+                        Gem1: entry.Gem1,
+                        Gem2: entry.Gem2,
+                        BattlePower: entry.BattlePower,
+                        Donation: entry.Donation(config)));
+                }
+                await client.SendAsync(reply);
+            }
+            finally { Gate.Release(); }
+        }
+
+        public static async Task RefreshInscribedItemAsync(DbItem item)
+        {
+            if (item == null || !ByInscribedItem.TryGetValue(item.ItemID, out var guildID))
+                return;
+            await Gate.WaitAsync();
+            try
+            {
+                if (!ById.TryGetValue(guildID, out var guild))
+                    return;
+                foreach (var pole in guild.Arsenal.Poles.Values)
+                {
+                    if (!pole.Items.TryGetValue(item.ItemID, out var entry))
+                        continue;
+                    entry.TypeID = item.TypeID;
+                    entry.Plus = item.Plus;
+                    entry.Gem1 = item.Gem1;
+                    entry.Gem2 = item.Gem2;
+                    await RecalculateArsenalAsync(guild);
+                    return;
+                }
+            }
+            finally { Gate.Release(); }
+        }
+
+        private static async Task UnlockArsenalAsync(Client client, uint rawType)
+        {
+            var membership = Of(client.ID);
+            if (membership == null || membership.Member.Rank < GuildRank.DeputyLeader)
+            {
+                Reject(client, "unlock_arsenal", rawType.ToString(CultureInfo.InvariantCulture), "not_authorized");
+                await Talk.NoticeAsync(client, "Only the guild leader or deputy leader can unlock an Arsenal.");
+                return;
+            }
+            if (rawType >= ArsenalConfig.PoleCount)
+            {
+                Reject(client, "unlock_arsenal", rawType.ToString(CultureInfo.InvariantCulture), "invalid_type");
+                return;
+            }
+            var guild = membership.Guild;
+            var poleType = (TotemPoleType)rawType;
+            if (guild.Arsenal.Get(poleType) != null)
+            {
+                Reject(client, "unlock_arsenal", poleType.ToString(), "already_open");
+                return;
+            }
+            uint today = Guild.Today;
+            if (guild.LastOpenTotem == today)
+            {
+                Reject(client, "unlock_arsenal", poleType.ToString(), "daily_limit");
+                await Talk.NoticeAsync(client, "Each guild can only unlock one Arsenal per day.");
+                return;
+            }
+            ulong cost = ArsenalConfig.UnlockCost(guild.Arsenal.UnlockedCount + 1);
+            if (guild.Fund < cost)
+            {
+                Reject(client, "unlock_arsenal", poleType.ToString(), "fund");
+                await Talk.NoticeAsync(client, "You don't have enough Guild Fund.");
+                return;
+            }
+
+            guild.Fund -= cost;
+            guild.LastOpenTotem = today;
+            var pole = guild.Arsenal.Unlock(poleType);
+            await GuildsRepository.SaveTotemPoleAsync(pole.ToRow(guild.ID));
+            await GuildsRepository.SaveAsync(guild.ToRow());
+            await SendArsenalInfoAsync(client);
+            await client.SendAsync(new MsgSyndicateAttributeInfo(guild, membership.Member));
+            await NotifyAsync(guild, $"{client.Character.Name} has unlocked the {poleType} Arsenal.");
+            LogEvents.For(typeof(Guilds), LogEvents.GuildArsenalUnlocked).Information(
+                "{Name} unlocked {Pole} arsenal for guild {Guild} (guild {GuildId}, cost {Cost}, fund {Fund})",
+                client.Character.Name, poleType, guild.Name, guild.ID, cost, guild.Fund);
+        }
+
+        private static async Task InscribeItemAsync(Client client, uint rawType, uint itemID)
+        {
+            var membership = Of(client.ID);
+            if (membership == null)
+            {
+                Reject(client, "inscribe", itemID.ToString(CultureInfo.InvariantCulture), "no_guild");
+                return;
+            }
+            var item = FindCarriedItem(client, itemID);
+            if (item == null)
+            {
+                Reject(client, "inscribe", itemID.ToString(CultureInfo.InvariantCulture), "not_found");
+                return;
+            }
+            var poleType = ArsenalConfig.PoleTypeOf(item.TypeID);
+            if (poleType == null || (rawType < ArsenalConfig.PoleCount && (TotemPoleType)rawType != poleType.Value))
+            {
+                Reject(client, "inscribe", itemID.ToString(CultureInfo.InvariantCulture), "wrong_type");
+                return;
+            }
+            if (ItemSlots.Quality(item.TypeID) is not (8 or 9))
+            {
+                Reject(client, "inscribe", itemID.ToString(CultureInfo.InvariantCulture), "quality");
+                await Talk.NoticeAsync(client, "Only Elite or above equipment can be inscribed in the Martial Arsenal.");
+                return;
+            }
+            if (ByInscribedItem.ContainsKey(item.ItemID))
+            {
+                Reject(client, "inscribe", itemID.ToString(CultureInfo.InvariantCulture), "already_inscribed");
+                return;
+            }
+            var guild = membership.Guild;
+            var pole = guild.Arsenal.Get(poleType.Value);
+            if (pole == null)
+            {
+                Reject(client, "inscribe", poleType.Value.ToString(), "locked");
+                await Talk.NoticeAsync(client, $"The {poleType.Value} Arsenal is locked.");
+                return;
+            }
+
+            var entry = new TotemEntry(
+                item.ItemID, client.ID, client.Character.Name, poleType.Value,
+                item.TypeID, item.Plus, item.Gem1, item.Gem2);
+            await GuildsRepository.AddTotemAsync(new DbSyndicateTotem
+            {
+                ItemID = item.ItemID,
+                SyndicateID = guild.ID,
+                CharacterID = client.ID,
+                Type = (byte)poleType.Value,
+            });
+            pole.Items[item.ItemID] = entry;
+            ByInscribedItem[item.ItemID] = guild.ID;
+
+            await RecalculateArsenalAsync(guild);
+            await client.SendAsync(new MsgTotemPole
+            {
+                Action = MsgTotemPole.TotemPoleAction.Inscribe,
+                TotemType = (uint)poleType.Value,
+                ItemID = item.ItemID,
+            });
+            await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Update));
+            await SendArsenalInfoAsync(client);
+            await client.SendAsync(new MsgSynpOffer(membership.Member));
+            LogEvents.For(typeof(Guilds), LogEvents.GuildArsenalInscribed).Information(
+                "{Name} inscribed item {ItemId} (type {TypeId}, donation {Donation}) into {Pole} arsenal of guild {Guild} (guild {GuildId})",
+                client.Character.Name, item.ItemID, item.TypeID, entry.Donation(Kernel.ArsenalConfig),
+                poleType.Value, guild.Name, guild.ID);
+        }
+
+        private static async Task RemoveInscribedItemAsync(Client client, uint rawType, uint itemID)
+        {
+            var membership = Of(client.ID);
+            if (membership == null)
+            {
+                Reject(client, "remove_inscribed", itemID.ToString(CultureInfo.InvariantCulture), "no_guild");
+                return;
+            }
+            var guild = membership.Guild;
+            TotemPole pole = null;
+            TotemEntry entry = null;
+            if (rawType < ArsenalConfig.PoleCount &&
+                guild.Arsenal.Get((TotemPoleType)rawType) is TotemPole candidate &&
+                candidate.Items.TryGetValue(itemID, out entry))
+            {
+                pole = candidate;
+            }
+            else
+            {
+                foreach (var p in guild.Arsenal.Poles.Values)
+                {
+                    if (p.Items.TryGetValue(itemID, out entry))
+                    {
+                        pole = p;
+                        break;
+                    }
+                }
+            }
+            if (pole == null || entry == null)
+            {
+                Reject(client, "remove_inscribed", itemID.ToString(CultureInfo.InvariantCulture), "not_inscribed");
+                return;
+            }
+            if (entry.CharacterID != client.ID)
+            {
+                Reject(client, "remove_inscribed", itemID.ToString(CultureInfo.InvariantCulture), "not_owner");
+                return;
+            }
+
+            await GuildsRepository.RemoveTotemAsync(itemID);
+            pole.Items.Remove(itemID);
+            ByInscribedItem.TryRemove(itemID, out _);
+
+            await RecalculateArsenalAsync(guild);
+            await client.SendAsync(new MsgTotemPole
+            {
+                Action = MsgTotemPole.TotemPoleAction.Remove,
+                TotemType = (uint)pole.Type,
+                ItemID = itemID,
+            });
+            if (FindCarriedItem(client, itemID) is DbItem carried)
+                await client.SendAsync(new MsgItemInfo(carried, MsgItemInfo.ItemAction.Update));
+            await SendArsenalInfoAsync(client);
+            await client.SendAsync(new MsgSynpOffer(membership.Member));
+            LogEvents.For(typeof(Guilds), LogEvents.GuildArsenalRemoved).Information(
+                "{Name} removed item {ItemId} from {Pole} arsenal of guild {Guild} (guild {GuildId})",
+                client.Character.Name, itemID, pole.Type, guild.Name, guild.ID);
+        }
+
+        private static async Task EnhanceArsenalAsync(Client client, uint rawType, uint addBp)
+        {
+            var membership = Of(client.ID);
+            if (membership == null || membership.Member.Rank < GuildRank.DeputyLeader)
+            {
+                Reject(client, "enhance_arsenal", rawType.ToString(CultureInfo.InvariantCulture), "not_authorized");
+                return;
+            }
+            if (rawType >= ArsenalConfig.PoleCount || addBp is not (1 or 2))
+            {
+                Reject(client, "enhance_arsenal", rawType.ToString(CultureInfo.InvariantCulture), "invalid_args");
+                return;
+            }
+            var guild = membership.Guild;
+            var pole = guild.Arsenal.Get((TotemPoleType)rawType);
+            if (pole == null)
+            {
+                Reject(client, "enhance_arsenal", ((TotemPoleType)rawType).ToString(), "locked");
+                return;
+            }
+            if (pole.DonationBattlePower >= ArsenalConfig.MaxPoleBattlePower)
+            {
+                Reject(client, "enhance_arsenal", pole.Type.ToString(), "already_max");
+                return;
+            }
+            ulong cost = ArsenalConfig.EnhanceCost((int)addBp);
+            if (guild.Fund < cost)
+            {
+                Reject(client, "enhance_arsenal", pole.Type.ToString(), "fund");
+                await Talk.NoticeAsync(client, "You don't have enough Guild Fund.");
+                return;
+            }
+
+            uint expiry = uint.Parse(Clock.Local(DateTime.UtcNow).AddDays(ArsenalConfig.EnhancementDays).ToString("yyyyMMdd"));
+            guild.Fund -= cost;
+            pole.Enhancement = (byte)addBp;
+            pole.EnhancementExpiration = expiry;
+            await GuildsRepository.SaveTotemPoleAsync(pole.ToRow(guild.ID));
+            await GuildsRepository.SaveAsync(guild.ToRow());
+            await RecalculateArsenalAsync(guild);
+
+            await client.SendAsync(new MsgTotemPole
+            {
+                Action = MsgTotemPole.TotemPoleAction.Enhance,
+                TotemType = (uint)pole.Type,
+                Enhancement = addBp,
+                EnhancementExpiration = expiry,
+            });
+            await SendArsenalInfoAsync(client);
+            await client.SendAsync(new MsgSyndicateAttributeInfo(guild, membership.Member));
+            LogEvents.For(typeof(Guilds), LogEvents.GuildArsenalEnhanced).Information(
+                "{Name} enhanced {Pole} arsenal of guild {Guild} (guild {GuildId}) by +{Bp} until {Expiry} for {Cost}",
+                client.Character.Name, pole.Type, guild.Name, guild.ID, addBp, expiry, cost);
+        }
+
+        private static async Task SendArsenalInfoAsync(Client client)
+        {
+            var membership = Of(client.ID);
+            if (membership == null)
+                return;
+            var guild = membership.Guild;
+            uint today = Guild.Today;
+            guild.Arsenal.Recalculate(Kernel.ArsenalConfig, today, guild.Members);
+            uint sharedBp = ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, membership.Member.Rank);
+
+            var info = new MsgTotemPoleInfo
+            {
+                TotalBattlePower = guild.Arsenal.TotalBattlePower,
+                PlayerDonation = membership.Member.ArsenalDonation,
+                SharedBattlePower = sharedBp,
+            };
+            for (int i = 0; i < ArsenalConfig.PoleCount; i++)
+            {
+                var type = (TotemPoleType)i;
+                var pole = guild.Arsenal.Get(type);
+                if (pole == null)
+                {
+                    info.Poles.Add(new MsgTotemPoleInfo.PoleEntry(type, 0, 0, 0, 0, false));
+                    continue;
+                }
+                info.Poles.Add(new MsgTotemPoleInfo.PoleEntry(
+                    type,
+                    pole.DonationBattlePower,
+                    pole.ActiveEnhancement(today),
+                    (uint)Math.Min(pole.Donation, uint.MaxValue),
+                    pole.ActiveExpiration(today),
+                    true));
+            }
+            await client.SendAsync(info);
+            await client.SendAsync(new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.GuildBattlePower, sharedBp));
+        }
+
+        private static async Task RecalculateArsenalAsync(Guild guild)
+        {
+            uint oldBp = guild.Arsenal.TotalBattlePower;
+            byte oldLevel = guild.Level;
+            guild.Arsenal.Recalculate(Kernel.ArsenalConfig, Guild.Today, guild.Members);
+            guild.Level = guild.Arsenal.GuildLevel;
+            if (guild.Level != oldLevel)
+                await GuildsRepository.SaveAsync(guild.ToRow());
+
+            if (guild.Arsenal.TotalBattlePower != oldBp || guild.Level != oldLevel)
+            {
+                foreach (var member in guild.Members.Values)
+                {
+                    if (Online(member.CharacterID) is not Client player)
+                        continue;
+                    if (guild.Arsenal.TotalBattlePower != oldBp)
+                    {
+                        uint sharedBp = ArsenalConfig.SharedBattlePower(guild.Arsenal.TotalBattlePower, member.Rank);
+                        await player.SendAsync(new MsgUserAttrib(
+                            player.ID, MsgUserAttrib.AttributeType.GuildBattlePower, sharedBp));
+                    }
+                    if (guild.Level != oldLevel)
+                        await player.SendAsync(new MsgSyndicateAttributeInfo(guild, member));
+                }
+            }
+        }
+
+        private static DbItem FindCarriedItem(Client client, uint itemID) =>
+            client.Inventory?.Find(itemID) ??
+            client.Equipment?.Items.FirstOrDefault(i => i.ItemID == itemID);
     }
 }

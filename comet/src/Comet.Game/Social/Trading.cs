@@ -105,6 +105,7 @@ namespace Comet.Game.Social
                 item == null ? "not_in_inventory" :
                 trade.Of(client).Items.Contains(item) ? "offered" :
                 trade.PartnerOf(client).Player.Inventory.FreeSlots <= trade.Of(client).Items.Count ? "partner_full" :
+                Guilds.IsInscribed(item.ItemID) ? "inscribed" :
                 !MayGive(client, trade.PartnerOf(client).Player, item, DateTime.UtcNow) ? "locked" :
                 null;
             if (reason != null)
@@ -113,6 +114,8 @@ namespace Comet.Game.Social
                 await client.SendAsync(new MsgTrade(TradeAction.AddItemFailed, itemID));
                 if (reason == "partner_full")
                     await Talk.NoticeAsync(client, $"{trade.PartnerOf(client).Player.Character.Name} has no room for more items.");
+                else if (reason == "inscribed")
+                    await Talk.NoticeAsync(client, "The inscribed equipment cannot be traded.");
                 else if (reason == "locked")
                     await Talk.NoticeAsync(client, "This equipment is locked. You can only trade it to your trade partners.");
                 return;
@@ -334,7 +337,8 @@ namespace Comet.Game.Social
                 by.Character?.Name);
 
         private static bool MayGive(Client giver, Client receiver, DbItem item, DateTime now) =>
-            !Locking.IsLocked(item, now) || TradePartners.IsFormal(giver, receiver.ID, now);
+            !Guilds.IsInscribed(item.ItemID) &&
+            (!Locking.IsLocked(item, now) || TradePartners.IsFormal(giver, receiver.ID, now));
 
         private static bool InGame(Client client) =>
             client.Character != null && Kernel.Players.TryGet(client.ID, out var online) && online == client;

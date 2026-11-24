@@ -61,6 +61,8 @@ namespace Comet.Game.Packets
                 [PacketType.MsgMeteSpecial] = () => new MsgMeteSpecial(),
                 [PacketType.MsgChangeName] = () => new MsgChangeName(),
                 [PacketType.MsgSubPro] = () => new MsgSubPro(),
+                [PacketType.MsgWeaponsInfo] = () => new MsgWeaponsInfo(),
+                [PacketType.MsgTotemPole] = () => new MsgTotemPole(),
             };
 
         public static MsgBase<Client> Create(PacketType type) =>

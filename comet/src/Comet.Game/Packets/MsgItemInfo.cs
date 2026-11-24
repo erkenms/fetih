@@ -42,7 +42,8 @@ namespace Comet.Game.Packets
             body[46] = (byte)(this.Item.Locked ? 1 : 0);
             BitConverter.TryWriteBytes(span[48..], (uint)this.Item.Color);
             BitConverter.TryWriteBytes(span[52..], this.Item.PlusProgress);
-            // 56: inscribed, 60: time left (uint each)
+            BitConverter.TryWriteBytes(span[56..], Social.Guilds.ArsenalSyndicateOf(this.Item.ItemID));
+            // 60: time left (uint)
 
             var writer = new PacketWriter();
             writer.Write((ushort)base.Type);

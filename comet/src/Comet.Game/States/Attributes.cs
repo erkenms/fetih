@@ -57,9 +57,11 @@ namespace Comet.Game.States
 
         public static ushort MaxMana(Client client) => MaxMana(client.Character, client.Equipment);
 
-        // A level a point, and five a rebirth
+        // A level a point, five a rebirth, nobility rank, and shared guild arsenal battle power
         public static uint BattlePower(DbCharacter character) =>
-            character.Level + character.Rebirths * 5u + (uint)Nobility.Peerage.RankOf(character.CharacterID);
+            character.Level + character.Rebirths * 5u +
+            (uint)Nobility.Peerage.RankOf(character.CharacterID) +
+            Social.Guilds.BattlePowerOf(character.CharacterID);
 
         // Worn items add their itemtype mana after the taoists' bonus; itemadd.ini has none
         public static ushort MaxMana(DbCharacter character, Equipment equipment)

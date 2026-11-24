@@ -82,6 +82,7 @@ namespace Comet.Game.Items
             }
 
             await ItemsRepository.SetUpgradeAsync(item);
+            await Social.Guilds.RefreshInscribedItemAsync(item);
             await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Update));
             await client.SendAsync(msg);
             LogEvents.For(typeof(Embedding), LogEvents.ItemEmbedded).Information(

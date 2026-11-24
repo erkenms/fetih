@@ -610,6 +610,42 @@ namespace Comet.Client
             return packet == null ? null : GuildDonationRanking.Parse(packet);
         }
 
+        public Task TotemPoleAsync(ushort action, uint totemType = 0, uint itemId = 0, uint enhancement = 0) =>
+            this.SendAsync(TotemPoleMessage.Build(action, totemType, itemId, enhancement));
+
+        public async Task<TotemPoleMessage> WaitForTotemPoleAsync(
+            Func<TotemPoleMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTotemPole && match(TotemPoleMessage.Parse(p)), timeout);
+            return packet == null ? null : TotemPoleMessage.Parse(packet);
+        }
+
+        public async Task<TotemPoleInfoMessage> WaitForTotemPoleInfoAsync(
+            Func<TotemPoleInfoMessage, bool> match = null, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTotemPoleInfo &&
+                (match == null || match(TotemPoleInfoMessage.Parse(p))), timeout);
+            return packet == null ? null : TotemPoleInfoMessage.Parse(packet);
+        }
+
+        public async Task<TotemPoleInfoMessage> QueryArsenalAsync(TimeSpan? timeout = null)
+        {
+            await this.TotemPoleAsync(TotemPoleMessage.Refresh);
+            return await this.WaitForTotemPoleInfoAsync(null, timeout);
+        }
+
+        public async Task<WeaponsInfoMessage> QueryArsenalWeaponsAsync(
+            uint totemType, uint beginAt = 1, uint endAt = 8, TimeSpan? timeout = null)
+        {
+            await this.SendAsync(WeaponsInfoMessage.BuildQuery(totemType, beginAt, endAt));
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgWeaponsInfo &&
+                BitConverter.ToUInt32(p, 16) == totemType, timeout);
+            return packet == null ? null : WeaponsInfoMessage.Parse(packet);
+        }
+
         public Task FamilyAsync(uint action, uint data, string text = null) =>
             this.SendAsync(FamilyMessage.Build(action, data, text));
 

@@ -78,6 +78,7 @@ namespace Comet.Game.Packets
             VipLevel = 39,
             QuizPoints = 40,
             EnlightenPoints = 41,
+            GuildBattlePower = 44,
         }
     }
 }

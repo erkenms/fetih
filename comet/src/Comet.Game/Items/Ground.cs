@@ -35,6 +35,11 @@ namespace Comet.Game.Items
                 await Chat.Talk.NoticeAsync(client, "This equipment is locked. It can't be discarded.");
                 return Reject(client, "drop", itemID, "locked");
             }
+            if (Social.Guilds.IsInscribed(item.ItemID))
+            {
+                await Chat.Talk.NoticeAsync(client, "The inscribed equipment cannot be dropped.");
+                return Reject(client, "drop", itemID, "inscribed");
+            }
             if (!Kernel.Ground.TryGet(character.MapID, out var ground))
                 return Reject(client, "drop", itemID, "no_map");
 

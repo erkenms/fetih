@@ -65,6 +65,8 @@ namespace Comet.Game.Items
             }
             if (Locking.IsLocked(minor, now))
                 return "minor_locked";
+            if (Social.Guilds.IsInscribed(minor.ItemID))
+                return "minor_inscribed";
             return null;
         }
 
@@ -100,6 +102,7 @@ namespace Comet.Game.Items
             uint points = PointsOf(PlusOf(minor));
             (main.Plus, main.PlusProgress) = Add(main.Plus, main.PlusProgress, points);
             await ItemsRepository.SetPlusAsync(main.ItemID, main.Plus, main.PlusProgress);
+            await Social.Guilds.RefreshInscribedItemAsync(main);
             await client.SendAsync(new MsgItemInfo(main, MsgItemInfo.ItemAction.Update));
             await Social.Mentors.RecordCompositionAsync(client, points);
             LogEvents.For(typeof(Composing), LogEvents.ItemComposed).Information(

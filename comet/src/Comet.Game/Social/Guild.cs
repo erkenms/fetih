@@ -21,11 +21,12 @@ namespace Comet.Game.Social
         public GuildRank Rank { get; set; }
         public uint SilverDonation { get; set; }
         public uint ConquerPointsDonation { get; set; }
+        public uint ArsenalDonation { get; set; }
         public uint Joined { get; }
 
-        // Sum of tracked guild donation columns (silver + CPs; guide, PK and arsenal are not tracked yet)
+        // Sum of tracked guild donation columns (silver + CPs + arsenal; guide and PK are not tracked yet)
         public uint TotalDonation =>
-            (uint)Math.Min((ulong)this.SilverDonation + this.ConquerPointsDonation, uint.MaxValue);
+            (uint)Math.Min((ulong)this.SilverDonation + this.ConquerPointsDonation + this.ArsenalDonation, uint.MaxValue);
 
         public GuildMember(uint characterID, string name, byte level, GuildRank rank, uint joined)
         {
@@ -79,10 +80,12 @@ namespace Comet.Game.Social
         public uint RequiredRebirths { get; set; }
         public uint RequiredProfessions { get; set; }
         public uint Created { get; set; }
+        public uint LastOpenTotem { get; set; }
 
         public Dictionary<uint, GuildMember> Members { get; } = new Dictionary<uint, GuildMember>();
         public HashSet<uint> Allies { get; } = new HashSet<uint>();
         public HashSet<uint> Enemies { get; } = new HashSet<uint>();
+        public GuildArsenal Arsenal { get; } = new GuildArsenal();
 
         public Guild(uint id, string name)
         {
@@ -115,6 +118,7 @@ namespace Comet.Game.Social
             RequiredRebirths = this.RequiredRebirths,
             RequiredProfessions = this.RequiredProfessions,
             Created = this.Created,
+            LastOpenTotem = this.LastOpenTotem,
         };
 
         public static Guild FromRow(DbSyndicate row) => new Guild(row.SyndicateID, row.Name)
@@ -129,6 +133,7 @@ namespace Comet.Game.Social
             RequiredRebirths = row.RequiredRebirths,
             RequiredProfessions = row.RequiredProfessions,
             Created = row.Created,
+            LastOpenTotem = row.LastOpenTotem,
         };
 
         public static uint Today => uint.Parse(Clock.Local(DateTime.UtcNow).ToString("yyyyMMdd"));

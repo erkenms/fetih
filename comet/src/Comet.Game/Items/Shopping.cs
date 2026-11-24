@@ -59,6 +59,11 @@ namespace Comet.Game.Items
                 await Chat.Talk.NoticeAsync(client, "This equipment is locked. It can't be sold.");
                 return Reject(client, "sell", npcID, item.TypeID, "locked");
             }
+            if (Social.Guilds.IsInscribed(item.ItemID))
+            {
+                await Chat.Talk.NoticeAsync(client, "The inscribed equipment cannot be sold.");
+                return Reject(client, "sell", npcID, item.TypeID, "inscribed");
+            }
 
             uint price = Kernel.ItemTypes.TryGet(item.TypeID, out var type) ? SellPrice(type.Price, item.Amount, item.AmountLimit) : 0;
             if ((long)character.Silver + price > uint.MaxValue)

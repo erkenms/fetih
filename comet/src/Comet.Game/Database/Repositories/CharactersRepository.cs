@@ -104,6 +104,7 @@ namespace Comet.Game.Database.Repositories
             await db.TradePartners.Where(x => x.CharacterID == characterID || x.PartnerID == characterID).ExecuteDeleteAsync();
             await db.Magics.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Proficiencies.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.SyndicateTotems.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.SyndicateMembers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.FamilyMembers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
             await db.Arena.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();

@@ -17,6 +17,8 @@ namespace Comet.Game.Database
         public virtual DbSet<DbSyndicate> Syndicates { get; set; }
         public virtual DbSet<DbSyndicateMember> SyndicateMembers { get; set; }
         public virtual DbSet<DbSyndicateRelation> SyndicateRelations { get; set; }
+        public virtual DbSet<DbSyndicateTotemPole> SyndicateTotemPoles { get; set; }
+        public virtual DbSet<DbSyndicateTotem> SyndicateTotems { get; set; }
         public virtual DbSet<DbFamily> Families { get; set; }
         public virtual DbSet<DbFamilyMember> FamilyMembers { get; set; }
         public virtual DbSet<DbFamilyRelation> FamilyRelations { get; set; }
@@ -54,6 +56,8 @@ namespace Comet.Game.Database
             builder.Entity<DbSyndicate>(e => e.HasKey(x => x.SyndicateID));
             builder.Entity<DbSyndicateMember>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbSyndicateRelation>(e => e.HasKey(x => new { x.SyndicateID, x.TargetID }));
+            builder.Entity<DbSyndicateTotemPole>(e => e.HasKey(x => new { x.SyndicateID, x.Type }));
+            builder.Entity<DbSyndicateTotem>(e => e.HasKey(x => x.ItemID));
             builder.Entity<DbFamily>(e => e.HasKey(x => x.FamilyID));
             builder.Entity<DbFamilyMember>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbFamilyRelation>(e => e.HasKey(x => new { x.FamilyID, x.TargetID }));

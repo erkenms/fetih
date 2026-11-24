@@ -171,6 +171,7 @@ CREATE TABLE `syndicate` (
   `RequiredRebirths` int(10) unsigned NOT NULL DEFAULT '0',
   `RequiredProfessions` int(10) unsigned NOT NULL DEFAULT '0',
   `Created` int(10) unsigned NOT NULL DEFAULT '0',
+  `LastOpenTotem` int(10) unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`SyndicateID`),
   UNIQUE KEY `Name` (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -193,6 +194,29 @@ CREATE TABLE `syndicate_relation` (
   `TargetID` int(10) unsigned NOT NULL,
   `Kind` tinyint(3) unsigned NOT NULL,
   PRIMARY KEY (`SyndicateID`,`TargetID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Unlocked guild arsenals (Type 0..7: headgear, armor, weapon, ring, boots, necklace, fan,
+-- tower). EnhancementExpiration is a YYYYMMDD date, or 0 when not enhanced.
+DROP TABLE IF EXISTS `syndicate_totem_pole`;
+CREATE TABLE `syndicate_totem_pole` (
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `Type` tinyint(3) unsigned NOT NULL,
+  `Enhancement` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `EnhancementExpiration` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`SyndicateID`,`Type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Equipment inscribed in a guild's arsenals. The item stays with its owner.
+DROP TABLE IF EXISTS `syndicate_totem`;
+CREATE TABLE `syndicate_totem` (
+  `ItemID` int(10) unsigned NOT NULL,
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Type` tinyint(3) unsigned NOT NULL,
+  PRIMARY KEY (`ItemID`),
+  KEY `SyndicateID` (`SyndicateID`),
+  KEY `CharacterID` (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Clans. A character is in one clan at most. Relations as for guilds: Kind 1 is an ally

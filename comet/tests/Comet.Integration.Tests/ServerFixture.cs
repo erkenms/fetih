@@ -35,6 +35,8 @@ namespace Comet.Integration.Tests
         public static readonly (ushort X, ushort Y, uint Index) UnlinkedPortal = (700, 700, 99);
         // Item types in the test itemtype.dat
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Blade = (410301, "LuckyBlade", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) EliteBlade = (410308, "EliteBlade", 1099, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) SuperBlade = (410309, "SuperBlade", 1099, 0);
         // Their HP and MP, as in the 5619 client's itemtype.dat
         public static readonly (uint Id, string Name, ushort Life, ushort Mana) Potion = (1000000, "Stancher", 70, 0);
         public static readonly (uint Id, string Name, ushort Life, ushort Mana) ManaPotion = (1001000, "Agrypnotic", 0, 70);
@@ -490,7 +492,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "mine-four.DMap"), MapFiles.DMap(184, 184));
             File.WriteAllBytes(Path.Combine(maps, "gw.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
-                ItemFiles.ItemTypeDat(new[] { Blade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
+                ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
                     HelmetRefinedLowest, HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald, OblivionDew,
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
@@ -531,6 +533,12 @@ namespace Comet.Integration.Tests
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "SubProfessionInfo.ini"), TestSubProfessionInfoIni());
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "levexp.dat"),
                 ItemFiles.Encrypt(System.Text.Encoding.Latin1.GetBytes(TestLevExpTxt()), 0x4D2));
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "totempole.ini"),
+                "[Name]\r\n0=Headgear\r\n1=Armor\r\n2=Weapon\r\n3=Ring\r\n4=Boots\r\n5=Necklace\r\n6=Fan\r\n7=Tower\r\n" +
+                "[Quality]\r\nfine=1000\r\nmasterwork=16660\r\n" +
+                "[Add]\r\n1=90\r\n2=490\r\n3=1350\r\n4=4070\r\n5=12340\r\n6=37030\r\n7=111110\r\n8=333330\r\n" +
+                "9=1000000\r\n10=1033330\r\n11=1101230\r\n12=1212340\r\n" +
+                "[Hole]\r\n1=33330\r\n2=133330\r\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "Shop.dat"), ItemFiles.ShopDat(
                 (Blacksmith, new[] { Blade.Id, Glaive.Id }), (Pharmacist, new[] { Potion.Id })));
         }

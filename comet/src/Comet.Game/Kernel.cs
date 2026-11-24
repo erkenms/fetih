@@ -53,6 +53,7 @@ namespace Comet.Game
         public static Arena.HonorRewards HonorRewards = new Arena.HonorRewards(new uint[0]);
         public static Social.TutorTypes TutorTypes = new Social.TutorTypes(new Social.TutorTypes.Bracket[0]);
         public static SubClassTable SubClasses = new SubClassTable(new Dictionary<SubClassId, SubClassDefinition>());
+        public static Social.ArsenalConfig ArsenalConfig = Social.ArsenalConfig.Default;
 
         public static MonsterTypeTable MonsterTypes = new MonsterTypeTable(new MonsterType[0]);
         public static WorldMaps<Monster> Monsters;

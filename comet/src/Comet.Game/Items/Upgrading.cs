@@ -80,6 +80,7 @@ namespace Comet.Game.Items
             item.Amount = next.Amount;
             item.AmountLimit = next.AmountLimit;
             await ItemsRepository.SetUpgradeAsync(item);
+            await Social.Guilds.RefreshInscribedItemAsync(item);
             await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Update));
             await Equipping.ShowLookAsync(client);
             await Equipping.FollowMaximumsAsync(client);

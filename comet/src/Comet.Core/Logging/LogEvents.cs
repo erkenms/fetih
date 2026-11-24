@@ -166,6 +166,10 @@ namespace Comet.Core.Logging
         public const string GuildDonated = "guild.donated";
         public const string GuildRelation = "guild.relation";
         public const string GuildAnnounced = "guild.announced";
+        public const string GuildArsenalUnlocked = "guild.arsenal_unlocked";
+        public const string GuildArsenalEnhanced = "guild.arsenal_enhanced";
+        public const string GuildArsenalInscribed = "guild.arsenal_inscribed";
+        public const string GuildArsenalRemoved = "guild.arsenal_removed";
         public const string GuildRejected = "guild.rejected";
 
         public const string ClansLoaded = "clan.loaded";

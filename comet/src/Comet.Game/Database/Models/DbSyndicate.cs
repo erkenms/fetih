@@ -17,6 +17,7 @@ namespace Comet.Game.Database.Models
         public uint RequiredRebirths { get; set; }
         public uint RequiredProfessions { get; set; }
         public uint Created { get; set; }
+        public uint LastOpenTotem { get; set; }
     }
 
     [Table("syndicate_member")]
@@ -37,5 +38,23 @@ namespace Comet.Game.Database.Models
         public uint SyndicateID { get; set; }
         public uint TargetID { get; set; }
         public byte Kind { get; set; }
+    }
+
+    [Table("syndicate_totem_pole")]
+    public class DbSyndicateTotemPole
+    {
+        public uint SyndicateID { get; set; }
+        public byte Type { get; set; }
+        public byte Enhancement { get; set; }
+        public uint EnhancementExpiration { get; set; }
+    }
+
+    [Table("syndicate_totem")]
+    public class DbSyndicateTotem
+    {
+        public uint ItemID { get; set; }
+        public uint SyndicateID { get; set; }
+        public uint CharacterID { get; set; }
+        public byte Type { get; set; }
     }
 }

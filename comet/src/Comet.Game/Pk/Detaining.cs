@@ -32,7 +32,8 @@ namespace Comet.Game.Pk
             { 0, 10, 20, 50, 100, 200, 400, 800, 1500, 2500, 3500, 4500, 5500 };
 
         public static bool IsDetainable(DbItem item) =>
-            item != null && Equipment.IsEquipped(item.Position) && !ItemSlots.IsArrow(item.TypeID);
+            item != null && Equipment.IsEquipped(item.Position) && !ItemSlots.IsArrow(item.TypeID) &&
+            !Social.Guilds.IsInscribed(item.ItemID);
 
         // Days elapsed for the client's detain/reward dialogs: 0..7 while redeemable, >= 8 once
         // expired (the client treats >= 8 as expired and claimable by the hunter).

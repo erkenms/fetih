@@ -116,6 +116,17 @@
 
             try
             {
+                Kernel.ArsenalConfig = Social.ArsenalConfig.Load(config.Maps.ResolveClientDirectory());
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read ini/totempole.ini from {Directory}", config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.ItemTypes = ItemTypeTable.Load(config.Maps.ResolveClientDirectory());
                 Kernel.ItemAdditions = ItemAdditionTable.Load(config.Maps.ResolveClientDirectory());
                 LogEvents.For(typeof(Program), LogEvents.ItemTypesLoaded).Information(

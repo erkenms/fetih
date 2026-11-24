@@ -14,6 +14,7 @@ namespace Comet.Game.Packets
 
         public uint Silver { get; set; }
         public uint ConquerPoints { get; set; }
+        public uint Arsenal { get; set; }
 
         public MsgSynpOffer() => base.Type = PacketType.MsgSynpOffer;
 
@@ -21,6 +22,7 @@ namespace Comet.Game.Packets
         {
             this.Silver = member?.SilverDonation ?? 0;
             this.ConquerPoints = member?.ConquerPointsDonation ?? 0;
+            this.Arsenal = member?.ArsenalDonation ?? 0;
         }
 
         public override void Decode(byte[] bytes)
@@ -37,7 +39,10 @@ namespace Comet.Game.Packets
             writer.Write(AllDonations);         // 4
             writer.Write(this.Silver);          // 8
             writer.Write(this.ConquerPoints);   // 12
-            writer.Write(new byte[40]);         // 16
+            writer.Write(0u);                   // 16 guide
+            writer.Write(0u);                   // 20 PK
+            writer.Write(this.Arsenal);         // 24 arsenal
+            writer.Write(new byte[28]);         // 28
             return writer.ToArray();
         }
 

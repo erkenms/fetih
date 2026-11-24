@@ -78,6 +78,9 @@ namespace Comet.Client
         public const ushort MsgGuide = 2065;
         public const ushort MsgGuideInfo = 2066;
         public const ushort MsgContribute = 2067;
+        public const ushort MsgTotemPoleInfo = 2201;
+        public const ushort MsgWeaponsInfo = 2202;
+        public const ushort MsgTotemPole = 2203;
         public const ushort Msg2ndPsw = 2261;
         public const ushort MsgSubPro = 2320;
     }
@@ -1643,6 +1646,110 @@ namespace Comet.Client
                     BitConverter.ToUInt64(packet, 6), BitConverter.ToUInt64(packet, 14), entries);
             }
             return new SubProMessage(action, packet[6], packet.Length > 7 ? packet[7] : (byte)0, 0, 0, entries);
+        }
+    }
+
+    public sealed record TotemPoleMessage(
+        ushort Action, uint TotemType, uint ItemId, uint Enhancement, uint EnhancementExpiration)
+    {
+        public const ushort Unlock = 0;
+        public const ushort Inscribe = 1;
+        public const ushort Remove = 2;
+        public const ushort Enhance = 3;
+        public const ushort Refresh = 4;
+
+        public static byte[] Build(ushort action, uint totemType = 0, uint itemId = 0, uint enhancement = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgTotemPole, 28);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), totemType);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), itemId);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), enhancement);
+            return packet;
+        }
+
+        public static TotemPoleMessage Parse(byte[] packet) => new TotemPoleMessage(
+            BitConverter.ToUInt16(packet, 4),
+            BitConverter.ToUInt32(packet, 8),
+            BitConverter.ToUInt32(packet, 12),
+            BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt32(packet, 24));
+    }
+
+    public sealed record TotemPoleInfoEntry(
+        uint Type, uint BattlePower, uint Enhancement, uint Donation, uint EnhancementExpiration, bool Open);
+
+    public sealed record TotemPoleInfoMessage(
+        uint TotalBattlePower, uint PlayerDonation, uint SharedBattlePower, List<TotemPoleInfoEntry> Poles)
+    {
+        public static TotemPoleInfoMessage Parse(byte[] packet)
+        {
+            uint count = BitConverter.ToUInt32(packet, 20);
+            var poles = new List<TotemPoleInfoEntry>((int)count);
+            for (int i = 0, at = 24; i < count && at + 24 <= packet.Length; i++, at += 24)
+            {
+                poles.Add(new TotemPoleInfoEntry(
+                    BitConverter.ToUInt32(packet, at),
+                    BitConverter.ToUInt32(packet, at + 4),
+                    BitConverter.ToUInt32(packet, at + 8),
+                    BitConverter.ToUInt32(packet, at + 12),
+                    BitConverter.ToUInt32(packet, at + 16),
+                    packet[at + 20] != 0));
+            }
+            return new TotemPoleInfoMessage(
+                BitConverter.ToUInt32(packet, 8),
+                BitConverter.ToUInt32(packet, 12),
+                BitConverter.ToUInt32(packet, 16),
+                poles);
+        }
+    }
+
+    public sealed record ArsenalWeaponEntry(
+        uint ItemId, uint Position, string OwnerName, uint TypeId,
+        byte Quality, byte Plus, byte Gem1, byte Gem2, uint BattlePower, uint Donation);
+
+    public sealed record WeaponsInfoMessage(
+        uint BeginAt, uint EndAt, uint TotemType, uint TotalCount,
+        uint BattlePower, uint Enhancement, uint EnhancementExpiration, uint Donation,
+        List<ArsenalWeaponEntry> Items)
+    {
+        public static byte[] BuildQuery(uint totemType, uint beginAt, uint endAt)
+        {
+            var packet = Packet.Create(PacketTypes.MsgWeaponsInfo, 84);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), beginAt);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), endAt);
+            BitConverter.TryWriteBytes(packet.AsSpan(16), totemType);
+            return packet;
+        }
+
+        public static WeaponsInfoMessage Parse(byte[] packet)
+        {
+            uint count = BitConverter.ToUInt32(packet, 40);
+            var items = new List<ArsenalWeaponEntry>((int)count);
+            for (int i = 0, at = 44; i < count && at + 40 <= packet.Length; i++, at += 40)
+            {
+                items.Add(new ArsenalWeaponEntry(
+                    BitConverter.ToUInt32(packet, at),
+                    BitConverter.ToUInt32(packet, at + 4),
+                    Packet.ReadText(packet, at + 8, 16),
+                    BitConverter.ToUInt32(packet, at + 24),
+                    packet[at + 28],
+                    packet[at + 29],
+                    packet[at + 30],
+                    packet[at + 31],
+                    BitConverter.ToUInt32(packet, at + 32),
+                    BitConverter.ToUInt32(packet, at + 36)));
+            }
+            return new WeaponsInfoMessage(
+                BitConverter.ToUInt32(packet, 8),
+                BitConverter.ToUInt32(packet, 12),
+                BitConverter.ToUInt32(packet, 16),
+                BitConverter.ToUInt32(packet, 20),
+                BitConverter.ToUInt32(packet, 24),
+                BitConverter.ToUInt32(packet, 28),
+                BitConverter.ToUInt32(packet, 32),
+                BitConverter.ToUInt32(packet, 36),
+                items);
         }
     }
 }

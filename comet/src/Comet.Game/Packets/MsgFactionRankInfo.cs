@@ -71,7 +71,7 @@ namespace Comet.Game.Packets
                 writer.Write(member.ConquerPointsDonation); // +16
                 writer.Write(0u);                       // +20 guide
                 writer.Write(0u);                       // +24 PK
-                writer.Write(0u);                       // +28 arsenal
+                writer.Write(member.ArsenalDonation);   // +28 arsenal
                 this.Flowers.TryGetValue(member.CharacterID, out var flowers);
                 writer.Write(flowers?.RedRoses ?? 0);   // +32 rose
                 writer.Write(flowers?.Orchids ?? 0);    // +36 orchid
