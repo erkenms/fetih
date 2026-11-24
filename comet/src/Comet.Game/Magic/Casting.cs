@@ -514,6 +514,16 @@ namespace Comet.Game.Magic
             {
                 if (spell.Sort == MagicSort.ShurikenVortex)
                     (x, y) = (character.X, character.Y);
+                // The client lets a body that's still falling be clicked
+                string reason = AimsAtDead(client, targetID) ? "dead_target" :
+                    spell.Sort is MagicSort.Line or MagicSort.RadiantPalm or MagicSort.Fan &&
+                        x == character.X && y == character.Y ? "no_direction" :
+                    null;
+                if (reason != null)
+                {
+                    Reject(client, spell.Type, reason);
+                    return false;
+                }
                 victims = Around(client, now)
                     .Where(v => InShape(spell, character.X, character.Y, x, y, v.X, v.Y))
                     .Take(MaxTargets)
@@ -786,6 +796,10 @@ namespace Comet.Game.Magic
                     }
                 });
         }
+
+        private static bool AimsAtDead(Client client, uint targetID) =>
+            Attacks.IsMonster(targetID) && Kernel.Monsters.TryGet(client.Character.MapID, out var map) &&
+            map.TryGet(targetID, out var monster, out _, out _) && !monster.Alive;
 
         // The cells past the victim on the line from the caster, up to range cells from the
         // caster, until one is blocked or taken
