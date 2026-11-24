@@ -9,10 +9,11 @@ namespace Comet.Game.Magic
     // How the client shows a spell, from its ini/MagicEffect.ini: one section per type * 10 +
     // level, a level's keys over its level 0's. The client starts a spell's show as the packet
     // comes and shows each target's hit when its throw or shot is done and the target delays
-    // (DelayOfTarget3DEffect + WoundDelayOfTarget) have passed.
+    // (DelayOfTarget3DEffect + WoundDelayOfTarget) have passed, after the caster's intone
+    // (IntoneDuration).
     public sealed record MagicEffect(
         int Represent, int TargetDelay, int WoundDelay, bool Traces, int TraceDelay, int TraceSpeed,
-        int TraceAcceleration, int HitGap)
+        int TraceAcceleration, int HitGap, int Intone = 0)
     {
         // ClientRepresent: a body thrown at a cell (the bombs), a shot at each target, one
         // effect for each hit of a combo (Triple Attack)
@@ -46,7 +47,8 @@ namespace Comet.Game.Magic
                 first != null && first.TryGetValue(key, out s) && s.Length > 0;
             return new MagicEffect(Int("ClientRepresent", 0), Int("DelayOfTarget3DEffect", 0),
                 Int("WoundDelayOfTarget", 0), Has("TraceEffect"), Int("TraceEffectDelay", 0),
-                Int("TraceEffectSpeed", 100), Int("TraceEffectAcceleration", 300), Int("ExtraCmdTime", 0));
+                Int("TraceEffectSpeed", 100), Int("TraceEffectAcceleration", 300), Int("ExtraCmdTime", 0),
+                Int("IntoneDuration", 0));
         }
 
         public static MagicEffectTable Load(string clientDirectory)

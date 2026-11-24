@@ -20,6 +20,8 @@ namespace Comet.Game.Tests.Magic
             var meteor = table.Find(1180, 0);
             Assert.Equal((500, 500, false, 100), (meteor.TargetDelay, meteor.WoundDelay, meteor.Traces, meteor.TraceSpeed));
             Assert.Null(table.Find(1000, 0));
+            var palm = MagicEffectTable.Parse("[103810]\r\nClientRepresent=1\r\nIntoneDuration=500\r\n");
+            Assert.Equal(500, palm.Find(10381, 0).Intone);
         }
     }
 }

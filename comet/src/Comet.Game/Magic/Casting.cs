@@ -628,7 +628,8 @@ namespace Comet.Game.Magic
             spell.Sort == MagicSort.BlackbeardsRage ? BlackbeardShotGap : TimeSpan.Zero;
 
         // When the client shows a victim's last hit, so what it kills falls then rather than
-        // before. A thrown body (the bombs) lands TraceEffectDelay and TraceEffectSpeed ms for
+        // before: the client lets a monster fall a moment after the Kill, and a hit shown later
+        // stands it up again at no life. A thrown body (the bombs) lands TraceEffectDelay and TraceEffectSpeed ms for
         // each world unit from the caster to the cell aimed at; the client shows Gale Bomb's
         // hits at once, but it falls as its bomb lands too, like Scurvy Bomb's. A shot covers
         // (TraceEffectSpeed + TraceEffectAcceleration * t) * t world units in t seconds; a
@@ -638,7 +639,7 @@ namespace Comet.Game.Magic
         {
             if (effect == null)
                 return TimeSpan.Zero;
-            double ms = effect.TargetDelay + effect.WoundDelay;
+            double ms = effect.Intone + effect.TargetDelay;
             if (effect.Represent == MagicEffect.Thrown && effect.Traces)
                 ms += effect.TraceDelay + effect.TraceSpeed * (int)WorldDistance(casterX, casterY, aimX, aimY);
             // Blackbeard's Rage keeps its shots a measured gap apart
