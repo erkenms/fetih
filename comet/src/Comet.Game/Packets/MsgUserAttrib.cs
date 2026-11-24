@@ -22,6 +22,10 @@ namespace Comet.Game.Packets
             this.Append(type, value);
         }
 
+        // Attribute 18 packs seconds in bits 32-63 and the EXP rate percent (e.g. 200 for 2x) in bits 96-127
+        public static MsgUserAttrib DoubleExpOf(uint characterID, uint seconds, uint percent) =>
+            new MsgUserAttrib(characterID, AttributeType.DoubleExp, ((UInt128)percent << 96) | ((UInt128)seconds << 32));
+
         public MsgUserAttrib Append(AttributeType type, UInt128 value)
         {
             this.Attributes.Add((type, value));
@@ -65,6 +69,7 @@ namespace Comet.Game.Packets
             Strength = 15,
             Agility = 16,
             HeavenBlessing = 17,    // seconds left
+            DoubleExp = 18,         // seconds in bits 32-63, rate percent in bits 96-127
             Rebirths = 22,
             Status = 25,
             Hairstyle = 26,

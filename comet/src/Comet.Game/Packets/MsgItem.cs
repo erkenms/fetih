@@ -45,6 +45,9 @@ namespace Comet.Game.Packets
         public static MsgItem Unequipped(uint itemID, ItemPosition position) =>
             Create(itemID, (uint)position, ItemActionType.EquipmentRemove);
 
+        public static MsgItem Fireworks(uint characterID) =>
+            Create(characterID, 0, ItemActionType.Fireworks);
+
         // What the player wears, by item ID. The client draws its own character from this,
         // not from MsgPlayer or the equip replies.
         public static MsgItem DisplayGears(uint characterID, Equipment equipment)
@@ -184,6 +187,7 @@ namespace Comet.Game.Packets
             BoothRemove,
             BoothPurchase,
             EquipmentAmount,
+            Fireworks = 26,
             ClientPing = 27,
             EquipmentEnchant,
             BoothSellPoints,

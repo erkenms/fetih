@@ -244,6 +244,7 @@ namespace Comet.Game.Combat
 
             if (experience > 0)
             {
+                experience = DoubleExp.Scale(client.ID, experience, DateTime.UtcNow);
                 await Progress.AwardExperienceAsync(client, experience, "monster");
                 await Training.GodExp.AddHuntingAsync(client, experience);
             }

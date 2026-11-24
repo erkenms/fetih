@@ -224,5 +224,132 @@ namespace Comet.Integration.Tests
             Assert.Equal("daily_limit", refused.GetProperty("reason").GetString());
             Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("10 EXP balls a day")));
         }
+
+        [Fact]
+        public async Task ExpPotionActivatesDoubleExpAndSurvivesRelog()
+        {
+            var (first, email) = await this.PlayingAtAsync(1002, 700, 940, GameMaster);
+            var potion = await GiveAsync(first, ServerFixture.ExpPotion.Id);
+            await first.Game.UseAsync(potion.Id);
+            Assert.NotNull(await first.Game.WaitForItemActionAsync(ItemMessage.Remove, potion.Id));
+            var attrib = await first.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.DoubleExp, out var low) && (low >> 32) > 3500 &&
+                a.ValuesHigh.TryGetValue(UserAttribMessage.DoubleExp, out var hi) && (hi >> 32) == 200);
+            Assert.NotNull(attrib);
+
+            await this.LogOutAsync(first);
+            await using var again = await this.Servers.PlayAsync(email, Password);
+            var restored = await again.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.DoubleExp, out var low) && (low >> 32) > 3500 &&
+                a.ValuesHigh.TryGetValue(UserAttribMessage.DoubleExp, out var hi) && (hi >> 32) == 200);
+            Assert.NotNull(restored);
+        }
+
+        [Fact]
+        public async Task PenitenceAmuletAndPkPotionReducePkPointsWithRules()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 710, 940, GameMaster)).Player;
+            var amulet = await GiveAsync(player, ServerFixture.PenitenceAmulet.Id);
+
+            // Needs at least 30 PK points
+            await player.Game.UseAsync(amulet.Id);
+            var lowPk = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
+            Assert.Equal("pk_points", lowPk.GetProperty("reason").GetString());
+
+            // Works at 40 PK points -> 10
+            await CommandAsync(player, "/pk 40");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.PkPoints, out var pk) && pk == 40));
+            await player.Game.UseAsync(amulet.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, amulet.Id));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.PkPoints, out var pk) && pk == 10));
+
+            // Second amulet within an hour hits cooldown
+            await CommandAsync(player, "/pk 40");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.PkPoints, out var pk) && pk == 40));
+            var second = await GiveAsync(player, ServerFixture.PenitenceAmulet.Id);
+            int mark = this.Servers.Mark();
+            await player.Game.UseAsync(second.Id);
+            var cd = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name, after: mark);
+            Assert.Equal("cooldown", cd.GetProperty("reason").GetString());
+
+            // AtonementPotion has no cooldown and reduces by 10
+            var potion = await GiveAsync(player, ServerFixture.AtonementPotion.Id);
+            await player.Game.UseAsync(potion.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, potion.Id));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.PkPoints, out var pk) && pk == 30));
+        }
+
+        [Fact]
+        public async Task HairDyeChangesHairColorForSelfAndViewer()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 720, 940, GameMaster)).Player;
+            await using var viewer = (await this.PlayingAtAsync(1002, 722, 940, GameMaster)).Player;
+            ushort style = (ushort)(player.User.Hairstyle % 100);
+            uint dyeType = player.User.Hairstyle / 100 == 3 ? ServerFixture.WhiteDye.Id : ServerFixture.BlackDye.Id;
+            ushort expected = (ushort)((dyeType == ServerFixture.WhiteDye.Id ? 9 : 3) * 100 + style);
+
+            var dye = await GiveAsync(player, dyeType);
+            await player.Game.UseAsync(dye.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, dye.Id));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Hairstyle, out var h) && h == expected));
+            Assert.NotNull(await viewer.Game.WaitForAttribAsync(a =>
+                a.Id == player.User.Id && a.Values.TryGetValue(UserAttribMessage.Hairstyle, out var h) && h == expected));
+        }
+
+        [Fact]
+        public async Task FireworksBroadcastBurstAndTextToViewers()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 730, 940, GameMaster)).Player;
+            await using var viewer = (await this.PlayingAtAsync(1002, 732, 940, GameMaster)).Player;
+
+            var firework = await GiveAsync(player, ServerFixture.Firework.Id);
+            await player.Game.UseAsync(firework.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Fireworks, player.User.Id));
+            Assert.NotNull(await viewer.Game.WaitForItemActionAsync(ItemMessage.Fireworks, player.User.Id));
+
+            var love = await GiveAsync(player, ServerFixture.EndlessLove.Id);
+            await player.Game.UseAsync(love.Id);
+            Assert.NotNull(await player.Game.WaitForNameAsync(n =>
+                n.Action == NameMessage.Fireworks && n.Data == player.User.Id && n.Strings.Contains("Endless Love")));
+            Assert.NotNull(await viewer.Game.WaitForNameAsync(n =>
+                n.Action == NameMessage.Fireworks && n.Data == player.User.Id && n.Strings.Contains("Endless Love")));
+        }
+
+        [Fact]
+        public async Task MoneyBagCpBagDrugBundleAndTransformItemWork()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 750, 940, GameMaster)).Player;
+
+            var bag = await GiveAsync(player, ServerFixture.Class1MoneyBag.Id);
+            await player.Game.UseAsync(bag.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Silver, out var s) && s == player.User.Silver + 300_000));
+
+            var cpBag = await GiveAsync(player, ServerFixture.CpBag.Id);
+            await player.Game.UseAsync(cpBag.Id);
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Jewels, out var j) && j == 3));
+
+            var bundle = await GiveAsync(player, ServerFixture.AmritaBundle.Id);
+            await player.Game.UseAsync(bundle.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, bundle.Id));
+            await this.Servers.WaitForEventAsync("game", "item.used", e =>
+                e.GetProperty("name").GetString() == player.User.Name && e.GetProperty("itemId").GetUInt32() == bundle.Id);
+            var amritas = await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM item WHERE CharacterID = @id AND TypeID = @type",
+                ("@id", player.User.Id), ("@type", ServerFixture.Amrita.Id));
+            Assert.Equal(3L, (long)amritas);
+
+            var brand = await GiveAsync(player, ServerFixture.TurtledoveBrand.Id);
+            await player.Game.UseAsync(brand.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, brand.Id));
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a =>
+                a.Values.TryGetValue(UserAttribMessage.Mesh, out var m) && m / 10000000 == 304));
+        }
     }
 }

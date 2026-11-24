@@ -57,6 +57,7 @@ namespace Comet.Game.Magic
             }
 
             await HeavenBlessing.ExpireAsync(client, now);
+            await DoubleExp.ExpireAsync(client, now);
             await Transforming.TickAsync(client, now);
             await Training.GodExp.TickAsync(client, now);
 

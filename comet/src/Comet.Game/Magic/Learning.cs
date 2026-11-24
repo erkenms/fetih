@@ -149,6 +149,10 @@ namespace Comet.Game.Magic
             [725025] = FlyingMoon, [725026] = Snow, [725027] = StrandedMonster, [725028] = SpeedLightning,
             [725029] = Phoenix, [725030] = Boom, [725031] = Boreas, [725040] = Seizer, [725041] = Earthquake,
             [725042] = Rage, [725043] = Celestial, [725044] = Roamer, [721157] = DragonTail, [721158] = ViperFang,
+            [721273] = Halt, [721274] = StrandedMonster, [721275] = SpeedGun, [721276] = Penetration,
+            [721277] = Snow, [721278] = WideStrike, [721279] = Boreas, [721280] = Seizer,
+            [721281] = Earthquake, [721282] = Rage, [721283] = Celestial, [721284] = Roamer,
+            [721287] = Phoenix, [721288] = Boom,
         };
 
         public static ushort? BookOf(uint itemType) => Books.TryGetValue(itemType, out var magic) ? magic : null;

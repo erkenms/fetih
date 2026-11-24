@@ -83,6 +83,14 @@ namespace Comet.Game.Packets
             Strings = new List<string> { effect },
         };
 
+        // Draws text in the sky as fireworks, two characters per burst
+        public static MsgName FireworksOf(uint roleID, string text) => new MsgName
+        {
+            Data = roleID,
+            Action = NameAction.Fireworks,
+            Strings = new List<string> { text },
+        };
+
         private static readonly Dictionary<NameAction, Func<MsgName, Client, Task>> Handlers =
             new Dictionary<NameAction, Func<MsgName, Client, Task>>
             {

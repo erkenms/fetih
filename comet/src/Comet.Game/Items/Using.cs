@@ -1,19 +1,23 @@
 namespace Comet.Game.Items
 {
     using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Chat;
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
     using Comet.Game.Packets;
+    using Comet.Game.Pk;
     using Comet.Game.States;
     using Comet.Game.World;
 
     // Items used from the inventory (MsgItem 4 with slot 0): potions, city scrolls, praying stones,
-    // EXP balls, scrolls that open into ten meteors or dragonballs, skill books, and quivers,
-    // which go on the left hand. Runs on the player's own
-    // packet queue, like Progress.
+    // EXP balls, EXP potions, PK amulets, hair dyes, fireworks, silver/CP packs, item packs,
+    // transformation items, skill books, and quivers (which go on the left hand). Runs on the
+    // player's own packet queue, like Progress.
     public static class Using
     {
         // EXP balls: each level has an upLevTime, how long it is meant to take, and a ball is
@@ -31,6 +35,141 @@ namespace Comet.Game.Items
         public const uint MeteorScroll = 720027, DragonBallScroll = 720028;
         public const int ScrollGems = 10;
 
+        public sealed record PackEntry(uint TypeID, int Count);
+        public sealed record PkReducer(ushort Amount, ushort MinPoints, bool ForbidJail, TimeSpan Cooldown);
+        public sealed record TransformItem(uint[] MonsterTypeIDs, uint Seconds);
+
+        // Fixed-content scrolls, 3-in-1 drug bundles, and gift packs from itemtype.dat
+        private static readonly Dictionary<uint, PackEntry[]> ItemPacks = new Dictionary<uint, PackEntry[]>
+        {
+            [MeteorScroll] = new[] { new PackEntry(Upgrading.Meteor, ScrollGems) },
+            [DragonBallScroll] = new[] { new PackEntry(Upgrading.DragonBall, ScrollGems) },
+            // 3-in-1 drug bundles
+            [720010] = new[] { new PackEntry(1000030, 3) }, // Amrita
+            [720011] = new[] { new PackEntry(1002000, 3) }, // Panacea
+            [720012] = new[] { new PackEntry(1002010, 3) }, // Ginseng
+            [720013] = new[] { new PackEntry(1002020, 3) }, // Vanilla
+            [720014] = new[] { new PackEntry(1001030, 3) }, // RecoveryPill
+            [720015] = new[] { new PackEntry(1001040, 3) }, // SoulPill
+            [720016] = new[] { new PackEntry(1002030, 3) }, // RefreshingPill
+            [720017] = new[] { new PackEntry(1002040, 3) }, // ChantPill
+            // Firework and fixed gift packs
+            [720600] = new[] { new PackEntry(720601, 10) }, // LanternFestivalFireworks
+            [721863] = new[] { new PackEntry(721862, 5) },  // FireworkPack
+            [724002] = new[] { new PackEntry(711504, 3) },  // SmallLotteryTicketPack
+            [721222] = new[] { new PackEntry(730008, 1), new PackEntry(730006, 1) }, // +8StonePack
+            [721223] = new[] { new PackEntry(1200005, 1), new PackEntry(730003, 1) }, // ToughDrillPack
+            [729210] = new[] { new PackEntry(723717, 1), new PackEntry(723714, 1), new PackEntry(723713, 1) }, // MoneyBagPack
+        };
+
+        // Money bags whose exact silver amount is stated in itemtype.dat
+        private static readonly Dictionary<uint, uint> SilverBags = new Dictionary<uint, uint>
+        {
+            [723915] = 150_000,     // 150KMoneyBag
+            [723713] = 300_000,     // Class1MoneyBag
+            [728232] = 500_000,     // MoneyBag
+            [723714] = 800_000,     // Class2MoneyBag
+            [723715] = 1_200_000,   // Class3MoneyBag
+            [723716] = 1_800_000,   // Class4MoneyBag
+            [723717] = 5_000_000,   // Class5MoneyBag
+            [723718] = 20_000_000,  // Class6MoneyBag
+            [723719] = 25_000_000,  // Class7MoneyBag
+            [723720] = 80_000_000,  // Class8MoneyBag
+            [723721] = 100_000_000, // Class9MoneyBag
+            [723722] = 300_000_000, // Class10MoneyBag
+            [723723] = 500_000_000, // TopMoneyBag
+        };
+
+        // CP bags, packs, and lottery prize packs whose exact CP amount is stated in itemtype.dat
+        private static readonly Dictionary<uint, uint> ConquerPointPacks = new Dictionary<uint, uint>
+        {
+            [729911] = 3,       // CPBag
+            [720657] = 5,       // HopeCPPack
+            [729912] = 6,       // CPBackpack
+            [720656] = 10,      // MascotCPPack
+            [720655] = 20,      // MammonCPPack
+            [720658] = 25,      // FestivalCPPack
+            [729244] = 45,      // 7thPrize
+            [720659] = 50,      // SweetCPPack
+            [720663] = 50,      // VioletCPPack
+            [720660] = 100,     // LegendCPPack
+            [720664] = 100,     // FlareCPPack
+            [720665] = 200,     // CuteCPPack
+            [720675] = 250,     // GhostCPPack
+            [720653] = 270,     // DreamCPPack
+            [729245] = 450,     // 6thPrize
+            [720676] = 500,     // SoulCPPack
+            [729246] = 900,     // 5thPrize
+            [720677] = 1_000,   // BloodCPPack
+            [720661] = 1_350,   // PureCPPack
+            [720654] = 1_380,   // JoyCPPack
+            [729247] = 2_250,   // 4thPrize
+            [720666] = 2_700,   // StarCPPack
+            [729248] = 4_500,   // 3rdPrize
+            [720662] = 6_900,   // MysticCPPack
+            [729249] = 9_000,   // 2ndPrize
+            [720667] = 13_800,  // FantasyCPPack
+            [729250] = 22_500,  // 1stPrize
+            [729251] = 45_000,  // TopPrize
+        };
+
+        // Hair dyes from Shop.dat; the color is the hundreds digit of Hairstyle (3 black to 9 white)
+        private static readonly Dictionary<uint, byte> HairDyes = new Dictionary<uint, byte>
+        {
+            [1060030] = 3, // BlackDye
+            [1060040] = 4, // VioletDye
+            [1060050] = 5, // BlueDye
+            [1060060] = 6, // GreenDye
+            [1060070] = 7, // BrownDye
+            [1060080] = 8, // RedDye
+            [1060090] = 9, // WhiteDye
+        };
+
+        // Fireworks: null text launches sky bursts (MsgItem 26); non-null also spells text (MsgName 1)
+        private static readonly Dictionary<uint, string> Fireworks = new Dictionary<uint, string>
+        {
+            [720030] = null,           // Firework
+            [720265] = null,           // ColorfulFirework
+            [720601] = null,           // FestivalFirework
+            [721862] = null,           // AutumnFirework
+            [720031] = "Endless Love", // EndlessLove
+            [720032] = "My Wish",      // MyWish
+        };
+
+        // PK-point-reducing items from itemtype.dat
+        private static readonly Dictionary<uint, PkReducer> PkReducers = new Dictionary<uint, PkReducer>
+        {
+            [720128] = new PkReducer(30, 30, true, TimeSpan.FromHours(1)), // PenitenceAmulet
+            [723727] = new PkReducer(30, 30, true, TimeSpan.FromHours(1)), // PenitenceAmulet
+            [721772] = new PkReducer(10, 1, false, TimeSpan.Zero),         // AtonementPotion
+            [721773] = new PkReducer(30, 1, false, TimeSpan.Zero),         // PenancePotion
+            [722364] = new PkReducer(5, 1, false, TimeSpan.Zero),          // RepentPotion
+            [720382] = new PkReducer(1, 1, false, TimeSpan.Zero),          // Bible
+        };
+
+        private static readonly ConcurrentDictionary<uint, DateTime> PenitenceCooldowns =
+            new ConcurrentDictionary<uint, DateTime>();
+
+        // Transformation items whose monster type exists in Data/monsters.json
+        private static readonly uint[] RandomDisguiseMonsters = { 1, 2, 6, 8 }; // Pheasant, Turtledove, WingedSnake, Ratling
+        private static readonly Dictionary<uint, TransformItem> TransformItems = new Dictionary<uint, TransformItem>
+        {
+            [722498] = new TransformItem(new[] { 2u }, 300),                    // PhoenixTransformationBrand (Turtledove)
+            [722499] = new TransformItem(new[] { 8u }, 300),                    // HanumanTransformationBrand (Ratling)
+            [722520] = new TransformItem(new[] { 6u }, 300),                    // FairyTransformationBrand (WingedSnake)
+            [722684] = new TransformItem(new[] { 3310u }, 300),                 // TreasureBag (CuteBunny)
+            [727240] = new TransformItem(RandomDisguiseMonsters, 300),          // EasterSweet
+            [723724] = new TransformItem(RandomDisguiseMonsters, 300),          // DisguiseAmulet
+        };
+
+        public static bool TryGetPack(uint typeID, out PackEntry[] entries) => ItemPacks.TryGetValue(typeID, out entries);
+        public static bool TryGetSilverBag(uint typeID, out uint silver) => SilverBags.TryGetValue(typeID, out silver);
+        public static bool TryGetConquerPointPack(uint typeID, out uint points) => ConquerPointPacks.TryGetValue(typeID, out points);
+        public static bool TryGetHairDye(uint typeID, out byte color) => HairDyes.TryGetValue(typeID, out color);
+        public static bool TryGetFirework(uint typeID, out string text) => Fireworks.TryGetValue(typeID, out text);
+        public static bool TryGetPkReducer(uint typeID, out PkReducer reducer) => PkReducers.TryGetValue(typeID, out reducer);
+        public static bool TryGetTransform(uint typeID, out TransformItem transform) => TransformItems.TryGetValue(typeID, out transform);
+
         public static async Task<bool> UseAsync(Client client, uint itemID)
         {
             var character = client.Character;
@@ -43,15 +182,28 @@ namespace Comet.Game.Items
                 return await Equipping.EquipAsync(client, itemID, ItemPosition.LeftHand);
             if (HeavenBlessing.StoneDuration(item.TypeID) is TimeSpan blessing)
                 return await PrayAsync(client, item, blessing);
+            if (DoubleExp.TryGetPotion(item.TypeID, out var expPotion))
+                return await UseExpPotionAsync(client, item, expPotion);
             if (Kernel.ItemTypes.TryGet(item.TypeID, out var type) && IsPotion(type))
                 return await DrinkAsync(client, item, type);
             if (System.Array.IndexOf(ExpBalls, item.TypeID) >= 0)
                 return await ExpBallAsync(client, item);
             if (Magic.Learning.BookOf(item.TypeID) is ushort magic)
                 return await ReadBookAsync(client, item, magic);
-            if (item.TypeID is MeteorScroll or DragonBallScroll)
-                return await OpenScrollAsync(client, item,
-                    item.TypeID == MeteorScroll ? Upgrading.Meteor : Upgrading.DragonBall);
+            if (ItemPacks.TryGetValue(item.TypeID, out var pack))
+                return await OpenPackAsync(client, item, pack);
+            if (SilverBags.TryGetValue(item.TypeID, out var silver))
+                return await OpenSilverBagAsync(client, item, silver);
+            if (ConquerPointPacks.TryGetValue(item.TypeID, out var points))
+                return await OpenConquerPointPackAsync(client, item, points);
+            if (HairDyes.TryGetValue(item.TypeID, out var color))
+                return await DyeHairAsync(client, item, color);
+            if (Fireworks.TryGetValue(item.TypeID, out var fireworkText))
+                return await LaunchFireworkAsync(client, item, fireworkText);
+            if (PkReducers.TryGetValue(item.TypeID, out var pkReducer))
+                return await ReducePkAsync(client, item, pkReducer);
+            if (TransformItems.TryGetValue(item.TypeID, out var transform))
+                return await TransformAsync(client, item, transform);
 
             var scroll = Kernel.MapTypes.ScrollPointOf(item.TypeID);
             if (scroll == null)
@@ -103,6 +255,24 @@ namespace Comet.Game.Items
             return true;
         }
 
+        private static async Task<bool> UseExpPotionAsync(Client client, DbItem item, DoubleExp.Potion potion)
+        {
+            if (client.Life.Dead)
+                return Reject(client, item.ItemID, item.TypeID, "dead");
+            var now = DateTime.UtcNow;
+            if (!DoubleExp.Apply(client.ID, potion.Percent, potion.Duration, now))
+            {
+                await Talk.NoticeAsync(client, "You already have a stronger EXP bonus active.");
+                return Reject(client, item.ItemID, item.TypeID, "stronger_exp_bonus");
+            }
+            await UseUpAsync(client, item);
+            await DoubleExp.SendAsync(client, now);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Percent}% EXP ({Minutes}m)",
+                client.Character.Name, item.ItemID, item.TypeID, potion.Percent, potion.Duration.TotalMinutes);
+            return true;
+        }
+
         private static async Task<bool> ExpBallAsync(Client client, DbItem ball)
         {
             var character = client.Character;
@@ -132,23 +302,153 @@ namespace Comet.Game.Items
             return true;
         }
 
-        // The scroll's own slot holds one of the gems
-        private static async Task<bool> OpenScrollAsync(Client client, DbItem scroll, uint gemType)
+        // The pack's own slot holds one of the items it yields
+        private static async Task<bool> OpenPackAsync(Client client, DbItem pack, PackEntry[] entries)
         {
-            if (client.Inventory.FreeSlots < ScrollGems - 1)
+            int total = entries.Sum(e => e.Count);
+            if (client.Inventory.FreeSlots < total - 1)
             {
-                await Talk.NoticeAsync(client, $"You need {ScrollGems - 1} free inventory slots for that.");
-                return Reject(client, scroll.ItemID, scroll.TypeID, "inventory_full");
+                await Talk.NoticeAsync(client, $"You need {total - 1} free inventory slots for that.");
+                return Reject(client, pack.ItemID, pack.TypeID, "inventory_full");
             }
-            if (!Kernel.ItemTypes.TryGet(gemType, out var type))
-                return Reject(client, scroll.ItemID, scroll.TypeID, "unknown_gem");
+            var resolved = new List<(ItemType Type, int Count)>(entries.Length);
+            foreach (var entry in entries)
+            {
+                if (!Kernel.ItemTypes.TryGet(entry.TypeID, out var type))
+                    return Reject(client, pack.ItemID, pack.TypeID, "unknown_pack_item");
+                resolved.Add((type, entry.Count));
+            }
 
-            await UseUpAsync(client, scroll);
-            for (int i = 0; i < ScrollGems; i++)
-                await ItemActions.GiveAsync(client, type, "scroll");
+            await UseUpAsync(client, pack);
+            foreach (var (type, count) in resolved)
+                for (int i = 0; i < count; i++)
+                    await ItemActions.GiveAsync(client, type, "pack");
             LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
-                "{Name} used item {ItemId} (type {TypeId}) for {Amount} of {GemTypeId}",
-                client.Character.Name, scroll.ItemID, scroll.TypeID, ScrollGems, gemType);
+                "{Name} used item {ItemId} (type {TypeId}) for {Amount} items",
+                client.Character.Name, pack.ItemID, pack.TypeID, total);
+            return true;
+        }
+
+        private static async Task<bool> OpenSilverBagAsync(Client client, DbItem bag, uint silver)
+        {
+            if (!await Progress.ChangeSilverAsync(client, silver, "money_bag"))
+            {
+                await Talk.NoticeAsync(client, "You can't carry any more silver.");
+                return Reject(client, bag.ItemID, bag.TypeID, "silver_limit");
+            }
+            await UseUpAsync(client, bag);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Silver} silver",
+                client.Character.Name, bag.ItemID, bag.TypeID, silver);
+            return true;
+        }
+
+        private static async Task<bool> OpenConquerPointPackAsync(Client client, DbItem pack, uint points)
+        {
+            if (!await Progress.ChangeConquerPointsAsync(client, points, "cp_pack"))
+            {
+                await Talk.NoticeAsync(client, "You can't carry any more Conquer Points.");
+                return Reject(client, pack.ItemID, pack.TypeID, "cp_limit");
+            }
+            await UseUpAsync(client, pack);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) for {Points} CPs",
+                client.Character.Name, pack.ItemID, pack.TypeID, points);
+            return true;
+        }
+
+        private static async Task<bool> DyeHairAsync(Client client, DbItem dye, byte color)
+        {
+            var character = client.Character;
+            if (client.Life.Dead)
+                return Reject(client, dye.ItemID, dye.TypeID, "dead");
+            ushort next = (ushort)(color * 100 + character.Hairstyle % 100);
+            if (next == character.Hairstyle)
+                return Reject(client, dye.ItemID, dye.TypeID, "same_hair_color");
+
+            await UseUpAsync(client, dye);
+            character.Hairstyle = next;
+            var update = new MsgUserAttrib(client.ID, MsgUserAttrib.AttributeType.Hairstyle, next);
+            await client.SendAsync(update);
+            await Movement.SendToViewAsync(client, update);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) to dye hair to {Hairstyle}",
+                character.Name, dye.ItemID, dye.TypeID, next);
+            return true;
+        }
+
+        private static async Task<bool> LaunchFireworkAsync(Client client, DbItem firework, string text)
+        {
+            if (client.Life.Dead)
+                return Reject(client, firework.ItemID, firework.TypeID, "dead");
+            await UseUpAsync(client, firework);
+            if (text != null)
+            {
+                var letters = MsgName.FireworksOf(client.ID, text);
+                await client.SendAsync(letters);
+                await Movement.SendToViewAsync(client, letters);
+            }
+            else
+            {
+                var burst = MsgItem.Fireworks(client.ID);
+                await client.SendAsync(burst);
+                await Movement.SendToViewAsync(client, burst);
+            }
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) to launch fireworks",
+                client.Character.Name, firework.ItemID, firework.TypeID);
+            return true;
+        }
+
+        private static async Task<bool> ReducePkAsync(Client client, DbItem item, PkReducer reducer)
+        {
+            var character = client.Character;
+            if (client.Life.Dead)
+                return Reject(client, item.ItemID, item.TypeID, "dead");
+            if (reducer.ForbidJail && (Kernel.MapTypes.Of(character.MapID) & MapFlags.PrisonMap) != 0)
+            {
+                await Talk.NoticeAsync(client, "You can't use that in jail.");
+                return Reject(client, item.ItemID, item.TypeID, "in_jail");
+            }
+            if (character.KillPoints < reducer.MinPoints)
+            {
+                await Talk.NoticeAsync(client, reducer.MinPoints > 1
+                    ? $"You need at least {reducer.MinPoints} PK points to use that."
+                    : "You don't have any PK points to reduce.");
+                return Reject(client, item.ItemID, item.TypeID, "pk_points");
+            }
+            var now = DateTime.UtcNow;
+            if (reducer.Cooldown > TimeSpan.Zero &&
+                PenitenceCooldowns.TryGetValue(client.ID, out var until) && until > now)
+            {
+                int minutes = Math.Max(1, (int)Math.Ceiling((until - now).TotalMinutes));
+                await Talk.NoticeAsync(client, $"You can use a Penitence Amulet again in {minutes} minute(s).");
+                return Reject(client, item.ItemID, item.TypeID, "cooldown");
+            }
+
+            await UseUpAsync(client, item);
+            if (reducer.Cooldown > TimeSpan.Zero)
+                PenitenceCooldowns[client.ID] = now + reducer.Cooldown;
+            await Pking.ChangePointsAsync(client, -reducer.Amount, "pk_item");
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) to reduce PK points by {Amount}",
+                character.Name, item.ItemID, item.TypeID, reducer.Amount);
+            return true;
+        }
+
+        private static async Task<bool> TransformAsync(Client client, DbItem item, TransformItem transform)
+        {
+            if (client.Life.Dead)
+                return Reject(client, item.ItemID, item.TypeID, "dead");
+            uint monsterID = transform.MonsterTypeIDs[Random.Shared.Next(transform.MonsterTypeIDs.Length)];
+            if (!Kernel.MonsterTypes.TryGet(monsterID, out var monster))
+                return Reject(client, item.ItemID, item.TypeID, "unknown_monster");
+
+            await UseUpAsync(client, item);
+            await Magic.Transforming.StartAsync(client, monster, transform.Seconds, DateTime.UtcNow);
+            LogEvents.For(typeof(Using), LogEvents.ItemUsed).Information(
+                "{Name} used item {ItemId} (type {TypeId}) to transform into {MonsterName}",
+                client.Character.Name, item.ItemID, item.TypeID, monster.Name);
             return true;
         }
 

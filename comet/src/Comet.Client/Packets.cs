@@ -118,7 +118,7 @@ namespace Comet.Client
     // A number, the action as one byte, then the strings
     public sealed record NameMessage(uint Data, byte Action, List<string> Strings)
     {
-        public const byte Guild = 3, SetSpouse = 6, RoleEffect = 10, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
+        public const byte Fireworks = 1, Guild = 3, SetSpouse = 6, RoleEffect = 10, GuildKick = 12, Spouse = 16, SetAlly = 21, SetEnemy = 22, WhisperDetails = 26;
 
         public static NameMessage Parse(byte[] packet) => new NameMessage(
             BitConverter.ToUInt32(packet, 4), packet[8], Packet.ReadStrings(packet, 9));
@@ -378,10 +378,12 @@ namespace Comet.Client
     public sealed record UserAttribMessage(uint Id, Dictionary<uint, ulong> Values)
     {
         public ulong StatusHigh { get; init; }
+        public Dictionary<uint, ulong> ValuesHigh { get; init; } = new Dictionary<uint, ulong>();
 
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, Class = 7, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
-            Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27, Rebirths = 22, Jewels = 29;
+            Strength = 15, Agility = 16, HeavenBlessing = 17, DoubleExp = 18, Mesh = 11, PkPoints = 6,
+            Status = 25, Hairstyle = 26, Stamina = 8, XpCircle = 27, Rebirths = 22, Jewels = 29;
         public const ulong DeadStatus = 0x400;
 
         public const ulong Flashing = 0x1, RedName = 0x4000, BlackName = 0x8000;
@@ -391,16 +393,19 @@ namespace Comet.Client
         public static UserAttribMessage Parse(byte[] packet)
         {
             var values = new Dictionary<uint, ulong>();
+            var valuesHigh = new Dictionary<uint, ulong>();
             ulong high = 0;
             uint count = BitConverter.ToUInt32(packet, 8);
             for (int i = 0, offset = 12; i < count && offset + 20 <= packet.Length; i++, offset += 24)
             {
                 uint type = BitConverter.ToUInt32(packet, offset);
                 values[type] = BitConverter.ToUInt64(packet, offset + 4);
+                ulong hi = BitConverter.ToUInt64(packet, offset + 12);
+                valuesHigh[type] = hi;
                 if (type == Status)
-                    high = BitConverter.ToUInt64(packet, offset + 12);
+                    high = hi;
             }
-            return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values) { StatusHigh = high };
+            return new UserAttribMessage(BitConverter.ToUInt32(packet, 4), values) { StatusHigh = high, ValuesHigh = valuesHigh };
         }
     }
 
@@ -561,7 +566,7 @@ namespace Comet.Client
     public sealed record ItemMessage(uint Id, uint Data, uint Action, uint[] Gears)
     {
         public const uint Buy = 1, Sell = 2, Remove = 3, Equip = 4, Equipped = 5, Unequip = 6,
-            StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Ping = 27, Drop = 37,
+            StoredSilver = 9, StoreSilver = 10, TakeSilver = 11, Fireworks = 26, Ping = 27, Drop = 37,
             DropSilver = 38, DisplayGears = 46;
 
         public const uint Repair = 14, RepairAll = 15, Enchant = 28;

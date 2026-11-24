@@ -172,6 +172,7 @@ namespace Comet.Game.Packets
                 if (entered.OnlineTrainingExp > 0 || entered.BlessedHuntingExp > 0 ||
                     HeavenBlessing.IsBlessed(entered, DateTime.UtcNow))
                     await Training.GodExp.SendAsync(client);
+                await DoubleExp.SendAsync(client, DateTime.UtcNow);
             }            
         }
 
