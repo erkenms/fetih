@@ -269,6 +269,15 @@
                 await Social.Clans.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ClansLoaded).Information(
                     "Loaded {ClanCount} clans", Social.Clans.Count);
+                Social.ClanWar.StartHour = config.ClanWar.StartHour;
+                Social.ClanWar.StartMinute = config.ClanWar.StartMinute;
+                Social.ClanWar.EndHour = config.ClanWar.EndHour;
+                Social.ClanWar.EndMinute = config.ClanWar.EndMinute;
+                Social.ClanWar.SignUpCloseHour = config.ClanWar.SignUpCloseHour;
+                Social.ClanWar.SignUpCloseMinute = config.ClanWar.SignUpCloseMinute;
+                Social.ClanWar.EntryTime = TimeSpan.FromMinutes(Math.Max(0, config.ClanWar.EntryMinutes));
+                Social.ClanWar.Fee = config.ClanWar.Fee;
+                await Social.ClanWar.LoadAsync();
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
@@ -398,6 +407,7 @@
             Arena.Qualifier.EndTime = TimeSpan.FromSeconds(Math.Max(0, config.Arena.EndSeconds));
             _ = Arena.Qualifier.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Social.GuildWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            _ = Social.ClanWar.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Chat.Broadcasts.Interval = TimeSpan.FromSeconds(Math.Max(1, config.Broadcast.IntervalSeconds));
             _ = Chat.Broadcasts.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
 

@@ -45,6 +45,7 @@ namespace Comet.Client
         public const ushort MsgFactionRankInfo = 2101;
         public const ushort MsgSynMemberList = 2102;
         public const ushort MsgFamily = 1312;
+        public const ushort MsgFamilyOccupy = 1313;
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
@@ -1239,6 +1240,33 @@ namespace Comet.Client
             }
             return packet;
         }
+    }
+
+    // Clan War map dialog (1313, 136 bytes): action at 4, the banner NPC at 8 (12 in a query),
+    // role at 16, occupier at 20 and map at 56 (36 bytes each), join/apply/change bools at
+    // 92-94, days at 96, daily and weekly packs at 100 and 104, challenged at 112, fee (u64)
+    // at 120, revenue unclaimed at 128, a player at 132
+    public sealed record FamilyOccupyMessage(uint Action, uint NpcId, uint Role, string Occupier, string MapName,
+        bool CanJoin, bool CanApply, bool CanChange, uint Days, uint DailyPrize, uint WeeklyPrize,
+        bool Challenged, ulong Fee, bool RevenueUnclaimed, uint PlayerId)
+    {
+        public const uint Apply = 0, Cancel = 1, GiveUp = 2, Abandoned = 3, AskReapply = 4, Query = 6,
+            Invite = 7, Join = 8, ApplyAgain = 10, OnceADay = 13, ClaimRevenue = 18, RevenueClaimed = 19,
+            NeedSpace = 20;
+
+        public static byte[] Build(uint action, uint npcId)
+        {
+            var packet = Packet.Create(PacketTypes.MsgFamilyOccupy, 136);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(action == Query ? 12 : 8), npcId);
+            return packet;
+        }
+
+        public static FamilyOccupyMessage Parse(byte[] p) => new FamilyOccupyMessage(
+            BitConverter.ToUInt32(p, 4), BitConverter.ToUInt32(p, 8), BitConverter.ToUInt32(p, 16),
+            Packet.ReadText(p, 20, 36), Packet.ReadText(p, 56, 36), p[92] != 0, p[93] != 0, p[94] != 0,
+            BitConverter.ToUInt32(p, 96), BitConverter.ToUInt32(p, 100), BitConverter.ToUInt32(p, 104),
+            p[112] != 0, BitConverter.ToUInt64(p, 120), p[128] != 0, BitConverter.ToUInt32(p, 132));
     }
 
     public static class Packet

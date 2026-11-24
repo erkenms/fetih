@@ -272,6 +272,17 @@ namespace Comet.Core.Logging
         public const string GuildWarGateChanged = "guildwar.gate_changed";
         public const string GuildWarPrizeClaimed = "guildwar.prize_claimed";
         public const string GuildWarLoopFailed = "guildwar.loop_failed";
+        public const string ClanWarLoaded = "clanwar.loaded";
+        public const string ClanWarSignedUp = "clanwar.signed_up";
+        public const string ClanWarCancelled = "clanwar.cancelled";
+        public const string ClanWarAbandoned = "clanwar.abandoned";
+        public const string ClanWarStarted = "clanwar.started";
+        public const string ClanWarEntered = "clanwar.entered";
+        public const string ClanWarKill = "clanwar.kill";
+        public const string ClanWarEnded = "clanwar.ended";
+        public const string ClanWarRevenue = "clanwar.revenue";
+        public const string ClanWarRejected = "clanwar.rejected";
+        public const string ClanWarLoopFailed = "clanwar.loop_failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

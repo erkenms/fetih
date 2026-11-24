@@ -53,7 +53,7 @@ namespace Comet.Integration.Tests
                 f.Action == FamilyMessage.Query && f.Data == clanID));
             var occupation = await founder.Game.WaitForFamilyAsync(f =>
                 f.Action == FamilyMessage.QueryOccupy && f.Data == clanID);
-            Assert.Equal("0 0 0 0 0 0 0 0", occupation?.Text);
+            Assert.Equal("0 0 0 0 0 0 0", occupation?.Text);
 
             // Invited by the leader
             Assert.NotNull(await founder.Game.WaitForSpawnAsync(member.User.Id));

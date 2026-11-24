@@ -25,6 +25,7 @@ namespace Comet.Game.Database
         public MagicConfiguration Magic { get; set; } = new MagicConfiguration();
         public ArenaConfiguration Arena { get; set; } = new ArenaConfiguration();
         public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
+        public ClanWarConfiguration ClanWar { get; set; } = new ClanWarConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
@@ -168,6 +169,20 @@ namespace Comet.Game.Database
             public uint PoleLife { get; set; } = 20_000_000;
             public uint GateLife { get; set; } = 10_000_000;
             public uint PrizeConquerPoints { get; set; } = 3_000;
+        }
+
+        // Daily Clan War in the server's local time zone: sign-up closes at SignUpClose and
+        // reopens at the war's end; the battlefield takes entrants for EntryMinutes after the start
+        public class ClanWarConfiguration
+        {
+            public int StartHour { get; set; } = 20;
+            public int StartMinute { get; set; } = 30;
+            public int EndHour { get; set; } = 21;
+            public int EndMinute { get; set; } = 0;
+            public int SignUpCloseHour { get; set; } = 20;
+            public int SignUpCloseMinute { get; set; } = 0;
+            public int EntryMinutes { get; set; } = 5;
+            public ulong Fee { get; set; } = 500_000;
         }
 
         // How often the next queued broadcast message is released to the server

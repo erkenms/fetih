@@ -32,4 +32,20 @@ namespace Comet.Game.Database.Models
         public uint TargetID { get; set; }
         public byte Kind { get; set; }
     }
+
+    [Table("family_occupy")]
+    public class DbFamilyOccupy
+    {
+        public uint NpcID { get; set; }
+        public uint FamilyID { get; set; }
+        public uint Days { get; set; }
+        public bool RevenueClaimed { get; set; }
+    }
+
+    [Table("family_war_signup")]
+    public class DbFamilyWarSignup
+    {
+        public uint FamilyID { get; set; }
+        public uint NpcID { get; set; }
+    }
 }

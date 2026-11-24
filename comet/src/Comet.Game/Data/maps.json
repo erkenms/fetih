@@ -119,6 +119,8 @@
     { "map": 5000, "flags": "PkField, ChangeMapDisable", "portal": { "x": 430, "y": 380 }, "reborn": 1002 }, // admin[A]
     { "map": 6000, "name": "jail", "flags": "ChangeMapDisable, TeleportDisable, PrisonMap, MineField, Bit15", "portal": { "x": 29, "y": 72 }, "reborn": 6000 }, // Jail.PK
     { "map": 6001, "flags": "PkField, ChangeMapDisable, TeleportDisable, Bit15", "portal": { "x": 30, "y": 76 }, "reborn": 6001 }, // Jail.GW5..
+    // The clan war battlefield (map/map/family.7z). Each war map fights in a copy of its own.
+    { "map": 3024, "flags": "ChangeMapDisable, RecordDisable, TeleportDisable, Family", "reborn": 1002 }, // family
     // The qualifier arena (GameMapEx PlayersArena). Each match fights in a copy of its own.
     { "map": 900000, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": 1002 }, // PlayersArena
   ]

@@ -134,3 +134,14 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   (mode at 4, gear at 8, count at 12, stones from 16); points from `ini/ItemSolidify.ini`, needed
   per level from `ini/info.ini` [Solidify]. Battle power ignores refinery. Not confirmed in the
   Windows client.
+- **Clan War** (2026-11-24, Mac `CMsgFamilyOccupy::Process`, `CDlgFamilyOccupy`, `CMyShellDlg::WindowProc`
+  commands 3014-3032): clicking a role 31 banner sends MsgFamilyOccupy 1313 action 6 with the NPC
+  at 12. Buttons send Apply 0, Cancel 1, Give Up 2, Join 8, Claim 18 with the NPC at 8; 10 follows
+  the re-register confirmation (unverified), 5 comes from an unknown command. From the server: 3
+  abandoned (TEXT24), 4 re-register prompt (TEXT23), 6 the dialog, 7 the war invitation
+  (`CDlgOccupyConfirm`, TEXT40, accept sends 8 with the invite NPC), 11/19 reward effect on the
+  player at 132, 12-17 and 20 message boxes (TEXT29, 25, 26, 27, 28, 39, 42). Layout is in
+  `MsgFamilyOccupy.cs`; fields at 108, 129-131 are unknown. MsgFamily Query string 3 is
+  `%u %d %u %u %d %d %d` (challenged NPC, days, pack, next pack, challenged, income claimed, exp
+  claimed), strings 4 and 5 the occupied and challenged map names; MsgFamily 29 carries the same
+  seven numbers. The battlefield is map 3024 (`family.7z`); packs are 722454-722478 per city.

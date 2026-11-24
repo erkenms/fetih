@@ -657,6 +657,17 @@ namespace Comet.Client
             return packet == null ? null : FamilyMessage.Parse(packet);
         }
 
+        public Task FamilyOccupyAsync(uint action, uint npcId) =>
+            this.SendAsync(FamilyOccupyMessage.Build(action, npcId));
+
+        public async Task<FamilyOccupyMessage> WaitForFamilyOccupyAsync(Func<FamilyOccupyMessage, bool> match,
+            TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgFamilyOccupy && match(FamilyOccupyMessage.Parse(p)), timeout);
+            return packet == null ? null : FamilyOccupyMessage.Parse(packet);
+        }
+
         public Task NameAsync(byte action, string text, uint data = 0) =>
             this.SendAsync(NameMessage.Build(action, text, data));
 

@@ -207,6 +207,7 @@ namespace Comet.Game.Social
                 }
                 var clan = membership.Clan;
                 await ClansRepository.DeleteAsync(clan.ID);
+                await ClanWar.OnClanDisbandedAsync(clan.ID);
                 ById.TryRemove(clan.ID, out _);
                 foreach (var other in ById.Values)
                 {
@@ -647,7 +648,7 @@ namespace Comet.Game.Social
         }
 
         // The clan window: "ID members 0 fund level rank 0 0 0 0 0 own-donation", the name,
-        // the leader, then the clan war's map details, unused
+        // the leader, then the clan war line, the occupied map's name and the challenged one's
         private static Task SendInfoAsync(Client client)
         {
             var membership = Of(client.ID);
@@ -655,19 +656,35 @@ namespace Comet.Game.Social
                 return Task.CompletedTask;
             var clan = membership.Clan;
             var member = membership.Member;
+            var (war, occupied, challenged) = ClanWar.InfoOf(clan.ID);
             return client.SendAsync(new MsgFamily(FamilyAction.Query, clan.ID,
                 $"{clan.ID} {clan.Members.Count} 0 {clan.Fund} {clan.Level} {(int)member.Rank} 0 0 0 0 0 {member.Donation}",
-                clan.Name, clan.Leader?.Name ?? string.Empty, "0 0 0 0 0 0 0", string.Empty, string.Empty));
+                clan.Name, clan.Leader?.Name ?? string.Empty, war, occupied, challenged));
         }
 
+        // The occupation tab asks for the clan war line alone
         private static async Task SendOccupyAsync(Client client)
         {
             var clan = Of(client.ID)?.Clan;
             if (clan == null)
                 return;
             await SendInfoAsync(client);
-            await client.SendAsync(new MsgFamily(FamilyAction.QueryOccupy, clan.ID, "0 0 0 0 0 0 0 0"));
+            await client.SendAsync(new MsgFamily(FamilyAction.QueryOccupy, clan.ID, ClanWar.InfoOf(clan.ID).Numbers));
         }
+
+        public static async Task RefreshInfoAsync(Client client)
+        {
+            await Gate.WaitAsync();
+            try { await SendInfoAsync(client); }
+            finally { Gate.Release(); }
+        }
+
+        public static Clan Find(uint clanID) => clanID == 0 ? null : ById.GetValueOrDefault(clanID);
+
+        public static List<Client> OnlineMembers(uint clanID) =>
+            Find(clanID) is Clan clan
+                ? clan.Members.Keys.ToList().Select(Online).Where(c => c != null).ToList()
+                : new List<Client>();
 
         private static async Task SendRelationsAsync(Client client)
         {

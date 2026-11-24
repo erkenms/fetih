@@ -261,6 +261,25 @@ CREATE TABLE `family_relation` (
   PRIMARY KEY (`FamilyID`,`TargetID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Clan War: which clan occupies each war map (keyed by the map's banner NPC), for how many
+-- days, and whether its leader claimed today's revenue.
+DROP TABLE IF EXISTS `family_occupy`;
+CREATE TABLE `family_occupy` (
+  `NpcID` int(10) unsigned NOT NULL,
+  `FamilyID` int(10) unsigned NOT NULL,
+  `Days` int(10) unsigned NOT NULL DEFAULT '0',
+  `RevenueClaimed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`NpcID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Clan War sign-ups for the next war: one map per clan.
+DROP TABLE IF EXISTS `family_war_signup`;
+CREATE TABLE `family_war_signup` (
+  `FamilyID` int(10) unsigned NOT NULL,
+  `NpcID` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`FamilyID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
 DROP TABLE IF EXISTS `arena`;

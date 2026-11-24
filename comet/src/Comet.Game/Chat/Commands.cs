@@ -61,6 +61,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "weather" }, Authority.GameMaster, WeatherUsage, WeatherAsync),
             new Command(new[] { "arenaseason" }, Authority.GameMaster, "/arenaseason", ArenaSeasonAsync),
             new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
+            new Command(new[] { "clanwar", "cw" }, Authority.GameMaster, ClanWarUsage, ClanWarAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
             new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
         };
@@ -608,6 +609,40 @@ namespace Comet.Game.Chat
                 ? $"Arena season {season} saved with top {top}; {rewarded} players got honor; reset {reset} records."
                 : $"Arena season reset {reset} records (nobody fought).");
             return true;
+        }
+
+        private const string ClanWarUsage = "/clanwar <start|end|status|reload>";
+
+        // reload reads occupations and sign-ups back from the database, as a restart would
+        private static async Task<bool> ClanWarAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, ClanWarUsage);
+            switch (args[0].ToLowerInvariant())
+            {
+                case "start":
+                    await Talk.NoticeAsync(client, await Social.ClanWar.StartAsync(DateTime.UtcNow, manual: true)
+                        ? "Clan War started." : "Clan War is already running.");
+                    return true;
+                case "end":
+                    await Talk.NoticeAsync(client, await Social.ClanWar.EndAsync(DateTime.UtcNow, manual: true)
+                        ? "Clan War ended." : "Clan War is not running.");
+                    return true;
+                case "status":
+                    await Talk.NoticeAsync(client, Social.ClanWar.StatusText());
+                    return true;
+                case "reload":
+                    if (Social.ClanWar.Active)
+                    {
+                        await Talk.NoticeAsync(client, "End the Clan War first.");
+                        return true;
+                    }
+                    await Social.ClanWar.LoadAsync();
+                    await Talk.NoticeAsync(client, Social.ClanWar.StatusText());
+                    return true;
+                default:
+                    return await UsageAsync(client, ClanWarUsage);
+            }
         }
 
         private static async Task<bool> GuildWarAsync(Client client, string[] args, string rest)

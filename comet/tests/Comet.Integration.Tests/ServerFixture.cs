@@ -88,6 +88,7 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Class1MoneyBag = (723713, "Class1MoneyBag", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CpBag = (729911, "CPBag", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) AmritaBundle = (720010, "Amrita", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) NormalTwinCityClanPack = (722458, "NormalTwinCityClanPack", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Amrita = (1000030, "Amrita", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) Bomb = (721261, "Bomb", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) YinYangFruit = (711188, "YinYangFruit", 1, 0);
@@ -284,6 +285,7 @@ namespace Comet.Integration.Tests
         // Players may fight in Desert City; on a PK field it's no crime (Data/maps.json).
         // Twin City and the market forbid it. Not 1005, the arena: NpcTests need it missing.
         public const uint DesertCity = 1000, PkField = 1080, TrainingGround = 1039, GuildWar = 1038;
+        public const uint ClanWarField = 3024;
 
         // Twin City's mine, where its mine assistant lets players in
         public const uint TwinCityMine = 1028;
@@ -460,6 +462,8 @@ namespace Comet.Integration.Tests
                 "--GuildWar:StartDay=Monday", "--GuildWar:StartHour=0", "--GuildWar:StartMinute=0",
                 "--GuildWar:EndDay=Monday", "--GuildWar:EndHour=0", "--GuildWar:EndMinute=0",
                 "--GuildWar:PoleLife=2000", "--GuildWar:GateLife=1000",
+                "--ClanWar:StartHour=0", "--ClanWar:StartMinute=0", "--ClanWar:EndHour=0", "--ClanWar:EndMinute=0",
+                "--ClanWar:SignUpCloseHour=0", "--ClanWar:SignUpCloseMinute=0",
                 "--Broadcast:IntervalSeconds=2", "--Metrics:Port=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
@@ -484,7 +488,7 @@ namespace Comet.Integration.Tests
                     (DesertCity, "map/map/desert.7z"), (PkField, "map/map/pkfield.7z"),
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z"), (TrainingGround, "map/map/tg.7z"),
-                    (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"),
+                    (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"), (ClanWarField, "map/map/family.7z"),
                     (BirthVillage, "map/map/newbie.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
@@ -501,6 +505,7 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "newarena.DMap"), MapFiles.DMap(100, 100));
             File.WriteAllBytes(Path.Combine(maps, "mine-four.DMap"), MapFiles.DMap(184, 184));
             File.WriteAllBytes(Path.Combine(maps, "gw.DMap"), MapFiles.DMap(400, 400));
+            File.WriteAllBytes(Path.Combine(maps, "family.DMap"), MapFiles.DMap(170, 170));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
@@ -508,7 +513,7 @@ namespace Comet.Integration.Tests
                     SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
-                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies,
+                    Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies, NormalTwinCityClanPack,
                     Bomb, YinYangFruit, LuckyAmulet, Orchid, Saddle, StudyBookArena,
                     HeadgearRefinery, BladeRefinery, PermanentStone }, new[] { Potion, ManaPotion, Bottle },
                     new Dictionary<uint, ushort> { [Crop.Id] = CropVigor },
