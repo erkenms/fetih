@@ -114,3 +114,6 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
 - **Reincarnation, name change, degrade** open native windows through MsgAction 126: 485
   (`CDlgMeteSpecial`, MsgMeteSpecial 1066), 489 (`CDlgChangeName`, MsgChangeName 2080), 506
   (`CDlgEquipDegrade`, MsgItem 54, 54 CPs). The client keeps its old name until relog.
+- **Wanted / bounty** (2026-11-24, `CMsgName::Process`): MsgName 8 and 15 only store a name;
+  when a player of that name comes into view the client sends an empty MsgName 13/14. No
+  NPC, window or item in 5619 posts or claims a bounty, so the server doesn't implement it.
