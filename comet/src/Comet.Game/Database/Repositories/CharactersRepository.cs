@@ -65,6 +65,25 @@ namespace Comet.Game.Database.Repositories
                 .ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, none));
         }
 
+        public static async Task DeleteAsync(uint characterID, string name, string none)
+        {
+            using var db = new ServerDbContext();
+            using var tx = await db.Database.BeginTransactionAsync();
+            await db.Items.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Friends.Where(x => x.CharacterID == characterID || x.FriendID == characterID).ExecuteDeleteAsync();
+            await db.Enemies.Where(x => x.CharacterID == characterID || x.EnemyID == characterID).ExecuteDeleteAsync();
+            await db.TradePartners.Where(x => x.CharacterID == characterID || x.PartnerID == characterID).ExecuteDeleteAsync();
+            await db.Magics.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Proficiencies.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.SyndicateMembers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.FamilyMembers.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Arena.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Nobility.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await db.Characters.Where(x => x.Spouse == name).ExecuteUpdateAsync(s => s.SetProperty(x => x.Spouse, none));
+            await db.Characters.Where(x => x.CharacterID == characterID).ExecuteDeleteAsync();
+            await tx.CommitAsync();
+        }
+
         public static bool IsDuplicateName(DbUpdateException e) => IsDuplicateKey(e, "Name_UNIQUE");
 
         public static bool IsDuplicateAccount(DbUpdateException e) => IsDuplicateKey(e, "AccountID_UNIQUE");

@@ -110,6 +110,26 @@ namespace Comet.Game.Magic
             await client.SendAsync(new MsgUserAttrib(client.ID, AttributeType.XpCircle, xp));
         }
 
+        // The client sends SpellAbortXp once its 20s full-XP timer runs out
+        public static async Task AbortXpAsync(Client client)
+        {
+            if (client.Character == null || !client.Effects.Remove(StatusFlags.XpFull))
+                return;
+            await SetXpAsync(client, 0);
+            await Pk.Pking.SendStatusAsync(client);
+            LogEvents.For(typeof(Recovery), LogEvents.StatusEnded).Debug(
+                "{Name} status 0x{Status:X} ended (aborted)", client.Character.Name, StatusFlags.XpFull);
+        }
+
+        public static async Task AbortFlightAsync(Client client)
+        {
+            if (client.Character == null || !client.Effects.Remove(StatusFlags.Fly))
+                return;
+            await Pk.Pking.SendStatusAsync(client);
+            LogEvents.For(typeof(Recovery), LogEvents.StatusEnded).Information(
+                "{Name} landed (aborted)", client.Character.Name);
+        }
+
         public static async Task<bool> UseStaminaAsync(Client client, byte amount)
         {
             if (amount == 0)

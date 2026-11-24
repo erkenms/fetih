@@ -60,5 +60,36 @@ namespace Comet.Game.World
             foreach (var other in map.InView(x, y))
                 _ = other.SendAsync(removal);
         }
+
+        // The client asks for an entity it heard from (walk, jump, interact) before seeing its spawn
+        public static async Task QueryAsync(Client client, uint targetID)
+        {
+            var map = client.Map;
+            var character = client.Character;
+            if (map == null || character == null || targetID == 0 || targetID == client.ID)
+                return;
+            if (!map.TryGetPosition(client, out var x, out var y))
+                return;
+
+            if (Kernel.Players.TryGet(targetID, out var other))
+            {
+                if (other.Character != null && other.Character.MapID == character.MapID &&
+                    GameMap<Client>.InView(x, y, other.Character.X, other.Character.Y))
+                    await client.SendAsync(new MsgPlayer(other));
+                return;
+            }
+
+            if (Monsters.TryGet(targetID, out var monster))
+            {
+                if (monster.Alive && monster.Map.Id == character.MapID &&
+                    GameMap<Monster>.InView(x, y, monster.X, monster.Y))
+                    await client.SendAsync(new MsgPlayer(monster));
+                return;
+            }
+
+            var npc = Kernel.Npcs?.Find(character.MapID, targetID);
+            if (npc != null && GameMap<Client>.InView(x, y, npc.X, npc.Y))
+                await Items.Vending.ShowNpcAsync(client, npc);
+        }
     }
 }

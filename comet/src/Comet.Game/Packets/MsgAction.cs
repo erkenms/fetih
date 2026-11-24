@@ -278,8 +278,14 @@ namespace Comet.Game.Packets
                 // Non-zero Command asks to revive where the player lies
                 [ActionType.CharacterRevive] = (msg, client) =>
                     Combat.Death.ReviveAsync(client, "button", here: msg.Command != 0),
+                [ActionType.CharacterDelete] = (msg, client) => CharacterDeletion.DeleteAsync(client, msg.Command),
                 [ActionType.CharacterDead] = (msg, client) => Combat.Death.BecomeGhostAsync(client),
                 [ActionType.MapPortal] = (msg, client) => Movement.PortalAsync(client, msg),
+                [ActionType.MapQuery] = (msg, client) => Visibility.QueryAsync(client, msg.Command),
+
+                [ActionType.SpellAbortXp] = (msg, client) => Magic.Recovery.AbortXpAsync(client),
+                [ActionType.SpellAbortTransform] = (msg, client) => Magic.Transforming.EndAsync(client, "aborted"),
+                [ActionType.SpellAbortFlight] = (msg, client) => Magic.Recovery.AbortFlightAsync(client),
 
                 // Turning and emotes go to everyone in view, not back to the player
                 [ActionType.CharacterDirection] = (msg, client) =>

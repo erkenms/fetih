@@ -16,8 +16,11 @@ namespace Comet.Game.World
         public static readonly TimeSpan CorpseTime = TimeSpan.FromSeconds(3);
 
         private static List<Monster> all = new List<Monster>();
+        private static Dictionary<uint, Monster> byId = new Dictionary<uint, Monster>();
 
         public static IReadOnlyList<Monster> All => all;
+
+        public static bool TryGet(uint id, out Monster monster) => byId.TryGetValue(id, out monster);
 
         // Monsters for each generator whose map the client has; generators beyond the monster
         // ID range are left out. Monsters with no free cell wait for the respawn pass.
@@ -46,6 +49,7 @@ namespace Comet.Game.World
             }
 
             all = monsters;
+            byId = monsters.ToDictionary(m => m.Identity);
             return (monsters.Count(m => m.Alive), skipped);
         }
 

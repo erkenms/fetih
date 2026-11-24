@@ -27,5 +27,7 @@ namespace Comet.Network.Sockets
         public const string Kicked = "kicked";
 
         public const string Banned = "banned";
+
+        public const string Deleted = "deleted";
     }
 }

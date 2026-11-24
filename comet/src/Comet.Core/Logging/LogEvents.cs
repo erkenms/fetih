@@ -26,6 +26,8 @@ namespace Comet.Core.Logging
         public const string SessionPing = "session.ping";
         public const string CharacterCreated = "character.created";
         public const string CharacterCreateFailed = "character.create_failed";
+        public const string CharacterDeleted = "character.deleted";
+        public const string CharacterDeleteRejected = "character.delete_rejected";
         public const string CharacterRelocated = "character.relocated";
         public const string CharacterSaved = "character.saved";
         public const string CharacterSaveFailed = "character.save_failed";

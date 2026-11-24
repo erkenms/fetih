@@ -121,6 +121,7 @@ namespace Comet.Game.States
         public TransferAuthArgs Authentication { get; set; }
 
         public DateTime? LoggedInAt { get; set; }
+        public bool Deleted { get; set; }
 
         public Authority Authority => (Authority)(this.Authentication?.AuthorityID ?? 1);
 
@@ -185,7 +186,7 @@ namespace Comet.Game.States
             catch (Exception) { }
 
             var character = this.Character;
-            if (character == null)
+            if (character == null || this.Deleted)
                 return;
 
             try

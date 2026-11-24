@@ -325,6 +325,11 @@ namespace Comet.Client
         public const ushort CreateBooth = 111, CloseBooth = 114;
         public const uint WarehouseWindow = 4, ComposeWindow = 2, EnchantWindow = 1091;
         public const ushort Mine = 99;
+        public const ushort SpellAbortXp = 93;
+        public const ushort CharacterDelete = 95;
+        public const ushort MapQuery = 102;
+        public const ushort SpellAbortTransform = 118;
+        public const ushort SpellAbortFlight = 120;
 
         public static ActionMessage Parse(byte[] packet) => new ActionMessage(
             BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 8),
