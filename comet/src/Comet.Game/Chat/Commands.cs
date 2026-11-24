@@ -45,6 +45,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "level" }, Authority.GameMaster, "/level <level>", LevelAsync),
             new Command(new[] { "class" }, Authority.GameMaster, "/class <class>", ClassAsync),
             new Command(new[] { "silver" }, Authority.GameMaster, "/silver <+/-amount>", SilverAsync),
+            new Command(new[] { "jewel" }, Authority.GameMaster, "/jewel <+/-amount>", JewelAsync),
             new Command(new[] { "item" }, Authority.GameMaster, "/item <type> [count]", ItemAsync),
             new Command(new[] { "steed" }, Authority.GameMaster, "/steed [plus]", SteedAsync),
             new Command(new[] { "attr" }, Authority.GameMaster, "/attr <str|agi|vit|spi|points> <value|+n|-n>", StatAsync),
@@ -404,6 +405,16 @@ namespace Comet.Game.Chat
             if (await Progress.ChangeSilverAsync(client, amount, "gm"))
                 return true;
             await Talk.NoticeAsync(client, $"Silver must stay between 0 and {uint.MaxValue}.");
+            return false;
+        }
+
+        private static async Task<bool> JewelAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1 || !long.TryParse(args[0], out var amount) || amount == 0)
+                return await UsageAsync(client, "/jewel <+/-amount>");
+            if (await Progress.ChangeConquerPointsAsync(client, amount, "gm"))
+                return true;
+            await Talk.NoticeAsync(client, $"Jewels must stay between 0 and {uint.MaxValue}.");
             return false;
         }
 
