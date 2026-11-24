@@ -92,6 +92,19 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task JewelChangesAreSentAndLogged()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 685, 520, GameMaster)).Player;
+            await CommandAsync(player, "/jewel 500");
+            Assert.NotNull(await AttribAsync(player, Jewels, 500));
+            var logged = await this.Servers.WaitForEventAsync("game", "character.conquer_points", "name", player.User.Name);
+            Assert.Equal((500, 500), (logged.GetProperty("amount").GetInt32(), logged.GetProperty("balance").GetInt32()));
+
+            await CommandAsync(player, "/jewel -5000");
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text.Contains("Jewels must stay")));
+        }
+
+        [Fact]
         public async Task OnlineCharactersAreSavedPeriodically()
         {
             await using var player = (await this.PlayingAtAsync(1002, 700, 520, GameMaster)).Player;

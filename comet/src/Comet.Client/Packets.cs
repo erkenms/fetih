@@ -372,7 +372,7 @@ namespace Comet.Client
 
         public const uint Health = 0, MaxHealth = 1, Mana = 2, MaxMana = 3, Silver = 4,
             Experience = 5, Class = 7, AttributePoints = 10, Level = 12, Spirit = 13, Vitality = 14,
-            Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27, Rebirths = 22;
+            Strength = 15, Agility = 16, HeavenBlessing = 17, Mesh = 11, PkPoints = 6, Status = 25, Stamina = 8, XpCircle = 27, Rebirths = 22, Jewels = 29;
         public const ulong DeadStatus = 0x400;
 
         public const ulong Flashing = 0x1, RedName = 0x4000, BlackName = 0x8000;
