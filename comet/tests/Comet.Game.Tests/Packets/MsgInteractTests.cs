@@ -15,7 +15,7 @@ namespace Comet.Game.Tests.Packets
         [InlineData(33u)]
         [InlineData(34u)]
         [InlineData(38u)]
-        public async Task AntiCheatReportActionsAreIgnoredQuietly(uint action)
+        public async Task AntiCheatReportsAreOnlyLogged(uint action)
         {
             var packet = new MsgInteract((InteractionType)action, 1000000, 0, 0, 0, 14);
             var decoded = new MsgInteract();
@@ -23,7 +23,7 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal((InteractionType)action, decoded.Action);
             Assert.Equal(14u, decoded.Data);
 
-            // Completes without touching the client (null would throw if routed to Attacks)
+            // Completes without touching the client; one routed to Attacks would throw on null
             await decoded.ProcessAsync(null);
         }
     }

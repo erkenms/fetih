@@ -2,6 +2,7 @@ namespace Comet.Game.Packets
 {
     using System;
     using System.Threading.Tasks;
+    using Comet.Core.Logging;
     using Comet.Game.Combat;
     using Comet.Game.States;
     using Comet.Network.Packets;
@@ -92,12 +93,20 @@ namespace Comet.Game.Packets
             InteractionType.CounterKillSwitch => Magic.Casting.CastAsync(client, Magic.CounterKill.Type, this.TargetID, this.X, this.Y),
             InteractionType.Court => Social.Marriage.CourtAsync(client, this),
             InteractionType.Marry => Social.Marriage.MarryAsync(client, this),
-            // Client anti-cheat reports pick one of these seven action numbers at random
+            // The client's anti-cheat reports pick one of these seven actions at random, with
+            // the cheat code in Data
             (InteractionType)16 or (InteractionType)19 or (InteractionType)23 or
                 (InteractionType)30 or (InteractionType)33 or (InteractionType)34 or
-                (InteractionType)38 => Task.CompletedTask,
+                (InteractionType)38 => ReportCheatAsync(client),
             _ => Attacks.RequestAsync(client, this),
         };
+
+        private Task ReportCheatAsync(Client client)
+        {
+            LogEvents.For<MsgInteract>(LogEvents.SessionCheatReport).Warning(
+                "{Name}'s client reported cheat code {Code}", client?.Character?.Name, this.Data);
+            return Task.CompletedTask;
+        }
 
         public enum InteractionType : uint
         {
