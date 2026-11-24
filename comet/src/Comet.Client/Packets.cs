@@ -75,6 +75,7 @@ namespace Comet.Client
         public const ushort Clan = 2006;
         public const ushort Friend = 2009;
         public const ushort Center = 2011;
+        public const ushort Ghost = 2013;
         public const ushort Service = 2014;
         public const ushort World = 2021;
         public const ushort Vendor = 2104;

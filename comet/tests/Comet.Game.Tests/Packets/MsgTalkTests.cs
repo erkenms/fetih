@@ -3,6 +3,7 @@ namespace Comet.Game.Tests.Packets
     using System;
     using System.Drawing;
     using System.Text;
+    using Comet.Game.Chat;
     using Comet.Game.Packets;
     using Xunit;
     using static Comet.Game.Packets.MsgTalk;
@@ -26,5 +27,23 @@ namespace Comet.Game.Tests.Packets
             Assert.Equal("Alice", Encoding.ASCII.GetString(bytes, 26, 5));
             Assert.Equal(200, bytes[26 + 5 + 1 + 3 + 1]);
         }
+
+        [Theory]
+        [InlineData(true, 10, true)]
+        [InlineData(true, 100, true)]
+        [InlineData(true, 132, true)]
+        [InlineData(true, 142, true)]
+        [InlineData(false, 132, true)]
+        [InlineData(false, 133, true)]
+        [InlineData(false, 134, true)]
+        [InlineData(false, 135, true)]
+        [InlineData(false, 100, false)]
+        [InlineData(false, 101, false)]
+        [InlineData(false, 142, false)]
+        [InlineData(false, 145, false)]
+        [InlineData(false, 10, false)]
+        [InlineData(false, 25, false)]
+        public void OnlyGhostsAndWaterTaoistsHearGhostChat(bool dead, byte currentClass, bool expected) =>
+            Assert.Equal(expected, Talk.CanHearGhost(dead, currentClass));
     }
 }

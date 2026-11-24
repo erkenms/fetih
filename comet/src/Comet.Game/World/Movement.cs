@@ -205,6 +205,15 @@ namespace Comet.Game.World
                 await other.SendAsync(packet);
         }
 
+        public static async Task SendToViewAsync(Client client, IPacket packet, Func<Client, bool> filter)
+        {
+            if (!TryGetPosition(client, out var map, out var x, out var y))
+                return;
+            foreach (var other in map.InView(x, y, except: client))
+                if (filter(other))
+                    await other.SendAsync(packet);
+        }
+
         private static bool TryGetPosition(Client client, out GameMap<Client> map, out ushort x, out ushort y)
         {
             map = client.Map;

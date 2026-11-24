@@ -1,5 +1,6 @@
 namespace Comet.Integration.Tests
 {
+    using System;
     using System.Threading.Tasks;
     using Comet.Client;
     using Xunit;
@@ -275,6 +276,78 @@ namespace Comet.Integration.Tests
             await CommandAsync(player, "/window 9 custom");
             opened = await player.Game.WaitForActionAsync(160, player.User.Id);
             Assert.Equal(9u, opened?.Command);
+        }
+
+        private async Task<Player> PlayingAsClassAtAsync(uint mapID, int x, int y, byte currentClass)
+        {
+            var (first, email) = await this.PlayingAsync();
+            var name = first.User.Name;
+            await this.LogOutAsync(first);
+            await this.Servers.ExecuteGameSqlAsync(
+                "UPDATE `character` SET MapID = @map, X = @x, Y = @y, CurrentClass = @class WHERE Name = @name",
+                ("@map", mapID), ("@x", x), ("@y", y), ("@class", currentClass), ("@name", name));
+            return await this.Servers.PlayAsync(email, Password);
+        }
+
+        private static async Task KillAsync(Player attacker, Player victim, int x, int y)
+        {
+            await attacker.Game.AttackAsync(attacker.User.Id, victim.User.Id, x, y);
+            Assert.NotNull(await victim.Game.WaitForInteractAsync(
+                i => i.Action == InteractMessage.Kill && i.Target == victim.User.Id, TimeSpan.FromSeconds(15)));
+            await victim.Game.BecomeGhostAsync(victim.User.Id);
+            Assert.NotNull(await victim.Game.WaitForAttribAsync(
+                a => a.Id == victim.User.Id && a.Values.TryGetValue(UserAttribMessage.Mesh, out var m) && m >= 10_000_000));
+        }
+
+        [Fact]
+        public async Task GhostChatReachesOnlyOtherGhostsAndWaterTaoistsInView()
+        {
+            uint map = ServerFixture.DesertCity;
+            await using var killer = (await this.PlayingAtAsync(map, 140, 120, strength: 5000)).Player;
+            await using var speaker = (await this.PlayingAtAsync(map, 141, 120)).Player;
+            await using var otherGhost = (await this.PlayingAtAsync(map, 140, 121)).Player;
+            await using var waterTaoist = await this.PlayingAsClassAtAsync(map, 142, 120, 132);
+            await using var fireTaoist = await this.PlayingAsClassAtAsync(map, 143, 120, 142);
+            await using var internTaoist = await this.PlayingAsClassAtAsync(map, 144, 120, 100);
+            await using var farWaterTaoist = await this.PlayingAsClassAtAsync(map, 200, 200, 135);
+
+            // An alive player cannot talk on the Ghost channel
+            await speaker.Game.SayAsync(TalkChannels.Ghost, speaker.User.Name, "ALLUSERS", "still breathing");
+            var rejected = await this.Servers.WaitForEventAsync("game", "chat.rejected", "name", speaker.User.Name);
+            Assert.Equal("alive", rejected.GetProperty("reason").GetString());
+            await SyncAsync(speaker, waterTaoist);
+            Assert.Null(await waterTaoist.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+
+            await FreePkAsync(killer);
+            await KillAsync(killer, speaker, 141, 120);
+            await KillAsync(killer, otherGhost, 140, 121);
+
+            await speaker.Game.SayAsync(TalkChannels.Ghost, "Impostor", "ALLUSERS", "revive me");
+
+            var heardByGhost = await otherGhost.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost);
+            Assert.NotNull(heardByGhost);
+            Assert.Equal((speaker.User.Name, "revive me"), (heardByGhost.Sender, heardByGhost.Text));
+
+            var heardByWater = await waterTaoist.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost);
+            Assert.NotNull(heardByWater);
+            Assert.Equal((speaker.User.Name, "revive me"), (heardByWater.Sender, heardByWater.Text));
+
+            await SyncAsync(speaker, killer);
+            await SyncAsync(speaker, fireTaoist);
+            await SyncAsync(speaker, internTaoist);
+            await SyncAsync(speaker, farWaterTaoist);
+            await SyncAsync(speaker);
+
+            Assert.Null(await killer.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+            Assert.Null(await fireTaoist.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+            Assert.Null(await internTaoist.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+            Assert.Null(await farWaterTaoist.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+            Assert.Null(await speaker.Game.WaitForTalkAsync(t => t.Channel == TalkChannels.Ghost, Already));
+
+            var logged = await this.Servers.WaitForEventAsync("game", "chat.message", e =>
+                e.TryGetProperty("name", out var n) && n.GetString() == speaker.User.Name &&
+                e.TryGetProperty("channel", out var c) && c.GetString() == "Ghost");
+            Assert.Equal("revive me", logged.GetProperty("text").GetString());
         }
     }
 }

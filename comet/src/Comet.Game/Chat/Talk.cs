@@ -43,6 +43,16 @@ namespace Comet.Game.Chat
                     await Movement.SendToViewAsync(client, msg);
                     break;
 
+                case TalkChannel.Ghost:
+                    if (!client.Life.Dead)
+                    {
+                        await RejectAsync(client, msg, "alive", null);
+                        return;
+                    }
+                    Log(client, msg, null);
+                    await Movement.SendToViewAsync(client, msg, CanHearGhost);
+                    break;
+
                 case TalkChannel.Whisper:
                     if (!Kernel.Players.TryGet(msg.RecipientName ?? string.Empty, out var target) ||
                         target.Character == null)
@@ -134,6 +144,12 @@ namespace Comet.Game.Chat
 
         public static bool IsMuted(Character character, DateTime now) =>
             character.MutedUntil is DateTime until && until > now;
+
+        public static bool CanHearGhost(bool dead, byte currentClass) =>
+            dead || Magic.Learning.ElementOf(currentClass) == Magic.Learning.Element.Water;
+
+        private static bool CanHearGhost(Client client) =>
+            client.Character != null && CanHearGhost(client.Life.Dead, client.Character.CurrentClass);
 
         public static Task NoticeAsync(Client client, string text) =>
             client.SendAsync(new MsgTalk(client.ID, TalkChannel.Service, text));
