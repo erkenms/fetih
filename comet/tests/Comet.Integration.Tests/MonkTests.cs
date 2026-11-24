@@ -59,6 +59,22 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task RadiantPalmHitsTheMonsterItWasCastOnWhereverTheClientShowedIt()
+        {
+            var at = ServerFixture.PheasantForPalm;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 4, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await LearnAsync(player, 10381);
+            await HoldBeadsAsync(player);
+
+            // A step off where the pheasant is, as when the client is behind its walk
+            await player.Game.CastAsync(player.User.Id, 10381, pheasant.Id, at.X + 1, at.Y + 1);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 10381);
+            Assert.Contains(effect.Targets, t => t.Id == pheasant.Id);
+        }
+
+        [Fact]
         public async Task RadiantPalmAtATargetOutOfReachTurnsTheMonkTowardIt()
         {
             var at = ServerFixture.PheasantForPalm;

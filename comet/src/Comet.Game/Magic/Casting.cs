@@ -514,6 +514,16 @@ namespace Comet.Game.Magic
             {
                 if (spell.Sort == MagicSort.ShurikenVortex)
                     (x, y) = (character.X, character.Y);
+                // The client aims at where it shows the target, which can be a step behind a
+                // monster on the move, so a spell cast on a target in reach always hits it
+                Victim clicked = null;
+                if (targetID != 0 && spell.Sort is MagicSort.Line or MagicSort.RadiantPalm or MagicSort.Fan &&
+                    FindTarget(client, spell, targetID, now).Item1 is { } found &&
+                    (found.X != character.X || found.Y != character.Y))
+                {
+                    clicked = found;
+                    (x, y) = (found.X, found.Y);
+                }
                 // The client lets a body that's still falling be clicked
                 string reason = AimsAtDead(client, targetID) ? "dead_target" :
                     spell.Sort is MagicSort.Line or MagicSort.RadiantPalm or MagicSort.Fan &&
@@ -528,6 +538,8 @@ namespace Comet.Game.Magic
                     .Where(v => InShape(spell, character.X, character.Y, x, y, v.X, v.Y))
                     .Take(MaxTargets)
                     .ToList();
+                if (clicked != null && victims.All(v => v.ID != clicked.ID))
+                    victims.Insert(0, clicked);
             }
 
             var stats = Stats.Of(client);
