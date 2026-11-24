@@ -37,6 +37,9 @@ namespace Comet.Game.World
                 ? npcs.Where(n => GameMap<States.Client>.InView(x, y, n.X, n.Y))
                 : Enumerable.Empty<Npc>();
 
+        public IReadOnlyList<Npc> On(uint mapID) =>
+            this.ByMap.TryGetValue(mapID, out var npcs) ? npcs : new List<Npc>();
+
         public Npc Find(uint mapID, uint npcID) =>
             this.ByMap.TryGetValue(mapID, out var npcs) ? npcs.FirstOrDefault(n => n.NpcID == npcID) : null;
     }

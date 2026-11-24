@@ -23,16 +23,24 @@ namespace Comet.Game.World
         // Chance in percent that an idle monster takes a step when it may move
         public static int WanderChance = 10;
 
+        // How long the last tick took, and the slowest one
+        public static TimeSpan LastTick { get; private set; }
+        public static TimeSpan SlowestTick { get; private set; }
+
         public static async Task RunAsync(TimeSpan interval, CancellationToken cancellation)
         {
             using var timer = new PeriodicTimer(interval);
             while (await timer.WaitForNextTickAsync(cancellation))
             {
+                long started = System.Diagnostics.Stopwatch.GetTimestamp();
                 try { await TickAsync(DateTime.UtcNow, Random.Shared); }
                 catch (Exception e)
                 {
                     LogEvents.For(typeof(MonsterAI), LogEvents.MonsterLoopFailed).Error(e, "Monster loop tick failed");
                 }
+                LastTick = System.Diagnostics.Stopwatch.GetElapsedTime(started);
+                if (LastTick > SlowestTick)
+                    SlowestTick = LastTick;
             }
         }
 

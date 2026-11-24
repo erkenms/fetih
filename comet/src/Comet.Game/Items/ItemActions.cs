@@ -12,14 +12,17 @@ namespace Comet.Game.Items
     public static class ItemActions
     {
         // Null if the inventory is full
-        public static async Task<DbItem> GiveAsync(Client client, ItemType type, string reason, byte plus = 0)
+        public static Task<DbItem> GiveAsync(Client client, ItemType type, string reason, byte plus = 0) =>
+            GiveAsync(client, type, reason, item => item.Plus = plus);
+
+        public static async Task<DbItem> GiveAsync(Client client, ItemType type, string reason, System.Action<DbItem> shape)
         {
             var character = client.Character;
             if (character == null || client.Inventory == null || client.Inventory.FreeSlots == 0)
                 return null;
 
             var item = New(character.CharacterID, type);
-            item.Plus = plus;
+            shape(item);
             await ItemsRepository.CreateAsync(item);
             client.Inventory.Add(item);
             await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));

@@ -16,6 +16,14 @@ namespace Comet.Game.Database.Repositories
                 .SingleOrDefaultAsync();
         }
 
+        public static async Task<DbCharacter> FindByIdAsync(uint characterID)
+        {
+            using var db = new ServerDbContext();
+            return await db.Characters
+                .Where(x => x.CharacterID == characterID)
+                .SingleOrDefaultAsync();
+        }
+
         public static async Task<DbCharacter> FindAsync(uint accountID)
         {
             using var db = new ServerDbContext();

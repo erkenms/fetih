@@ -43,12 +43,19 @@ namespace Comet.Game.States
                 return false;
 
             byte from = character.Level;
+            SetLevel(character, level);
+            await LevelChangedAsync(client, from, reason);
+            return true;
+        }
+
+        // Also for a character offline
+        public static void SetLevel(Database.Models.DbCharacter character, byte level)
+        {
+            byte from = character.Level;
             character.Level = level;
             character.Experience = 0;
             if (level > from)
                 character.AttributePoints = AddPoints(character.AttributePoints, (level - from) * Attributes.PointsPerLevel);
-            await LevelChangedAsync(client, from, reason);
-            return true;
         }
 
         // A trade changes both players' silver from one player's packet queue, so the

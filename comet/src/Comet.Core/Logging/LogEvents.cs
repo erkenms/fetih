@@ -283,6 +283,20 @@ namespace Comet.Core.Logging
         public const string MessageBoardDeleted = "message_board.deleted";
         public const string MessageBoardRejected = "message_board.rejected";
         public const string GmCommand = "gm.command";
+        // Admin RPC calls, from the web
+        public const string GmKick = "gm.kick";
+        public const string GmMute = "gm.mute";
+        public const string GmJail = "gm.jail";
+        public const string GmBan = "gm.ban";
+        public const string GmUnban = "gm.unban";
+        public const string GmTeleport = "gm.teleport";
+        public const string GmGiveItem = "gm.give_item";
+        public const string GmTakeItem = "gm.take_item";
+        public const string GmSilver = "gm.silver";
+        public const string GmConquerPoints = "gm.conquer_points";
+        public const string GmLevel = "gm.level";
+        public const string GmMessage = "gm.message";
+        public const string GmBroadcast = "gm.broadcast";
         public const string ChatCommand = "chat.command";
 
         public const string PacketUnhandled = "packet.unhandled";

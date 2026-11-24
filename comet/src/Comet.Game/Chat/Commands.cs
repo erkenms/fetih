@@ -207,15 +207,12 @@ namespace Comet.Game.Chat
                 return false;
 
             var name = target.Character.Name;
-            if (!await Database.Repositories.AccountsRepository.BanAsync(target.Character.AccountID))
+            if (!await Admin.GmActions.BanAsync(target.Character.AccountID, rest.Substring(args[0].Length)))
             {
                 await Talk.NoticeAsync(client, $"Can't ban {name}: account {target.Character.AccountID} not found.");
                 return false;
             }
-            string reason = rest.Substring(args[0].Length).Trim();
-            await Talk.NoticeAsync(target, reason.Length > 0 ? "You have been banned: " + reason : "You have been banned.");
             await Talk.NoticeAsync(client, $"Banned {name}.");
-            target.Disconnect(DisconnectReasons.Banned);
             return true;
         }
 
@@ -237,23 +234,17 @@ namespace Comet.Game.Chat
             }
         }
 
-        // Ten years; much more would overflow DateTime
-        private const int MaxMuteMinutes = 10 * 365 * 24 * 60;
-
         private static async Task<bool> MuteAsync(Client client, string[] args, string rest)
         {
-            if (args.Length != 2 || !int.TryParse(args[1], out var minutes) || minutes < 1 || minutes > MaxMuteMinutes)
-                return await UsageAsync(client, $"/mute <name> <minutes 1-{MaxMuteMinutes}>");
+            if (args.Length != 2 || !int.TryParse(args[1], out var minutes) || minutes < 1 || minutes > Admin.GmActions.MaxMuteMinutes)
+                return await UsageAsync(client, $"/mute <name> <minutes 1-{Admin.GmActions.MaxMuteMinutes}>");
             if (!TryFind(args[0], out var target))
                 return await NotOnlineAsync(client, args[0]);
             if (!await OutranksAsync(client, target, "mute"))
                 return false;
 
-            var character = target.Character;
-            character.MutedUntil = DateTime.UtcNow.AddMinutes(minutes);
-            await target.SaveAsync("mute");
-            await Talk.NoticeAsync(target, $"You have been muted for {minutes} minutes.");
-            await Talk.NoticeAsync(client, $"Muted {character.Name} for {minutes} minutes.");
+            await Admin.GmActions.MuteAsync(target, minutes);
+            await Talk.NoticeAsync(client, $"Muted {target.Character.Name} for {minutes} minutes.");
             return true;
         }
 
@@ -266,16 +257,13 @@ namespace Comet.Game.Chat
             if (!await OutranksAsync(client, target, "unmute"))
                 return false;
 
-            var character = target.Character;
-            if (!Talk.IsMuted(character, DateTime.UtcNow))
+            var name = target.Character.Name;
+            if (!await Admin.GmActions.UnmuteAsync(target))
             {
-                await Talk.NoticeAsync(client, $"{character.Name} isn't muted.");
+                await Talk.NoticeAsync(client, $"{name} isn't muted.");
                 return false;
             }
-            character.MutedUntil = null;
-            await target.SaveAsync("mute");
-            await Talk.NoticeAsync(target, "You can chat again.");
-            await Talk.NoticeAsync(client, $"Unmuted {character.Name}.");
+            await Talk.NoticeAsync(client, $"Unmuted {name}.");
             return true;
         }
 
@@ -350,9 +338,7 @@ namespace Comet.Game.Chat
         {
             if (rest.Length == 0)
                 return await UsageAsync(client, "/bc <text>");
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, rest);
-            foreach (var player in Kernel.Players.Values)
-                await player.SendAsync(message);
+            await Admin.GmActions.BroadcastAsync(MsgTalk.TalkChannel.Center, rest);
             return true;
         }
 

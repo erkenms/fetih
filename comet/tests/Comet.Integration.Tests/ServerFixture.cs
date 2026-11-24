@@ -313,6 +313,7 @@ namespace Comet.Integration.Tests
         public string GameSchema { get; }
         public int AccountPort { get; private set; }
         public int GamePort { get; private set; }
+        public int RpcPort { get; private set; }
         public string LogDirectory { get; }
         public string MapDirectory { get; }
         // Each server's events in the order they were read, and how far each log file was read
@@ -409,7 +410,7 @@ namespace Comet.Integration.Tests
             await this.LoadSchemaAsync("comet.game.sql", "comet.game", this.GameSchema);
             this.AccountPort = FreePort();
             this.GamePort = FreePort();
-            int rpcPort = FreePort();
+            int rpcPort = this.RpcPort = FreePort();
             await this.ExecuteAccountSqlAsync(
                 "UPDATE realm SET GameIPAddress = @host, RpcIPAddress = @host, GamePort = @game, " +
                 "RpcPort = @rpc WHERE Name = @realm",

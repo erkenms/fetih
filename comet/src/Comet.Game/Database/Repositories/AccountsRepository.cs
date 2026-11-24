@@ -3,7 +3,7 @@ namespace Comet.Game.Database.Repositories
     using System.Threading.Tasks;
     using MySqlConnector;
 
-    // The few writes the game server makes to the account database (/ban and /unban). The
+    // The few writes the game server makes to the account database (bans and unbans). The
     // account server reads StatusID at login and refuses banned accounts.
     public static class AccountsRepository
     {
@@ -23,19 +23,23 @@ namespace Comet.Game.Database.Repositories
             return await command.ExecuteNonQueryAsync() > 0;
         }
 
-        public static async Task<UnbanResult> UnbanAsync(string username)
+        public static Task<UnbanResult> UnbanAsync(string username) => UnbanAsync("Username", username);
+
+        public static Task<UnbanResult> UnbanAsync(uint accountID) => UnbanAsync("AccountID", accountID);
+
+        private static async Task<UnbanResult> UnbanAsync(string column, object key)
         {
             await using var db = await OpenAsync();
             var update = new MySqlCommand(
-                "UPDATE account SET StatusID = @registered WHERE Username = @name AND StatusID = @banned", db);
+                $"UPDATE account SET StatusID = @registered WHERE {column} = @key AND StatusID = @banned", db);
             update.Parameters.AddWithValue("@registered", Registered);
             update.Parameters.AddWithValue("@banned", Banned);
-            update.Parameters.AddWithValue("@name", username);
+            update.Parameters.AddWithValue("@key", key);
             if (await update.ExecuteNonQueryAsync() > 0)
                 return UnbanResult.Unbanned;
 
-            var exists = new MySqlCommand("SELECT COUNT(*) FROM account WHERE Username = @name", db);
-            exists.Parameters.AddWithValue("@name", username);
+            var exists = new MySqlCommand($"SELECT COUNT(*) FROM account WHERE {column} = @key", db);
+            exists.Parameters.AddWithValue("@key", key);
             return System.Convert.ToInt64(await exists.ExecuteScalarAsync()) > 0
                 ? UnbanResult.NotBanned : UnbanResult.UnknownAccount;
         }

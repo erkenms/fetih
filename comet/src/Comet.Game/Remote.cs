@@ -7,7 +7,7 @@ namespace Comet.Game
     using Comet.Network.RPC;
     using Comet.Shared.Models;
 
-    public class Remote : IRpcServerTarget
+    public partial class Remote : IRpcServerTarget
     {
         public void Connected(string agentName)
         {
