@@ -1,0 +1,49 @@
+{
+  "title": "Zaman çizelgeleri",
+  "description": "Loki üzerinden sunucu olay zaman çizelgelerini sorgulayın ve ayrıntılı inceleme için Grafana'ya geçin.",
+  "filter": {
+    "characterId": "Karakter ID",
+    "accountId": "Hesap ID",
+    "range": "Zaman aralığı",
+    "server": "Sunucu",
+    "level": "Seviye",
+    "eventPrefix": "Olay ön eki",
+    "search": "Metin ara",
+    "includePackets": "Paket izlerini dahil et",
+    "all": "Tümü"
+  },
+  "range": {
+    "1h": "Son 1 saat",
+    "6h": "Son 6 saat",
+    "24h": "Son 24 saat",
+    "7d": "Son 7 gün",
+    "30d": "Son 30 gün"
+  },
+  "actions": {
+    "refresh": "Yenile",
+    "openGrafana": "Grafana'da aç",
+    "exploreGrafana": "Grafana Explore'da aç"
+  },
+  "column": {
+    "time": "Zaman",
+    "server": "Sunucu",
+    "level": "Seviye",
+    "event": "Olay",
+    "message": "Mesaj"
+  },
+  "detail": {
+    "title": "Kayıt detayı",
+    "source": "Kaynak",
+    "characterId": "Karakter ID",
+    "accountId": "Hesap ID",
+    "fields": "Alanlar",
+    "exception": "İstisna"
+  },
+  "empty": "Bu filtreyle eşleşen kayıt bulunamadı.",
+  "truncated": "En yeni {{count}} kayıt gösteriliyor. Daha fazlası için aralığı veya filtreleri daraltın.",
+  "count": "{{count}} kayıt",
+  "errors": {
+    "loki_unavailable": "Loki kayıt sunucusuna ulaşılamıyor.",
+    "invalid_time_range": "Geçersiz zaman aralığı (1 saniye ile 30 gün arasında olmalı)."
+  }
+}
