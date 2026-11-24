@@ -1302,7 +1302,8 @@ namespace Comet.Game.Magic
             AzureShieldLevels[Math.Min(spell.Level, AzureShieldLevels.Length - 1)];
 
         // A monk keeps one aura up on themself and the teammates within its range, as long as
-        // magictype's step; casting it again takes it down, casting another swaps it
+        // magictype's step; casting it again takes it down, casting another swaps it. A
+        // teammate who comes in range later asks for it.
         private static async Task AuraAsync(Client client, MagicType spell, DateTime now)
         {
             var flag = Buffs.AuraOf(spell.Type);
@@ -1323,31 +1324,106 @@ namespace Comet.Game.Magic
             var members = Teammates(client, spell.Range).Prepend(client).ToList();
             await PayAsync(client, spell, now);
             client.Aura = spell.Type;
+            client.AuraLevel = spell.Level;
+            // The client turns the caster toward the first target, and keeps their facing when
+            // there's none, so the monk isn't listed
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
             foreach (var member in members)
             {
                 member.Effects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
-                effect.Targets.Add((member.ID, 0));
+                if (member != client)
+                    effect.Targets.Add((member.ID, 0));
             }
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
+            var aura = AuraOf(client, spell);
+            foreach (var member in Social.Teams.OthersOf(client).Prepend(client))
+                await member.SendAsync(aura.With(MsgAura.AuraAction.Add));
             foreach (var member in members)
+            {
+                await member.SendAsync(aura.With(MsgAura.AuraAction.Got));
                 await Pking.SendStatusAsync(member);
+            }
             LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
                 "{Name} put up {MagicName} on {Count} players", character.Name, spell.Name, members.Count);
             LogCast(client, spell, character.X, character.Y, members.Count);
+        }
+
+        private static MsgAura AuraOf(Client owner, MagicType spell) => new MsgAura
+        {
+            OwnerID = owner.ID,
+            Aura = AuraTypeOf(spell.Type),
+            Level = spell.Level,
+            Range = spell.Range,
+            Power = (uint)Math.Max(0, spell.Power),
+        };
+
+        private static MsgAura.AuraType AuraTypeOf(ushort magicType) => magicType switch
+        {
+            10395 => MsgAura.AuraType.Tyrant,
+            10410 => MsgAura.AuraType.Fend,
+            10420 => MsgAura.AuraType.Metal,
+            10421 => MsgAura.AuraType.Wood,
+            10422 => MsgAura.AuraType.Water,
+            10423 => MsgAura.AuraType.Fire,
+            10424 => MsgAura.AuraType.Earth,
+            _ => MsgAura.AuraType.None,
+        };
+
+        // On the asker's queue: the owner's aura goes to them if it's up, they're the owner
+        // or a teammate, and they're within its range
+        public static async Task AskForAuraAsync(Client client, uint ownerID, MsgAura.AuraType type)
+        {
+            var character = client.Character;
+            var now = DateTime.UtcNow;
+            Client owner = null;
+            MagicType spell = null;
+            string reason =
+                character == null || client.Life.Dead ? "dead" :
+                !Kernel.Players.TryGet(ownerID, out owner) || owner.Character == null || owner.Map != client.Map ? "not_found" :
+                owner.Aura == 0 || AuraTypeOf(owner.Aura) != type ||
+                    !Kernel.Magics.TryGet(owner.Aura, owner.AuraLevel, out spell) ? "no_aura" :
+                owner != client && !Social.Teams.OthersOf(owner).Contains(client) ? "not_teammate" :
+                MonsterAI.Distance(owner.Character.X, owner.Character.Y, character.X, character.Y) >
+                    spell.Range + DistanceSlack ? "too_far" :
+                null;
+            if (reason != null)
+            {
+                LogEvents.For(typeof(Casting), LogEvents.CombatRejected).Debug(
+                    "{Name} can't have aura {Aura} of {OwnerId}: {Reason}", character?.Name, type, ownerID, reason);
+                return;
+            }
+            var flag = Buffs.AuraOf(spell.Type);
+            if (!client.Effects.Has(flag, now))
+            {
+                client.Effects.Set(flag, now + TimeSpan.FromSeconds(spell.StepSeconds), now, spell.Power);
+                await Pking.SendStatusAsync(client);
+            }
+            await client.SendAsync(AuraOf(owner, spell).With(MsgAura.AuraAction.Got));
+            LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
+                "{Name} came into {Owner}'s {MagicName}", character.Name, owner.Character.Name, spell.Name);
         }
 
         // Takes the monk's aura off them and their teammates
         public static async Task DropAuraAsync(Client client)
         {
             var flag = Buffs.AuraOf(client.Aura);
+            Kernel.Magics.TryGet(client.Aura, client.AuraLevel, out var spell);
             client.Aura = 0;
             if (flag == UInt128.Zero)
                 return;
+            var aura = spell != null ? AuraOf(client, spell) : null;
             foreach (var member in Social.Teams.OthersOf(client).Prepend(client))
+            {
                 if (member.Effects.Remove(flag))
+                {
                     await Pking.SendStatusAsync(member);
+                    if (aura != null)
+                        await member.SendAsync(aura.With(MsgAura.AuraAction.Lost));
+                }
+                if (aura != null)
+                    await member.SendAsync(aura.With(MsgAura.AuraAction.Remove));
+            }
             LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
                 "{Name} took down aura 0x{Status:X}", client.Character?.Name, flag);
         }

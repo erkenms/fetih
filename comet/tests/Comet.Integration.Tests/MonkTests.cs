@@ -122,7 +122,8 @@ namespace Comet.Integration.Tests
 
             await monk.Game.CastAsync(monk.User.Id, 10395, 0, 920, 760);
             var effect = await monk.Game.WaitForEffectAsync(e => e.Caster == monk.User.Id && e.Type == 10395);
-            Assert.Equal(new[] { monk.User.Id, mate.User.Id }, effect.Targets.Select(t => t.Id).OrderBy(id => id != monk.User.Id));
+            // Not the monk, whom the client would turn toward their own cell
+            Assert.Equal(mate.User.Id, Assert.Single(effect.Targets).Id);
             Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id && (a.StatusHigh & TyrantAura) != 0));
 
             await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
@@ -132,6 +133,27 @@ namespace Comet.Integration.Tests
             await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
             Assert.NotNull(await mate.Game.WaitForAttribAsync(a => a.Id == mate.User.Id &&
                 a.Values.ContainsKey(Status) && (a.StatusHigh & FendAura) == 0));
+        }
+
+        [Fact]
+        public async Task AnAuraTellsItsLevelAndPowerAndGoesToATeammateWhoAsks()
+        {
+            await using var monk = (await this.PlayingAtAsync(1002, 920, 760, GameMaster, level: 100)).Player;
+            await using var mate = (await this.PlayingAtAsync(1002, 922, 760, GameMaster, level: 100)).Player;
+            await LearnAsync(monk, 10410);
+            await TeamUpAsync(monk, mate);
+
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
+            Assert.NotNull(await mate.Game.WaitForAuraAsync(a => a.Action == AuraMessage.Add && a.Owner == monk.User.Id));
+            var got = await mate.Game.WaitForAuraAsync(a => a.Action == AuraMessage.Got);
+            Assert.Equal(new AuraMessage(AuraMessage.Got, monk.User.Id, 2, 0, 30, 2), got);
+
+            await mate.Game.AskForAuraAsync(monk.User.Id, 2);
+            Assert.NotNull(await mate.Game.WaitForAuraAsync(a => a.Action == AuraMessage.Got && a.Owner == monk.User.Id));
+
+            await monk.Game.CastAsync(monk.User.Id, 10410, 0, 920, 760);
+            Assert.NotNull(await mate.Game.WaitForAuraAsync(a => a.Action == AuraMessage.Lost && a.Owner == monk.User.Id && a.Aura == 2));
+            Assert.NotNull(await mate.Game.WaitForAuraAsync(a => a.Action == AuraMessage.Remove && a.Owner == monk.User.Id));
         }
 
         private const ulong SoulShackle = 1UL << (111 - 64);

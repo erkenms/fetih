@@ -381,6 +381,15 @@ namespace Comet.Client
             await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgDeadMark &&
                 BitConverter.ToUInt32(p, 8) == target && (p[4] != 0) == remove, timeout) != null;
 
+        public async Task<AuraMessage> WaitForAuraAsync(Func<AuraMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p => BitConverter.ToUInt16(p, 2) == PacketTypes.MsgAura &&
+                match(AuraMessage.Parse(p)), timeout);
+            return packet == null ? null : AuraMessage.Parse(packet);
+        }
+
+        public Task AskForAuraAsync(uint owner, uint aura) => this.SendAsync(AuraMessage.BuildAsk(owner, aura));
+
         public Task TalkToNpcAsync(uint npcId) => this.SendAsync(NpcSpawn.BuildClick(npcId));
 
         // Like the game, which sends 255 after each answer as its dialog window closes

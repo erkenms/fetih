@@ -23,6 +23,7 @@ namespace Comet.Client
         public const ushort MsgItemInfoEx = 1108;
         public const ushort MsgRelation = 2071;
         public const ushort MsgDeadMark = 2081;
+        public const ushort MsgAura = 2410;
         public const ushort MsgPeerage = 2064;
         public const ushort MsgQualifyingInteractive = 2205;
         public const ushort MsgQualifyingFightersList = 2206;
@@ -1185,5 +1186,24 @@ namespace Comet.Client
         public static TrainingInfo Parse(byte[] packet) => new TrainingInfo(
             BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt16(packet, 6),
             BitConverter.ToUInt16(packet, 8), BitConverter.ToUInt32(packet, 12));
+    }
+
+    // A monk's aura: action at 4, owner 8, aura 12, level 16, range 20, power 24
+    public sealed record AuraMessage(ushort Action, uint Owner, uint Aura, uint Level, uint Range, uint Power)
+    {
+        public const ushort Add = 0, Remove = 1, Ask = 2, Got = 3, Lost = 5;
+
+        public static AuraMessage Parse(byte[] packet) => new AuraMessage(BitConverter.ToUInt16(packet, 4),
+            BitConverter.ToUInt32(packet, 8), BitConverter.ToUInt32(packet, 12), BitConverter.ToUInt32(packet, 16),
+            BitConverter.ToUInt32(packet, 20), BitConverter.ToUInt32(packet, 24));
+
+        public static byte[] BuildAsk(uint owner, uint aura)
+        {
+            var packet = Packet.Create(PacketTypes.MsgAura, 28);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), Ask);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), owner);
+            BitConverter.TryWriteBytes(packet.AsSpan(12), aura);
+            return packet;
+        }
     }
 }
