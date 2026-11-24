@@ -1,0 +1,10 @@
+{
+  "title": "Server health",
+  "description": "Whether the web app reaches the databases and the game server.",
+  "gameDatabase": "Game database",
+  "accountDatabase": "Account database",
+  "gameServer": "Game server (RPC)",
+  "up": "Up",
+  "down": "Down",
+  "serverTime": "Server time: {{time}}"
+}

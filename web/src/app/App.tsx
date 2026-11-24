@@ -1,0 +1,83 @@
+import { createTheme, MantineProvider } from '@mantine/core'
+import { Notifications } from '@mantine/notifications'
+import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { lazy, type ComponentType } from 'react'
+import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-router'
+import { ApiError } from '../api/client'
+import { AdminLayout } from './AdminLayout'
+import type { FeatureRoute } from './feature'
+import { NotFound, RequirePermission } from './Guards'
+import { AdminHome, PublicHome } from './HomePages'
+import { LoginPage } from './LoginPage'
+import { PublicLayout } from './PublicLayout'
+import { featureRoutes } from './routes'
+
+const theme = createTheme({ primaryColor: 'red', defaultRadius: 'sm' })
+
+// A 401 anywhere means the session ended; dropping the cached account sends guards to login
+function expireSessionOn401(error: unknown) {
+  if (error instanceof ApiError && error.status === 401) void queryClient.invalidateQueries({ queryKey: ['me'] })
+}
+
+const queryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: expireSessionOn401 }),
+  mutationCache: new MutationCache({ onError: expireSessionOn401 }),
+  defaultOptions: {
+    queries: {
+      retry: (count, error) => !(error instanceof ApiError && error.status >= 400 && error.status < 500) && count < 2,
+    },
+  },
+})
+
+const pages = new Map<FeatureRoute, ComponentType>()
+function toRoute(feature: FeatureRoute): RouteObject {
+  let Page = pages.get(feature)
+  if (!Page) pages.set(feature, (Page = lazy(feature.page)))
+  return {
+    path: feature.path,
+    element: feature.permission ? (
+      <RequirePermission permission={feature.permission}>
+        <Page />
+      </RequirePermission>
+    ) : (
+      <Page />
+    ),
+  }
+}
+
+const router = createBrowserRouter([
+  {
+    path: '/admin',
+    element: (
+      <RequirePermission permission="AdminArea">
+        <AdminLayout />
+      </RequirePermission>
+    ),
+    children: [
+      { index: true, element: <AdminHome /> },
+      ...featureRoutes.filter((r) => r.area === 'admin').map(toRoute),
+      { path: '*', element: <NotFound /> },
+    ],
+  },
+  {
+    path: '/',
+    element: <PublicLayout />,
+    children: [
+      { index: true, element: <PublicHome /> },
+      { path: 'login', element: <LoginPage /> },
+      ...featureRoutes.filter((r) => r.area === 'public').map(toRoute),
+      { path: '*', element: <NotFound /> },
+    ],
+  },
+])
+
+export function App() {
+  return (
+    <MantineProvider theme={theme} defaultColorScheme="auto">
+      <Notifications />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>
+    </MantineProvider>
+  )
+}

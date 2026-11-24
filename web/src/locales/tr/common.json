@@ -1,0 +1,69 @@
+{
+  "shell": {
+    "adminPanel": "Yönetim paneli",
+    "login": "Giriş yap",
+    "logout": "Çıkış yap",
+    "home": "Ana sayfa",
+    "toggleColorScheme": "Açık ve koyu tema arasında geç"
+  },
+  "nav": {
+    "home": "Ana sayfa",
+    "overview": "Genel bakış",
+    "world": "Dünya",
+    "players": "Oyuncular",
+    "social": "Sosyal",
+    "studio": "Stüdyo",
+    "catalogs": "Kataloglar",
+    "logs": "Kayıtlar",
+    "system": "Sistem"
+  },
+  "login": {
+    "title": "Giriş yap",
+    "username": "Hesap (e-posta)",
+    "password": "Şifre",
+    "submit": "Giriş yap",
+    "required": "Gerekli"
+  },
+  "home": {
+    "tagline": "Bir Conquer Online sunucusu.",
+    "welcome": "Hoş geldin, {{name}}"
+  },
+  "authority": {
+    "1": "Oyuncu",
+    "2": "Moderatör",
+    "3": "Oyun Yöneticisi",
+    "4": "Proje Yöneticisi",
+    "5": "Yönetici"
+  },
+  "permission": {
+    "AdminArea": "Yönetim paneli",
+    "ViewCatalogs": "Kataloglar",
+    "ViewLive": "Canlı dünya",
+    "Moderate": "Atma, susturma, hapis, mesaj",
+    "ManageCharacters": "Karakter düzenleme",
+    "ViewLogs": "Kayıtlar",
+    "ViewAudit": "Denetim kaydı",
+    "Studio": "Stüdyo",
+    "ManageAccounts": "Hesaplar"
+  },
+  "forbidden": {
+    "title": "Erişim yok",
+    "text": "Hesabın bu sayfayı açamaz."
+  },
+  "notFound": {
+    "title": "Sayfa bulunamadı"
+  },
+  "errors": {
+    "invalid_credentials": "Hesap ya da şifre yanlış.",
+    "banned": "Bu hesap yasaklı.",
+    "locked": "Bu hesap kilitli.",
+    "unauthorized": "Lütfen yeniden giriş yap.",
+    "forbidden": "Hesabın bunu yapamaz.",
+    "not_found": "Bulunamadı.",
+    "too_many_requests": "Çok fazla deneme. Bir dakika bekleyip yeniden dene.",
+    "game_offline": "Oyun sunucusu çalışmıyor.",
+    "network": "Web sunucusuna ulaşılamıyor.",
+    "server_error": "Sunucuda bir şeyler ters gitti.",
+    "unknown": "Hata: {{code}}"
+  }
+}

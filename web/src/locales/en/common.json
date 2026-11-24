@@ -1,0 +1,69 @@
+{
+  "shell": {
+    "adminPanel": "Admin panel",
+    "login": "Log in",
+    "logout": "Log out",
+    "home": "Home",
+    "toggleColorScheme": "Switch light and dark"
+  },
+  "nav": {
+    "home": "Home",
+    "overview": "Overview",
+    "world": "World",
+    "players": "Players",
+    "social": "Social",
+    "studio": "Studio",
+    "catalogs": "Catalogs",
+    "logs": "Logs",
+    "system": "System"
+  },
+  "login": {
+    "title": "Log in",
+    "username": "Account (email)",
+    "password": "Password",
+    "submit": "Log in",
+    "required": "Required"
+  },
+  "home": {
+    "tagline": "A Conquer Online server.",
+    "welcome": "Welcome, {{name}}"
+  },
+  "authority": {
+    "1": "Player",
+    "2": "Moderator",
+    "3": "Game Manager",
+    "4": "Project Manager",
+    "5": "Administrator"
+  },
+  "permission": {
+    "AdminArea": "Admin panel",
+    "ViewCatalogs": "Catalogs",
+    "ViewLive": "Live world",
+    "Moderate": "Kick, mute, jail, message",
+    "ManageCharacters": "Edit characters",
+    "ViewLogs": "Logs",
+    "ViewAudit": "Audit log",
+    "Studio": "Studio",
+    "ManageAccounts": "Accounts"
+  },
+  "forbidden": {
+    "title": "No access",
+    "text": "Your account can't open this page."
+  },
+  "notFound": {
+    "title": "Page not found"
+  },
+  "errors": {
+    "invalid_credentials": "Wrong account or password.",
+    "banned": "This account is banned.",
+    "locked": "This account is locked.",
+    "unauthorized": "Please log in again.",
+    "forbidden": "Your account can't do this.",
+    "not_found": "Not found.",
+    "too_many_requests": "Too many attempts. Wait a minute and try again.",
+    "game_offline": "The game server isn't running.",
+    "network": "Can't reach the web server.",
+    "server_error": "Something went wrong on the server.",
+    "unknown": "Error: {{code}}"
+  }
+}
