@@ -32,6 +32,8 @@ namespace Comet.Network.Packets
         MsgTrade,
         MsgSynpOffer = 1058,
         MsgEncryptCode,
+        // Faction award-rank queries and settings sent by the award/rank dialogs.
+        MsgSelfSynMemAwardRank = 1063,
         MsgPCNum = 1100,
         MsgMapItem,
         MsgPackage,
@@ -50,6 +52,8 @@ namespace Comet.Network.Packets
         MsgTitle = 1130,
         MsgTaskStatus = 1134,
         MsgTaskDetailInfo,
+        // Achievement queries and submissions sent by the achievement manager.
+        MsgAchievement = 1136,
         MsgRank = 1151,
         MsgLoginChallengeS = 1213,
         MsgLoginProofC,
@@ -61,6 +65,8 @@ namespace Comet.Network.Packets
         MsgDataArray = 2036,
         MsgTrainingInfo = 2043,
         MsgTraining,
+        // Team auto-group toggle sent by CDlgGroup::OnButtonChkAutoGroup.
+        MsgAutoGroup = 2045,
         MsgTradeBuddy = 2046,
         MsgTradeBuddyInfo,
         MsgEquipLock,
@@ -73,6 +79,8 @@ namespace Comet.Network.Packets
         MsgQuiz,
         MsgRelation = 2071,
         MsgDeadMark = 2081,
+        // Faction contribution-rank paging and refresh sent by CDlgFactionContriRank.
+        MsgFactionRankInfo = 2101,
         MsgSynMemberList = 2102,
         MsgTotemPoleInfo = 2201,
         MsgWeaponsInfo,
@@ -84,6 +92,14 @@ namespace Comet.Network.Packets
         MsgQualifyingDetailInfo,
         MsgArenicScore,
         MsgArenicWitness,
+        // Elite PK bracket and match queries sent by the Elite PK dialogs.
+        MsgPKEliteMatchInfo = 2219,
+        // PK log queries sent by CPKLogMgr::QueryPKLog.
+        MsgPkStatistic = 2220,
+        // War flag status and action queries sent by CWarFlagMgr and flag dialogs.
+        MsgWarFlag = 2224,
+        // Faction recruiting ad-list paging sent by CFactionRecruitMgr::QueryAdList.
+        MsgSynRecruitAdvertisingList = 2226,
         Msg2ndPsw = 2261,
         MsgAura = 2410,
         MsgWalk = 10005,
