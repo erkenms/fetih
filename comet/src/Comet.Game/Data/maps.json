@@ -121,6 +121,10 @@
     { "map": 6001, "flags": "PkField, ChangeMapDisable, TeleportDisable, Bit15", "portal": { "x": 30, "y": 76 }, "reborn": 6001 }, // Jail.GW5..
     // The Elite PK Tournament's waiting room (map/map/pk.7z). Each level group waits in a copy.
     { "map": 2068, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable", "reborn": 1002 }, // pk
+    // The Guild Contest (GameMapEx GuildContest, map/map/bp-contest02.7z): guild members hunt its monsters for guild points.
+    { "map": 2060, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable, GuildContest", "reborn": 1002 }, // bp-contest02
+    // The Guild PK Tournament (GameMapEx GuildPKTournamentMap, map/map/bp-kingfight.7z). Each match fights in a copy.
+    { "map": 2071, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable, FactionPk", "reborn": 1002 }, // bp-kingfight
     // The clan war battlefield (map/map/family.7z). Each war map fights in a copy of its own.
     { "map": 3024, "flags": "ChangeMapDisable, RecordDisable, TeleportDisable, Family", "reborn": 1002 }, // family
     // The Capture the Flag arena (map/map/bp-flag.7z); its safe zone and bases are in ini/region.ini.

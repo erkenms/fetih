@@ -306,6 +306,11 @@ namespace Comet.Integration.Tests
 
         // The Elite PK waiting room, and short match timings
         public const uint ElitePkWaitingRoom = 2068;
+
+        // The Guild Contest and Guild PK Tournament maps; the contest's two pheasants stand east
+        // of where its Emissary lets players in (the middle, 20,20)
+        public const uint GuildContestMap = 2060, GuildPkMap = 2071;
+        public static readonly (ushort X, ushort Y) ContestPheasantA = (30, 18), ContestPheasantB = (30, 22);
         public const int ElitePkCountdownSeconds = 2;
 
         // Short, so a test can see a periodic save happen
@@ -478,6 +483,7 @@ namespace Comet.Integration.Tests
                 "--ElitePk:LeaveSeconds=1",
                 "--TeamPk:CountdownSeconds=" + ElitePkCountdownSeconds, "--TeamPk:RoundBreakSeconds=1",
                 "--TeamPk:LeaveSeconds=1",
+                "--GuildPk:MinGuildDays=0", "--GuildPk:FlagLife=1000",
                 "--Broadcast:IntervalSeconds=2", "--Metrics:Port=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
@@ -505,6 +511,7 @@ namespace Comet.Integration.Tests
                     (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"), (ClanWarField, "map/map/family.7z"),
                     (CaptureTheFlagArena, "map/map/bp-flag.7z"),
                     (ElitePkWaitingRoom, "map/map/pk.7z"),
+                    (GuildContestMap, "map/map/bp-contest02.7z"), (GuildPkMap, "map/map/bp-kingfight.7z"),
                     (BirthVillage, "map/map/newbie.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
                 walkable: (x, y) => (x, y) != BlockedCell,
@@ -531,6 +538,8 @@ namespace Comet.Integration.Tests
                 "2057 25 318 439 20 20 CTF-Arena none 0 0 0 0 none none\r\n" +
                 "2057 25 206 261 20 20 CTF-Arena none 0 0 0 0 none none\r\n" +
                 "2057 25 196 086 20 20 CTF-Arena none 0 0 0 0 none none\r\n");
+            File.WriteAllBytes(Path.Combine(maps, "bp-contest02.DMap"), MapFiles.DMap(40, 40));
+            File.WriteAllBytes(Path.Combine(maps, "bp-kingfight.DMap"), MapFiles.DMap(40, 40));
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
@@ -662,7 +671,10 @@ namespace Comet.Integration.Tests
                 (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u), (PheasantForFreezingArrow, 1u), (PheasantForPoisonousArrows, 1u),
                 (MacaqueForTripleAttack, 10u), (MacaqueForWindstorm, 10u), (PheasantForGaleBomb, 1u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
-                $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}");
+                $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}")
+                .Concat(new[] { ContestPheasantA, ContestPheasantB }.Select((at, i) =>
+                    $"{{ \"id\": {1000 + i}, \"map\": {GuildContestMap}, \"x\": {at.X}, \"y\": {at.Y}, " +
+                    $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": 1 }}"));
             File.WriteAllText(Path.Combine(this.MapDirectory, "spawns.json"),
                 "{ \"spawns\": [\n" + string.Join(",\n", spawns) + "\n] }\n");
 

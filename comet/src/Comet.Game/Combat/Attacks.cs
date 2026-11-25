@@ -73,7 +73,8 @@ namespace Comet.Game.Combat
                 client.Life.Dead ? "dead" :
                 !IsMonster(request.TargetID) && !Kernel.Players.TryGet(request.TargetID, out _) &&
                     Training.TrainingGround.FindGoal(client, request.TargetID) == null &&
-                    Social.GuildWar.FindTarget(client, request.TargetID) == null ? "unknown_target" :
+                    Social.GuildWar.FindTarget(client, request.TargetID) == null &&
+                    Tournaments.GuildPk.FindFlag(client, request.TargetID) == null ? "unknown_target" :
                 null;
             if (reason != null)
             {
@@ -139,7 +140,12 @@ namespace Comet.Game.Combat
             }
             if (Social.GuildWar.FindTarget(client, client.AttackTarget) is Npc gwTarget)
             {
-                await SwingAtGuildWarAsync(client, gwTarget, run, now);
+                await SwingAtStructureAsync(client, gwTarget, run, now, Social.GuildWar.Problem, Social.GuildWar.AfterHitAsync);
+                return;
+            }
+            if (Tournaments.GuildPk.FindFlag(client, client.AttackTarget) is Npc flag)
+            {
+                await SwingAtStructureAsync(client, flag, run, now, Tournaments.GuildPk.FlagProblem, Tournaments.GuildPk.AfterFlagHitAsync);
                 return;
             }
             if (!IsMonster(client.AttackTarget))
@@ -247,6 +253,7 @@ namespace Comet.Game.Combat
                 LogEvents.For(typeof(Attacks), LogEvents.MonsterKilled).Information(
                     "{Name} killed {MonsterName} {MonsterId} (type {MonsterTypeId}) on map {MapId} at {X},{Y}",
                     character.Name, type.Name, monster.Identity, type.ID, monster.Map.Id, x, y);
+                await Tournaments.GuildPk.OnMonsterKilledAsync(client, monster.Map.Id);
             }
 
             if (experience > 0)
@@ -344,14 +351,16 @@ namespace Comet.Game.Combat
                 Schedule(client, run, interval);
         }
 
-        private static async Task SwingAtGuildWarAsync(Client client, Npc target, int run, DateTime now)
+        // A Guild War pole or gate, or a Guild PK Tournament flag
+        private static async Task SwingAtStructureAsync(Client client, Npc target, int run, DateTime now,
+            Func<Client, Npc, string> problem, Func<Client, Npc, uint, string, Task> afterHit)
         {
             var character = client.Character;
             var stats = Stats.Of(client);
             var arrows = client.Equipment?[ItemPosition.LeftHand];
             bool shooting = client.AttackShooting;
             int distance = MonsterAI.Distance(character.X, character.Y, target.X, target.Y);
-            string reason = Social.GuildWar.Problem(client, target) ?? WeaponProblem(stats, shooting, arrows, distance);
+            string reason = problem(client, target) ?? WeaponProblem(stats, shooting, arrows, distance);
             if (reason != null)
             {
                 Stop(client);
@@ -378,9 +387,9 @@ namespace Comet.Game.Combat
                 client.ID, target.NpcID, target.X, target.Y, damage);
             await client.SendAsync(hit);
             await Movement.SendToViewAsync(client, hit);
-            await Social.GuildWar.AfterHitAsync(client, target, damage, shooting ? "shoot" : "melee");
+            await afterHit(client, target, damage, shooting ? "shoot" : "melee");
 
-            if (Social.GuildWar.Problem(client, target) != null)
+            if (problem(client, target) != null)
                 Stop(client);
             else
                 Schedule(client, run, interval);
@@ -504,6 +513,7 @@ namespace Comet.Game.Combat
             if (!await Arena.Qualifier.OnKillAsync(attacker, target) &&
                 !await Tournaments.ElitePk.OnKillAsync(attacker, target) &&
                 !await Tournaments.TeamPk.OnKillAsync(attacker, target) &&
+                !await Tournaments.GuildPk.OnKillAsync(attacker, target) &&
                 !await Social.ClanWar.OnKillAsync(attacker, target))
             {
                 await Pking.OnKillAsync(attacker, target, guilty);

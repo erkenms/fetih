@@ -29,6 +29,10 @@ namespace Comet.Game.World
         // Set on some maps in cq_map, meaning unknown
         Bit15 = 1 << 15,
         Bit16 = 1 << 16,
+        // The client draws the Guild Contest ranking (CSynCompeteMgr) on it
+        GuildContest = 1 << 26,
+        // The client's Guild PK Tournament map (CGameMap::IsFactionPKMap): the match window shows
+        FactionPk = 1 << 28,
     }
 
     public sealed class MapType

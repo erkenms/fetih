@@ -323,6 +323,19 @@ namespace Comet.Core.Logging
         public const string CaptureTheFlagEnded = "ctf.ended";
         public const string CaptureTheFlagRejected = "ctf.rejected";
         public const string CaptureTheFlagFailed = "ctf.failed";
+        public const string GuildPkLoaded = "guildpk.loaded";
+        public const string GuildPkContestOpened = "guildpk.contest_opened";
+        public const string GuildPkContestStarted = "guildpk.contest_started";
+        public const string GuildPkContestEnded = "guildpk.contest_ended";
+        public const string GuildPkEntered = "guildpk.entered";
+        public const string GuildPkMatchesOpened = "guildpk.matches_opened";
+        public const string GuildPkMatchesStarted = "guildpk.matches_started";
+        public const string GuildPkMatchEnded = "guildpk.match_ended";
+        public const string GuildPkMatchesEnded = "guildpk.matches_ended";
+        public const string GuildPkFlagCaptured = "guildpk.flag_captured";
+        public const string GuildPkPrizeClaimed = "guildpk.prize_claimed";
+        public const string GuildPkRejected = "guildpk.rejected";
+        public const string GuildPkFailed = "guildpk.failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

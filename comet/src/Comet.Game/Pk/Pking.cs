@@ -66,6 +66,8 @@ namespace Comet.Game.Pk
                 return tournament;
             if (Tournaments.TeamPk.CanFight(attacker, target) is bool teams)
                 return teams;
+            if (Tournaments.GuildPk.CanFight(attacker, target) is bool guildPk)
+                return guildPk;
             if (Arena.Qualifier.CanFight(attacker, target) is bool fighting)
                 return fighting;
             if (Social.ClanWar.CanFight(attacker, target) is bool warring)

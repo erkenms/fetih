@@ -67,6 +67,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "skillteampk", "stpk" }, Authority.GameMaster, SkillTeamPkUsage, (c, a, r) => TeamPkAsync(Tournaments.TeamPk.Skill, SkillTeamPkUsage, c, a)),
             new Command(new[] { "ctf", "captureflag" }, Authority.GameMaster, CaptureTheFlagUsage, CaptureTheFlagAsync),
             new Command(new[] { "events" }, Authority.GameMaster, "/events", EventsAsync),
+            new Command(new[] { "guildpk", "gpk" }, Authority.GameMaster, GuildPkUsage, GuildPkAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
             new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
         };
@@ -702,6 +703,41 @@ namespace Comet.Game.Chat
                 default:
                     return await UsageAsync(client, CaptureTheFlagUsage);
             }
+        }
+
+        private const string GuildPkUsage = "/guildpk <contest|round|final> <open|start|end>, or /guildpk status";
+
+        // Runs the Guild Contest, the tournament's next round or its final now, outside the schedule
+        private static async Task<bool> GuildPkAsync(Client client, string[] args, string rest)
+        {
+            var now = DateTime.UtcNow;
+            if (args.Length == 1 && args[0].Equals("status", StringComparison.OrdinalIgnoreCase))
+            {
+                await Talk.NoticeAsync(client, Tournaments.GuildPk.StatusText(now));
+                return true;
+            }
+            if (args.Length != 2)
+                return await UsageAsync(client, GuildPkUsage);
+            string what = args[0].ToLowerInvariant(), step = args[1].ToLowerInvariant();
+            bool? done = (what, step) switch
+            {
+                ("contest", "open") => await Tournaments.GuildPk.OpenContestAsync(now),
+                ("contest", "start") => await Tournaments.GuildPk.StartContestAsync(now),
+                ("contest", "end") => await Tournaments.GuildPk.EndContestAsync(now),
+                ("round" or "final", "open") => await Tournaments.GuildPk.OpenMatchesAsync(what == "final", now),
+                ("round" or "final", "start") =>
+                    (Tournaments.GuildPk.MatchPhaseNow != Tournaments.GuildPk.Phase.Idle ||
+                     await Tournaments.GuildPk.OpenMatchesAsync(what == "final", now)) &&
+                    await Tournaments.GuildPk.StartMatchesAsync(now),
+                ("round" or "final", "end") => await Tournaments.GuildPk.EndMatchesAsync(now),
+                _ => null,
+            };
+            if (done == null)
+                return await UsageAsync(client, GuildPkUsage);
+            await Talk.NoticeAsync(client, done.Value
+                ? $"Guild PK: {what} {step} done."
+                : $"Guild PK: can't {step} the {what} now. " + Tournaments.GuildPk.StatusText(now));
+            return true;
         }
 
         private static async Task<bool> EventsAsync(Client client, string[] args, string rest)

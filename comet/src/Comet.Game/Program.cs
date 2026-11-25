@@ -92,7 +92,8 @@
 
             try
             {
-                Events.EventScheduler.Schedule = Events.EventSchedule.Load(config.Maps.ResolveClientDirectory());
+                Events.EventScheduler.Schedule = Events.EventSchedule.Load(config.Maps.ResolveClientDirectory())
+                    .With(Tournaments.GuildPk.Events);
                 LogEvents.For(typeof(Program), LogEvents.EventsLoaded).Information(
                     "Loaded {EventCount} weekly events from client ini", Events.EventScheduler.Schedule.All.Count);
             }
@@ -308,6 +309,7 @@
                 await Social.ClanWar.LoadAsync();
                 await Tournaments.ElitePk.LoadAsync();
                 await Tournaments.TeamPk.LoadAllAsync();
+                await Tournaments.GuildPk.LoadAsync();
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
@@ -457,6 +459,12 @@
             Tournaments.TeamPk.LeaveDelay = TimeSpan.FromSeconds(Math.Max(0, config.TeamPk.LeaveSeconds));
             Tournaments.TeamPk.SubscribeAll();
             _ = Tournaments.TeamPk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Tournaments.GuildPk.FlagLife = Math.Max(1u, config.GuildPk.FlagLife);
+            Tournaments.GuildPk.MinGuildDays = Math.Max(0, config.GuildPk.MinGuildDays);
+            Tournaments.GuildPk.ContestPrizes = config.GuildPk.ContestPrizeConquerPoints ?? Tournaments.GuildPk.ContestPrizes;
+            Tournaments.GuildPk.TournamentPrizes = config.GuildPk.TournamentPrizeConquerPoints ?? Tournaments.GuildPk.TournamentPrizes;
+            Tournaments.GuildPk.Subscribe();
+            _ = Tournaments.GuildPk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Events.EventScheduler.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Chat.Broadcasts.Interval = TimeSpan.FromSeconds(Math.Max(1, config.Broadcast.IntervalSeconds));
             _ = Chat.Broadcasts.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);

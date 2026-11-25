@@ -29,6 +29,7 @@ namespace Comet.Game.Database
         public ElitePkConfiguration ElitePk { get; set; } = new ElitePkConfiguration();
         public TeamPkConfiguration TeamPk { get; set; } = new TeamPkConfiguration();
         public CaptureTheFlagConfiguration CaptureTheFlag { get; set; } = new CaptureTheFlagConfiguration();
+        public GuildPkConfiguration GuildPk { get; set; } = new GuildPkConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
@@ -204,6 +205,17 @@ namespace Comet.Game.Database
             public int FlagSeconds { get; set; } = 60;
             public int Flags { get; set; } = 10;
             public int DoubleSeconds { get; set; } = 300;
+        }
+
+        // The Guild PK Tournament's flag life, how long members must have been in their guild to
+        // fight, and the Conquer Points a leader or deputy claims for places 1-8 (GuildPk's when
+        // unset). The client gives no flag life or prize amounts; these are the server's own.
+        public class GuildPkConfiguration
+        {
+            public uint FlagLife { get; set; } = 1_000_000;
+            public int MinGuildDays { get; set; } = 7;
+            public uint[] ContestPrizeConquerPoints { get; set; }
+            public uint[] TournamentPrizeConquerPoints { get; set; }
         }
 
         public class ClanWarConfiguration

@@ -319,7 +319,7 @@ namespace Comet.Game.Arena
             var now = DateTime.UtcNow;
             string reason;
             uint points;
-            bool tournament = Tournaments.ElitePk.IsTakingPart(client);
+            bool tournament = Tournaments.ElitePk.IsTakingPart(client) || Tournaments.GuildPk.IsTakingPart(client);
             bool teamPk = Tournaments.TeamPk.IsTakingPart(client);
             lock (Sync)
             {

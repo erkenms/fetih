@@ -49,6 +49,7 @@ namespace Comet.Game.World
                 await Items.Vending.ShowNpcAsync(client, npc);
             }
             await Social.CaptureTheFlag.ShowAsync(client, x, y, fromX, fromY);
+            await Tournaments.GuildPk.ShowFlagAsync(client, x, y, fromX, fromY);
         }
 
         public static void Leave(Client client)
@@ -90,6 +91,12 @@ namespace Comet.Game.World
 
             if (await Social.CaptureTheFlag.QueryAsync(client, targetID))
                 return;
+            if (Tournaments.GuildPk.FindFlag(client, targetID) != null)
+            {
+                await Tournaments.GuildPk.ShowFlagAsync(client, x, y);
+                return;
+            }
+
             var npc = Kernel.Npcs?.Find(character.MapID, targetID);
             if (npc != null && GameMap<Client>.InView(x, y, npc.X, npc.Y))
                 await Items.Vending.ShowNpcAsync(client, npc);

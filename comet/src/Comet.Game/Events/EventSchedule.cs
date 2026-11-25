@@ -33,6 +33,10 @@ namespace Comet.Game.Events
 
         public static EventSchedule Empty { get; } = new EventSchedule(Array.Empty<ScheduledEvent>());
 
+        // Weekly events Activity.ini doesn't list, timed by the server
+        public EventSchedule With(IEnumerable<ScheduledEvent> more) =>
+            new EventSchedule(this.All.Concat(more.Where(m => this.All.All(e => e.ID != m.ID))).ToList());
+
         public IEnumerable<ScheduledEvent> Named(string name) =>
             this.All.Where(e => string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
 

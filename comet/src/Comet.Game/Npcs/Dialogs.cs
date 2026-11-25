@@ -55,6 +55,8 @@ namespace Comet.Game.Npcs
                 [ElitePkEnvoy.ID] = ElitePkEnvoy.TalkAsync,
                 [Tournaments.TeamPk.Team.ManagerID] = TeamPkManager.TalkAsync,
                 [Tournaments.TeamPk.Skill.ManagerID] = TeamPkManager.TalkAsync,
+                [Tournaments.GuildPk.ContestEmissaryID] = GuildPkNpcs.ContestEmissaryAsync,
+                [Tournaments.GuildPk.PkEmissaryID] = GuildPkNpcs.PkEmissaryAsync,
             };
 
         static Dialogs()
@@ -69,6 +71,8 @@ namespace Comet.Game.Npcs
                 Scripts[stone] = GuildWarNpc.FlameStoneAsync;
             foreach (var master in SubClassMasters.AllIDs)
                 Scripts[master] = SubClassMasters.TalkAsync;
+            for (uint place = 0; place < Tournaments.GuildPkTable.Qualifiers; place++)
+                Scripts[Tournaments.GuildPk.FirstAwarderID + place] = GuildPkNpcs.AwarderAsync;
         }
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);

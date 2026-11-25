@@ -169,6 +169,16 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   effects (7 shows STR_WARFLAG_ESCORT_SUC to the planter), 10 game over, 11 the answer to 11, 12 the X2
   base. `CWarFlagMgr::HasFlag` is status 95, which blocks jumping. `info.ini` [WarflagReward] holds the top
   8 prizes (CPs, silver); npc.ini NpcType868/872 are flag bases, 891 the flag. Not confirmed in Windows.
+- **Guild Contest and Guild PK Tournament** (2026-11-25, Mac `CMsgSynCompete`, `CMsgFactionMatch`,
+  `CFactionPKMgr`, `CGameMap`): MsgMapInfo's u64 type at 12 is `CGameMap+0xe8`; bit 26 makes the
+  client draw the contest ranking (`ShowCompeteRank`), bit 28 is `IsFactionPKMap`, bit 25
+  `IsRaceTrackMap`. MsgSynCompete 1062 and MsgFactionMatch 2330 layouts are in their classes. Which
+  of the match window's four numbers is points and which is members is a guess (labels in order
+  name1, n0, n1, name2, n2, n3). Not traced: MsgFMRoundRobin and MsgFMMatch (group and final
+  tables), MsgFactionMatchWitness, the sponsor wagers and reward-setting dialogs, and how the
+  StrRes 10537 contest invitation pops up. Maps: 2060 bp-contest02 (GuildContest), 2071
+  bp-kingfight; 2072-2074 aren't in GameMap.dat. NPC types: Contest Emissary 813, PK Emissary
+  866, Awarders 878-885.
 - **Map drawing** (2026-11-24, Mac 1133): `CGameMap::SetMapSize` sets the origin to
   (32·width, 16), and `Cell2World` is (32·(x − y), 16·(x + y)) plus it. `GetBgWorldPos`
   puts the puzzle background's top left at (32·width − bgWidth/2, 16·height − bgHeight/2),

@@ -310,6 +310,44 @@ CREATE TABLE `team_pk_reward` (
   PRIMARY KEY (`Event`,`LeaderID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- The Guild PK Tournament's qualified guilds for the week, written when the Monday Guild
+-- Contest ends: Seed is the contest place (1-8, odd seeds Group A, even Group B), Points the
+-- round-robin points, Score the guild points earned in matches, FinalRank the place after
+-- Saturday's final (0 before it).
+DROP TABLE IF EXISTS `guild_pk_entry`;
+CREATE TABLE `guild_pk_entry` (
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `Name` varchar(16) NOT NULL DEFAULT '',
+  `Seed` tinyint(3) unsigned NOT NULL,
+  `ContestPoints` bigint(20) NOT NULL DEFAULT '0',
+  `Played` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `Points` int(11) NOT NULL DEFAULT '0',
+  `Score` bigint(20) NOT NULL DEFAULT '0',
+  `FinalRank` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`SyndicateID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Prizes a guild's leader or deputy claims from the Awarder of its place: Kind 0 the Guild
+-- Contest (until midnight), 1 the Guild PK Tournament (until the next final). Expires is UTC.
+DROP TABLE IF EXISTS `guild_pk_prize`;
+CREATE TABLE `guild_pk_prize` (
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `Kind` tinyint(3) unsigned NOT NULL,
+  `Rank` tinyint(3) unsigned NOT NULL,
+  `Expires` datetime NOT NULL,
+  `Claimed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`SyndicateID`,`Kind`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- Exploits earned in the Guild Contest (a monster killed) and the Guild PK Tournament (an
+-- enemy defeated or a guild member revived).
+DROP TABLE IF EXISTS `guild_pk_exploit`;
+CREATE TABLE `guild_pk_exploit` (
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Exploits` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
 DROP TABLE IF EXISTS `arena`;

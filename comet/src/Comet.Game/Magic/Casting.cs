@@ -1147,6 +1147,7 @@ namespace Comet.Game.Magic
             await Movement.SendToViewAsync(client, effect);
             Kernel.Post(target, () => Death.ReviveHereAsync(target, $"magic {spell.Type} from {character.Name}"));
             Social.CaptureTheFlag.OnHelp(client, target, Social.CaptureTheFlag.ReviveExploits, "revive");
+            await Tournaments.GuildPk.OnReviveAsync(client, target);
             LogCast(client, spell, target.Character.X, target.Character.Y, 1);
         }
 

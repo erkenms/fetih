@@ -36,6 +36,7 @@ namespace Comet.Network.Packets
         MsgTrade,
         MsgSynpOffer = 1058,
         MsgEncryptCode,
+        MsgSynCompete = 1062,
         // Faction award-rank queries and settings sent by the award/rank dialogs.
         MsgSelfSynMemAwardRank = 1063,
         MsgMeteSpecial = 1066,
@@ -118,6 +119,7 @@ namespace Comet.Network.Packets
         MsgTeamPopPKArenicScore = 2251,
         Msg2ndPsw = 2261,
         MsgSubPro = 2320,
+        MsgFactionMatch = 2330,
         MsgAura = 2410,
         MsgWalk = 10005,
         MsgAction = 10010,
