@@ -1,0 +1,149 @@
+{
+  "title": "Sosyal",
+  "description": "Loncalar, aileler, asalet, arena, çiçekler, lonca savaşı ve ilan panosu, oyunun tuttuğu haliyle.",
+  "search": "Ada göre ara",
+  "none": "Burada henüz bir şey yok.",
+  "cancel": "Vazgeç",
+  "confirm": "Evet, yap",
+  "levelClass": "seviye {{level}} {{class}}",
+  "tab": {
+    "guilds": "Loncalar",
+    "families": "Aileler",
+    "nobility": "Asalet",
+    "arena": "Arena",
+    "flowers": "Çiçekler",
+    "guildwar": "Lonca savaşı",
+    "board": "İlan panosu"
+  },
+  "class": {
+    "trojan": "Trojan",
+    "warrior": "Savaşçı",
+    "archer": "Okçu",
+    "ninja": "Ninja",
+    "taoist": "Taocu",
+    "water": "Su Taocusu",
+    "fire": "Ateş Taocusu"
+  },
+  "rank": {
+    "leader": "Lider",
+    "deputy": "Lider yardımcısı",
+    "member": "Üye",
+    "spouse": "Eş"
+  },
+  "guild": {
+    "title": "Lonca",
+    "name": "Lonca",
+    "leader": "Lider",
+    "level": "Seviye",
+    "members": "Üyeler",
+    "fund": "Kasa",
+    "cpFund": "CP kasası",
+    "created": "Kuruluş",
+    "ruling": "Lonca savaşı galibi",
+    "holding": "Direği tutuyor",
+    "announcement": "Duyuru",
+    "requirements": "Katılmak için",
+    "requirementText": "seviye {{level}}, {{rebirths}} yeniden doğuş",
+    "allies": "Müttefikler",
+    "enemies": "Düşmanlar",
+    "disband": "Dağıt",
+    "disbandQuestion_other": "{{name}} dağıtılsın mı? {{count}} üyesi loncasız kalır ve bu geri alınamaz.",
+    "disbanded": "{{name}} dağıtıldı."
+  },
+  "family": {
+    "title": "Aile",
+    "name": "Aile",
+    "territories": "Tutulan şehirler",
+    "occupied": "Tutuyor",
+    "occupiedDays_other": "{{name}}, {{count}} gün",
+    "signedUp": "Savaşmak için yazıldığı yer"
+  },
+  "member": {
+    "character": "Karakter",
+    "rank": "Rütbe",
+    "silver": "Bağışlanan gümüş",
+    "cps": "Bağışlanan CP",
+    "donation": "Bağış",
+    "joined": "Katılım"
+  },
+  "nobility": {
+    "rank": "Unvan",
+    "donation": "Bağış",
+    "ranks": {
+      "King": "Kral",
+      "Prince": "Prens",
+      "Duke": "Dük",
+      "Earl": "Kont",
+      "Baron": "Baron",
+      "Knight": "Şövalye",
+      "Commoner": "Halk"
+    }
+  },
+  "arena": {
+    "season": "Sezon",
+    "current": "Güncel sıralama",
+    "seasonNumber": "{{season}}. sezon",
+    "points": "Puan",
+    "today": "Bugün",
+    "total": "Toplam",
+    "honor": "Onur",
+    "record": "{{wins}} G / {{losses}} M",
+    "honorText": "{{points}} (toplam {{total}})"
+  },
+  "flowers": {
+    "RedRose": "Kırmızı güller",
+    "Lily": "Zambaklar",
+    "Orchid": "Orkideler",
+    "Tulip": "Laleler",
+    "total": "Alınan",
+    "today": "Bugün"
+  },
+  "war": {
+    "title": "Lonca savaşı",
+    "gameOffline": "Oyun kapalı",
+    "active": "Sürüyor",
+    "idle": "Çalışmıyor",
+    "start": "Başlat",
+    "end": "Bitir",
+    "startQuestion": "Lonca savaşı şimdi başlasın mı? Biri bitirene kadar sürer.",
+    "endQuestion": "Lonca savaşı şimdi bitsin mi? Direği tutan lonca kazanır.",
+    "started": "Lonca savaşı başladı.",
+    "ended": "Lonca savaşı bitti.",
+    "winner": "Galip",
+    "holder": "Direği tutan",
+    "wonAt": "Kazanıldı",
+    "reward": "Ödül",
+    "claimed": "Alındı",
+    "unclaimed": "Alınmadı",
+    "schedule": "Program (sunucu saati)",
+    "structures": "Direk ve kapılar",
+    "pole": "Direk",
+    "leftGate": "Sol kapı",
+    "rightGate": "Sağ kapı",
+    "open": "açık",
+    "closed": "kapalı",
+    "scores": "Direğe verilen hasar",
+    "score": "Hasar",
+    "noScores": "Henüz hiçbir lonca direğe vurmadı."
+  },
+  "board": {
+    "all": "Tümü",
+    "trade": "Ticaret",
+    "friend": "Arkadaş",
+    "team": "Takım",
+    "guild": "Lonca",
+    "others": "Diğer",
+    "posted": "Tarih",
+    "channel": "Pano",
+    "author": "Yazan",
+    "message": "İleti",
+    "none": "İleti yok.",
+    "delete": "Sil",
+    "deleteQuestion": "{{name}} adlı oyuncunun iletisi silinsin mi? Oyuncuya bildirilmez.",
+    "deleted": "İleti silindi."
+  },
+  "errors": {
+    "already_running": "Lonca savaşı zaten sürüyor.",
+    "not_running": "Lonca savaşı sürmüyor."
+  }
+}

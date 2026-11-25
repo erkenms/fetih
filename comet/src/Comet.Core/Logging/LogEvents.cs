@@ -369,6 +369,9 @@ namespace Comet.Core.Logging
         public const string GmLevel = "gm.level";
         public const string GmMessage = "gm.message";
         public const string GmBroadcast = "gm.broadcast";
+        public const string GmGuildWar = "gm.guild_war";
+        public const string GmDisbandGuild = "gm.disband_guild";
+        public const string GmDeletePost = "gm.delete_post";
         public const string ChatCommand = "chat.command";
 
         public const string PacketUnhandled = "packet.unhandled";

@@ -340,57 +340,75 @@ namespace Comet.Game.Social
                     Reject(client, "disband", membership?.Guild.Name, "not_leader");
                     return "not_leader";
                 }
-                var guild = membership.Guild;
-                var removedByOwner = new Dictionary<uint, List<(TotemPoleType Pole, uint ItemID)>>();
-                foreach (var pole in guild.Arsenal.Poles.Values)
-                {
-                    foreach (var entry in pole.Items.Values)
-                    {
-                        ByInscribedItem.TryRemove(entry.ItemID, out _);
-                        if (!removedByOwner.TryGetValue(entry.CharacterID, out var list))
-                            removedByOwner[entry.CharacterID] = list = new List<(TotemPoleType, uint)>();
-                        list.Add((pole.Type, entry.ItemID));
-                    }
-                    pole.Items.Clear();
-                }
-                await GuildsRepository.DeleteAsync(guild.ID);
-                ById.TryRemove(guild.ID, out _);
-                foreach (var other in ById.Values)
-                {
-                    other.Allies.Remove(guild.ID);
-                    other.Enemies.Remove(guild.ID);
-                }
-                foreach (var id in AllyRequests.Where(r => r.Key == guild.ID || r.Value == guild.ID)
-                    .Select(r => r.Key).ToList())
-                    AllyRequests.Remove(id);
-                foreach (var member in guild.Members.Values.ToList())
-                {
-                    ByMember.TryRemove(member.CharacterID, out _);
-                    if (Online(member.CharacterID) is Client player)
-                    {
-                        if (removedByOwner.TryGetValue(member.CharacterID, out var removedItems))
-                        {
-                            foreach (var (poleType, itemID) in removedItems)
-                                await player.SendAsync(new MsgTotemPole
-                                {
-                                    Action = MsgTotemPole.TotemPoleAction.Remove,
-                                    TotemType = (uint)poleType,
-                                    ItemID = itemID,
-                                });
-                        }
-                        await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower, 0));
-                        await player.SendAsync(new MsgSyndicate(SyndicateAction.Disband, guild.ID));
-                        await RefreshAsync(player);
-                        await Talk.NoticeAsync(player, $"The guild {guild.Name} has been disbanded.");
-                    }
-                }
-                await GuildWar.OnGuildDisbandedAsync(guild.ID);
-                LogEvents.For(typeof(Guilds), LogEvents.GuildDisbanded).Information(
-                    "{Name} disbanded guild {Guild} (guild {GuildId}, {MemberCount} members)",
-                    client.Character.Name, guild.Name, guild.ID, guild.Members.Count);
+                await DisbandLockedAsync(membership.Guild, client.Character.Name);
                 return null;
             }
             finally { Gate.Release(); }
+        }
+
+        // A disband from the admin panel, whether the leader is online or not
+        public static async Task<bool> DisbandAsync(uint guildID, string actor)
+        {
+            await Gate.WaitAsync();
+            try
+            {
+                if (!ById.TryGetValue(guildID, out var guild))
+                    return false;
+                await DisbandLockedAsync(guild, actor);
+                return true;
+            }
+            finally { Gate.Release(); }
+        }
+
+        private static async Task DisbandLockedAsync(Guild guild, string actor)
+        {
+            var removedByOwner = new Dictionary<uint, List<(TotemPoleType Pole, uint ItemID)>>();
+            foreach (var pole in guild.Arsenal.Poles.Values)
+            {
+                foreach (var entry in pole.Items.Values)
+                {
+                    ByInscribedItem.TryRemove(entry.ItemID, out _);
+                    if (!removedByOwner.TryGetValue(entry.CharacterID, out var list))
+                        removedByOwner[entry.CharacterID] = list = new List<(TotemPoleType, uint)>();
+                    list.Add((pole.Type, entry.ItemID));
+                }
+                pole.Items.Clear();
+            }
+            await GuildsRepository.DeleteAsync(guild.ID);
+            ById.TryRemove(guild.ID, out _);
+            foreach (var other in ById.Values)
+            {
+                other.Allies.Remove(guild.ID);
+                other.Enemies.Remove(guild.ID);
+            }
+            foreach (var id in AllyRequests.Where(r => r.Key == guild.ID || r.Value == guild.ID)
+                .Select(r => r.Key).ToList())
+                AllyRequests.Remove(id);
+            foreach (var member in guild.Members.Values.ToList())
+            {
+                ByMember.TryRemove(member.CharacterID, out _);
+                if (Online(member.CharacterID) is Client player)
+                {
+                    if (removedByOwner.TryGetValue(member.CharacterID, out var removedItems))
+                    {
+                        foreach (var (poleType, itemID) in removedItems)
+                            await player.SendAsync(new MsgTotemPole
+                            {
+                                Action = MsgTotemPole.TotemPoleAction.Remove,
+                                TotemType = (uint)poleType,
+                                ItemID = itemID,
+                            });
+                    }
+                    await player.SendAsync(new MsgUserAttrib(player.ID, MsgUserAttrib.AttributeType.GuildBattlePower, 0));
+                    await player.SendAsync(new MsgSyndicate(SyndicateAction.Disband, guild.ID));
+                    await RefreshAsync(player);
+                    await Talk.NoticeAsync(player, $"The guild {guild.Name} has been disbanded.");
+                }
+            }
+            await GuildWar.OnGuildDisbandedAsync(guild.ID);
+            LogEvents.For(typeof(Guilds), LogEvents.GuildDisbanded).Information(
+                "{Name} disbanded guild {Guild} (guild {GuildId}, {MemberCount} members)",
+                actor, guild.Name, guild.ID, guild.Members.Count);
         }
 
         public static async Task<string> TransferAsync(Client client, string name)

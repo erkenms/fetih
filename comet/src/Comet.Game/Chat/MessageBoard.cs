@@ -206,6 +206,15 @@ namespace Comet.Game.Chat
                 client.ID, channel, Color.White, client.Character.Name, post.AuthorName, post.Message));
         }
 
+        // A moderator's delete of anyone's post
+        public static async Task<bool> RemoveAsync(TalkChannel channel, uint characterID)
+        {
+            if (!IsBoardChannel(channel) || !Store.DeleteOwn(channel, characterID, null))
+                return false;
+            await MessageBoardRepository.DeleteAsync((ushort)channel, characterID);
+            return true;
+        }
+
         private static async Task DeleteAsync(Client client, TalkChannel channel, string authorName)
         {
             if (!Store.DeleteOwn(channel, client.ID, authorName))

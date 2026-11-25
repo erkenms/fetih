@@ -2130,10 +2130,486 @@
           }
         }
       }
+    },
+    "/api/social/guilds": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialGuilds",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GuildSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/guilds/{id}": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialGuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuildDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/families": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialFamilies",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FamilySummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/families/{id}": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialFamily",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FamilyDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/nobility": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialNobility",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NobilityEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/arena": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialArena",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArenaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/arena/seasons/{season}": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialArenaSeason",
+        "parameters": [
+          {
+            "name": "season",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArenaSeasonEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/flowers": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialFlowers",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FlowerKind"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FlowerEntryView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/guildwar": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialGuildWar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuildWarResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/board": {
+      "get": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialBoard",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BoardPost"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/guildwar/start": {
+      "post": {
+        "tags": [
+          "Comet.Web"
+        ],
+        "operationId": "socialStartGuildWar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/guildwar/end": {
+      "post": {
+        "tags": [
+          "Comet.Web"
+        ],
+        "operationId": "socialEndGuildWar",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResult"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/guilds/{id}/disband": {
+      "post": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialDisbandGuild",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/social/board/{channel}/{characterId}": {
+      "delete": {
+        "tags": [
+          "SocialFeature"
+        ],
+        "operationId": "socialDeletePost",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "characterId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdminResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
       "AnnouncementDto": {
         "required": [
           "id",
@@ -2217,6 +2693,57 @@
           }
         }
       },
+      "ArenaEntry": {
+        "required": [
+          "position",
+          "character",
+          "points",
+          "winsToday",
+          "lossesToday",
+          "winsTotal",
+          "lossesTotal",
+          "honorPoints",
+          "honorTotal"
+        ],
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "character": {
+            "$ref": "#/components/schemas/CharacterRef"
+          },
+          "points": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "winsToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lossesToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "winsTotal": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lossesTotal": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "honorPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "honorTotal": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "ArenaRankEntry": {
         "required": [
           "rank",
@@ -2278,6 +2805,74 @@
             "format": "uint32"
           },
           "lossesTotal": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "ArenaResponse": {
+        "required": [
+          "current",
+          "seasons"
+        ],
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArenaEntry"
+            }
+          },
+          "seasons": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        }
+      },
+      "ArenaSeasonEntry": {
+        "required": [
+          "rank",
+          "characterId",
+          "name",
+          "level",
+          "class",
+          "points",
+          "wins",
+          "losses"
+        ],
+        "type": "object",
+        "properties": {
+          "rank": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "class": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "points": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "wins": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "losses": {
             "type": "integer",
             "format": "uint32"
           }
@@ -2434,6 +3029,62 @@
           "total": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "BoardPost": {
+        "required": [
+          "channel",
+          "channelId",
+          "characterId",
+          "author",
+          "authorName",
+          "guild",
+          "message",
+          "postedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "channelId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "author": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterRef"
+              }
+            ]
+          },
+          "authorName": {
+            "type": "string"
+          },
+          "guild": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildRef"
+              }
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "postedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2664,6 +3315,32 @@
           }
         }
       },
+      "CharacterRef": {
+        "required": [
+          "id",
+          "name",
+          "level",
+          "class"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "class": {
+            "type": "integer",
+            "format": "uint8"
+          }
+        }
+      },
       "DashboardCounts": {
         "required": [
           "accounts",
@@ -2847,6 +3524,85 @@
           }
         }
       },
+      "FamilyDetail": {
+        "required": [
+          "family",
+          "announcement",
+          "members",
+          "allies",
+          "enemies",
+          "occupied",
+          "signedUp"
+        ],
+        "type": "object",
+        "properties": {
+          "family": {
+            "$ref": "#/components/schemas/FamilySummary"
+          },
+          "announcement": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyMemberView"
+            }
+          },
+          "allies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuildRef"
+            }
+          },
+          "enemies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuildRef"
+            }
+          },
+          "occupied": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyTerritory"
+            }
+          },
+          "signedUp": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FamilyTerritory"
+            }
+          }
+        }
+      },
+      "FamilyMemberView": {
+        "required": [
+          "character",
+          "rank",
+          "donation",
+          "joined"
+        ],
+        "type": "object",
+        "properties": {
+          "character": {
+            "$ref": "#/components/schemas/CharacterRef"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "donation": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "joined": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "FamilyRankEntry": {
         "required": [
           "rank",
@@ -2900,6 +3656,86 @@
           }
         }
       },
+      "FamilySummary": {
+        "required": [
+          "id",
+          "name",
+          "leader",
+          "level",
+          "fund",
+          "members",
+          "created",
+          "territories"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "leader": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterRef"
+              }
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "fund": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "members": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "territories": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "FamilyTerritory": {
+        "required": [
+          "npcId",
+          "name",
+          "days",
+          "revenueClaimed"
+        ],
+        "type": "object",
+        "properties": {
+          "npcId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "days": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "revenueClaimed": {
+            "type": "boolean"
+          }
+        }
+      },
       "FileDiffResponse": {
         "required": [
           "file",
@@ -2925,6 +3761,40 @@
             }
           }
         }
+      },
+      "FlowerEntryView": {
+        "required": [
+          "position",
+          "character",
+          "amount",
+          "today"
+        ],
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "character": {
+            "$ref": "#/components/schemas/CharacterRef"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "today": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "FlowerKind": {
+        "enum": [
+          "RedRose",
+          "Lily",
+          "Orchid",
+          "Tulip"
+        ]
       },
       "FlowerRankEntry": {
         "required": [
@@ -2987,6 +3857,86 @@
           }
         }
       },
+      "GuildDetail": {
+        "required": [
+          "guild",
+          "announcement",
+          "requiredLevel",
+          "requiredRebirths",
+          "members",
+          "allies",
+          "enemies"
+        ],
+        "type": "object",
+        "properties": {
+          "guild": {
+            "$ref": "#/components/schemas/GuildSummary"
+          },
+          "announcement": {
+            "type": "string"
+          },
+          "requiredLevel": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "requiredRebirths": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuildMemberView"
+            }
+          },
+          "allies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuildRef"
+            }
+          },
+          "enemies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuildRef"
+            }
+          }
+        }
+      },
+      "GuildMemberView": {
+        "required": [
+          "character",
+          "rank",
+          "silverDonation",
+          "conquerPointsDonation",
+          "joined"
+        ],
+        "type": "object",
+        "properties": {
+          "character": {
+            "$ref": "#/components/schemas/CharacterRef"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "silverDonation": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPointsDonation": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "joined": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "GuildRankEntry": {
         "required": [
           "rank",
@@ -3045,6 +3995,248 @@
           },
           "isGuildWarWinner": {
             "type": "boolean"
+          }
+        }
+      },
+      "GuildRef": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "GuildSummary": {
+        "required": [
+          "id",
+          "name",
+          "leader",
+          "level",
+          "fund",
+          "conquerPointsFund",
+          "members",
+          "created"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "leader": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterRef"
+              }
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "fund": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "conquerPointsFund": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "members": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "GuildWarResponse": {
+        "required": [
+          "live",
+          "saved",
+          "liveHolder",
+          "liveWinner"
+        ],
+        "type": "object",
+        "properties": {
+          "live": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildWarState"
+              }
+            ]
+          },
+          "saved": {
+            "$ref": "#/components/schemas/GuildWarSaved"
+          },
+          "liveHolder": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildRef"
+              }
+            ]
+          },
+          "liveWinner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildRef"
+              }
+            ]
+          }
+        }
+      },
+      "GuildWarSaved": {
+        "required": [
+          "winner",
+          "holder",
+          "rewardClaimed",
+          "wonAt"
+        ],
+        "type": "object",
+        "properties": {
+          "winner": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildRef"
+              }
+            ]
+          },
+          "holder": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GuildRef"
+              }
+            ]
+          },
+          "rewardClaimed": {
+            "type": "boolean"
+          },
+          "wonAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "GuildWarScore": {
+        "type": "object",
+        "properties": {
+          "guildID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "score": {
+            "type": "integer",
+            "format": "uint64"
+          }
+        }
+      },
+      "GuildWarState": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "holderGuildID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "winnerGuildID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "rewardClaimed": {
+            "type": "boolean"
+          },
+          "wonAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "schedule": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "poleLife": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "poleMaxLife": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "leftGateLife": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "rightGateLife": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "gateMaxLife": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "leftGateOpen": {
+            "type": "boolean"
+          },
+          "rightGateOpen": {
+            "type": "boolean"
+          },
+          "scores": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/GuildWarScore"
+            }
           }
         }
       },
@@ -3921,6 +5113,31 @@
           "total": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "NobilityEntry": {
+        "required": [
+          "position",
+          "character",
+          "donation",
+          "rank"
+        ],
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "character": {
+            "$ref": "#/components/schemas/CharacterRef"
+          },
+          "donation": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "rank": {
+            "type": "string"
           }
         }
       },
@@ -5492,6 +6709,9 @@
       "name": "ChangesFeature"
     },
     {
+      "name": "Comet.Web"
+    },
+    {
       "name": "DashboardFeature"
     },
     {
@@ -5508,6 +6728,9 @@
     },
     {
       "name": "PublicSiteFeature"
+    },
+    {
+      "name": "SocialFeature"
     }
   ]
 }

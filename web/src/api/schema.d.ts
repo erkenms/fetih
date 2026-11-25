@@ -756,10 +756,239 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/social/guilds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialGuilds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/guilds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialGuild"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/families": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialFamilies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/families/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialFamily"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/nobility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialNobility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/arena": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialArena"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/arena/seasons/{season}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialArenaSeason"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/flowers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialFlowers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/guildwar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialGuildWar"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/board": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["socialBoard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/guildwar/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["socialStartGuildWar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/guildwar/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["socialEndGuildWar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/guilds/{id}/disband": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["socialDisbandGuild"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/social/board/{channel}/{characterId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["socialDeletePost"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AdminResult: {
+            ok?: boolean;
+            error?: null | string;
+            online?: boolean;
+        };
         AnnouncementDto: {
             /** Format: uint32 */
             id: number;
@@ -785,6 +1014,25 @@ export interface components {
         ApiError: {
             error: string;
         };
+        ArenaEntry: {
+            /** Format: int32 */
+            position: number;
+            character: components["schemas"]["CharacterRef"];
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            winsToday: number;
+            /** Format: uint32 */
+            lossesToday: number;
+            /** Format: uint32 */
+            winsTotal: number;
+            /** Format: uint32 */
+            lossesTotal: number;
+            /** Format: uint32 */
+            honorPoints: number;
+            /** Format: uint32 */
+            honorTotal: number;
+        };
         ArenaRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -809,6 +1057,27 @@ export interface components {
             winsTotal: number;
             /** Format: uint32 */
             lossesTotal: number;
+        };
+        ArenaResponse: {
+            current: components["schemas"]["ArenaEntry"][];
+            seasons: number[];
+        };
+        ArenaSeasonEntry: {
+            /** Format: uint32 */
+            rank: number;
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            wins: number;
+            /** Format: uint32 */
+            losses: number;
         };
         ArenaSeasonInfo: {
             /** Format: uint32 */
@@ -853,6 +1122,19 @@ export interface components {
             items: components["schemas"]["AuditEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        BoardPost: {
+            channel: string;
+            /** Format: uint16 */
+            channelId: number;
+            /** Format: uint32 */
+            characterId: number;
+            author: null | components["schemas"]["CharacterRef"];
+            authorName: string;
+            guild: null | components["schemas"]["GuildRef"];
+            message: string;
+            /** Format: date-time */
+            postedAt: string;
         };
         /** @enum {unknown} */
         BroadcastChannel: "Center" | "System" | "TopLeft";
@@ -938,6 +1220,15 @@ export interface components {
             files: components["schemas"]["DataFileChange"][];
             allProblems: components["schemas"]["ValidationProblemDto"][];
         };
+        CharacterRef: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+        };
         DashboardCounts: {
             /** Format: int32 */
             accounts: number;
@@ -984,6 +1275,24 @@ export interface components {
             npc: components["schemas"]["FaceEntry"][];
             player: components["schemas"]["FaceEntry"][];
         };
+        FamilyDetail: {
+            family: components["schemas"]["FamilySummary"];
+            announcement: string;
+            members: components["schemas"]["FamilyMemberView"][];
+            allies: components["schemas"]["GuildRef"][];
+            enemies: components["schemas"]["GuildRef"][];
+            occupied: components["schemas"]["FamilyTerritory"][];
+            signedUp: components["schemas"]["FamilyTerritory"][];
+        };
+        FamilyMemberView: {
+            character: components["schemas"]["CharacterRef"];
+            /** Format: uint16 */
+            rank: number;
+            /** Format: uint64 */
+            donation: number;
+            /** Format: date */
+            joined: null | string;
+        };
         FamilyRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -1002,12 +1311,47 @@ export interface components {
             /** Format: int32 */
             occupiedMaps: number;
         };
+        FamilySummary: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            leader: null | components["schemas"]["CharacterRef"];
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint64 */
+            fund: number;
+            /** Format: int32 */
+            members: number;
+            /** Format: date */
+            created: null | string;
+            /** Format: int32 */
+            territories: number;
+        };
+        FamilyTerritory: {
+            /** Format: uint32 */
+            npcId: number;
+            name: string;
+            /** Format: uint32 */
+            days: number;
+            revenueClaimed: boolean;
+        };
         FileDiffResponse: {
             file: string;
             gitStatus: string;
             diff: string;
             problems: components["schemas"]["ValidationProblemDto"][];
         };
+        FlowerEntryView: {
+            /** Format: int32 */
+            position: number;
+            character: components["schemas"]["CharacterRef"];
+            /** Format: uint32 */
+            amount: number;
+            /** Format: uint32 */
+            today: number;
+        };
+        /** @enum {unknown} */
+        FlowerKind: "RedRose" | "Lily" | "Orchid" | "Tulip";
         FlowerRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -1031,6 +1375,28 @@ export interface components {
             /** Format: uint32 */
             tulips: number;
         };
+        GuildDetail: {
+            guild: components["schemas"]["GuildSummary"];
+            announcement: string;
+            /** Format: uint32 */
+            requiredLevel: number;
+            /** Format: uint32 */
+            requiredRebirths: number;
+            members: components["schemas"]["GuildMemberView"][];
+            allies: components["schemas"]["GuildRef"][];
+            enemies: components["schemas"]["GuildRef"][];
+        };
+        GuildMemberView: {
+            character: components["schemas"]["CharacterRef"];
+            /** Format: uint16 */
+            rank: number;
+            /** Format: uint32 */
+            silverDonation: number;
+            /** Format: uint32 */
+            conquerPointsDonation: number;
+            /** Format: date */
+            joined: null | string;
+        };
         GuildRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -1050,6 +1416,71 @@ export interface components {
             conquerPointsFund: number;
             isGuildWarHolder: boolean;
             isGuildWarWinner: boolean;
+        };
+        GuildRef: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+        };
+        GuildSummary: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            leader: null | components["schemas"]["CharacterRef"];
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint64 */
+            fund: number;
+            /** Format: uint32 */
+            conquerPointsFund: number;
+            /** Format: int32 */
+            members: number;
+            /** Format: date */
+            created: null | string;
+        };
+        GuildWarResponse: {
+            live: null | components["schemas"]["GuildWarState"];
+            saved: components["schemas"]["GuildWarSaved"];
+            liveHolder: null | components["schemas"]["GuildRef"];
+            liveWinner: null | components["schemas"]["GuildRef"];
+        };
+        GuildWarSaved: {
+            winner: null | components["schemas"]["GuildRef"];
+            holder: null | components["schemas"]["GuildRef"];
+            rewardClaimed: boolean;
+            /** Format: date-time */
+            wonAt: null | string;
+        };
+        GuildWarScore: {
+            /** Format: uint32 */
+            guildID?: number;
+            name?: null | string;
+            /** Format: uint64 */
+            score?: number;
+        };
+        GuildWarState: {
+            active?: boolean;
+            /** Format: uint32 */
+            holderGuildID?: number;
+            /** Format: uint32 */
+            winnerGuildID?: number;
+            rewardClaimed?: boolean;
+            /** Format: date-time */
+            wonAt?: null | string;
+            schedule?: null | string;
+            /** Format: uint32 */
+            poleLife?: number;
+            /** Format: uint32 */
+            poleMaxLife?: number;
+            /** Format: uint32 */
+            leftGateLife?: number;
+            /** Format: uint32 */
+            rightGateLife?: number;
+            /** Format: uint32 */
+            gateMaxLife?: number;
+            leftGateOpen?: boolean;
+            rightGateOpen?: boolean;
+            scores?: null | components["schemas"]["GuildWarScore"][];
         };
         GuildWarSummary: {
             /** Format: uint32 */
@@ -1286,6 +1717,14 @@ export interface components {
             items: components["schemas"]["NewsEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        NobilityEntry: {
+            /** Format: int32 */
+            position: number;
+            character: components["schemas"]["CharacterRef"];
+            /** Format: uint64 */
+            donation: number;
+            rank: string;
         };
         NobilityRankEntry: {
             /** Format: int32 */
@@ -3071,6 +3510,359 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DiscardResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialGuilds: {
+        parameters: {
+            query?: {
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuildSummary"][];
+                };
+            };
+        };
+    };
+    socialGuild: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuildDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialFamilies: {
+        parameters: {
+            query?: {
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilySummary"][];
+                };
+            };
+        };
+    };
+    socialFamily: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FamilyDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialNobility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NobilityEntry"][];
+                };
+            };
+        };
+    };
+    socialArena: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArenaResponse"];
+                };
+            };
+        };
+    };
+    socialArenaSeason: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                season: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArenaSeasonEntry"][];
+                };
+            };
+        };
+    };
+    socialFlowers: {
+        parameters: {
+            query?: {
+                kind?: components["schemas"]["FlowerKind"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FlowerEntryView"][];
+                };
+            };
+        };
+    };
+    socialGuildWar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GuildWarResponse"];
+                };
+            };
+        };
+    };
+    socialBoard: {
+        parameters: {
+            query?: {
+                channel?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoardPost"][];
+                };
+            };
+        };
+    };
+    socialStartGuildWar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminResult"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialEndGuildWar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminResult"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialDisbandGuild: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminResult"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    socialDeletePost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel: number;
+                characterId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminResult"];
                 };
             };
             /** @description Not Found */

@@ -14,5 +14,6 @@ public static class FeatureRegistry
         new Broadcasts.BroadcastsFeature(),
         new Logs.LogsFeature(),
         new Changes.ChangesFeature(),
+        new Social.SocialFeature(),
     ];
 }

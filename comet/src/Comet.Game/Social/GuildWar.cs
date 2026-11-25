@@ -76,6 +76,12 @@ namespace Comet.Game.Social
             get { lock (Sync) return HolderID != 0 ? HolderID : WinnerID; }
         }
 
+        public static (uint Pole, uint LeftGate, uint RightGate, bool LeftOpen, bool RightOpen) Structures()
+        {
+            lock (Sync)
+                return (PoleLife, LeftGateLife, RightGateLife, LeftGateOpen, RightGateOpen);
+        }
+
         public static string HolderGuildName => Guilds.Find(HolderGuildID)?.Name;
         public static string WinnerGuildName => Guilds.Find(WinnerGuildID)?.Name;
 
