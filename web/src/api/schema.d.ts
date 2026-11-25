@@ -1380,6 +1380,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/data/levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLevelsData"];
+        put: operations["saveLevelsData"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGoalsData"];
+        put: operations["saveGoalsData"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/teleporters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTeleportersData"];
+        put: operations["saveTeleportersData"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/talkers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getTalkersData"];
+        put: operations["saveTalkersData"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/maps/{mapId}/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDataMapInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/maps/{mapId}/cell": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["checkDataMapCell"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1688,6 +1784,17 @@ export interface components {
             attackSpeed?: number;
             /** Format: uint32 */
             stackLimit?: number;
+        };
+        CellCheckResponse: {
+            /** Format: uint32 */
+            mapId: number;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            hasGrid: boolean;
+            inBounds: boolean;
+            walkable: boolean;
         };
         ChangePasswordRequest: {
             currentPassword: string;
@@ -1999,6 +2106,15 @@ export interface components {
             reloadable: boolean;
             problems: components["schemas"]["ValidationProblemDto"][];
         };
+        DataProblemDto: {
+            file: string;
+            /** Format: int32 */
+            entry: null | number;
+            /** Format: int32 */
+            line: null | number;
+            message: string;
+            level: string;
+        };
         DeleteMonsterResponse: {
             hash: string;
             /** Format: uint32 */
@@ -2144,6 +2260,49 @@ export interface components {
             /** Format: uint8 */
             gem2?: null | number;
         };
+        GoalEntryDto: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint16 */
+            lookface: number;
+            /** Format: uint8 */
+            role: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            life: number;
+            /** Format: uint32 */
+            map: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: int32 */
+            line: number;
+        };
+        GoalEntryInput: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint16 */
+            lookface: number;
+            /** Format: uint8 */
+            role: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            life: number;
+            /** Format: uint32 */
+            map: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+        };
+        GoalsFileResponse: {
+            hash: string;
+            entries: components["schemas"]["GoalEntryDto"][];
+            problems: components["schemas"]["DataProblemDto"][];
+        };
         GuildDetail: {
             guild: components["schemas"]["GuildSummary"];
             announcement: string;
@@ -2281,6 +2440,24 @@ export interface components {
         KickCharacterRequest: {
             reason?: null | string;
         };
+        LevelEntryDto: {
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint64 */
+            experience: number;
+            /** Format: uint32 */
+            upLevTime: number;
+            /** Format: int32 */
+            line: number;
+        };
+        LevelEntryInput: {
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint64 */
+            experience: number;
+            /** Format: uint32 */
+            upLevTime: number;
+        };
         LevelRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -2298,6 +2475,11 @@ export interface components {
             /** Format: uint32 */
             guildId: null | number;
             guildName: null | string;
+        };
+        LevelsFileResponse: {
+            hash: string;
+            entries: components["schemas"]["LevelEntryDto"][];
+            problems: components["schemas"]["DataProblemDto"][];
         };
         LogEntry: {
             /** Format: date-time */
@@ -2497,6 +2679,17 @@ export interface components {
             isGoal: boolean;
             facePath: null | string;
             kind: string;
+        };
+        MapPickInfoResponse: {
+            /** Format: uint32 */
+            mapId: number;
+            name: null | string;
+            /** Format: int32 */
+            width: null | number;
+            /** Format: int32 */
+            height: null | number;
+            minimap: null | string;
+            background: null | string;
         };
         MapPortalEntry: {
             /** Format: uint32 */
@@ -3190,6 +3383,25 @@ export interface components {
             /** Format: date-time */
             endAt: null | string;
         };
+        SaveDataResponse: {
+            hash: string;
+            saved: boolean;
+            problems: components["schemas"]["DataProblemDto"][];
+            /** Format: int32 */
+            added: number;
+            /** Format: int32 */
+            updated: number;
+            /** Format: int32 */
+            removed: number;
+        };
+        SaveGoalsRequest: {
+            hash: string;
+            entries: components["schemas"]["GoalEntryInput"][];
+        };
+        SaveLevelsRequest: {
+            hash: string;
+            entries: components["schemas"]["LevelEntryInput"][];
+        };
         SaveMonsterRequest: {
             hash: null | string;
             monster: components["schemas"]["MonsterDto"];
@@ -3198,6 +3410,14 @@ export interface components {
             hash: string;
             monster: components["schemas"]["MonsterDto"];
             warnings: components["schemas"]["MonsterProblemDto"][];
+        };
+        SaveTalkersRequest: {
+            hash: string;
+            entries: components["schemas"]["TalkerEntryInput"][];
+        };
+        SaveTeleportersRequest: {
+            hash: string;
+            entries: components["schemas"]["TeleporterEntryInput"][];
         };
         SendBroadcastRequest: {
             channel: components["schemas"]["BroadcastChannel"];
@@ -3343,6 +3563,35 @@ export interface components {
             /** Format: uint32 */
             itemId: number;
         };
+        TalkerEntryDto: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint8 */
+            face: number;
+            text: string[];
+            reply: string;
+            /** Format: int32 */
+            line: number;
+            /** Format: uint32 */
+            npcMap: null | number;
+            /** Format: uint16 */
+            npcX: null | number;
+            /** Format: uint16 */
+            npcY: null | number;
+        };
+        TalkerEntryInput: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint8 */
+            face: number;
+            text: string[];
+            reply: string;
+        };
+        TalkersFileResponse: {
+            hash: string;
+            entries: components["schemas"]["TalkerEntryDto"][];
+            problems: components["schemas"]["DataProblemDto"][];
+        };
         TeleportCharacterRequest: {
             /** Format: uint32 */
             mapId: number;
@@ -3350,6 +3599,50 @@ export interface components {
             x: number;
             /** Format: uint16 */
             y: number;
+        };
+        TeleporterDestinationDto: {
+            name: string;
+            /** Format: uint32 */
+            map: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+        };
+        TeleporterEntryDto: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint32 */
+            fare: number;
+            /** Format: uint8 */
+            face: number;
+            text: string[];
+            destinations: components["schemas"]["TeleporterDestinationDto"][];
+            close: null | string;
+            /** Format: int32 */
+            line: number;
+            /** Format: uint32 */
+            npcMap: null | number;
+            /** Format: uint16 */
+            npcX: null | number;
+            /** Format: uint16 */
+            npcY: null | number;
+        };
+        TeleporterEntryInput: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint32 */
+            fare: number;
+            /** Format: uint8 */
+            face: number;
+            text: string[];
+            destinations: components["schemas"]["TeleporterDestinationDto"][];
+            close: null | string;
+        };
+        TeleportersFileResponse: {
+            hash: string;
+            entries: components["schemas"]["TeleporterEntryDto"][];
+            problems: components["schemas"]["DataProblemDto"][];
         };
         TimelineResponse: {
             entries: components["schemas"]["LogEntry"][];
@@ -6133,6 +6426,265 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MonsterReloadResponse"];
+                };
+            };
+        };
+    };
+    getLevelsData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LevelsFileResponse"];
+                };
+            };
+        };
+    };
+    saveLevelsData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveLevelsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveDataResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getGoalsData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalsFileResponse"];
+                };
+            };
+        };
+    };
+    saveGoalsData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveGoalsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveDataResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getTeleportersData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeleportersFileResponse"];
+                };
+            };
+        };
+    };
+    saveTeleportersData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTeleportersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveDataResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getTalkersData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TalkersFileResponse"];
+                };
+            };
+        };
+    };
+    saveTalkersData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTalkersRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveDataResponse"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getDataMapInfo: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                mapId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapPickInfoResponse"];
+                };
+            };
+        };
+    };
+    checkDataMapCell: {
+        parameters: {
+            query: {
+                x: number;
+                y: number;
+            };
+            header?: never;
+            path: {
+                mapId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CellCheckResponse"];
                 };
             };
         };

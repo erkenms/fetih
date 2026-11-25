@@ -19,5 +19,6 @@ public static class FeatureRegistry
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),
         new MonsterEdit.MonsterEditFeature(),
+        new DataEdit.DataEditFeature(),
     ];
 }

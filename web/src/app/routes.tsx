@@ -3,6 +3,7 @@ import { auditRoute } from '../features/audit'
 import { catalogRoutes } from '../features/catalogs'
 import { broadcastsRoute } from '../features/broadcasts'
 import { changesRoute } from '../features/changes'
+import { dataRoute } from '../features/data'
 import { healthRoute } from '../features/health'
 import { itemsRoute } from '../features/items'
 import { myAccountRoute, registerRoute } from '../features/public/account'
@@ -31,4 +32,5 @@ export const featureRoutes: FeatureRoute[] = [
   ...accountsRoutes,
   ...charactersRoutes,
   monstersRoute,
+  dataRoute,
 ]
