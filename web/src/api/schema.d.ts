@@ -1620,6 +1620,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/live/online": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLiveOnline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/live/maps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLiveMapSnapshot"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2793,6 +2825,65 @@ export interface components {
             entries: components["schemas"]["LevelEntryDto"][];
             problems: components["schemas"]["DataProblemDto"][];
         };
+        LiveGroundItem: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint32 */
+            typeId: number;
+            itemName: null | string;
+            icon: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        LiveMapSnapshot: {
+            /** Format: uint32 */
+            mapId: number;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: date-time */
+            takenAt: string;
+            gameOnline: boolean;
+            exists: boolean;
+            players: components["schemas"]["MapPlayer"][];
+            monsters: components["schemas"]["MapMonster"][];
+            groundItems: components["schemas"]["LiveGroundItem"][];
+            booths: components["schemas"]["MapBooth"][];
+        };
+        LiveOnlinePlayer: {
+            /** Format: uint32 */
+            characterId: number;
+            /** Format: uint32 */
+            accountId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint16 */
+            pkPoints: number;
+            /** Format: uint16 */
+            authority: number;
+            ipAddress: string;
+            /** Format: date-time */
+            loggedInAt: null | string;
+        };
         LogEntry: {
             /** Format: date-time */
             timestamp: string;
@@ -2852,6 +2943,20 @@ export interface components {
             /** Format: int32 */
             accounts: number;
             recentLogins: components["schemas"]["LoginLine"][];
+        };
+        MapBooth: {
+            /** Format: uint32 */
+            id?: number;
+            /** Format: uint32 */
+            ownerID?: number;
+            ownerName?: null | string;
+            /** Format: uint16 */
+            x?: number;
+            /** Format: uint16 */
+            y?: number;
+            /** Format: int32 */
+            items?: number;
+            hawk?: null | string;
         };
         MapCatalogEntry: {
             /** Format: uint32 */
@@ -2972,6 +3077,27 @@ export interface components {
             /** Format: int32 */
             total: number;
         };
+        MapMonster: {
+            /** Format: uint32 */
+            id?: number;
+            /** Format: uint32 */
+            typeID?: number;
+            name?: null | string;
+            /** Format: uint8 */
+            level?: number;
+            /** Format: uint32 */
+            lookface?: number;
+            /** Format: uint16 */
+            x?: number;
+            /** Format: uint16 */
+            y?: number;
+            alive?: boolean;
+            /** Format: uint32 */
+            health?: number;
+            /** Format: uint32 */
+            maxHealth?: number;
+            guard?: boolean;
+        };
         MapNpcEntry: {
             /** Format: uint32 */
             id: number;
@@ -3002,6 +3128,29 @@ export interface components {
             height: null | number;
             minimap: null | string;
             background: null | string;
+        };
+        MapPlayer: {
+            /** Format: uint32 */
+            characterID?: number;
+            name?: null | string;
+            /** Format: uint8 */
+            level?: number;
+            /** Format: uint8 */
+            class?: number;
+            /** Format: uint16 */
+            x?: number;
+            /** Format: uint16 */
+            y?: number;
+            /** Format: uint16 */
+            pkPoints?: number;
+            nameColor?: null | string;
+            dead?: boolean;
+            /** Format: uint32 */
+            health?: number;
+            /** Format: uint32 */
+            maxHealth?: number;
+            /** Format: uint32 */
+            mesh?: number;
         };
         MapPortalEntry: {
             /** Format: uint32 */
@@ -3385,6 +3534,12 @@ export interface components {
             nobilityRank: string;
             /** Format: uint64 */
             donation: number;
+        };
+        OnlinePlayersResponse: {
+            gameOnline: boolean;
+            /** Format: date-time */
+            takenAt: string;
+            players: components["schemas"]["LiveOnlinePlayer"][];
         };
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
@@ -7298,6 +7453,57 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GmCommandsResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getLiveOnline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnlinePlayersResponse"];
+                };
+            };
+        };
+    };
+    getLiveMapSnapshot: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LiveMapSnapshot"];
                 };
             };
             /** @description Bad Request */

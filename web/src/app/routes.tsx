@@ -17,6 +17,7 @@ import { accountsRoutes } from '../features/accounts'
 import { charactersRoutes } from '../features/characters'
 import { monstersRoute } from '../features/monsters'
 import { integrityRoute } from '../features/integrity'
+import { liveRoutes } from '../features/live'
 
 // Every feature page, one line each. Admin pages show in the sidebar by their nav group.
 export const featureRoutes: FeatureRoute[] = [
@@ -39,4 +40,5 @@ export const featureRoutes: FeatureRoute[] = [
   monstersRoute,
   dataRoute,
   integrityRoute,
+  ...liveRoutes,
 ]

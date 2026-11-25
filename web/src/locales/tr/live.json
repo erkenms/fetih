@@ -1,0 +1,102 @@
+{
+  "nav": "Canlı dünya",
+  "title": "Canlı dünya",
+  "status": {
+    "connecting": "Bağlanıyor…",
+    "connected": "Canlı",
+    "reconnecting": "Yeniden bağlanıyor…",
+    "disconnected": "Bağlantı kesildi",
+    "gameOnline": "Oyun açık",
+    "gameOffline": "Oyun kapalı"
+  },
+  "banner": {
+    "gameOffline": "Oyun sunucusu kapalı. Yeniden bağlandığında canlı varlıklar otomatik görünecektir.",
+    "mapNotLoaded": "Bu harita oyun sunucusunda yüklü değil.",
+    "following": "Takip ediliyor: {{name}}",
+    "stopFollowing": "Takibi bırak",
+    "followedOffline": "{{name}} çevrimdışı oldu."
+  },
+  "toolbar": {
+    "mapPlaceholder": "Harita seç…",
+    "activeMaps": "Aktif haritalar",
+    "fitMap": "Haritayı sığdır",
+    "openInMaps": "Harita görüntüleyici",
+    "playersCount": "{{count}} oyuncu",
+    "monstersCount": "{{count}} canavar",
+    "itemsCount": "{{count}} eşya",
+    "boothsCount": "{{count}} tezgah"
+  },
+  "tabs": {
+    "online": "Çevrimiçi ({{count}})",
+    "map": "Haritada",
+    "layers": "Katmanlar"
+  },
+  "online": {
+    "search": "Oyuncu, harita veya ID ara…",
+    "thisMapOnly": "Sadece bu harita",
+    "empty": "Çevrimiçi oyuncu yok.",
+    "noMatches": "Eşleşen oyuncu yok.",
+    "follow": "Takip et",
+    "following": "Takip ediliyor",
+    "openCharacter": "Karakteri aç",
+    "pk": "PK {{points}}"
+  },
+  "map": {
+    "search": "Bu haritadaki varlıkları filtrele…",
+    "players": "Oyuncular ({{count}})",
+    "monsters": "Canavarlar ({{alive}}/{{total}})",
+    "groundItems": "Yerdeki eşyalar ({{count}})",
+    "booths": "Tezgahlar ({{count}})",
+    "empty": "Bu haritada yok.",
+    "silver": "{{amount}} Gümüş",
+    "itemFallback": "Eşya #{{id}}",
+    "boothItems": "{{count}} eşya",
+    "guard": "Muhafız",
+    "dead": "Ölü"
+  },
+  "layers": {
+    "liveHeading": "Canlı katmanlar",
+    "players": "Oyuncular",
+    "monsters": "Canavarlar (canlı)",
+    "deadMonsters": "Ölü canavarlar",
+    "groundItems": "Yerdeki eşyalar",
+    "booths": "Tezgahlar",
+    "staticHeading": "Harita bağlamı",
+    "covers": "Harita örtüleri",
+    "walkability": "Yürünebilirlik",
+    "portals": "Portallar",
+    "npcs": "NPC'ler"
+  },
+  "inspector": {
+    "title": "Seçili",
+    "position": "Konum",
+    "level": "Seviye {{level}}",
+    "hp": "Can",
+    "pk": "PK puanı",
+    "dead": "Ölü",
+    "alive": "Canlı",
+    "typeId": "Tip ID",
+    "guard": "Muhafız",
+    "silver": "Gümüş",
+    "expiresIn": "{{seconds}} sn kaldı",
+    "expired": "Süresi doluyor",
+    "owner": "Sahibi",
+    "boothItems": "Satılık eşya",
+    "hawk": "Tezgah mesajı",
+    "follow": "Takip et",
+    "stopFollowing": "Takibi bırak",
+    "openCharacter": "Karakter sayfası"
+  },
+  "pkColor": {
+    "white": "Beyaz",
+    "red": "Kırmızı",
+    "black": "Siyah",
+    "blue": "Yanıp sönen"
+  },
+  "cursor": {
+    "cell": "({{x}}, {{y}})",
+    "walkable": "Yürünebilir",
+    "blocked": "Engelli",
+    "outside": "Dışarıda"
+  }
+}

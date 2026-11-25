@@ -109,7 +109,10 @@ if (app.Environment.IsDevelopment())
 var api = app.MapGroup("/api");
 api.MapAuth();
 foreach (var feature in FeatureRegistry.All)
+{
     feature.Map(api);
+    feature.MapRoot(app);
+}
 api.MapFallback(() => Results.NotFound(new ApiError("not_found")));
 
 if (frontendFiles != null)

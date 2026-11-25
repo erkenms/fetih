@@ -4838,6 +4838,67 @@
           }
         }
       }
+    },
+    "/api/live/online": {
+      "get": {
+        "tags": [
+          "LiveFeature"
+        ],
+        "operationId": "getLiveOnline",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnlinePlayersResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/maps/{id}": {
+      "get": {
+        "tags": [
+          "LiveFeature"
+        ],
+        "operationId": "getLiveMapSnapshot",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveMapSnapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8732,6 +8793,200 @@
           }
         }
       },
+      "LiveGroundItem": {
+        "required": [
+          "id",
+          "typeId",
+          "itemName",
+          "icon",
+          "x",
+          "y",
+          "silver",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "itemName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "LiveMapSnapshot": {
+        "required": [
+          "mapId",
+          "width",
+          "height",
+          "takenAt",
+          "gameOnline",
+          "exists",
+          "players",
+          "monsters",
+          "groundItems",
+          "booths"
+        ],
+        "type": "object",
+        "properties": {
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "takenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gameOnline": {
+            "type": "boolean"
+          },
+          "exists": {
+            "type": "boolean"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapPlayer"
+            }
+          },
+          "monsters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapMonster"
+            }
+          },
+          "groundItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveGroundItem"
+            }
+          },
+          "booths": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapBooth"
+            }
+          }
+        }
+      },
+      "LiveOnlinePlayer": {
+        "required": [
+          "characterId",
+          "accountId",
+          "name",
+          "level",
+          "class",
+          "rebirths",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "pkPoints",
+          "authority",
+          "ipAddress",
+          "loggedInAt"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "class": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "pkPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "authority": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "ipAddress": {
+            "type": "string"
+          },
+          "loggedInAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "LogEntry": {
         "required": [
           "timestamp",
@@ -8934,6 +9189,43 @@
             "items": {
               "$ref": "#/components/schemas/LoginLine"
             }
+          }
+        }
+      },
+      "MapBooth": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "ownerID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "ownerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hawk": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -9443,6 +9735,55 @@
           }
         }
       },
+      "MapMonster": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "lookface": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "alive": {
+            "type": "boolean"
+          },
+          "health": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "maxHealth": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "guard": {
+            "type": "boolean"
+          }
+        }
+      },
       "MapNpcEntry": {
         "required": [
           "id",
@@ -9553,6 +9894,62 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "MapPlayer": {
+        "type": "object",
+        "properties": {
+          "characterID": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "class": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "pkPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "nameColor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dead": {
+            "type": "boolean"
+          },
+          "health": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "maxHealth": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mesh": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -10881,6 +11278,29 @@
           "donation": {
             "type": "integer",
             "format": "uint64"
+          }
+        }
+      },
+      "OnlinePlayersResponse": {
+        "required": [
+          "gameOnline",
+          "takenAt",
+          "players"
+        ],
+        "type": "object",
+        "properties": {
+          "gameOnline": {
+            "type": "boolean"
+          },
+          "takenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LiveOnlinePlayer"
+            }
           }
         }
       },
@@ -13162,6 +13582,9 @@
     },
     {
       "name": "ItemsFeature"
+    },
+    {
+      "name": "LiveFeature"
     },
     {
       "name": "LogsFeature"

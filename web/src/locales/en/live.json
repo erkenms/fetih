@@ -1,0 +1,102 @@
+{
+  "nav": "Live world",
+  "title": "Live world",
+  "status": {
+    "connecting": "Connecting…",
+    "connected": "Live",
+    "reconnecting": "Reconnecting…",
+    "disconnected": "Disconnected",
+    "gameOnline": "Game online",
+    "gameOffline": "Game offline"
+  },
+  "banner": {
+    "gameOffline": "The game server is offline. Live entities will appear automatically when it reconnects.",
+    "mapNotLoaded": "This map isn't loaded on the game server.",
+    "following": "Following {{name}}",
+    "stopFollowing": "Stop following",
+    "followedOffline": "{{name}} went offline."
+  },
+  "toolbar": {
+    "mapPlaceholder": "Pick a map…",
+    "activeMaps": "Active maps",
+    "fitMap": "Fit map",
+    "openInMaps": "Map viewer",
+    "playersCount": "{{count}} players",
+    "monstersCount": "{{count}} monsters",
+    "itemsCount": "{{count}} items",
+    "boothsCount": "{{count}} booths"
+  },
+  "tabs": {
+    "online": "Online ({{count}})",
+    "map": "On map",
+    "layers": "Layers"
+  },
+  "online": {
+    "search": "Search player, map, or ID…",
+    "thisMapOnly": "This map only",
+    "empty": "No players online.",
+    "noMatches": "No matching players.",
+    "follow": "Follow",
+    "following": "Following",
+    "openCharacter": "Open character",
+    "pk": "PK {{points}}"
+  },
+  "map": {
+    "search": "Filter entities on this map…",
+    "players": "Players ({{count}})",
+    "monsters": "Monsters ({{alive}}/{{total}})",
+    "groundItems": "Ground items ({{count}})",
+    "booths": "Booths ({{count}})",
+    "empty": "None on this map.",
+    "silver": "{{amount}} Silver",
+    "itemFallback": "Item #{{id}}",
+    "boothItems": "{{count}} items",
+    "guard": "Guard",
+    "dead": "Dead"
+  },
+  "layers": {
+    "liveHeading": "Live layers",
+    "players": "Players",
+    "monsters": "Monsters (alive)",
+    "deadMonsters": "Dead monsters",
+    "groundItems": "Ground items",
+    "booths": "Booths",
+    "staticHeading": "Map context",
+    "covers": "Map covers",
+    "walkability": "Walkability",
+    "portals": "Portals",
+    "npcs": "NPCs"
+  },
+  "inspector": {
+    "title": "Selected",
+    "position": "Position",
+    "level": "Level {{level}}",
+    "hp": "HP",
+    "pk": "PK points",
+    "dead": "Dead",
+    "alive": "Alive",
+    "typeId": "Type ID",
+    "guard": "Guard",
+    "silver": "Silver",
+    "expiresIn": "Expires in {{seconds}}s",
+    "expired": "Expiring",
+    "owner": "Owner",
+    "boothItems": "Items for sale",
+    "hawk": "Hawk message",
+    "follow": "Follow",
+    "stopFollowing": "Stop following",
+    "openCharacter": "Character page"
+  },
+  "pkColor": {
+    "white": "White",
+    "red": "Red",
+    "black": "Black",
+    "blue": "Flashing"
+  },
+  "cursor": {
+    "cell": "({{x}}, {{y}})",
+    "walkable": "Walkable",
+    "blocked": "Blocked",
+    "outside": "Outside"
+  }
+}

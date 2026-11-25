@@ -7,4 +7,6 @@ public interface IFeature
     void AddServices(IServiceCollection services, WebConfiguration config) { }
 
     void Map(RouteGroupBuilder api);
+
+    void MapRoot(IEndpointRouteBuilder app) { }
 }

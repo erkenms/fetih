@@ -23,5 +23,6 @@ public static class FeatureRegistry
         new DataEdit.DataEditFeature(),
         new Integrity.IntegrityFeature(),
         new Chat.ChatFeature(),
+        new Live.LiveFeature(),
     ];
 }
