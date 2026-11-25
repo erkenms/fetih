@@ -2,6 +2,7 @@ import {
   Alert,
   Badge,
   Button,
+  Center,
   Code,
   CopyButton,
   Group,
@@ -30,7 +31,8 @@ import {
   ItemIcon,
   ItemTooltip,
   ItemTooltipContent,
-  qualityBadgeColor,
+  GAME_TEXT_EDGE,
+  hasQualityColor,
   qualityColor,
   type CatalogItem,
   type ItemCategory,
@@ -240,12 +242,11 @@ export default function ItemsPage() {
                           <Text
                             size="sm"
                             fw={600}
-                            style={{
-                              color:
-                                item.quality && item.quality !== 'None' && item.quality !== 'Normal'
-                                  ? qualityColor(item.quality)
-                                  : undefined,
-                            }}
+                            style={
+                              hasQualityColor(item.quality)
+                                ? { color: qualityColor(item.quality), textShadow: GAME_TEXT_EDGE }
+                                : undefined
+                            }
                           >
                             {item.name}
                           </Text>
@@ -264,7 +265,18 @@ export default function ItemsPage() {
                   <Table.Td>{t(`category.${item.category ?? 'Other'}`)}</Table.Td>
                   <Table.Td>
                     {item.quality && item.quality !== 'None' ? (
-                      <Badge size="sm" variant="light" color={qualityBadgeColor(item.quality)}>
+                      <Badge
+                        size="sm"
+                        radius={0}
+                        styles={{
+                          root: {
+                            background: 'rgba(0, 0, 0, 0.78)',
+                            color: qualityColor(item.quality),
+                            border: '1px solid #000',
+                            textTransform: 'none',
+                          },
+                        }}
+                      >
                         {t(`quality.${item.quality}`)}
                       </Badge>
                     ) : (
@@ -312,16 +324,10 @@ export default function ItemsPage() {
       <Modal opened={!!selected} onClose={() => setSelected(null)} title={t('detail.title')} size="md">
         {selected && (
           <Stack>
-            <Paper
-              p="sm"
-              radius="md"
-              style={{
-                background: 'rgba(18, 20, 26, 0.96)',
-                color: '#f1f3f5',
-              }}
-            >
+            <Group align="flex-start" gap="sm" wrap="nowrap">
+              <ItemIcon item={selected} size={64} />
               <ItemTooltipContent item={selected} />
-            </Paper>
+            </Group>
             <SimpleGrid cols={2} spacing="xs">
               <Text size="xs" c="dimmed">
                 {t('detail.actionId')}: <Code>{selected.actionId ?? 0}</Code>
@@ -332,10 +338,24 @@ export default function ItemsPage() {
               <Text size="xs" c="dimmed">
                 {t('detail.stackLimit')}: <Code>{selected.stackLimit ?? 0}</Code>
               </Text>
+            </SimpleGrid>
+            <Group gap="sm" wrap="nowrap">
+              <Center
+                w={48}
+                h={48}
+                style={{ flexShrink: 0, borderRadius: 6, background: 'rgba(18, 20, 26, 0.85)' }}
+              >
+                <img
+                  src={`/assets/${selected.groundIcon ?? 'icons/ground/default.png'}`}
+                  alt=""
+                  width={32}
+                  height={32}
+                />
+              </Center>
               <Text size="xs" c="dimmed">
                 {t('detail.groundIcon')}: <Code>{selected.groundIcon ?? '—'}</Code>
               </Text>
-            </SimpleGrid>
+            </Group>
             <Group justify="flex-end">
               <CopyButton value={String(selected.id ?? '')}>
                 {({ copied, copy }) => (

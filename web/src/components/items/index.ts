@@ -1,5 +1,5 @@
 export { ItemCard, type ItemCardProps } from './ItemCard'
-export { ItemIcon, type ItemIconProps } from './ItemIcon'
+export { ItemIcon, itemSlotStyle, type ItemIconProps } from './ItemIcon'
 export { ItemPicker, type ItemPickerProps } from './ItemPicker'
 export { ItemTooltip, ItemTooltipContent, type ItemTooltipContentProps, type ItemTooltipProps } from './ItemTooltip'
 export {
@@ -8,7 +8,8 @@ export {
   formatDurability,
   itemIconUrl,
   professionKey,
-  qualityBadgeColor,
+  GAME_TEXT_EDGE,
+  hasQualityColor,
   qualityColor,
   type CatalogItem,
   type DecodedSocket,

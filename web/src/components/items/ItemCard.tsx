@@ -2,7 +2,7 @@ import { Group, Paper, Stack, Text } from '@mantine/core'
 import type { ReactNode } from 'react'
 import { ItemIcon } from './ItemIcon'
 import { ItemTooltip } from './ItemTooltip'
-import { qualityColor, type CatalogItem, type ItemInstance } from './itemMeta'
+import { GAME_TEXT_EDGE, hasQualityColor, qualityColor, type CatalogItem, type ItemInstance } from './itemMeta'
 
 export interface ItemCardProps {
   item: CatalogItem
@@ -34,12 +34,11 @@ export function ItemCard({
               size="sm"
               fw={600}
               truncate
-              style={{
-                color:
-                  item.quality && item.quality !== 'None' && item.quality !== 'Normal'
-                    ? qualityColor(item.quality)
-                    : undefined,
-              }}
+              style={
+                hasQualityColor(item.quality)
+                  ? { color: qualityColor(item.quality), textShadow: GAME_TEXT_EDGE }
+                  : undefined
+              }
             >
               {item.name}
               {instance?.plus ? ` +${instance.plus}` : ''}

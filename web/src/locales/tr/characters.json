@@ -40,7 +40,7 @@
     "gameOfflineNotice": "Oyun sunucusu çevrimdışı. Veritabanı görüntüsü gösteriliyor; değişiklikler için oyun sunucusu gerekir.",
     "tabs": {
       "profile": "Profil",
-      "items": "Ekipman ve Envanter",
+      "items": "Depolar",
       "skills": "Yetenekler ve Ustalıklar",
       "relations": "İlişkiler",
       "timeline": "Zaman çizelgesi"
@@ -103,7 +103,9 @@
       "take": "Eşyayı al",
       "takeConfirmTitle": "Eşya envanterden silinsin mi?",
       "takeConfirmBody": "{{name}} (eşya #{{id}}) {{character}} envanterinden silinsin mi?",
-      "takeSuccess": "Eşya envanterden alındı."
+      "takeSuccess": "Eşya envanterden alındı.",
+      "otherEquipment": "Diğer ekipman",
+      "storedSilver": "Depodaki gümüş: {{value}}"
     },
     "skills": {
       "magics": "Yetenekler ({{count}})",
@@ -116,6 +118,18 @@
       "enemies": "Düşmanlar ({{count}})",
       "tradePartners": "Ticaret Ortakları ({{count}})",
       "none": "Yok"
+    },
+    "game": {
+      "tabs": {
+        "stats": "Durum",
+        "equipment": "Ekipman",
+        "proficiencies": "Silah becerileri",
+        "skills": "Beceriler"
+      },
+      "level": "Sv. {{level}}",
+      "experience": "Tecrübe: {{value}}",
+      "none": "Yok",
+      "battlePower": "Savaş gücü: {{value}}"
     }
   },
   "slot": {

@@ -41,7 +41,7 @@
     "gameOfflineNotice": "Game server is offline. Showing database snapshot; mutations require the game server.",
     "tabs": {
       "profile": "Profile",
-      "items": "Equipment & Inventory",
+      "items": "Warehouses",
       "skills": "Skills & Proficiencies",
       "relations": "Relations",
       "timeline": "Timeline"
@@ -104,7 +104,9 @@
       "take": "Take item",
       "takeConfirmTitle": "Remove item from inventory?",
       "takeConfirmBody": "Remove {{name}} (item #{{id}}) from {{character}}'s inventory?",
-      "takeSuccess": "Item removed from inventory."
+      "takeSuccess": "Item removed from inventory.",
+      "otherEquipment": "Other equipment",
+      "storedSilver": "Stored silver: {{value}}"
     },
     "skills": {
       "magics": "Skills ({{count}})",
@@ -117,6 +119,18 @@
       "enemies": "Enemies ({{count}})",
       "tradePartners": "Trade Partners ({{count}})",
       "none": "None"
+    },
+    "game": {
+      "tabs": {
+        "stats": "Status",
+        "equipment": "Equipment",
+        "proficiencies": "Weapon skills",
+        "skills": "Skills"
+      },
+      "level": "Lv. {{level}}",
+      "experience": "Exp: {{value}}",
+      "none": "None",
+      "battlePower": "Battle power: {{value}}"
     }
   },
   "slot": {

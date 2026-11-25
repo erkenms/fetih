@@ -17,12 +17,12 @@ describe('itemIconUrl', () => {
 })
 
 describe('qualityColor', () => {
-  it('returns distinct colors for gear qualities', () => {
-    expect(qualityColor('Super')).toBe('#ffd43b')
-    expect(qualityColor('Elite')).toBe('#ff9233')
-    expect(qualityColor('Unique')).toBe('#52e078')
-    expect(qualityColor('Refined')).toBe('#b18cff')
-    expect(qualityColor('Normal')).toBe('#e9ecef')
+  it('uses the client colors for item names', () => {
+    expect(qualityColor('Super')).toBe('#ebe57f')
+    expect(qualityColor('Elite')).toBe('#e804fd')
+    expect(qualityColor('Unique')).toBe('#00ff00')
+    expect(qualityColor('Refined')).toBe('#5e87ca')
+    expect(qualityColor('Normal')).toBe('#ffffff')
   })
 })
 

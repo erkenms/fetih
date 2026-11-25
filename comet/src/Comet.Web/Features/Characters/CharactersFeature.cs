@@ -2,13 +2,17 @@ namespace Comet.Web.Features.Characters;
 
 using System.Globalization;
 using System.Security.Claims;
+using Microsoft.Extensions.Caching.Memory;
 using Comet.Game.Database.Models;
 using Comet.Game.Items;
+using Comet.Game.Nobility;
+using Comet.Game.Social;
 using Comet.Shared.Models.Admin;
 using Comet.Web.Audit;
 using Comet.Web.Auth;
 using Comet.Web.Features.Catalogs;
 using Comet.Web.Features.Items;
+using Comet.Web.Features.PublicSite;
 using Comet.Web.Game;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -194,6 +198,7 @@ public sealed class CharactersFeature : IFeature
         GameRpc rpc,
         ItemCatalog itemCatalog,
         CatalogStore catalogs,
+        IMemoryCache cache,
         CancellationToken ct = default)
     {
         await using var gameDb = new GameDbContext();
@@ -380,6 +385,11 @@ public sealed class CharactersFeature : IFeature
 
         var nob = await gameDb.Nobility.AsNoTracking().SingleOrDefaultAsync(n => n.CharacterID == id, ct);
         var nobility = nob != null ? new CharacterNobilitySummary(nob.Donation) : null;
+        var nobilityBoard = await PublicSiteFeature.GetCachedNobilityBoardAsync(cache);
+        var nobilityRank = nobilityBoard.Standings.TryGetValue(id, out var standing) ? standing.Rank : NobilityRank.Commoner;
+        byte level = live?.Level ?? dbChar.Level;
+        byte rebirths = live?.Rebirths ?? dbChar.Rebirths;
+        uint battlePower = level + rebirths * 5u + (uint)nobilityRank + GearBattlePower(equipment);
 
         var flw = await gameDb.Flowers.AsNoTracking().SingleOrDefaultAsync(f => f.CharacterID == id, ct);
         var flowers = flw != null
@@ -416,7 +426,8 @@ public sealed class CharactersFeature : IFeature
             live?.Class ?? dbChar.CurrentClass,
             live?.PreviousClass ?? dbChar.PreviousClass,
             live?.AncestorClass ?? dbChar.AncestorClass,
-            live?.Rebirths ?? dbChar.Rebirths,
+            rebirths,
+            battlePower,
             live?.Silver ?? dbChar.Silver,
             live?.StoredSilver ?? dbChar.StoredSilver,
             live?.ConquerPoints ?? dbChar.Jewels,
@@ -457,6 +468,28 @@ public sealed class CharactersFeature : IFeature
             nobility,
             flowers,
             arena));
+    }
+
+    // What the status window's globe shows, less the guild arsenal's share, which only the game
+    // server knows: worn gear's quality, sockets, super gems and pluses, doubled for a two-handed
+    // weapon, bow or backsword unless a shield is in the left hand. A left-hand weapon adds nothing.
+    private static uint GearBattlePower(CharacterItemEntry[] equipment)
+    {
+        bool shield = equipment.Any(i => i.Position == (byte)ItemPosition.LeftHand && ItemSlots.IsShield(i.TypeId));
+        uint total = 0;
+        foreach (var item in equipment)
+        {
+            if (item.Position is < (byte)ItemPosition.Headwear or > (byte)ItemPosition.Boots)
+                continue;
+            if (item.Position == (byte)ItemPosition.LeftHand && !ItemSlots.IsShield(item.TypeId))
+                continue;
+            uint bp = ArsenalConfig.ItemBattlePower(item.TypeId, item.Plus, item.Gem1, item.Gem2);
+            if (item.Position == (byte)ItemPosition.RightHand && !shield
+                && (ItemSlots.IsTwoHanded(item.TypeId) || item.TypeId / 1000 == 421))
+                bp *= 2;
+            total += bp;
+        }
+        return total;
     }
 
     private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> KickAsync(

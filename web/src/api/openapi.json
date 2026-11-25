@@ -6255,6 +6255,7 @@
           "previousClass",
           "ancestorClass",
           "rebirths",
+          "battlePower",
           "silver",
           "storedSilver",
           "conquerPoints",
@@ -6363,6 +6364,10 @@
           "rebirths": {
             "type": "integer",
             "format": "uint8"
+          },
+          "battlePower": {
+            "type": "integer",
+            "format": "uint32"
           },
           "silver": {
             "type": "integer",

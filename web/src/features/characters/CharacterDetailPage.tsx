@@ -25,6 +25,7 @@ import { formatProfession } from '../../lib/gameMeta'
 import { CharacterTimelineTab } from '../logs/CharacterTimelineTab'
 import { CharacterActionsBar } from './CharacterActionsBar'
 import { CharacterItemsView } from './CharacterItemsView'
+import { InventoryWindow, StatusWindow } from './game/GameWindows'
 import { isMuted, pkColor } from './characterMeta'
 
 function StatRow({ label, value }: { label: string; value: string | number }) {
@@ -186,7 +187,7 @@ export default function CharacterDetailPage() {
         </Group>
       </Group>
 
-      <Group justify="space-between" align="flex-start" wrap="wrap">
+      <Stack gap="sm">
         <Stack gap={4}>
           <Group gap="sm" wrap="wrap">
             <Title order={2}>{ch.name}</Title>
@@ -229,7 +230,7 @@ export default function CharacterDetailPage() {
           canManage={canManage}
           onChanged={refresh}
         />
-      </Group>
+      </Stack>
 
       {!ch.gameConnected && (
         <Alert color="yellow" icon={<IconInfoCircle size={18} />}>
@@ -255,6 +256,10 @@ export default function CharacterDetailPage() {
 
         <Tabs.Panel value="profile" pt="md">
           <Stack>
+            <Group align="flex-start" gap="md" wrap="wrap">
+              <StatusWindow ch={ch} />
+              <InventoryWindow ch={ch} canManage={canManage} onChanged={refresh} />
+            </Group>
             <SimpleGrid cols={{ base: 1, md: 2 }}>
               <Card withBorder>
                 <Title order={4} mb="sm">
@@ -269,12 +274,6 @@ export default function CharacterDetailPage() {
                     label={t('characters:detail.mp')}
                     value={ch.maxMana ? `${ch.mana} / ${ch.maxMana}` : ch.mana}
                   />
-                  <Divider my={4} />
-                  <StatRow label={t('characters:detail.strength')} value={ch.strength} />
-                  <StatRow label={t('characters:detail.agility')} value={ch.agility} />
-                  <StatRow label={t('characters:detail.vitality')} value={ch.vitality} />
-                  <StatRow label={t('characters:detail.spirit')} value={ch.spirit} />
-                  <StatRow label={t('characters:detail.attributePoints')} value={ch.attributePoints} />
                 </Stack>
               </Card>
 
@@ -498,14 +497,10 @@ export default function CharacterDetailPage() {
 
         <Tabs.Panel value="items" pt="md">
           <CharacterItemsView
-            characterId={ch.characterId}
-            characterName={ch.name}
+            storedSilver={ch.storedSilver}
             equipment={ch.equipment}
-            inventory={ch.inventory}
             warehouses={ch.warehouses}
             detained={ch.detained}
-            canManage={canManage}
-            onChanged={refresh}
           />
         </Tabs.Panel>
 

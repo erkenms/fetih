@@ -22,6 +22,8 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
         Faces();
         Maps();
         Site();
+        Windows();
+        WeaponSkills();
     }
 
     // The website's illustrations, from the launcher's pictures. AutoPatch/1.bmp has the
@@ -42,6 +44,62 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
                 written++;
         }
         Summary.Add($"site: {written} illustrations");
+    }
+
+    // The game windows the character page draws: the status window (DialogQuery, Dialog6 in
+    // Control.Ani) with its pages and round tab buttons (Check61, 63, 64, 65, each with its
+    // pressed frame), and the inventory (DialogMpcGoods, Dialog12) with its money icons. The
+    // item slot is the inventory's top left one, frame included. The battle power on the
+    // window's globe is drawn with the CountB digits (3DEffect.ini).
+    private void Windows()
+    {
+        var written = 0;
+        (string Source, string Path, Func<Rgba, Rgba>? Crop)[] pictures =
+        [
+            ("data/main/DialogQuery.dds", "ui/status.png", null),
+            ("data/main/DialogQuery_Role.dds", "ui/status-stats.png", null),
+            ("data/main/DialogQuery_Mission.dds", "ui/status-equipment.png", null),
+            ("data/main/DialogQuery_Weapon.dds", "ui/status-skills.png", null),
+            ("data/main/QueryRoleBtn.dds", "ui/tab-stats.png", null),
+            ("data/main/QueryRoleBtnClick.dds", "ui/tab-stats-on.png", null),
+            ("data/main/QueryMissionBtn.dds", "ui/tab-equipment.png", null),
+            ("data/main/QueryMissionBtnClick.dds", "ui/tab-equipment-on.png", null),
+            ("data/main/QueryWeaponBtn.dds", "ui/tab-proficiencies.png", null),
+            ("data/main/QueryWeaponBtnClick.dds", "ui/tab-proficiencies-on.png", null),
+            ("data/main/QuerySkillBtn.dds", "ui/tab-skills.png", null),
+            ("data/main/QuerySkillBtnClick.dds", "ui/tab-skills-on.png", null),
+            ("data/main/DialogMpcGoods.dds", "ui/inventory.png", null),
+            ("data/main/DialogMpcGoods.dds", "ui/item-slot.png", image => Crop(image, 27, 27, 42, 42)),
+            ("data/main/MpcGoodsMoneyBtn.dds", "ui/silver.png", null),
+            ("data/main/PublicBtnMoney.dds", "ui/cps.png", null),
+            .. Enumerable.Range(0, 10).Select(d => ($"c3/effect/CountB/CountB{d}.dds", $"ui/bp-{d}.png", (Func<Rgba, Rgba>?)null)),
+        ];
+        foreach (var (source, path, crop) in pictures)
+        {
+            var stamp = files.Stamp(source);
+            if (stamp != null && output.Image(path, $"{source}@{stamp}{(crop != null ? "#crop" : "")}",
+                    () => crop != null ? crop(Images.Decode(files.Read(source)!)) : Images.Decode(files.Read(source)!)))
+                written++;
+        }
+        Summary.Add($"ui: {written} window pictures");
+    }
+
+    // ini/WeaponSkillName.ini names each proficiency ("410,Blade"); its icon is
+    // [Weapon<type>] in Control.Ani
+    private void WeaponSkills()
+    {
+        var names = new SortedDictionary<uint, string>();
+        foreach (var line in ClientFiles.Gbk.GetString(files.Read("ini/WeaponSkillName.ini") ?? []).Split('\n'))
+        {
+            var f = line.Trim().Split(',', 2);
+            if (f.Length == 2 && uint.TryParse(f[0], CultureInfo.InvariantCulture, out var type))
+                names[type] = f[1].Trim();
+        }
+        var icons = Icons("ani/Control.Ani", "icons/weapon", type => $"Weapon{type}", names.Keys, named: type => $"{type}");
+        output.Write("weaponSkills.json", names.ToDictionary(
+            n => n.Key.ToString(CultureInfo.InvariantCulture),
+            n => new { Name = n.Value, Icon = icons.GetValueOrDefault(n.Key) }));
+        Summary.Add($"weaponSkills.json: {names.Count} weapon skills, {icons.Count} with an icon");
     }
 
     private static Rgba Crop(Rgba image, int x, int y, int width, int height)
@@ -75,8 +133,12 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
                 text.TryAdd(id, f);
         }
 
-        var minIcons = Icons("ani/ItemMinIcon.Ani", "icons/items", id => $"Item{id}", table.All.Select(t => t.ID), "ItemDefault");
-        var groundIcons = Icons("ani/MapItemIcon.Ani", "icons/ground", id => $"{id}", table.All.Select(t => t.ID), "Default");
+        // Dyeable gear (helmets, armor, shields) has a section per color, <color><id>, and none
+        // without one; 3 is the color items get when made.
+        var minIcons = Icons("ani/ItemMinIcon.Ani", "icons/items", id => $"Item{id}", table.All.Select(t => t.ID), "ItemDefault",
+            orElse: id => $"Item3{id}");
+        var groundIcons = Icons("ani/MapItemIcon.Ani", "icons/ground", id => $"{id}", table.All.Select(t => t.ID), "Default",
+            orElse: id => $"3{id}");
 
         var items = table.All.OrderBy(t => t.ID).Select(t =>
         {
@@ -360,12 +422,13 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
     // folder/<its file name>.png, and IDs that share it share the PNG. Returns the path per ID,
     // for the IDs whose picture the client has.
     private Dictionary<uint, string> Icons(string ani, string folder, Func<uint, string> section, IEnumerable<uint> ids,
-        string? fallback = null, Func<uint, string>? named = null)
+        string? fallback = null, Func<uint, string>? named = null, Func<uint, string>? orElse = null)
     {
         var sections = Ani.Parse(files.Read(ani) ?? throw new FileNotFoundException($"No {ani}"));
         var sources = new Dictionary<uint, string>();
         foreach (var id in ids)
-            if (sections.TryGetValue(section(id), out var frames) && frames.Count > 0)
+            if ((sections.TryGetValue(section(id), out var frames) && frames.Count > 0)
+                || (orElse != null && sections.TryGetValue(orElse(id), out frames) && frames.Count > 0))
                 sources[id] = frames[0];
         if (fallback != null && sections.TryGetValue(fallback, out var defaults) && defaults.Count > 0)
             Convert(defaults[0], $"{folder}/default.png");

@@ -69,37 +69,28 @@ export function itemIconUrl(icon?: string | null): string {
   return icon ? `/assets/${icon}` : '/assets/icons/items/default.png'
 }
 
+// The client's item name colors (CItem::GetColorOfItemName), by the type ID's last digit
 export function qualityColor(quality?: ItemQuality): string {
   switch (quality) {
     case 'Refined':
-      return '#b18cff'
+      return '#5e87ca'
     case 'Unique':
-      return '#52e078'
+      return '#00ff00'
     case 'Elite':
-      return '#ff9233'
+      return '#e804fd'
     case 'Super':
-      return '#ffd43b'
+      return '#ebe57f'
     default:
-      return '#e9ecef'
+      return '#ffffff'
   }
 }
 
-export function qualityBadgeColor(quality?: ItemQuality): string {
-  switch (quality) {
-    case 'Refined':
-      return 'violet'
-    case 'Unique':
-      return 'green'
-    case 'Elite':
-      return 'orange'
-    case 'Super':
-      return 'yellow'
-    case 'Normal':
-      return 'gray'
-    default:
-      return 'dark'
-  }
+export function hasQualityColor(quality?: ItemQuality): boolean {
+  return quality === 'Refined' || quality === 'Unique' || quality === 'Elite' || quality === 'Super'
 }
+
+// The client draws its text with a black edge; on parchment it keeps the bright colors legible
+export const GAME_TEXT_EDGE = '1px 0 0 #000, -1px 0 0 #000, 0 1px 0 #000, 0 -1px 0 #000'
 
 const KNOWN_PROFESSIONS = new Set([
   10, 11, 12, 13, 14, 15,

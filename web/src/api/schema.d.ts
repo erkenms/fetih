@@ -2089,6 +2089,8 @@ export interface components {
             /** Format: uint8 */
             rebirths: number;
             /** Format: uint32 */
+            battlePower: number;
+            /** Format: uint32 */
             silver: number;
             /** Format: uint32 */
             storedSilver: number;

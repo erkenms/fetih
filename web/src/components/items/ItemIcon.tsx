@@ -1,16 +1,20 @@
 import { Badge, Box, Center } from '@mantine/core'
 import { IconPackage } from '@tabler/icons-react'
 import { useEffect, useState } from 'react'
-import { itemIconUrl, qualityColor, type CatalogItem, type ItemInstance } from './itemMeta'
+import { itemIconUrl, type CatalogItem, type ItemInstance } from './itemMeta'
+
+// The client's inventory slot, frame included, for an icon or an empty slot
+export const itemSlotStyle = {
+  background: 'url(/assets/ui/item-slot.png) center / 100% 100% no-repeat, #0f2a33',
+} as const
 
 export interface ItemIconProps {
   item: Pick<CatalogItem, 'icon' | 'name' | 'quality'>
   instance?: Pick<ItemInstance, 'plus' | 'stackCount'>
   size?: number
-  showQualityBorder?: boolean
 }
 
-export function ItemIcon({ item, instance, size = 40, showQualityBorder = true }: ItemIconProps) {
+export function ItemIcon({ item, instance, size = 40 }: ItemIconProps) {
   const [src, setSrc] = useState(() => itemIconUrl(item.icon))
   const [failed, setFailed] = useState(false)
 
@@ -19,30 +23,19 @@ export function ItemIcon({ item, instance, size = 40, showQualityBorder = true }
     setFailed(false)
   }, [item.icon])
 
-  const borderColor =
-    showQualityBorder && item.quality && item.quality !== 'None' && item.quality !== 'Normal'
-      ? qualityColor(item.quality)
-      : 'var(--mantine-color-default-border)'
-
   return (
     <Box
       pos="relative"
       w={size}
       h={size}
-      style={{
-        flexShrink: 0,
-        borderRadius: 6,
-        border: `1px solid ${borderColor}`,
-        background: 'rgba(18, 20, 26, 0.85)',
-        overflow: 'hidden',
-      }}
+      style={{ flexShrink: 0, overflow: 'hidden', ...itemSlotStyle }}
     >
       {!failed ? (
         <img
           src={src}
           alt={item.name ?? ''}
-          width={size - 2}
-          height={size - 2}
+          width={size}
+          height={size}
           style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
           onError={() => {
             if (src !== '/assets/icons/items/default.png') {

@@ -588,7 +588,7 @@ public class PublicSiteFeature : IFeature
         return new RankingPage<ArenaRankEntry>(items, total, page, pageSize, DateTime.UtcNow);
     }
 
-    private static async Task<NobilityBoardCache> GetCachedNobilityBoardAsync(IMemoryCache cache)
+    internal static async Task<NobilityBoardCache> GetCachedNobilityBoardAsync(IMemoryCache cache)
     {
         var board = await cache.GetOrCreateAsync("public:rank:nobility:board", async entry =>
         {
@@ -639,7 +639,7 @@ public class PublicSiteFeature : IFeature
         ArenaRankEntry[] TopArena,
         NewsEntry[] LatestNews);
 
-    private sealed record NobilityBoardCache(
+    internal sealed record NobilityBoardCache(
         NobilityRankEntry[] Entries,
         Dictionary<uint, Standing> Standings,
         Dictionary<uint, ulong> Donations,

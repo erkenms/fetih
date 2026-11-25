@@ -120,6 +120,7 @@ public record CharacterDetailResponse(
     byte PreviousClass,
     byte AncestorClass,
     byte Rebirths,
+    uint BattlePower,
     uint Silver,
     uint StoredSilver,
     uint ConquerPoints,
