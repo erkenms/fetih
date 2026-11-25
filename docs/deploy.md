@@ -1,6 +1,6 @@
 # Deploying a public server
 
-`comet/compose.yaml` runs everything on one machine. Without a profile it starts what
+`compose.yaml` runs everything on one machine. Without a profile it starts what
 development needs next to servers run from source (MariaDB, Loki, Alloy, Prometheus,
 Grafana). `--profile deploy` adds the three servers and an HTTPS proxy in front of the web.
 
@@ -38,8 +38,8 @@ to the same paths in the server's checkout.
 ## First start
 
 ```bash
-cp comet/deploy/env.example comet/.env    # then set FETIH_DOMAIN and the passwords
-sudo podman compose -f comet/compose.yaml --profile deploy up -d --build
+cp deploy/env.example .env               # then set FETIH_DOMAIN and the passwords
+sudo podman compose --profile deploy up -d --build
 ```
 
 MariaDB creates the schemas from `comet/sql/*.sql` on its first start (into
@@ -47,16 +47,16 @@ MariaDB creates the schemas from `comet/sql/*.sql` on its first start (into
 client `GameIPAddress`, and reaches the game's RPC at `RpcIPAddress`.
 
 ```bash
-sudo podman exec -i comet-db mariadb -uroot -p<password> comet.account \
+sudo podman exec -i fetih-db mariadb -uroot -p<password> comet.account \
   -e "UPDATE realm SET GameIPAddress = '<public IP>', RpcIPAddress = 'game' WHERE RealmID = 1"
-sudo podman restart comet-account
+sudo podman restart fetih-account
 ```
 
 Create the first account and make it an administrator (authority 5):
 
 ```bash
-sudo podman exec comet-account dotnet Comet.Account.dll create-account <email> <password>
-sudo podman exec -i comet-db mariadb -uroot -p<password> comet.account \
+sudo podman exec fetih-account dotnet Comet.Account.dll create-account <email> <password>
+sudo podman exec -i fetih-db mariadb -uroot -p<password> comet.account \
   -e "UPDATE account SET AuthorityID = 5 WHERE Username = '<email>'"
 ```
 
@@ -72,17 +72,17 @@ they work through it too:
 ssh -L 3000:127.0.0.1:3000 <server>
 ```
 
-The servers' logs are in the `comet_logs` volume, and in Loki through Grafana.
+The servers' logs are in the `fetih_logs` volume, and in Loki through Grafana.
 
 ## Updating
 
 ```bash
 git pull
-sudo podman compose -f comet/compose.yaml --profile deploy up -d --build
+sudo podman compose --profile deploy up -d --build
 ```
 
 A new table or column goes into the running database with `IF NOT EXISTS` statements
-(`sudo podman exec -i comet-db mariadb -uroot -p<password>`), as in development. Never pipe
+(`sudo podman exec -i fetih-db mariadb -uroot -p<password>`), as in development. Never pipe
 `comet/sql/*.sql` in: they drop the live tables.
 
 Studio edits made on the server are uncommitted changes in its checkout: commit them there,
@@ -93,6 +93,6 @@ or `git stash` them before a `git pull` that touches the same files.
 `comet/sql/data` is the whole database. For a consistent copy while it runs:
 
 ```bash
-sudo podman exec comet-db mariadb-dump -uroot -p<password> --single-transaction \
+sudo podman exec fetih-db mariadb-dump -uroot -p<password> --single-transaction \
   --databases comet.account comet.game > fetih-$(date +%F).sql
 ```

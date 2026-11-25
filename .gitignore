@@ -1,3 +1,5 @@
 _CLIENT/
 client/rsa.pem
 web/assets/
+# Deployment settings (deploy/env.example)
+.env

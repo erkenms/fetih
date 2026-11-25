@@ -17,14 +17,14 @@ tests). `client/` builds the patched client. The web app (issue #37, its plan an
 ## Commands
 
 ```bash
-podman compose -f comet/compose.yaml up -d   # MariaDB (integration tests need it), Loki, Grafana :3000
+podman compose up -d                          # MariaDB (integration tests need it), Loki, Grafana :3000
 dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
 cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
 dotnet run client/build.cs                    # the client, into _CLIENT/fetih
 ```
 
-A public server runs the same compose file with `--profile deploy` (servers in containers
+A public server runs the same `compose.yaml` with `--profile deploy` (servers in containers
 behind an HTTPS proxy): [docs/deploy.md](docs/deploy.md). Settings the servers read from
 their `.config` files can be overridden by `COMET_GAME_`, `COMET_ACCOUNT_` and `COMET_WEB_`
 environment variables (`COMET_GAME_Database__Hostname=db`).
@@ -36,7 +36,7 @@ environment variables (`COMET_GAME_Database__Hostname=db`).
   (`--GameNetwork:Port=... --RpcNetwork:Port=...`) and stop only the PID you started. Never
   `pkill -f Comet.Game`. Starting the game server also runs startup jobs (like the arena season
   catch-up) against the dev database.
-- A new table or column goes in `comet/sql/*.sql` **and** into the running `comet-db`
+- A new table or column goes in `comet/sql/*.sql` **and** into the running `fetih-db`
   container (root/password) with `CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS`.
   The container seeds from the .sql files only on its first run.
 - Never pipe the .sql files into the container: they start with `USE` and `DROP TABLE` for the

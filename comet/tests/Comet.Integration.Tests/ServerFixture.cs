@@ -394,7 +394,7 @@ namespace Comet.Integration.Tests
             catch (Exception e)
             {
                 throw new InvalidOperationException(
-                    $"Integration tests need the comet-db MariaDB container on {DbHost}:3306. " +
+                    $"Integration tests need the fetih-db MariaDB container on {DbHost}:3306. " +
                     "Start it from the comet folder with 'podman compose up -d' " +
                     "(or set COMET_TEST_DB_HOST, COMET_TEST_DB_USER, COMET_TEST_DB_PASSWORD).", e);
             }

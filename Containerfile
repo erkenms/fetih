@@ -1,6 +1,6 @@
 # The account, game and web servers, built from the repository root:
 #
-#   podman build -f comet/Containerfile --target game .
+#   podman build --target game .
 #
 # compose.yaml builds all three (profile deploy). The client files, the game's Data
 # directory and the web's client art are mounted, not baked in.

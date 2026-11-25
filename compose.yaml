@@ -1,11 +1,11 @@
-# Development: `podman compose -f comet/compose.yaml up -d` starts the database, logs and
-# metrics; the servers run from source. Deployment adds the servers and the HTTPS proxy with
-# `--profile deploy`: see docs/deploy.md. Settings come from comet/.env (deploy/env.example).
-name: comet
+# Development: `podman compose up -d` starts the database, logs and metrics; the servers run
+# from source. Deployment adds the servers and the HTTPS proxy with `--profile deploy`: see
+# docs/deploy.md. Settings come from .env (deploy/env.example).
+name: fetih
 
 services:
   db:
-    container_name: comet-db
+    container_name: fetih-db
     image: mariadb
     restart: always
     environment:
@@ -13,10 +13,10 @@ services:
     ports:
       - "127.0.0.1:3306:3306"
     volumes:
-      - ./sql/data:/var/lib/mysql
+      - ./comet/sql/data:/var/lib/mysql
       # Auto-seed schemas on first run
-      - ./sql/comet.account.sql:/docker-entrypoint-initdb.d/01-account.sql:ro
-      - ./sql/comet.game.sql:/docker-entrypoint-initdb.d/02-game.sql:ro
+      - ./comet/sql/comet.account.sql:/docker-entrypoint-initdb.d/01-account.sql:ro
+      - ./comet/sql/comet.game.sql:/docker-entrypoint-initdb.d/02-game.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -24,7 +24,7 @@ services:
 
   # Logs and metrics. Everything binds to loopback; Grafana is http://localhost:3000
   loki:
-    container_name: comet-loki
+    container_name: fetih-loki
     mem_limit: 384m
     environment:
       GOMEMLIMIT: 320MiB
@@ -38,21 +38,21 @@ services:
       - loki-data:/loki
 
   alloy:
-    container_name: comet-alloy
+    container_name: fetih-alloy
     mem_limit: 192m
     image: docker.io/grafana/alloy:v1.9.1
     restart: unless-stopped
     command: run --disable-reporting --storage.path=/var/lib/alloy/data /etc/alloy/config.alloy
     volumes:
       - ./observability/alloy/config.alloy:/etc/alloy/config.alloy:ro
-      - ./src:/comet/src:ro
+      - ./comet/src:/comet/src:ro
       - logs:/comet/logs:ro
       - alloy-data:/var/lib/alloy/data
     depends_on:
       - loki
 
   prometheus:
-    container_name: comet-prometheus
+    container_name: fetih-prometheus
     mem_limit: 192m
     environment:
       GOMEMLIMIT: 160MiB
@@ -70,7 +70,7 @@ services:
       - "host.containers.internal:host-gateway"
 
   grafana:
-    container_name: comet-grafana
+    container_name: fetih-grafana
     mem_limit: 192m
     image: docker.io/grafana/grafana:12.0.2
     restart: unless-stopped
@@ -100,8 +100,8 @@ services:
   # Podman or Docker; rootless Podman shows every player as the same internal address.
   account:
     profiles: [deploy]
-    container_name: comet-account
-    build: { context: .., dockerfile: comet/Containerfile, target: account }
+    container_name: fetih-account
+    build: { context: ., dockerfile: Containerfile, target: account }
     restart: unless-stopped
     environment:
       COMET_ACCOUNT_Database__Hostname: db
@@ -116,8 +116,8 @@ services:
 
   game:
     profiles: [deploy]
-    container_name: comet-game
-    build: { context: .., dockerfile: comet/Containerfile, target: game }
+    container_name: fetih-game
+    build: { context: ., dockerfile: Containerfile, target: game }
     restart: unless-stopped
     environment:
       COMET_GAME_Database__Hostname: db
@@ -132,8 +132,8 @@ services:
     ports:
       - "5816:5816"
     volumes:
-      - ${CLIENT_DIR:-../_CLIENT/fetih}:/client:ro
-      - ./src/Comet.Game/Data:/data:ro
+      - ${CLIENT_DIR:-./_CLIENT/fetih}:/client:ro
+      - ./comet/src/Comet.Game/Data:/data:ro
       - logs:/logs
     depends_on:
       db: { condition: service_healthy }
@@ -142,8 +142,8 @@ services:
   # reads, and the Changes page diffs them with git
   web:
     profiles: [deploy]
-    container_name: comet-web
-    build: { context: .., dockerfile: comet/Containerfile, target: web }
+    container_name: fetih-web
+    build: { context: ., dockerfile: Containerfile, target: web }
     restart: unless-stopped
     environment:
       COMET_WEB_Database__Hostname: db
@@ -161,9 +161,9 @@ services:
       COMET_WEB_Paths__FrontendDirectory: /app/wwwroot
       COMET_WEB_Logging__Directory: /logs/web
     volumes:
-      - ..:/repo
-      - ${CLIENT_DIR:-../_CLIENT/fetih}:/client:ro
-      - ../web/assets:/assets:ro
+      - .:/repo
+      - ${CLIENT_DIR:-./_CLIENT/fetih}:/client:ro
+      - ./web/assets:/assets:ro
       - logs:/logs
       # The keys that sign login cookies; without them every update logs everyone out
       - web-keys:/root/.aspnet/DataProtection-Keys
@@ -172,7 +172,7 @@ services:
 
   proxy:
     profiles: [deploy]
-    container_name: comet-proxy
+    container_name: fetih-proxy
     image: docker.io/library/caddy:2
     restart: unless-stopped
     environment:

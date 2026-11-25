@@ -1,6 +1,6 @@
 # Logs and metrics
 
-`podman compose -f comet/compose.yaml up -d` starts these next to MariaDB, all on 127.0.0.1:
+`podman compose up -d` starts these next to MariaDB, all on 127.0.0.1:
 
 | Service | Port | What |
 |---|---|---|

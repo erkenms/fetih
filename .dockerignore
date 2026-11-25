@@ -1,4 +1,4 @@
-# Build context for comet/Containerfile: only sources go in
+# Build context for Containerfile: only sources go in
 **/bin
 **/obj
 comet/src/*/logs

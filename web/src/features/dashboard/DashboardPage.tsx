@@ -23,7 +23,7 @@ import { useMe } from '../../app/auth'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { byteSize, durationParts, grafanaDashboard, grafanaPanel, since } from './format'
 
-// Panels of the provisioned Overview dashboard (comet/observability/grafana/dashboards)
+// Panels of the provisioned Overview dashboard (observability/grafana/dashboards)
 const panels = [
   { id: 7, key: 'online' },
   { id: 8, key: 'packets' },
