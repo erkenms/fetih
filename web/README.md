@@ -1,7 +1,8 @@
 # fetih web
 
 The web app's frontend: Vite, React, TypeScript, Mantine, TanStack Query, React Router,
-react-i18next. The backend is `comet/src/Comet.Web`. The plan is issue #37.
+react-i18next. The backend is `comet/src/Comet.Web`. The plan is issue #37. The look is set by
+[docs/web-style.md](../docs/web-style.md).
 
 ```bash
 cd comet/src/Comet.Web && dotnet run   # backend on 127.0.0.1:5820

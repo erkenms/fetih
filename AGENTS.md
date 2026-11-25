@@ -4,7 +4,9 @@ A Conquer Online server for the 5619 client, built on the Comet emulator:
 `comet/src/Comet.Account` (login), `Comet.Game` (world), `Comet.Network` (sockets, ciphers,
 RPC), `Comet.Core` (logging), `Comet.Shared` (RPC types), `Comet.Client` (headless client for
 tests). `client/` builds the patched client. The web app (issue #37, its plan and rules) is
-`Comet.Web` plus `web/` (React), with client art built by `tools/assets/build.cs`.
+`Comet.Web` plus `web/` (React), with client art built by `tools/assets/build.cs`. Its look,
+public site and admin alike, follows [docs/web-style.md](docs/web-style.md): read it before
+any UI work.
 
 ## Rules
 
