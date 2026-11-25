@@ -1,0 +1,51 @@
+{
+  "title": "Economy",
+  "loading": "Loading economy metrics...",
+  "refresh": "Refresh",
+  "range": {
+    "1h": "1h",
+    "24h": "24h",
+    "7d": "7d",
+    "30d": "30d"
+  },
+  "totals": {
+    "silver": "Total Silver",
+    "silverBreakdown": "Pocket {{pocket}} · Warehouse {{stored}}",
+    "cp": "Total Conquer Points",
+    "characters": "Across {{count}} characters",
+    "guildFunds": "Guild Silver Funds",
+    "guildCp": "Guild CP Fund: {{cp}}"
+  },
+  "flow": {
+    "title": "Silver In vs. Silver Out (NPCs & Drops)",
+    "netLabel": "Net Silver Flow ({{range}})",
+    "inOutSummary": "In {{inflow}} · Out {{outflow}}",
+    "lokiUnavailable": "Loki is unreachable; money flow logs unavailable.",
+    "noData": "No silver flow events recorded in this window.",
+    "legendIn": "Silver in (NPC sales + pickups)",
+    "legendOut": "Silver out (spent at NPCs)",
+    "spent": "Spent at NPCs",
+    "npcSales": "NPC sales",
+    "pickups": "Pickups",
+    "spikeTitle": "Unusual silver inflow spike detected",
+    "spikeBody": "A time bucket recorded {{ratio}}x the average silver inflow. Inspect recent item.sold and item.picked_up logs for potential exploits."
+  },
+  "trends": {
+    "silverTitle": "Total Silver Trend (Prometheus)",
+    "cpTitle": "Total CP Trend (Prometheus)",
+    "prometheusUnavailable": "Prometheus is unreachable; supply trends unavailable.",
+    "noPoints": "No Prometheus samples yet for this window."
+  },
+  "holders": {
+    "silverTitle": "Top Silver Holders",
+    "cpTitle": "Top CP Holders",
+    "empty": "No characters found.",
+    "columns": {
+      "character": "Character",
+      "level": "Lvl",
+      "totalSilver": "Total Silver",
+      "stored": "Warehouse",
+      "cp": "CP"
+    }
+  }
+}

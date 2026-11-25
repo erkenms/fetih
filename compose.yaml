@@ -157,6 +157,7 @@ services:
       COMET_WEB_Web__ForwardedHeaders: "true"
       COMET_WEB_GameRpc__Hostname: game
       COMET_WEB_Observability__LokiUrl: http://loki:3100
+      COMET_WEB_Observability__PrometheusUrl: http://prometheus:9090
       COMET_WEB_Paths__DataDirectory: /repo/comet/src/Comet.Game/Data
       COMET_WEB_Paths__ClientDirectory: /client
       COMET_WEB_Paths__AssetsDirectory: /assets

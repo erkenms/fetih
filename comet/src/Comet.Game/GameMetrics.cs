@@ -3,8 +3,12 @@ namespace Comet.Game
     using System;
     using System.Diagnostics.Metrics;
     using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Comet.Game.Database;
     using Comet.Network.Sockets;
     using Comet.Core.Logging;
+    using Microsoft.EntityFrameworkCore;
     using Prometheus;
     using Serilog;
 
@@ -32,6 +36,18 @@ namespace Comet.Game
         private static MeterListener packetListener;
         private static readonly Gauge SaveRoundFailures = Metrics.CreateGauge(
             "comet_save_round_failed_characters", "Characters the last periodic round couldn't save");
+        private static readonly Gauge EconomySilverTotal = Metrics.CreateGauge(
+            "comet_economy_silver_total", "Total silver across all characters (online and offline, pocket and warehouse)");
+        private static readonly Gauge EconomyCpTotal = Metrics.CreateGauge(
+            "comet_economy_cp_total", "Total Conquer Points across all characters (online and offline)");
+        private static readonly Gauge EconomySilverOnline = Metrics.CreateGauge(
+            "comet_economy_silver_online", "Total silver held by online characters (pocket and warehouse)");
+        private static readonly Gauge EconomyCpOnline = Metrics.CreateGauge(
+            "comet_economy_cp_online", "Total Conquer Points held by online characters");
+
+        private static readonly TimeSpan EconomyRefreshInterval = TimeSpan.FromSeconds(60);
+        private static long lastEconomyRefreshTicks;
+        private static int economyRefreshing;
 
         public static void Start(MetricsConfiguration config)
         {
@@ -87,6 +103,61 @@ namespace Comet.Game
                 MonstersAlive.Set(Kernel.Monsters.Loaded.Sum(m => m.All().Count(x => x.Alive)));
             if (Kernel.Ground != null)
                 GroundItems.Set(Kernel.Ground.Loaded.Sum(m => m.Count));
+            CollectEconomy();
+        }
+
+        private static void CollectEconomy()
+        {
+            double onlineSilver = 0;
+            double onlineCp = 0;
+            foreach (var client in Kernel.Players.Values)
+            {
+                var ch = client.Character;
+                if (ch == null)
+                    continue;
+                onlineSilver += (double)ch.Silver + ch.StoredSilver;
+                onlineCp += ch.Jewels;
+            }
+            EconomySilverOnline.Set(onlineSilver);
+            EconomyCpOnline.Set(onlineCp);
+
+            long nowTicks = DateTime.UtcNow.Ticks;
+            long prevTicks = Interlocked.Read(ref lastEconomyRefreshTicks);
+            if (nowTicks - prevTicks < EconomyRefreshInterval.Ticks)
+                return;
+            if (Interlocked.CompareExchange(ref economyRefreshing, 1, 0) != 0)
+                return;
+
+            _ = Task.Run(RefreshEconomyTotalsAsync);
+        }
+
+        // The saved rows for offline characters, the live purses for online ones
+        private static async Task RefreshEconomyTotalsAsync()
+        {
+            try
+            {
+                var online = Kernel.Players.Values.Select(c => c.Character).Where(c => c != null).ToList();
+                var onlineIds = online.Select(c => c.CharacterID).ToList();
+
+                await using var db = new ServerDbContext();
+                var offline = await db.Characters.AsNoTracking()
+                    .Where(c => !onlineIds.Contains(c.CharacterID))
+                    .GroupBy(_ => 1)
+                    .Select(g => new { Silver = g.Sum(c => (long)c.Silver + (long)c.StoredSilver), Cp = g.Sum(c => (long)c.Jewels) })
+                    .FirstOrDefaultAsync();
+
+                EconomySilverTotal.Set((offline?.Silver ?? 0) + online.Sum(c => (double)c.Silver + c.StoredSilver));
+                EconomyCpTotal.Set((offline?.Cp ?? 0) + online.Sum(c => (double)c.Jewels));
+                Interlocked.Exchange(ref lastEconomyRefreshTicks, DateTime.UtcNow.Ticks);
+            }
+            catch (Exception e)
+            {
+                Log.Warning(e, "Can't read the economy totals; the gauges keep their last values");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref economyRefreshing, 0);
+            }
         }
     }
 

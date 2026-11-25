@@ -8,6 +8,7 @@ public sealed class ObservabilityOptions
 {
     public string LokiUrl { get; set; } = "http://127.0.0.1:3100";
     public string GrafanaUrl { get; set; } = "http://localhost:3000";
+    public string PrometheusUrl { get; set; } = "http://127.0.0.1:9090";
 }
 
 public record LogLine(DateTime Timestamp, string Server, string Level, string Event, string Message);

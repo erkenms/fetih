@@ -5,6 +5,7 @@ import { broadcastsRoute } from '../features/broadcasts'
 import { changesRoute } from '../features/changes'
 import { dataRoute } from '../features/data'
 import { healthRoute } from '../features/health'
+import { economyRoute } from '../features/economy'
 import { itemsRoute } from '../features/items'
 import { myAccountRoute, registerRoute } from '../features/public/account'
 import { publicSiteRoutes } from '../features/public/site'
@@ -28,6 +29,7 @@ import { serverRoute } from '../features/server'
 // Every feature page, one line each. Admin pages show in the sidebar by their nav group.
 export const featureRoutes: FeatureRoute[] = [
   healthRoute,
+  economyRoute,
   broadcastsRoute,
   auditRoute,
   itemsRoute,

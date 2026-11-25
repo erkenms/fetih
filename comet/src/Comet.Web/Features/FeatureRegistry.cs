@@ -12,6 +12,7 @@ public static class FeatureRegistry
         new PublicSite.PublicSiteFeature(),
         new PublicHeatmap.PublicHeatmapFeature(),
         new Dashboard.DashboardFeature(),
+        new Economy.EconomyFeature(),
         new Broadcasts.BroadcastsFeature(),
         new Logs.LogsFeature(),
         new ItemHistory.ItemHistoryFeature(),

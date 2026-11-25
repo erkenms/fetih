@@ -1475,6 +1475,45 @@
         }
       }
     },
+    "/api/economy": {
+      "get": {
+        "tags": [
+          "EconomyFeature"
+        ],
+        "operationId": "getEconomy",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "24h"
+            }
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 15
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EconomyResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/broadcasts/queue": {
       "get": {
         "tags": [
@@ -8029,6 +8068,115 @@
           }
         }
       },
+      "EconomyResponse": {
+        "required": [
+          "generatedAt",
+          "range",
+          "totals",
+          "topSilverHolders",
+          "topCpHolders",
+          "trends",
+          "flow"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "range": {
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/EconomyTotals"
+          },
+          "topSilverHolders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopHolderEntry"
+            }
+          },
+          "topCpHolders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopHolderEntry"
+            }
+          },
+          "trends": {
+            "$ref": "#/components/schemas/EconomyTrends"
+          },
+          "flow": {
+            "$ref": "#/components/schemas/MoneyFlowSummary"
+          }
+        }
+      },
+      "EconomyTotals": {
+        "required": [
+          "totalSilver",
+          "pocketSilver",
+          "storedSilver",
+          "totalConquerPoints",
+          "guildSilverFund",
+          "guildConquerPointsFund",
+          "characterCount"
+        ],
+        "type": "object",
+        "properties": {
+          "totalSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "pocketSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "storedSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "totalConquerPoints": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "guildSilverFund": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "guildConquerPointsFund": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "characterCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "EconomyTrends": {
+        "required": [
+          "prometheusAvailable",
+          "silver",
+          "conquerPoints"
+        ],
+        "type": "object",
+        "properties": {
+          "prometheusAvailable": {
+            "type": "boolean"
+          },
+          "silver": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            }
+          },
+          "conquerPoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendPoint"
+            }
+          }
+        }
+      },
       "EditableMapSettings": {
         "required": [
           "inMapsJson",
@@ -11864,6 +12012,88 @@
         "properties": {
           "text": {
             "type": "string"
+          }
+        }
+      },
+      "MoneyFlowBucket": {
+        "required": [
+          "timestamp",
+          "spentAtNpcs",
+          "earnedFromNpcs",
+          "pickedUpSilver",
+          "netFlow"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "spentAtNpcs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "earnedFromNpcs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pickedUpSilver": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "netFlow": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "MoneyFlowSummary": {
+        "required": [
+          "lokiAvailable",
+          "totalSpentAtNpcs",
+          "totalEarnedFromNpcs",
+          "totalPickedUpSilver",
+          "netFlow",
+          "spikeRatio",
+          "spikeDetected",
+          "buckets"
+        ],
+        "type": "object",
+        "properties": {
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "totalSpentAtNpcs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalEarnedFromNpcs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPickedUpSilver": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "netFlow": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "spikeRatio": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "spikeDetected": {
+            "type": "boolean"
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MoneyFlowBucket"
+            }
           }
         }
       },
@@ -15982,6 +16212,74 @@
           }
         }
       },
+      "TopHolderEntry": {
+        "required": [
+          "characterId",
+          "name",
+          "level",
+          "rebirths",
+          "currentClass",
+          "pocketSilver",
+          "storedSilver",
+          "totalSilver",
+          "conquerPoints"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "pocketSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "storedSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "totalSilver": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "conquerPoints": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "TrendPoint": {
+        "required": [
+          "timestamp",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "UpdateMaintenanceRequest": {
         "required": [
           "enabled",
@@ -16088,6 +16386,9 @@
     },
     {
       "name": "DataEditFeature"
+    },
+    {
+      "name": "EconomyFeature"
     },
     {
       "name": "HealthFeature"

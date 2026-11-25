@@ -596,6 +596,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/economy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getEconomy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/broadcasts/queue": {
         parameters: {
             query?: never;
@@ -2660,6 +2676,37 @@ export interface components {
             url: null | string;
             version: string;
         };
+        EconomyResponse: {
+            /** Format: date-time */
+            generatedAt: string;
+            range: string;
+            totals: components["schemas"]["EconomyTotals"];
+            topSilverHolders: components["schemas"]["TopHolderEntry"][];
+            topCpHolders: components["schemas"]["TopHolderEntry"][];
+            trends: components["schemas"]["EconomyTrends"];
+            flow: components["schemas"]["MoneyFlowSummary"];
+        };
+        EconomyTotals: {
+            /** Format: uint64 */
+            totalSilver: number;
+            /** Format: uint64 */
+            pocketSilver: number;
+            /** Format: uint64 */
+            storedSilver: number;
+            /** Format: uint64 */
+            totalConquerPoints: number;
+            /** Format: uint64 */
+            guildSilverFund: number;
+            /** Format: uint64 */
+            guildConquerPointsFund: number;
+            /** Format: int32 */
+            characterCount: number;
+        };
+        EconomyTrends: {
+            prometheusAvailable: boolean;
+            silver: components["schemas"]["TrendPoint"][];
+            conquerPoints: components["schemas"]["TrendPoint"][];
+        };
         EditableMapSettings: {
             inMapsJson: boolean;
             name: null | string;
@@ -3756,6 +3803,33 @@ export interface components {
         };
         MessageCharacterRequest: {
             text: string;
+        };
+        MoneyFlowBucket: {
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: int64 */
+            spentAtNpcs: number;
+            /** Format: int64 */
+            earnedFromNpcs: number;
+            /** Format: int64 */
+            pickedUpSilver: number;
+            /** Format: int64 */
+            netFlow: number;
+        };
+        MoneyFlowSummary: {
+            lokiAvailable: boolean;
+            /** Format: int64 */
+            totalSpentAtNpcs: number;
+            /** Format: int64 */
+            totalEarnedFromNpcs: number;
+            /** Format: int64 */
+            totalPickedUpSilver: number;
+            /** Format: int64 */
+            netFlow: number;
+            /** Format: double */
+            spikeRatio: null | number;
+            spikeDetected: boolean;
+            buckets: components["schemas"]["MoneyFlowBucket"][];
         };
         MonsterBossRef: {
             id: string;
@@ -4946,6 +5020,31 @@ export interface components {
             to: string;
             truncated: boolean;
         };
+        TopHolderEntry: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint64 */
+            pocketSilver: number;
+            /** Format: uint64 */
+            storedSilver: number;
+            /** Format: uint64 */
+            totalSilver: number;
+            /** Format: uint32 */
+            conquerPoints: number;
+        };
+        TrendPoint: {
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: double */
+            value: number;
+        };
         UpdateMaintenanceRequest: {
             enabled: boolean;
             message: null | string;
@@ -5913,6 +6012,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicHeatmapResponse"];
+                };
+            };
+        };
+    };
+    getEconomy: {
+        parameters: {
+            query?: {
+                range?: string;
+                top?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EconomyResponse"];
                 };
             };
         };
