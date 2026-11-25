@@ -150,11 +150,8 @@ namespace Comet.Game.States
                 return await RejectReincarnateAsync(client, newClass, "class", null);
 
             var dew = client.Inventory.Items.FirstOrDefault(i => i.TypeID == OblivionDew);
-            if (dew == null || !client.Inventory.Remove(dew))
+            if (dew == null || !await ItemActions.SpendOneAsync(client, dew))
                 return await RejectReincarnateAsync(client, newClass, "no_item", MsgMeteSpecial.Result.NoItem);
-
-            await ItemsRepository.DeleteAsync(dew.ItemID);
-            await client.SendAsync(MsgItem.Removed(dew.ItemID));
 
             byte dropped = character.AncestorClass;
             character.AncestorClass = character.PreviousClass;

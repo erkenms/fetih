@@ -152,9 +152,7 @@ namespace Comet.Game.Items
                 return;
             }
 
-            client.Inventory.Remove(refinery);
-            await ItemsRepository.DeleteAsync(refinery.ItemID);
-            await client.SendAsync(MsgItem.Removed(refinery.ItemID));
+            await ItemActions.SpendOneAsync(client, refinery);
 
             Apply(gear, refinement, now, character.VIPLevel);
             await ItemsRepository.SetRefineryAsync(gear);
@@ -201,9 +199,7 @@ namespace Comet.Game.Items
 
             foreach (var stone in stones)
             {
-                client.Inventory.Remove(stone);
-                await ItemsRepository.DeleteAsync(stone.ItemID);
-                await client.SendAsync(MsgItem.Removed(stone.ItemID));
+                await ItemActions.SpendOneAsync(client, stone);
             }
             Stabilize(gear);
             await ItemsRepository.SetRefineryAsync(gear);

@@ -118,7 +118,10 @@ namespace Comet.Game.Items
                 await Chat.Talk.NoticeAsync(client, "This item belongs to someone else for now.");
                 return Reject(client, "pick_up", groundID, "not_owner");
             }
-            if (found.Item != null && client.Inventory.FreeSlots == 0)
+            ushort stackLimit = found.Item == null ? (ushort)1 : ItemActions.StackLimit(found.Item.TypeID);
+            bool stacks = found.Item != null && ItemActions.IsPlain(found.Item) &&
+                client.Inventory.SlotsFor(found.Item.TypeID, 1, stackLimit) == 0;
+            if (found.Item != null && !stacks && client.Inventory.FreeSlots == 0)
             {
                 await Chat.Talk.NoticeAsync(client, "Your inventory is full.");
                 return Reject(client, "pick_up", groundID, "inventory_full");
@@ -131,11 +134,20 @@ namespace Comet.Game.Items
             if (found.Item != null)
             {
                 var item = found.Item;
-                item.CharacterID = character.CharacterID;
-                item.Position = (byte)ItemPosition.Inventory;
-                await ItemsRepository.SetOwnerAsync(item.ItemID, item.CharacterID, item.Position);
-                client.Inventory.Add(item);
-                await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
+                if (stacks && client.Inventory.StackOne(item.TypeID, stackLimit) is { } stack)
+                {
+                    await ItemsRepository.DeleteAsync(item.ItemID);
+                    await ItemsRepository.SetStackAmountAsync(stack.ItemID, stack.StackAmount);
+                    await client.SendAsync(new MsgItemInfo(stack, MsgItemInfo.ItemAction.Update));
+                }
+                else
+                {
+                    item.CharacterID = character.CharacterID;
+                    item.Position = (byte)ItemPosition.Inventory;
+                    await ItemsRepository.SetOwnerAsync(item.ItemID, item.CharacterID, item.Position);
+                    client.Inventory.Add(item);
+                    await client.SendAsync(new MsgItemInfo(item, MsgItemInfo.ItemAction.Add));
+                }
             }
             else
             {

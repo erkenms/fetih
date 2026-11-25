@@ -71,6 +71,25 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task APickedUpItemJoinsAStackWithRoom()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 680, 580, GameMaster)).Player;
+            await CommandAsync(player, $"/item {Potion} 2");
+            var stack = await player.Game.WaitForItemAsync(i => i.TypeId == Potion && i.StackAmount == 2);
+            Assert.NotNull(stack);
+            await player.Game.SplitAsync(stack.Id, 1);
+            var part = await player.Game.WaitForItemAsync(i => i.Id != stack.Id && i.TypeId == Potion);
+            Assert.NotNull(part);
+
+            await player.Game.DropAsync(part.Id);
+            var shown = await player.Game.WaitForGroundItemAsync(g => g.Action == GroundItemMessage.Create);
+            Assert.NotNull(shown);
+            await player.Game.PickUpAsync(shown.Id, shown.X, shown.Y);
+            Assert.NotNull(await player.Game.WaitForItemAsync(i => i.Id == stack.Id && i.StackAmount == 2));
+            Assert.Equal("2", await this.StacksAsync(player));
+        }
+
+        [Fact]
         public async Task SellingAStackPaysForEveryItemInIt()
         {
             await using var player = (await this.PlayingAtAsync(1002, 452, 342)).Player;

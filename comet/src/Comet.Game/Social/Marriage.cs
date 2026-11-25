@@ -112,14 +112,11 @@ namespace Comet.Game.Social
                 }
 
                 var tear = client.Inventory?.Items.FirstOrDefault(i => i.TypeID == MeteorTear);
-                if (tear == null || !client.Inventory.Remove(tear))
+                if (tear == null || !await Items.ItemActions.SpendOneAsync(client, tear))
                 {
                     LogReject(client, "divorce", 0, "no_item");
                     return "no_item";
                 }
-
-                await ItemsRepository.DeleteAsync(tear.ItemID);
-                await client.SendAsync(MsgItem.Removed(tear.ItemID));
 
                 string formerSpouse = character.Spouse;
                 character.Spouse = None;

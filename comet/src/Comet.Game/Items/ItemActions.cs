@@ -24,7 +24,7 @@ namespace Comet.Game.Items
 
             var item = New(character.CharacterID, type);
             shape(item);
-            if (item.Plus == 0 && client.Inventory.StackOne(type.ID, StackLimit(type.ID)) is { } stack)
+            if (IsPlain(item) && client.Inventory.StackOne(type.ID, StackLimit(type.ID)) is { } stack)
             {
                 await ItemsRepository.SetStackAmountAsync(stack.ItemID, stack.StackAmount);
                 await client.SendAsync(new MsgItemInfo(stack, MsgItemInfo.ItemAction.Update));
@@ -91,6 +91,11 @@ namespace Comet.Game.Items
         public static ushort StackLimit(uint typeID) =>
             !ItemSlots.IsArrow(typeID) && Kernel.ItemTypes.TryGet(typeID, out var type) && type.StackLimit > 1
                 ? (ushort)System.Math.Min(type.StackLimit, ushort.MaxValue) : (ushort)1;
+
+        // Only an item with nothing of its own may join a stack
+        public static bool IsPlain(DbItem item) =>
+            item.Plus == 0 && item.Bless == 0 && item.Gem1 == 0 && item.Gem2 == 0 && item.Enchant == 0 &&
+            !item.Locked && item.StackAmount == 1;
 
         public static DbItem New(uint characterID, ItemType type) => new DbItem
         {

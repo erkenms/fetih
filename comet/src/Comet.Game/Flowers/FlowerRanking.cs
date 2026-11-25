@@ -200,9 +200,7 @@ namespace Comet.Game.Flowers
             }
             else
             {
-                client.Inventory.Remove(consumed);
-                await ItemsRepository.DeleteAsync(consumed.ItemID);
-                await client.SendAsync(MsgItem.Removed(consumed.ItemID));
+                await ItemActions.SpendOneAsync(client, consumed);
             }
 
             FlowerRecord updated;
