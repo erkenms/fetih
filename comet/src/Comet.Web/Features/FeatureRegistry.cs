@@ -20,5 +20,6 @@ public static class FeatureRegistry
         new Characters.CharactersFeature(),
         new MonsterEdit.MonsterEditFeature(),
         new DataEdit.DataEditFeature(),
+        new Integrity.IntegrityFeature(),
     ];
 }

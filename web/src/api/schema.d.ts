@@ -1476,6 +1476,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/integrity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getIntegrityReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2426,6 +2442,40 @@ export interface components {
             gameServer: boolean;
             /** Format: date-time */
             serverTime: string;
+        };
+        IntegrityFileSummary: {
+            file: string;
+            /** Format: int32 */
+            errors: number;
+            /** Format: int32 */
+            warnings: number;
+            /** Format: int32 */
+            checkedEntries: number;
+        };
+        IntegrityProblem: {
+            file: string;
+            category: string;
+            level: string;
+            /** Format: int32 */
+            entry: null | number;
+            /** Format: int32 */
+            line: null | number;
+            entityId: null | string;
+            message: string;
+            editorPath: string;
+            editorKind: string;
+        };
+        IntegrityReportResponse: {
+            dataDirectory: string;
+            clientFilesAvailable: boolean;
+            /** Format: int32 */
+            errorCount: number;
+            /** Format: int32 */
+            warningCount: number;
+            /** Format: int32 */
+            checkedFiles: number;
+            files: components["schemas"]["IntegrityFileSummary"][];
+            problems: components["schemas"]["IntegrityProblem"][];
         };
         /** @enum {unknown} */
         ItemCategory: "Weapon" | "Armor" | "Headwear" | "Necklace" | "Ring" | "Boots" | "Shield" | "Garment" | "Steed" | "Crop" | "Bottle" | "Arrow" | "Gem" | "Consumable" | "Other";
@@ -6685,6 +6735,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CellCheckResponse"];
+                };
+            };
+        };
+    };
+    getIntegrityReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrityReportResponse"];
                 };
             };
         };

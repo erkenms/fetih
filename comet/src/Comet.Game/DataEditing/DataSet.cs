@@ -29,6 +29,8 @@ namespace Comet.Game.DataEditing
 
         public string Directory { get; }
 
+        public bool ChecksClient => this.Grids != null;
+
         // grids gives null for a map GameMap.dat doesn't list; without it, maps aren't checked,
         // and without items, item IDs aren't
         public DataSet(string directory, Func<uint, MapGrid> grids = null, Func<uint, bool> items = null)
@@ -88,6 +90,7 @@ namespace Comet.Game.DataEditing
             private readonly Dictionary<uint, MapGrid> Grids = new Dictionary<uint, MapGrid>();
             private readonly Dictionary<uint, string> GridErrors = new Dictionary<uint, string>();
             private HashSet<uint> MonsterIDs;
+            private HashSet<uint> NpcIDs;
             private DataFile File;
 
             public List<DataProblem> Problems { get; } = new List<DataProblem>();
@@ -250,6 +253,7 @@ namespace Comet.Game.DataEditing
                         this.Add(i, "No text");
                     if (string.IsNullOrEmpty(talkers[i].Reply))
                         this.Add(i, "No reply");
+                    this.NpcExists(i, talkers[i].NpcID);
                 }
             }
 
@@ -259,6 +263,7 @@ namespace Comet.Game.DataEditing
                 this.Unique(teleporters, t => t.NpcID, "NPC ID");
                 for (int i = 0; i < teleporters.Length; i++)
                 {
+                    this.NpcExists(i, teleporters[i].NpcID);
                     var destinations = teleporters[i].Destinations ?? new List<Destination>();
                     if (destinations.Count == 0 || destinations.Count >= MsgTaskDialog.NoOption)
                         this.Add(i, $"Needs 1 to {MsgTaskDialog.NoOption - 1} destinations");
@@ -331,6 +336,16 @@ namespace Comet.Game.DataEditing
                 this.MonsterIDs ??= this.Set.Entries<MonsterType>(DataFileKinds.Monsters.FileName).Select(m => m.ID).ToHashSet();
                 if (!this.MonsterIDs.Contains(id))
                     this.Add(entry, $"Monster {id} isn't in {DataFileKinds.Monsters.FileName}");
+            }
+
+            // Talkers and teleporters answer clicks on an NPC from npcs.json or goals.json
+            private void NpcExists(int entry, uint id)
+            {
+                this.NpcIDs ??= new[] { DataFileKinds.Npcs, DataFileKinds.Goals }
+                    .Where(k => System.IO.File.Exists(Path.Combine(this.Set.Directory, k.FileName)) || this.Set.Files.ContainsKey(k.FileName))
+                    .SelectMany(k => this.Set.Entries<Npc>(k.FileName)).Select(n => n.NpcID).ToHashSet();
+                if (!this.NpcIDs.Contains(id))
+                    this.Add(entry, $"NPC {id} isn't in {DataFileKinds.Npcs.FileName} or {DataFileKinds.Goals.FileName}");
             }
 
             private void Item(int entry, uint id, string what, DataProblemLevel level = DataProblemLevel.Error)

@@ -1,0 +1,74 @@
+{
+  "nav": "Bütünlük",
+  "title": "Veri bütünlüğü kontrolleri",
+  "description": "Comet.Game/Data dosyaları ile istemcinin harita ve eşya dosyaları arasındaki referansları doğrula.",
+  "refresh": "Yeniden kontrol et",
+  "status": {
+    "clientAvailable": "İstemci dosyaları yüklendi",
+    "clientMissing": "İstemci dosyaları yok (yalnızca veri kontrolleri)",
+    "checkedFiles": "{{count}} dosya kontrol edildi",
+    "errors": "{{count}} hata",
+    "warnings": "{{count}} uyarı"
+  },
+  "clean": {
+    "title": "Tüm bütünlük kontrolleri geçti",
+    "body": "{{files}} veri dosyasında bozuk referans bulunamadı.",
+    "withWarnings": "Hata bulunamadı (mevcut filtre tarafından gizlenen {{warnings}} uyarı var)."
+  },
+  "filter": {
+    "errors": "Hatalar ({{count}})",
+    "warnings": "Uyarılar ({{count}})",
+    "all": "Tümü ({{count}})",
+    "file": "Veri dosyası",
+    "allFiles": "Tüm dosyalar",
+    "category": "Kategori",
+    "allCategories": "Tüm kategoriler",
+    "search": "Kayıt, mesaj veya dosyaya göre filtrele..."
+  },
+  "filesHeading": "Dosyaya göre özet",
+  "problemsHeading": "Sorunlar ({{count}})",
+  "emptyFiltered": "Mevcut filtrelere uyan sorun yok.",
+  "column": {
+    "file": "Dosya",
+    "entries": "Kayıtlar",
+    "errors": "Hatalar",
+    "warnings": "Uyarılar",
+    "status": "Durum",
+    "level": "Seviye",
+    "category": "Kategori",
+    "entity": "Kayıt",
+    "line": "Satır",
+    "message": "Sorun",
+    "fix": "Düzelt"
+  },
+  "level": {
+    "error": "Hata",
+    "warning": "Uyarı"
+  },
+  "fileStatus": {
+    "ok": "Tamam",
+    "errors": "Hatalı",
+    "warnings": "Uyarılı"
+  },
+  "category": {
+    "missing_monster": "Eksik canavar",
+    "missing_map": "Eksik harita",
+    "missing_item": "Eksik eşya",
+    "missing_npc": "Eksik NPC",
+    "unwalkable_cell": "Yürünemez hücre",
+    "out_of_bounds": "Harita dışı",
+    "missing_portal": "Eksik portal",
+    "duplicate_id": "Tekrarlanan kimlik",
+    "parse_error": "Ayrıştırma hatası",
+    "invalid_value": "Geçersiz değer"
+  },
+  "editor": {
+    "map": "Haritayı aç",
+    "monsters": "Canavarlar",
+    "levels": "Seviyeler",
+    "goals": "Hedefler",
+    "teleporters": "Işınlayıcılar",
+    "talkers": "Konuşmacılar",
+    "changes": "Değişiklikler"
+  }
+}

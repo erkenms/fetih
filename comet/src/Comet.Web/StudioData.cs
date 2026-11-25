@@ -1,11 +1,10 @@
 namespace Comet.Web;
 
-using Comet.Game.DataEditing;
 using Comet.Shared.Models;
 using Comet.Web.Audit;
 using Comet.Web.Game;
 
-// Where the Studio pages find the game's data files, and the validation set over them
+// Where the Studio pages find the game's data files
 public static class StudioData
 {
     public static async Task<DataReloadResult> ReloadFileAsync(string fileName, GameRpc gameRpc, AuditLog audit)
@@ -39,19 +38,5 @@ public static class StudioData
         }
 
         return configured ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Comet.Game/Data"));
-    }
-
-    // Checks against the client's maps and items when its files are there, else the files alone
-    public static DataSet CreateDataSet(string dataDir, WebConfiguration config)
-    {
-        string? clientDir = WebConfiguration.PathsSection.Resolve(config.Paths.ClientDirectory);
-        if (clientDir != null
-            && File.Exists(Path.Combine(clientDir, "ini", "GameMap.dat"))
-            && File.Exists(Path.Combine(clientDir, "ini", "itemtype.dat")))
-        {
-            try { return DataSet.ForClient(dataDir, clientDir); }
-            catch { /* Fall back to schema-only checks when client data is incomplete */ }
-        }
-        return new DataSet(dataDir);
     }
 }

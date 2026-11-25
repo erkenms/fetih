@@ -156,14 +156,22 @@ namespace Comet.Game.Tests.DataEditing
                 "5: Boss ID a is already used on line 4",
             }, Errors(this.Set().Validate("bosses.json")));
 
+            this.Write("npcs.json", "npcs", "{ \"id\": 1, \"map\": 1002, \"x\": 1, \"y\": 1 }");
             this.Write("teleporters.json", "teleporters",
                 "{ \"id\": 1, \"destinations\": [{ \"name\": \"Far\", \"map\": 1002, \"x\": 1, \"y\": 99 }] }",
                 "{ \"id\": 2, \"destinations\": [] }");
             Assert.Equal(new[]
             {
                 "4: Destination 'Far' (1, 99) is outside map 1002, which is 20x20",
+                "5: NPC 2 isn't in npcs.json or goals.json",
                 "5: Needs 1 to 254 destinations",
             }, Errors(this.Set().Validate("teleporters.json")));
+
+            this.Write("goals.json", "npcs", "{ \"id\": 3, \"map\": 1002, \"x\": 2, \"y\": 2, \"role\": 21 }");
+            this.Write("talkers.json", "talkers",
+                "{ \"id\": 3, \"text\": [\"Hi\"], \"reply\": \"Bye\" }",
+                "{ \"id\": 4, \"text\": [\"Hi\"], \"reply\": \"Bye\" }");
+            Assert.Equal(new[] { "5: NPC 4 isn't in npcs.json or goals.json" }, Errors(this.Set().Validate("talkers.json")));
         }
 
         [Fact]

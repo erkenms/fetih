@@ -198,7 +198,7 @@ public class MapsTests(WebFixture web)
         Assert.Equal(HttpStatusCode.NotFound, (await mod.GetAsync("/api/maps/999999")).StatusCode);
     }
 
-    private static byte[] BuildDMap(int width, int height, Func<int, int, bool> walkable, Func<int, int, short> elevation,
+    internal static byte[] BuildDMap(int width, int height, Func<int, int, bool> walkable, Func<int, int, short> elevation,
         (uint X, uint Y, uint Index)[] portals)
     {
         using var ms = new MemoryStream();

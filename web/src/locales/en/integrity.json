@@ -1,0 +1,76 @@
+{
+  "nav": "Integrity",
+  "title": "Data integrity checks",
+  "description": "Verify cross-references across Comet.Game/Data and the client's map and item files.",
+  "refresh": "Re-run checks",
+  "status": {
+    "clientAvailable": "Client files loaded",
+    "clientMissing": "Client files unavailable (data-only checks)",
+    "checkedFiles": "{{count}} files checked",
+    "errors_one": "{{count}} error",
+    "errors_other": "{{count}} errors",
+    "warnings_one": "{{count}} warning",
+    "warnings_other": "{{count}} warnings"
+  },
+  "clean": {
+    "title": "All integrity checks passed",
+    "body": "No broken references were found across {{files}} data files.",
+    "withWarnings": "No errors found ({{warnings}} warning(s) hidden by the current filter)."
+  },
+  "filter": {
+    "errors": "Errors ({{count}})",
+    "warnings": "Warnings ({{count}})",
+    "all": "All ({{count}})",
+    "file": "Data file",
+    "allFiles": "All files",
+    "category": "Category",
+    "allCategories": "All categories",
+    "search": "Filter by entity, message, or file..."
+  },
+  "filesHeading": "Summary by file",
+  "problemsHeading": "Problems ({{count}})",
+  "emptyFiltered": "No problems match the current filters.",
+  "column": {
+    "file": "File",
+    "entries": "Entries",
+    "errors": "Errors",
+    "warnings": "Warnings",
+    "status": "Status",
+    "level": "Level",
+    "category": "Category",
+    "entity": "Entry",
+    "line": "Line",
+    "message": "Problem",
+    "fix": "Fix"
+  },
+  "level": {
+    "error": "Error",
+    "warning": "Warning"
+  },
+  "fileStatus": {
+    "ok": "OK",
+    "errors": "Errors",
+    "warnings": "Warnings"
+  },
+  "category": {
+    "missing_monster": "Missing monster",
+    "missing_map": "Missing map",
+    "missing_item": "Missing item",
+    "missing_npc": "Missing NPC",
+    "unwalkable_cell": "Unwalkable cell",
+    "out_of_bounds": "Out of bounds",
+    "missing_portal": "Missing portal",
+    "duplicate_id": "Duplicate ID",
+    "parse_error": "Parse error",
+    "invalid_value": "Invalid value"
+  },
+  "editor": {
+    "map": "Open map",
+    "monsters": "Monsters",
+    "levels": "Levels",
+    "goals": "Goals",
+    "teleporters": "Teleporters",
+    "talkers": "Talkers",
+    "changes": "Changes"
+  }
+}

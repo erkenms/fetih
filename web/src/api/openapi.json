@@ -4430,6 +4430,26 @@
           }
         }
       }
+    },
+    "/api/integrity": {
+      "get": {
+        "tags": [
+          "IntegrityFeature"
+        ],
+        "operationId": "getIntegrityReport",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrityReportResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -7529,6 +7549,130 @@
           "serverTime": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "IntegrityFileSummary": {
+        "required": [
+          "file",
+          "errors",
+          "warnings",
+          "checkedEntries"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warnings": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checkedEntries": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "IntegrityProblem": {
+        "required": [
+          "file",
+          "category",
+          "level",
+          "entry",
+          "line",
+          "entityId",
+          "message",
+          "editorPath",
+          "editorKind"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "entry": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "line": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "entityId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "editorPath": {
+            "type": "string"
+          },
+          "editorKind": {
+            "type": "string"
+          }
+        }
+      },
+      "IntegrityReportResponse": {
+        "required": [
+          "dataDirectory",
+          "clientFilesAvailable",
+          "errorCount",
+          "warningCount",
+          "checkedFiles",
+          "files",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "dataDirectory": {
+            "type": "string"
+          },
+          "clientFilesAvailable": {
+            "type": "boolean"
+          },
+          "errorCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "warningCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "checkedFiles": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityFileSummary"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntegrityProblem"
+            }
           }
         }
       },
@@ -11966,6 +12110,9 @@
     },
     {
       "name": "HealthFeature"
+    },
+    {
+      "name": "IntegrityFeature"
     },
     {
       "name": "ItemsFeature"
