@@ -62,7 +62,19 @@ namespace Comet.Network.Sockets
             this.Socket.Listen(backlog);
             
             await this.Registry.StartAsync(this.ShutdownToken.Token);
-            await this.AcceptingAsync();
+            try { await this.AcceptingAsync(); }
+            catch (Exception e) when (this.ShutdownToken.IsCancellationRequested &&
+                (e is ObjectDisposedException || e is SocketException))
+            {
+            }
+        }
+
+        // Stops accepting and ends every connection with reason shutdown, each through
+        // Disconnecting as usual.
+        public void Stop()
+        {
+            this.ShutdownToken.Cancel();
+            this.Socket.Close();
         }
 
         private async Task AcceptingAsync()

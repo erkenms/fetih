@@ -7,6 +7,7 @@ namespace Comet.Core.Logging
     {
         public const string ServerStart = "server.start";
         public const string ServerStop = "server.stop";
+        public const string ServerShutdown = "server.shutdown";
         public const string MetricsListening = "metrics.listening";
 
         public const string NetConnect = "net.connect";

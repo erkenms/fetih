@@ -96,6 +96,9 @@ namespace Comet.Game.Database
         public class SavingConfiguration
         {
             public int IntervalSeconds { get; set; } = 300;
+
+            // How long a shutdown waits for the logout saves; podman stop must wait longer
+            public int ShutdownSeconds { get; set; } = 20;
         }
 
         public class GroundConfiguration

@@ -330,6 +330,8 @@ namespace Comet.Integration.Tests
 
         private readonly string RunId = Guid.NewGuid().ToString("N")[..8];
         private readonly List<Process> Processes = new List<Process>();
+        private Process Game;
+        private string[] GameArgs;
         private int Counter;
         public string AccountSchema { get; }
         public string GameSchema { get; }
@@ -457,7 +459,7 @@ namespace Comet.Integration.Tests
             CopyDirectory(Path.Combine(this.ServerDirectory("Comet.Game"), "Data"), this.DataDirectory);
 
             // The game server first, so the account server finds its RPC port
-            this.StartServer("Comet.Game", this.GameSchema, "game",
+            this.GameArgs = new[] {
                 "--Maps:ClientDirectory=" + this.MapDirectory, "--Data:Directory=" + this.DataDirectory,
                 "--TimeZone=UTC",
                 "--GameNetwork:IPAddress=" + Host, "--GameNetwork:Port=" + this.GamePort,
@@ -487,7 +489,8 @@ namespace Comet.Integration.Tests
                 "--Broadcast:IntervalSeconds=2", "--Metrics:Port=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
-                "--AccountDatabase:Username=" + DbUser, "--AccountDatabase:Password=" + DbPassword);
+                "--AccountDatabase:Username=" + DbUser, "--AccountDatabase:Password=" + DbPassword };
+            this.Game = this.StartServer("Comet.Game", this.GameSchema, "game", this.GameArgs);
             await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout);
             this.StartServer("Comet.Account", this.AccountSchema, "account",
                 "--Network:IPAddress=" + Host, "--Network:Port=" + this.AccountPort,
@@ -753,11 +756,31 @@ namespace Comet.Integration.Tests
             "--Database:Username=" + DbUser, "--Database:Password=" + DbPassword
         };
 
-        private void StartServer(string project, string schema, string server, params string[] args)
+        private Process StartServer(string project, string schema, string server, params string[] args)
         {
             var process = this.StartProcess(project, server, DatabaseArgs(schema)
                 .Concat(new[] { "--Logging:Level=debug", "--Logging:PacketTrace:All=true" }).Concat(args).ToArray());
             this.Processes.Add(process);
+            return process;
+        }
+
+        // Stops the game server as podman stop does, with SIGTERM, and starts it again.
+        // Returns how long it took to exit.
+        public async Task<TimeSpan> RestartGameAsync()
+        {
+            var watch = Stopwatch.StartNew();
+            using (var kill = Process.Start("kill", new[] { "-TERM", this.Game.Id.ToString() }))
+                await kill.WaitForExitAsync();
+            await this.Game.WaitForExitAsync().WaitAsync(StartTimeout);
+            var stopped = watch.Elapsed;
+            this.Processes.Remove(this.Game);
+            this.Game.Dispose();
+
+            int mark = this.Mark();
+            this.Game = this.StartServer("Comet.Game", this.GameSchema, "game", this.GameArgs);
+            await this.WaitForEventAsync("game", "server.start", _ => true, StartTimeout, mark);
+            await this.WaitForEventAsync("game", "rpc.connected", _ => true, StartTimeout, mark);
+            return stopped;
         }
 
         private Process StartProcess(string project, string logName, string[] args)

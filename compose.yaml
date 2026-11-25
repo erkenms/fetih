@@ -117,6 +117,8 @@ services:
   game:
     profiles: [deploy]
     container_name: fetih-game
+    # The game saves everyone on SIGTERM; Saving:ShutdownSeconds must fit in this
+    stop_grace_period: 30s
     build: { context: ., dockerfile: Containerfile, target: game }
     restart: unless-stopped
     environment:

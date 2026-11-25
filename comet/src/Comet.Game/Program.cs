@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
@@ -32,6 +33,17 @@
 
             var config = new ServerConfiguration(args);
             LogSetup.Configure("game", config.Logging);
+
+            // podman stop sends SIGTERM, Ctrl+C SIGINT; either logs everyone out with a save
+            var shutdown = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            using var sigterm = PosixSignalRegistration.Create(PosixSignal.SIGTERM, Stop);
+            using var sigint = PosixSignalRegistration.Create(PosixSignal.SIGINT, Stop);
+            void Stop(PosixSignalContext context)
+            {
+                context.Cancel = true;
+                shutdown.TrySetResult();
+            }
+
             PacketTrace.Configure(config.Logging?.PacketTrace);
             if (!config.Valid) 
             {
@@ -475,8 +487,38 @@
             var saveInterval = TimeSpan.FromSeconds(Math.Max(1, config.Saving.IntervalSeconds));
             _ = SaveLoop.RunAsync(saveInterval, CancellationToken.None);
 
-            await rpcServerTask;
-            await serverTask;
+            var ended = await Task.WhenAny(shutdown.Task, rpcServerTask, serverTask);
+            if (ended != shutdown.Task)
+            {
+                await ended;
+                return;
+            }
+
+            await ShutdownAsync(server, TimeSpan.FromSeconds(Math.Max(1, config.Saving.ShutdownSeconds)));
+        }
+
+        private static async Task ShutdownAsync(Server server, TimeSpan timeout)
+        {
+            int online = Kernel.Players.Count;
+            LogEvents.For(typeof(Program), LogEvents.ServerShutdown).Information(
+                "Shutting down: logging out {Online} online characters", online);
+            var watch = System.Diagnostics.Stopwatch.StartNew();
+            server.Stop();
+
+            // Each disconnect registers its logout save in Kernel.Logouts before it leaves
+            // Kernel.Clients, so both empty means every save has finished
+            while ((Kernel.Clients.Count > 0 || !Kernel.Logouts.IsEmpty) && watch.Elapsed < timeout)
+                await Task.Delay(100);
+
+            if (Kernel.Clients.Count > 0 || !Kernel.Logouts.IsEmpty)
+                LogEvents.For(typeof(Program), LogEvents.ServerShutdown).Error(
+                    "Shutdown gave up after {DurationMs} ms with {Clients} clients still connected " +
+                    "and {Saving} logouts still saving",
+                    watch.ElapsedMilliseconds, Kernel.Clients.Count, Kernel.Logouts.Count);
+            else
+                LogEvents.For(typeof(Program), LogEvents.ServerShutdown).Information(
+                    "Logged out {Online} characters in {DurationMs} ms", online, watch.ElapsedMilliseconds);
+            Log.CloseAndFlush();
         }
     }
 }

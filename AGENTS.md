@@ -17,6 +17,7 @@ tests). `client/` builds the patched client. The web app (issue #37, its plan an
 ## Commands
 
 ```bash
+./dev.sh                                      # containers, the three servers and Vite in one terminal
 podman compose up -d                          # MariaDB (integration tests need it), Loki, Grafana :3000
 dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
