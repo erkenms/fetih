@@ -225,7 +225,7 @@ namespace Comet.Game.Tournaments
                     this.rewards.Remove(id);
             }
             await TeamPkRepository.ClearGroupAsync(this.ID, (byte)group);
-            await ElitePk.BroadcastAsync($"The {this.Title} ({GroupNames[group]}) is open! Team leaders, sign your team up with the {this.EventName} Manager in Twin City before it starts.");
+            await Talk.BroadcastAsync($"The {this.Title} ({GroupNames[group]}) is open! Team leaders, sign your team up with the {this.EventName} Manager in Twin City before it starts.");
             LogEvents.For(typeof(TeamPk), LogEvents.TeamPkOpened).Information(
                 "{EventName} sign-up opened for group {Group} ({GroupName})", this.EventName, group, GroupNames[group]);
             return true;
@@ -237,8 +237,8 @@ namespace Comet.Game.Tournaments
         {
             var character = client.Character;
             var leader = client.Team?.Leader;
-            bool qualifier = Arena.Qualifier.IsSignedUp(client);
-            bool elite = ElitePk.IsTakingPart(client);
+            string otherEvent = EventHelpers.CheckOtherEvents(client,
+                (GameEvent.Qualifier | GameEvent.ElitePk, "qualifier"));
             Tournament t = null;
             string reason;
             lock (Sync)
@@ -255,8 +255,7 @@ namespace Comet.Game.Tournaments
                     IsTakingPartLocked(client.ID) ? "signed_up" :
                     leader != client && GroupOf(character.Level) > t.Group ? "level" :
                     client.Life.Dead ? "dead" :
-                    qualifier || elite ? "qualifier" :
-                    null;
+                    otherEvent;
                 if (reason == null)
                 {
                     if (leader == client)
@@ -336,7 +335,7 @@ namespace Comet.Game.Tournaments
                     "{EventName} group {Group} cancelled: {Count} teams", this.EventName, group, count);
                 return false;
             }
-            await ElitePk.BroadcastAsync($"The {this.Title} ({GroupNames[group]}) has started with {count} teams!");
+            await Talk.BroadcastAsync($"The {this.Title} ({GroupNames[group]}) has started with {count} teams!");
             LogEvents.For(typeof(TeamPk), LogEvents.TeamPkStarted).Information(
                 "{EventName} group {Group} started with {Count} teams", this.EventName, group, count);
             return true;
@@ -630,7 +629,7 @@ namespace Comet.Game.Tournaments
                     });
 
             var champion = rows.FirstOrDefault(p => p.Rank == EliteBracket.Champion);
-            await ElitePk.BroadcastAsync(champion != null
+            await Talk.BroadcastAsync(champion != null
                 ? $"The Team of {champion.Name} is the champion of the {this.Title} ({GroupNames[t.Group]})! The leaders of the final eight can claim their prizes from the {this.EventName} Manager."
                 : $"The {this.Title} ({GroupNames[t.Group]}) is over.");
             LogEvents.For(typeof(TeamPk), LogEvents.TeamPkEnded).Information(
@@ -831,8 +830,7 @@ namespace Comet.Game.Tournaments
             MapPoint back;
             lock (Sync)
                 back = t.Returns.GetValueOrDefault(client.ID);
-            if (back == null || !await Movement.TeleportAsync(client, back.MapID, back.X, back.Y))
-                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+            await EventHelpers.TeleportHomeAsync(client, back);
         }
 
         private async Task GroupNoticeAsync(Tournament t, string text)

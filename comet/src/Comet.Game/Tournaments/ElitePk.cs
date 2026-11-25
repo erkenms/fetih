@@ -159,7 +159,7 @@ namespace Comet.Game.Tournaments
                     Rewards.Remove(id);
             }
             await ElitePkRepository.ClearGroupAsync((byte)group);
-            await BroadcastAsync($"The Elite PK Tournament ({GroupNames[group]}) is open! Sign up with the Elite PK Envoy in Twin City before it starts.");
+            await Talk.BroadcastAsync($"The Elite PK Tournament ({GroupNames[group]}) is open! Sign up with the Elite PK Envoy in Twin City before it starts.");
             LogEvents.For(typeof(ElitePk), LogEvents.ElitePkOpened).Information(
                 "Elite PK sign-up opened for group {Group} ({GroupName})", group, GroupNames[group]);
             return true;
@@ -172,8 +172,9 @@ namespace Comet.Game.Tournaments
             int group = GroupOf(character.Level);
             Tournament t = Tournaments[group];
             string reason;
-            bool qualifier = Arena.Qualifier.IsSignedUp(client);
-            bool teamPk = TeamPk.IsTakingPart(client);
+            string otherEvent = EventHelpers.CheckOtherEvents(client,
+                (GameEvent.Qualifier, "qualifier"),
+                (GameEvent.TeamPk, "team_pk"));
             lock (Sync)
             {
                 reason =
@@ -181,9 +182,7 @@ namespace Comet.Game.Tournaments
                     t.Phase != Phase.SignUp ? "closed" :
                     Tournaments.Any(x => x.Entrants.Contains(client.ID)) ? "signed_up" :
                     client.Life.Dead ? "dead" :
-                    qualifier ? "qualifier" :
-                    teamPk ? "team_pk" :
-                    null;
+                    otherEvent;
                 if (reason == null)
                 {
                     t.Entrants.Add(client.ID);
@@ -248,7 +247,7 @@ namespace Comet.Game.Tournaments
                     "Elite PK group {Group} cancelled: {Count} entrants", group, count);
                 return false;
             }
-            await BroadcastAsync($"The Elite PK Tournament ({GroupNames[group]}) has started with {count} players!");
+            await Talk.BroadcastAsync($"The Elite PK Tournament ({GroupNames[group]}) has started with {count} players!");
             LogEvents.For(typeof(ElitePk), LogEvents.ElitePkStarted).Information(
                 "Elite PK group {Group} started with {Count} players", group, count);
             return true;
@@ -514,7 +513,7 @@ namespace Comet.Game.Tournaments
                     });
 
             var champion = placements.FirstOrDefault(p => p.Rank == EliteBracket.Champion);
-            await BroadcastAsync(champion.ID != 0
+            await Talk.BroadcastAsync(champion.ID != 0
                 ? $"{NameOf(champion.ID)} is the champion of the Elite PK Tournament ({GroupNames[t.Group]})! The final eight can claim their prizes from the Elite PK Envoy."
                 : $"The Elite PK Tournament ({GroupNames[t.Group]}) is over.");
             LogEvents.For(typeof(ElitePk), LogEvents.ElitePkEnded).Information(
@@ -691,8 +690,7 @@ namespace Comet.Game.Tournaments
             MapPoint back;
             lock (Sync)
                 back = Tournaments[group].Returns.GetValueOrDefault(client.ID);
-            if (back == null || !await Movement.TeleportAsync(client, back.MapID, back.X, back.Y))
-                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+            await EventHelpers.TeleportHomeAsync(client, back);
         }
 
         internal static async Task RestoreAsync(Client client)
@@ -715,14 +713,6 @@ namespace Comet.Game.Tournaments
             var message = new MsgTalk(0, MsgTalk.TalkChannel.System, text);
             foreach (var player in present)
                 await player.SendAsync(message);
-        }
-
-        internal static async Task BroadcastAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values.ToList())
-                if (player.Character != null)
-                    await player.SendAsync(message);
         }
 
         private static void Reject(Client client, string kind, string reason) =>

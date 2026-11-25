@@ -100,7 +100,7 @@ namespace Comet.Game.World
         private readonly Func<DateTime, DateTime> ToLocal;
         private DateTime? LastCheckedLocal;
 
-        public BossSchedule() : this(Monsters.SpawnNowAsync, BroadcastWorldAsync, Clock.Local) { }
+        public BossSchedule() : this(Monsters.SpawnNowAsync, Chat.Talk.BroadcastAsync, Clock.Local) { }
 
         public BossSchedule(
             Func<Monster, DateTime, Random, Task<bool>> spawner,
@@ -247,12 +247,5 @@ namespace Comet.Game.World
             return false;
         }
 
-        private static async Task BroadcastWorldAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values)
-                if (player.Character != null)
-                    await player.SendAsync(message);
-        }
     }
 }

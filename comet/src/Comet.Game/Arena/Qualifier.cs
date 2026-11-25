@@ -319,16 +319,16 @@ namespace Comet.Game.Arena
             var now = DateTime.UtcNow;
             string reason;
             uint points;
-            bool tournament = Tournaments.ElitePk.IsTakingPart(client) || Tournaments.GuildPk.IsTakingPart(client);
-            bool teamPk = Tournaments.TeamPk.IsTakingPart(client);
+            string otherEvent = Tournaments.EventHelpers.CheckOtherEvents(client,
+                (Tournaments.GameEvent.ElitePk | Tournaments.GameEvent.GuildPk, "tournament"),
+                (Tournaments.GameEvent.TeamPk, "team_pk"));
             lock (Sync)
             {
                 var record = RecordOf(character, now);
                 points = record.Stored.Points;
                 reason =
                     character.Level < ArenaRecord.MinLevel ? "level" :
-                    tournament ? "tournament" :
-                    teamPk ? "team_pk" :
+                    otherEvent != null ? otherEvent :
                     InJail(character) ? "jail" :
                     Kernel.Maps?.Exists(MapID) != true ? "no_arena_map" :
                     MatchOf(client.ID) != null ? "in_match" :

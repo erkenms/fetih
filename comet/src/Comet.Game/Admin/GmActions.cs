@@ -47,11 +47,7 @@ namespace Comet.Game.Admin
             return true;
         }
 
-        public static async Task BroadcastAsync(MsgTalk.TalkChannel channel, string text)
-        {
-            var message = new MsgTalk(0, channel, text);
-            foreach (var player in Kernel.Players.Values)
-                await player.SendAsync(message);
-        }
+        public static Task BroadcastAsync(MsgTalk.TalkChannel channel, string text) =>
+            Talk.BroadcastAsync(channel, text);
     }
 }

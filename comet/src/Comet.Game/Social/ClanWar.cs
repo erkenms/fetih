@@ -516,7 +516,7 @@ namespace Comet.Game.Social
                 }
             }
 
-            await BroadcastAsync(started.Count > 0
+            await Chat.Talk.BroadcastAsync(started.Count > 0
                 ? "The Clan War has begun! Clan members can enter the battlefield for 5 minutes."
                 : "The Clan War has begun, but no clan signed up.");
             foreach (var war in started)
@@ -562,7 +562,7 @@ namespace Comet.Game.Social
             }
             foreach (var npcID in changed)
                 await SaveAsync(npcID);
-            await BroadcastAsync("The Clan War is over.");
+            await Chat.Talk.BroadcastAsync("The Clan War is over.");
             return true;
         }
 
@@ -613,7 +613,7 @@ namespace Comet.Game.Social
                 Kernel.Post(player, () => LeaveAsync(player, war));
 
             var winner = Clans.Find(result.WinnerID);
-            await BroadcastAsync(winner != null
+            await Chat.Talk.BroadcastAsync(winner != null
                 ? $"{winner.Name} has won the Clan War of {war.Territory.Name}!"
                 : $"The Clan War of {war.Territory.Name} has ended without a victor.");
             foreach (var clanID in war.Clans)
@@ -723,14 +723,6 @@ namespace Comet.Game.Social
                 return null;
             }
             return Dialogs.Reach(client, npcID, "clan_war_" + use) == null ? null : territory;
-        }
-
-        private static async Task BroadcastAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values)
-                if (player.Character != null)
-                    await player.SendAsync(message);
         }
 
         private static void Reject(Client client, string kind, Territory territory, string reason) =>

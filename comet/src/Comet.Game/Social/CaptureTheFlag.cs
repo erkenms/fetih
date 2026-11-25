@@ -133,7 +133,7 @@ namespace Comet.Game.Social
                 NextDoubleAt = now + DoubleInterval;
             }
             await SpawnFlagsAsync();
-            await BroadcastAsync("Capture the Flag has begun! Guild members can enter the arena through the Guild Controller in Twin City.");
+            await Chat.Talk.BroadcastAsync("Capture the Flag has begun! Guild members can enter the arena through the Guild Controller in Twin City.");
             LogEvents.For(typeof(CaptureTheFlag), LogEvents.CaptureTheFlagStarted).Information(
                 "Capture the Flag started with {BaseCount} flag bases", Layout.Bases.Count);
             return true;
@@ -144,6 +144,8 @@ namespace Comet.Game.Social
         {
             var character = client.Character;
             var membership = Guilds.Of(client.ID);
+            string otherEvent = Tournaments.EventHelpers.CheckOtherEvents(client,
+                (Tournaments.GameEvent.ElitePk | Tournaments.GameEvent.TeamPk | Tournaments.GameEvent.Qualifier, "busy"));
             string reason;
             lock (Sync)
                 reason =
@@ -151,9 +153,7 @@ namespace Comet.Game.Social
                     membership == null ? "no_guild" :
                     client.Life.Dead ? "dead" :
                     character.MapID == MapID ? "inside" :
-                    Tournaments.ElitePk.IsTakingPart(client) || Tournaments.TeamPk.IsTakingPart(client) ||
-                    Comet.Game.Arena.Qualifier.IsSignedUp(client) ? "busy" :
-                    null;
+                    otherEvent;
             if (reason != null)
             {
                 Reject(client, "enter", reason);
@@ -424,12 +424,11 @@ namespace Comet.Game.Social
                             return;
                         if (player.Life.Dead)
                             await Combat.Death.ReviveHereAsync(player, "capture_the_flag");
-                        if (back == null || !await Movement.TeleportAsync(player, back.MapID, back.X, back.Y))
-                            await Movement.TeleportAsync(player, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+                        await Tournaments.EventHelpers.TeleportHomeAsync(player, back);
                     });
 
             var top = ranking.Where(r => r.Points > 0).Take(3).Select((r, i) => $"{i + 1}. {r.Name} ({r.Points})").ToList();
-            await BroadcastAsync(top.Count == 0
+            await Chat.Talk.BroadcastAsync(top.Count == 0
                 ? "Capture the Flag is over."
                 : "Capture the Flag is over! " + string.Join(", ", top) + ". The top 8 guilds' prizes went to their funds.");
             LogEvents.For(typeof(CaptureTheFlag), LogEvents.CaptureTheFlagEnded).Information(
@@ -566,8 +565,7 @@ namespace Comet.Game.Social
                 back = Entrants.GetValueOrDefault(client.ID)?.Return;
             await LeaveAsync(client, "left");
             await client.SendAsync(new MsgWarFlag(FlagAction.Leave));
-            if (back == null || !await Movement.TeleportAsync(client, back.MapID, back.X, back.Y))
-                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
+            await Tournaments.EventHelpers.TeleportHomeAsync(client, back);
         }
 
         public static UInt128 StatusOf(Client client)
@@ -889,14 +887,6 @@ namespace Comet.Game.Social
             foreach (var player in map.All())
                 if (player.Character != null)
                     await player.SendAsync(msg);
-        }
-
-        private static async Task BroadcastAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values.ToList())
-                if (player.Character != null)
-                    await player.SendAsync(message);
         }
 
         private static void Reject(Client client, string kind, string reason) =>

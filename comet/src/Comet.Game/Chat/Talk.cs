@@ -1,6 +1,7 @@
 namespace Comet.Game.Chat
 {
     using System;
+    using System.Linq;
     using System.Threading.Tasks;
     using Comet.Core.Logging;
     using Comet.Game.Packets;
@@ -161,6 +162,16 @@ namespace Comet.Game.Chat
 
         public static Task NoticeAsync(Client client, string text) =>
             client.SendAsync(new MsgTalk(client.ID, TalkChannel.Service, text));
+
+        public static async Task BroadcastAsync(TalkChannel channel, string text)
+        {
+            var message = new MsgTalk(0, channel, text);
+            foreach (var player in Kernel.Players.Values.ToList())
+                if (player.Character != null)
+                    await player.SendAsync(message);
+        }
+
+        public static Task BroadcastAsync(string text) => BroadcastAsync(TalkChannel.Center, text);
 
         private static uint Mesh(Character character) =>
             (uint)(character.Mesh + character.Avatar * 10000);

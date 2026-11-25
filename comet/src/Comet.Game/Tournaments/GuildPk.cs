@@ -182,7 +182,7 @@ namespace Comet.Game.Tournaments
                 ContestPoints.Clear();
                 GuildRewards.Begin(MsgSelfSynMemAwardRank.AwardEvent.GuildPk);
             }
-            await BroadcastAsync("The Guild Contest is about to begin! Guild members can enter it through the Guild Contest Emissary in Twin City.");
+            await Talk.BroadcastAsync("The Guild Contest is about to begin! Guild members can enter it through the Guild Contest Emissary in Twin City.");
             LogEvents.For(typeof(GuildPk), LogEvents.GuildPkContestOpened).Information("The Guild Contest opened");
             return true;
         }
@@ -198,7 +198,7 @@ namespace Comet.Game.Tournaments
                 ContestPhase = Phase.Running;
                 ContestEndsAt = now + RunTime;
             }
-            await BroadcastAsync("The Guild Contest has begun! Kill the monsters in the contest map to win points for your guild.");
+            await Talk.BroadcastAsync("The Guild Contest has begun! Kill the monsters in the contest map to win points for your guild.");
             LogEvents.For(typeof(GuildPk), LogEvents.GuildPkContestStarted).Information("The Guild Contest started");
             return true;
         }
@@ -260,7 +260,7 @@ namespace Comet.Game.Tournaments
                 if (player.Character?.MapID == ContestMapID)
                     Kernel.Post(player, () => SendHomeAsync(player));
 
-            await BroadcastAsync(top.Count == 0
+            await Talk.BroadcastAsync(top.Count == 0
                 ? "The Guild Contest is over."
                 : "The Guild Contest is over! Qualified for the Guild PK Tournament: " +
                   string.Join(", ", top.Select((t, i) => $"{i + 1}. {Guilds.Find(t.GuildID)?.Name}")) + ".");
@@ -388,7 +388,7 @@ namespace Comet.Game.Tournaments
                 matches = Matches.ToList();
             }
             string stage = final ? "final" : $"round {round}";
-            await BroadcastAsync($"The Guild PK Tournament {stage} is about to begin! " +
+            await Talk.BroadcastAsync($"The Guild PK Tournament {stage} is about to begin! " +
                 string.Join("; ", matches.Select(m => $"{m.Pair.A.Name} vs. {m.Pair.B.Name}")) +
                 ". Members can enter through the Guild PK Emissary in Twin City.");
             LogEvents.For(typeof(GuildPk), LogEvents.GuildPkMatchesOpened).Information(
@@ -409,7 +409,7 @@ namespace Comet.Game.Tournaments
                 NextStatusAt = now;
                 stage = FinalStage ? "final" : $"round {RoundNumber}";
             }
-            await BroadcastAsync($"The Guild PK Tournament {stage} has begun! Seize the flag to win points for your guild.");
+            await Talk.BroadcastAsync($"The Guild PK Tournament {stage} has begun! Seize the flag to win points for your guild.");
             LogEvents.For(typeof(GuildPk), LogEvents.GuildPkMatchesStarted).Information(
                 "Guild PK Tournament {Stage} started", stage);
             return true;
@@ -487,12 +487,12 @@ namespace Comet.Game.Tournaments
             if (final && prizes != null)
             {
                 var champion = prizes.FirstOrDefault(p => p.Rank == 1);
-                await BroadcastAsync(champion != null
+                await Talk.BroadcastAsync(champion != null
                     ? $"{Guilds.Find(champion.SyndicateID)?.Name} is the champion of the Guild PK Tournament! Guild leaders and deputies can claim their prizes from the Awarders in Twin City."
                     : "The Guild PK Tournament is over.");
             }
             else
-                await BroadcastAsync($"The Guild PK Tournament {stage} is over. " +
+                await Talk.BroadcastAsync($"The Guild PK Tournament {stage} is over. " +
                     string.Join("; ", results.Select(r => r.Winner == null
                         ? $"{r.Match.Pair.A.Name} and {r.Match.Pair.B.Name} drew"
                         : $"{r.Winner} won")) + ".");
@@ -939,16 +939,7 @@ namespace Comet.Game.Tournaments
                 back = Returns.GetValueOrDefault(client.ID);
                 Returns.Remove(client.ID);
             }
-            if (back == null || !await Movement.TeleportAsync(client, back.MapID, back.X, back.Y))
-                await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
-        }
-
-        private static async Task BroadcastAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values.ToList())
-                if (player.Character != null)
-                    await player.SendAsync(message);
+            await EventHelpers.TeleportHomeAsync(client, back);
         }
 
         private static string Reject(Client client, string kind, string reason)

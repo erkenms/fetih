@@ -194,7 +194,7 @@ namespace Comet.Game.Social
             }
 
             await RefreshAllStructuresAsync();
-            await BroadcastWorldAsync("Guild War has begun! Speak with the Guild Controller in Twin City to enter the Guild War map.");
+            await Chat.Talk.BroadcastAsync("Guild War has begun! Speak with the Guild Controller in Twin City to enter the Guild War map.");
             LogEvents.For(typeof(GuildWar), LogEvents.GuildWarStarted).Information(
                 "Guild War started ({Trigger}, holder {HolderId})", manual ? "manual" : "schedule", HolderGuildID);
             return true;
@@ -233,7 +233,7 @@ namespace Comet.Game.Social
             await RefreshGuildFlagsAsync(oldWinner, newWinner);
 
             var winnerName = Guilds.Find(newWinner)?.Name;
-            await BroadcastWorldAsync(winnerName != null
+            await Chat.Talk.BroadcastAsync(winnerName != null
                 ? $"Guild War has ended! {winnerName} is victorious and rules the Guild Arena!"
                 : "Guild War has ended without a victor.");
             LogEvents.For(typeof(GuildWar), LogEvents.GuildWarEnded).Information(
@@ -481,7 +481,7 @@ namespace Comet.Game.Social
             await RefreshGuildFlagsAsync(oldHolder, newHolder);
 
             var winnerName = Guilds.Find(newHolder)?.Name ?? "Unknown";
-            await BroadcastWorldAsync($"{winnerName} has captured the Guild Pole!");
+            await Chat.Talk.BroadcastAsync($"{winnerName} has captured the Guild Pole!");
             LogEvents.For(typeof(GuildWar), LogEvents.GuildWarCaptured).Information(
                 "Guild {GuildName} ({GuildId}) captured the pole", winnerName, newHolder);
         }
@@ -632,14 +632,6 @@ namespace Comet.Game.Social
                 return;
             foreach (var player in map.InView(npc.X, npc.Y))
                 await player.SendAsync(packet);
-        }
-
-        private static async Task BroadcastWorldAsync(string text)
-        {
-            var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
-            foreach (var player in Kernel.Players.Values)
-                if (player.Character != null)
-                    await player.SendAsync(message);
         }
 
         private static async Task RefreshGuildFlagsAsync(uint oldGuildID, uint newGuildID)
