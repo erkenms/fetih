@@ -1,5 +1,6 @@
 namespace Comet.Web.Features.Characters;
 
+using Comet.Shared.Models.Admin;
 using Comet.Web.Features.Items;
 
 public record CharacterListItem(
@@ -160,7 +161,9 @@ public record CharacterDetailResponse(
     CharacterFamilySummary? Family,
     CharacterNobilitySummary? Nobility,
     CharacterFlowerSummary? Flowers,
-    CharacterArenaSummary? Arena);
+    CharacterArenaSummary? Arena,
+    // The client's attribute window; null when the game server can't be reached
+    CharacterStats? Stats);
 
 public record KickCharacterRequest(string? Reason = null);
 

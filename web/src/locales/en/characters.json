@@ -130,7 +130,30 @@
       "level": "Lv. {{level}}",
       "experience": "Exp: {{value}}",
       "none": "None",
-      "battlePower": "Battle power: {{value}}"
+      "battlePower": "Battle power: {{value}}",
+      "attributes": {
+        "hp": "HP:",
+        "mp": "Magic:",
+        "attack": "Attack:",
+        "defense": "Defense:",
+        "magicAttack": "M-Attack:",
+        "magicDefense": "M-Defense:",
+        "dodge": "Dodge:",
+        "agility": "Agility:",
+        "attackPercent": "Attack:",
+        "magicAttackPercent": "M-Attack:",
+        "damage": "Damage:",
+        "blessed": "Blessed:",
+        "criticalStrike": "Critical Strike:",
+        "block": "Block:",
+        "breakthrough": "Breakthrough:",
+        "counteraction": "Counteraction:",
+        "skillCriticalStrike": "S-Critical Strike:",
+        "immunity": "Immunity:",
+        "penetration": "Penetration:",
+        "detoxication": "Detoxication:",
+        "unknown": "The game server can't be reached."
+      }
     }
   },
   "slot": {

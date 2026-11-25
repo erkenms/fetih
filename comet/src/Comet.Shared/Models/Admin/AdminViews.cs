@@ -172,5 +172,32 @@ namespace Comet.Shared.Models.Admin
         public DateTime? LoggedInAt { get; set; }
         public bool Dead { get; set; }
         public List<CharacterItem> Items { get; set; } = new List<CharacterItem>();
+        public CharacterStats Stats { get; set; }
+    }
+
+    // What the client's attribute window shows (MsgPlayerAttribInfo); percentages are whole
+    public class CharacterStats
+    {
+        public uint MaxHealth { get; set; }
+        public uint MaxMana { get; set; }
+        public int MinAttack { get; set; }
+        public int MaxAttack { get; set; }
+        public int Defense { get; set; }
+        public int MagicAttack { get; set; }
+        public int MagicDefense { get; set; }
+        public int Dodge { get; set; }
+        public int Agility { get; set; }
+        public int AttackPercent { get; set; }
+        public int MagicAttackPercent { get; set; }
+        public int DamageTakenOffPercent { get; set; }
+        public int BlessPercent { get; set; }
+        public int CriticalStrike { get; set; }
+        public int SkillCriticalStrike { get; set; }
+        public int Immunity { get; set; }
+        public int Penetration { get; set; }
+        public int Block { get; set; }
+        public int Breakthrough { get; set; }
+        public int Counteraction { get; set; }
+        public int Detoxication { get; set; }
     }
 }

@@ -129,7 +129,30 @@
       "level": "Sv. {{level}}",
       "experience": "Tecrübe: {{value}}",
       "none": "Yok",
-      "battlePower": "Savaş gücü: {{value}}"
+      "battlePower": "Savaş gücü: {{value}}",
+      "attributes": {
+        "hp": "Can:",
+        "mp": "Mana:",
+        "attack": "Saldırı:",
+        "defense": "Savunma:",
+        "magicAttack": "B-Saldırı:",
+        "magicDefense": "B-Savunma:",
+        "dodge": "Kaçınma:",
+        "agility": "Çeviklik:",
+        "attackPercent": "Saldırı:",
+        "magicAttackPercent": "B-Saldırı:",
+        "damage": "Hasar:",
+        "blessed": "Kutsama:",
+        "criticalStrike": "Kritik Vuruş:",
+        "block": "Blok:",
+        "breakthrough": "Delme:",
+        "counteraction": "Karşı Koyma:",
+        "skillCriticalStrike": "B-Kritik Vuruş:",
+        "immunity": "Bağışıklık:",
+        "penetration": "Nüfuz:",
+        "detoxication": "Zehir Direnci:",
+        "unknown": "Oyun sunucusuna ulaşılamıyor."
+      }
     }
   },
   "slot": {

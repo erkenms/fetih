@@ -6295,7 +6295,8 @@
           "family",
           "nobility",
           "flowers",
-          "arena"
+          "arena",
+          "stats"
         ],
         "type": "object",
         "properties": {
@@ -6587,6 +6588,16 @@
               },
               {
                 "$ref": "#/components/schemas/CharacterArenaSummary"
+              }
+            ]
+          },
+          "stats": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterStats"
               }
             ]
           }
@@ -7040,6 +7051,95 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "CharacterStats": {
+        "type": "object",
+        "properties": {
+          "maxHealth": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "maxMana": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "minAttack": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "maxAttack": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "defense": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "magicAttack": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "magicDefense": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dodge": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "agility": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "attackPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "magicAttackPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "damageTakenOffPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blessPercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "criticalStrike": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skillCriticalStrike": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "immunity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "penetration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "block": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "breakthrough": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "counteraction": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detoxication": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

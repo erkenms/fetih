@@ -8,6 +8,7 @@ namespace Comet.Game
     using Comet.Core.Logging;
     using Comet.Game.Admin;
     using Comet.Game.Chat;
+    using Comet.Game.Combat;
     using Comet.Game.Database.Models;
     using Comet.Game.Database.Repositories;
     using Comet.Game.Items;
@@ -176,7 +177,12 @@ namespace Comet.Game
             if (saved == null)
                 return null;
             var offline = StateOf(saved);
-            offline.Items = (await ItemsRepository.LoadAsync(characterID)).Select(ItemOf).ToList();
+            var savedItems = await ItemsRepository.LoadAsync(characterID);
+            offline.Items = savedItems.Select(ItemOf).ToList();
+            var equipment = new Equipment(savedItems.Where(i => Equipment.IsEquipped(i.Position)));
+            var sub = new SubClasses(await SubClassesRepository.LoadAsync(characterID));
+            offline.Stats = StatsOf(Stats.Of(saved, equipment, sub, null, null, false),
+                Attributes.MaxHealth(saved, equipment, sub.MaxHealthBonus()), Attributes.MaxMana(saved, equipment), saved.Agility);
             return offline;
         }
 
@@ -186,6 +192,7 @@ namespace Comet.Game
             state.Online = true;
             state.MaxHealth = Attributes.MaxHealth(player);
             state.MaxMana = Attributes.MaxMana(player);
+            state.Stats = StatsOf(Stats.Of(player), state.MaxHealth.Value, state.MaxMana.Value, player.Character.Agility);
             state.IPAddress = player.IPAddress;
             state.LoggedInAt = player.LoggedInAt;
             state.Dead = player.Life.Dead;
@@ -197,6 +204,31 @@ namespace Comet.Game
             state.Items = items.Select(ItemOf).ToList();
             return state;
         }
+
+        private static CharacterStats StatsOf(Stats stats, uint maxHealth, uint maxMana, int agility) => new CharacterStats
+        {
+            MaxHealth = maxHealth,
+            MaxMana = maxMana,
+            MinAttack = stats.MinAttack,
+            MaxAttack = stats.MaxAttack,
+            Defense = stats.Defense,
+            MagicAttack = stats.MagicAttack,
+            MagicDefense = stats.MagicDefense,
+            Dodge = stats.Dodge,
+            Agility = agility,
+            AttackPercent = stats.AttackPercent,
+            MagicAttackPercent = stats.MagicPercent,
+            DamageTakenOffPercent = stats.TortoisePercent,
+            BlessPercent = stats.BlessPercent,
+            CriticalStrike = stats.CriticalStrike,
+            SkillCriticalStrike = stats.SkillCriticalStrike,
+            Immunity = stats.Immunity,
+            Penetration = stats.Penetration,
+            Block = stats.Block,
+            Breakthrough = stats.Breakthrough,
+            Counteraction = stats.Counteraction,
+            Detoxication = stats.Detoxication,
+        };
 
         private static CharacterState StateOf(DbCharacter c) => new CharacterState
         {

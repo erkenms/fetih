@@ -8,6 +8,7 @@ import { guildRankKey } from '../../social/names'
 import { mapEquipmentSlots, toCatalogItem, toItemInstance, type CharacterItemEntry } from '../characterMeta'
 import { TakeItemModal } from '../TakeItemModal'
 import {
+  ATTRIBUTES,
   EQUIPMENT_BOXES,
   FRAMED_SLOTS,
   INVENTORY,
@@ -344,6 +345,68 @@ export function InventoryWindow({
           onChanged()
         }}
       />
+    </Art>
+  )
+}
+
+// The client's lines (STR_PLAYER_* in Cn_Res.ini): the common ones always, the extra ones only
+// above zero. The third block, the five resists, stays empty: nothing sets them.
+export function AttributesWindow({ ch }: { ch: Character }) {
+  const { t } = useTranslation('characters')
+  const s = ch.stats
+  const n = (v: number | undefined) => v ?? 0
+  const common: [string, string][] = s
+    ? [
+        [t('detail.game.attributes.hp'), String(n(s.maxHealth))],
+        [t('detail.game.attributes.mp'), String(n(s.maxMana))],
+        [t('detail.game.attributes.attack'), `${n(s.minAttack)}---${n(s.maxAttack)}`],
+        [t('detail.game.attributes.defense'), String(n(s.defense))],
+        [t('detail.game.attributes.magicAttack'), String(n(s.magicAttack))],
+        [t('detail.game.attributes.magicDefense'), String(n(s.magicDefense))],
+      ]
+    : []
+  const extra: [string, number, (v: number) => string][] = s
+    ? [
+        [t('detail.game.attributes.dodge'), n(s.dodge), String],
+        [t('detail.game.attributes.agility'), n(s.agility), String],
+        [t('detail.game.attributes.attackPercent'), n(s.attackPercent), (v) => `${v}%`],
+        [t('detail.game.attributes.magicAttackPercent'), n(s.magicAttackPercent), (v) => `${v}%`],
+        [t('detail.game.attributes.damage'), n(s.damageTakenOffPercent), (v) => `${v}%`],
+        [t('detail.game.attributes.blessed'), n(s.blessPercent), (v) => `${v}%`],
+        [t('detail.game.attributes.criticalStrike'), n(s.criticalStrike), (v) => `${v.toFixed(2)}%`],
+        [t('detail.game.attributes.block'), n(s.block), (v) => `${v.toFixed(2)}%`],
+        [t('detail.game.attributes.breakthrough'), n(s.breakthrough), (v) => `${v.toFixed(1)}%`],
+        [t('detail.game.attributes.counteraction'), n(s.counteraction), (v) => `${v.toFixed(1)}%`],
+        [t('detail.game.attributes.skillCriticalStrike'), n(s.skillCriticalStrike), (v) => `${v.toFixed(2)}%`],
+        [t('detail.game.attributes.immunity'), n(s.immunity), (v) => `${v.toFixed(2)}%`],
+        [t('detail.game.attributes.penetration'), n(s.penetration), (v) => `${v.toFixed(2)}%`],
+        [t('detail.game.attributes.detoxication'), n(s.detoxication), (v) => `${v}%`],
+      ]
+    : []
+  const shownExtra = extra.filter(([, v]) => v > 0).map(([label, v, f]): [string, string] => [label, f(v)])
+
+  const block = (top: number, lines: [string, string][]) =>
+    lines.map(([label, value], i) => (
+      <span
+        key={label}
+        style={{ ...text, left: ATTRIBUTES.x, top: top + i * ATTRIBUTES.lineHeight, lineHeight: '13px', right: ATTRIBUTES.x }}
+      >
+        <span style={{ color: '#f7eb94' }}>{label}</span> {value}
+      </span>
+    ))
+
+  return (
+    <Art src="attributes.png" width={ATTRIBUTES.width} height={ATTRIBUTES.height}>
+      {s ? (
+        <>
+          {block(ATTRIBUTES.blocks[0], common)}
+          {block(ATTRIBUTES.blocks[1], shownExtra)}
+        </>
+      ) : (
+        <span style={{ ...text, left: ATTRIBUTES.x, top: ATTRIBUTES.blocks[0], whiteSpace: 'normal', right: ATTRIBUTES.x }}>
+          {t('detail.game.attributes.unknown')}
+        </span>
+      )}
     </Art>
   )
 }

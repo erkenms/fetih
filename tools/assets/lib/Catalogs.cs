@@ -48,7 +48,8 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
 
     // The game windows the character page draws: the status window (DialogQuery, Dialog6 in
     // Control.Ani) with its pages and round tab buttons (Check61, 63, 64, 65, each with its
-    // pressed frame), and the inventory (DialogMpcGoods, Dialog12) with its money icons. The
+    // pressed frame), the attribute window beside it (CDlgHeroAttri, Main3_RoleBG), and the
+    // inventory (DialogMpcGoods, Dialog12) with its money icons. The
     // item slot is the inventory's top left one, frame included. The battle power on the
     // window's globe is drawn with the CountB digits (3DEffect.ini).
     private void Windows()
@@ -60,6 +61,7 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
             ("data/main/DialogQuery_Role.dds", "ui/status-stats.png", null),
             ("data/main/DialogQuery_Mission.dds", "ui/status-equipment.png", null),
             ("data/main/DialogQuery_Weapon.dds", "ui/status-skills.png", null),
+            ("data/main/DialogQuery_Role1BG.dds", "ui/attributes.png", null),
             ("data/main/QueryRoleBtn.dds", "ui/tab-stats.png", null),
             ("data/main/QueryRoleBtnClick.dds", "ui/tab-stats-on.png", null),
             ("data/main/QueryMissionBtn.dds", "ui/tab-equipment.png", null),

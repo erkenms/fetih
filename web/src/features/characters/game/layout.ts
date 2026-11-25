@@ -80,3 +80,13 @@ export const INVENTORY = {
   silverIcon: { x: 70, y: 374 },
   cpsIcon: { x: 74, y: 402 },
 }
+
+// DialogQuery_Role1BG.dds, the attribute window: three blocks split by gold lines at 122 and
+// 414, lines 13 apart (SpaceBetween in ini/info.ini [DlgHeroAttri])
+export const ATTRIBUTES = {
+  width: 204,
+  height: 507,
+  x: 16,
+  blocks: [36, 130, 422],
+  lineHeight: 13,
+}

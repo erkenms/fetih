@@ -467,7 +467,8 @@ public sealed class CharactersFeature : IFeature
             family,
             nobility,
             flowers,
-            arena));
+            arena,
+            live?.Stats));
     }
 
     // What the status window's globe shows, less the guild arsenal's share, which only the game

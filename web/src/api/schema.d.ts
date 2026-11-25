@@ -2151,6 +2151,7 @@ export interface components {
             nobility: null | components["schemas"]["CharacterNobilitySummary"];
             flowers: null | components["schemas"]["CharacterFlowerSummary"];
             arena: null | components["schemas"]["CharacterArenaSummary"];
+            stats: null | components["schemas"]["CharacterStats"];
         };
         CharacterFamilySummary: {
             /** Format: uint32 */
@@ -2306,6 +2307,50 @@ export interface components {
             currentClass: number;
             /** Format: date-time */
             since: null | string;
+        };
+        CharacterStats: {
+            /** Format: uint32 */
+            maxHealth?: number;
+            /** Format: uint32 */
+            maxMana?: number;
+            /** Format: int32 */
+            minAttack?: number;
+            /** Format: int32 */
+            maxAttack?: number;
+            /** Format: int32 */
+            defense?: number;
+            /** Format: int32 */
+            magicAttack?: number;
+            /** Format: int32 */
+            magicDefense?: number;
+            /** Format: int32 */
+            dodge?: number;
+            /** Format: int32 */
+            agility?: number;
+            /** Format: int32 */
+            attackPercent?: number;
+            /** Format: int32 */
+            magicAttackPercent?: number;
+            /** Format: int32 */
+            damageTakenOffPercent?: number;
+            /** Format: int32 */
+            blessPercent?: number;
+            /** Format: int32 */
+            criticalStrike?: number;
+            /** Format: int32 */
+            skillCriticalStrike?: number;
+            /** Format: int32 */
+            immunity?: number;
+            /** Format: int32 */
+            penetration?: number;
+            /** Format: int32 */
+            block?: number;
+            /** Format: int32 */
+            breakthrough?: number;
+            /** Format: int32 */
+            counteraction?: number;
+            /** Format: int32 */
+            detoxication?: number;
         };
         CharacterWarehouseGroup: {
             /** Format: uint32 */

@@ -25,7 +25,7 @@ import { formatProfession } from '../../lib/gameMeta'
 import { CharacterTimelineTab } from '../logs/CharacterTimelineTab'
 import { CharacterActionsBar } from './CharacterActionsBar'
 import { CharacterItemsView } from './CharacterItemsView'
-import { InventoryWindow, StatusWindow } from './game/GameWindows'
+import { AttributesWindow, InventoryWindow, StatusWindow } from './game/GameWindows'
 import { isMuted, pkColor } from './characterMeta'
 
 function StatRow({ label, value }: { label: string; value: string | number }) {
@@ -257,7 +257,10 @@ export default function CharacterDetailPage() {
         <Tabs.Panel value="profile" pt="md">
           <Stack>
             <Group align="flex-start" gap="md" wrap="wrap">
-              <StatusWindow ch={ch} />
+              <Group gap={0} align="flex-start" wrap="nowrap">
+                <StatusWindow ch={ch} />
+                <AttributesWindow ch={ch} />
+              </Group>
               <InventoryWindow ch={ch} canManage={canManage} onChanged={refresh} />
             </Group>
             <SimpleGrid cols={{ base: 1, md: 2 }}>
