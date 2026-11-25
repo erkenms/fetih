@@ -5187,6 +5187,46 @@
           }
         }
       }
+    },
+    "/api/packets/decode": {
+      "post": {
+        "tags": [
+          "PacketsFeature"
+        ],
+        "operationId": "decodePacket",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PacketDecodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacketDecodeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -11998,6 +12038,161 @@
           }
         }
       },
+      "PacketDecodeRequest": {
+        "required": [
+          "hex"
+        ],
+        "type": "object",
+        "properties": {
+          "hex": {
+            "type": "string"
+          },
+          "server": {
+            "$ref": "#/components/schemas/PacketServer"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/PacketDirection"
+          }
+        }
+      },
+      "PacketDecodeResponse": {
+        "required": [
+          "type",
+          "typeName",
+          "length",
+          "declaredLength",
+          "seal",
+          "reader",
+          "readerName",
+          "handled",
+          "fields",
+          "error",
+          "dump"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "typeName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "length": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "declaredLength": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "seal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "reader": {
+            "$ref": "#/components/schemas/PacketReaderKind"
+          },
+          "readerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "handled": {
+            "type": "boolean"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PacketField"
+            }
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dump": {
+            "type": "string"
+          }
+        }
+      },
+      "PacketDirection": {
+        "enum": [
+          "In",
+          "Out"
+        ],
+        "default": "In"
+      },
+      "PacketField": {
+        "required": [
+          "name",
+          "kind",
+          "value",
+          "typeName",
+          "children"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PacketFieldKind"
+          },
+          "value": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "typeName": {
+            "type": "string"
+          },
+          "children": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PacketField"
+            }
+          }
+        }
+      },
+      "PacketFieldKind": {
+        "enum": [
+          "Number",
+          "Text",
+          "Enum",
+          "Bool",
+          "Bytes",
+          "Null",
+          "List",
+          "Object"
+        ]
+      },
+      "PacketReaderKind": {
+        "enum": [
+          "Server",
+          "Client",
+          "None"
+        ]
+      },
+      "PacketServer": {
+        "enum": [
+          "Game",
+          "Account"
+        ],
+        "default": "Game"
+      },
       "Permission": {
         "enum": [
           "AdminArea",
@@ -14712,6 +14907,9 @@
     },
     {
       "name": "MonsterEditFeature"
+    },
+    {
+      "name": "PacketsFeature"
     },
     {
       "name": "PkFeature"

@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Comet.Account\Comet.Account.csproj" />
     <ProjectReference Include="..\Comet.Game\Comet.Game.csproj" />
+    <ProjectReference Include="..\Comet.Client\Comet.Client.csproj" />
     <ProjectReference Include="..\Comet.Core\Comet.Core.csproj" />
     <ProjectReference Include="..\Comet.Network\Comet.Network.csproj" />
     <ProjectReference Include="..\Comet.Shared\Comet.Shared.csproj" />

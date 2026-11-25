@@ -1716,6 +1716,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/packets/decode": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["decodePacket"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3733,6 +3749,48 @@ export interface components {
             takenAt: string;
             players: components["schemas"]["LiveOnlinePlayer"][];
         };
+        PacketDecodeRequest: {
+            hex: string;
+            server?: components["schemas"]["PacketServer"];
+            direction?: components["schemas"]["PacketDirection"];
+        };
+        PacketDecodeResponse: {
+            /** Format: uint16 */
+            type: number;
+            typeName: null | string;
+            /** Format: int32 */
+            length: number;
+            /** Format: int32 */
+            declaredLength: number;
+            seal: null | string;
+            reader: components["schemas"]["PacketReaderKind"];
+            readerName: null | string;
+            handled: boolean;
+            fields: components["schemas"]["PacketField"][];
+            error: null | string;
+            dump: string;
+        };
+        /**
+         * @default In
+         * @enum {unknown}
+         */
+        PacketDirection: "In" | "Out";
+        PacketField: {
+            name: string;
+            kind: components["schemas"]["PacketFieldKind"];
+            value: null | string;
+            typeName: string;
+            children: null | components["schemas"]["PacketField"][];
+        };
+        /** @enum {unknown} */
+        PacketFieldKind: "Number" | "Text" | "Enum" | "Bool" | "Bytes" | "Null" | "List" | "Object";
+        /** @enum {unknown} */
+        PacketReaderKind: "Server" | "Client" | "None";
+        /**
+         * @default Game
+         * @enum {unknown}
+         */
+        PacketServer: "Game" | "Account";
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
         PkCharacterRef: {
@@ -8003,6 +8061,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LiveMapSnapshot"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    decodePacket: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PacketDecodeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PacketDecodeResponse"];
                 };
             };
             /** @description Bad Request */

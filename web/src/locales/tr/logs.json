@@ -37,7 +37,8 @@
     "characterId": "Karakter ID",
     "accountId": "Hesap ID",
     "fields": "Alanlar",
-    "exception": "İstisna"
+    "exception": "İstisna",
+    "packet": "Çözülmüş paket"
   },
   "empty": "Bu filtreyle eşleşen kayıt bulunamadı.",
   "truncated": "En yeni {{count}} kayıt gösteriliyor. Daha fazlası için aralığı veya filtreleri daraltın.",

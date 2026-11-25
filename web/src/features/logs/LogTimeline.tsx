@@ -19,9 +19,11 @@ import { useDebouncedValue } from '@mantine/hooks'
 import { IconAlertTriangle, IconExternalLink, IconRefresh } from '@tabler/icons-react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { api, unwrap, type Schemas } from '../../api/client'
 import { useErrorText } from '../../app/ErrorAlert'
+import { PacketDecodeView, packetSourceFromEntry } from '../packets'
 import { levelColor, rangeWindow, timeRangePresets, type TimeRangePreset } from './timeline'
 
 type Entry = Schemas['LogEntry']
@@ -66,6 +68,7 @@ export function LogTimeline({ characterId, accountId, compact = false }: LogTime
   })
 
   const errorText = useErrorText('logs')
+  const selectedPacket = selected ? packetSourceFromEntry(selected) : null
 
   return (
     <Stack gap="sm">
@@ -239,7 +242,7 @@ export function LogTimeline({ characterId, accountId, compact = false }: LogTime
         </ScrollArea>
       </Paper>
 
-      <Modal opened={!!selected} onClose={() => setSelected(null)} title={selected?.event || t('detail.title')} size="lg">
+      <Modal opened={!!selected} onClose={() => setSelected(null)} title={selected?.event || t('detail.title')} size={selectedPacket ? 'xl' : 'lg'}>
         {selected && (
           <Stack gap="xs">
             <Group gap="xs">
@@ -254,6 +257,17 @@ export function LogTimeline({ characterId, accountId, compact = false }: LogTime
               </Text>
             </Group>
             <Text>{selected.message}</Text>
+            {selectedPacket && (
+              <>
+                <Group justify="space-between" mt="xs">
+                  <Text fw={600}>{t('detail.packet')}</Text>
+                  <Button component={Link} to="/admin/packets" state={{ packet: selectedPacket }} variant="subtle" size="xs">
+                    {t('packets:openDecoder')}
+                  </Button>
+                </Group>
+                <PacketDecodeView source={selectedPacket} />
+              </>
+            )}
             {selected.characterId != null && (
               <Text size="sm">
                 {t('detail.characterId')}: {selected.characterId}

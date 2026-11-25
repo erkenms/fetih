@@ -37,7 +37,8 @@
     "characterId": "Character ID",
     "accountId": "Account ID",
     "fields": "Fields",
-    "exception": "Exception"
+    "exception": "Exception",
+    "packet": "Decoded packet"
   },
   "empty": "No log entries matched this filter.",
   "truncated": "Showing the newest {{count}} entries. Narrow the time range or filters to see more.",
