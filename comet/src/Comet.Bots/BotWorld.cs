@@ -27,12 +27,16 @@ namespace Comet.Bots
         public bool Dead { get; private set; }
         public DateTime DiedAt { get; private set; }
         public Dictionary<uint, Seen> Around { get; } = new Dictionary<uint, Seen>();
+        public Dictionary<uint, GroundItemMessage> Ground { get; } = new Dictionary<uint, GroundItemMessage>();
+        public Dictionary<uint, ItemInfo> Bag { get; } = new Dictionary<uint, ItemInfo>();
 
         // Set when the server answers our jump; null while none is on its way
         public DateTime? JumpSentAt { get; set; }
 
-        public BotWorld(uint me, ActionMessage spawn, uint health)
+        public BotWorld(uint me, ActionMessage spawn, uint health, IEnumerable<ItemInfo> inventory)
         {
+            foreach (var item in inventory)
+                this.Bag[item.Id] = item;
             this.Me = me;
             this.MapId = spawn.Command;
             this.X = spawn.X;
@@ -92,6 +96,7 @@ namespace Comet.Bots
                         this.Y = action.Y;
                         this.JumpSentAt = null;
                         this.Around.Clear();
+                        this.Ground.Clear();
                     }
                     break;
                 }
@@ -112,6 +117,28 @@ namespace Comet.Bots
                         if (interact.Sender == this.Me)
                             stats.Killed();
                     }
+                    break;
+                }
+                case PacketTypes.MsgMapItem:
+                {
+                    var item = GroundItemMessage.Parse(packet);
+                    if (item.Action == GroundItemMessage.Create)
+                        this.Ground[item.Id] = item;
+                    else
+                        this.Ground.Remove(item.Id);
+                    break;
+                }
+                case PacketTypes.MsgItemInfo:
+                {
+                    var item = ItemInfo.Parse(packet);
+                    this.Bag[item.Id] = item;
+                    break;
+                }
+                case PacketTypes.MsgItem:
+                {
+                    var item = ItemMessage.Parse(packet);
+                    if (item.Action == ItemMessage.Remove)
+                        this.Bag.Remove(item.Id);
                     break;
                 }
                 case PacketTypes.MsgUserAttrib:
@@ -136,6 +163,10 @@ namespace Comet.Bots
 
     public static class Steps
     {
+        // Potions are types 1000000-1009999; 1001xxx restore mana only
+        public static bool IsPotion(uint type) => type / 10000 == 100;
+        public static bool IsHealthPotion(uint type) => IsPotion(type) && type / 1000 != 1001;
+
         public static readonly int[] DeltaX = { 0, -1, -1, -1, 0, 1, 1, 1 };
         public static readonly int[] DeltaY = { 1, 1, 0, -1, -1, -1, 0, 1 };
 

@@ -39,6 +39,30 @@ namespace Comet.Bots
 
         public abstract Task TickAsync(DateTime now);
 
+        // Far from its spot (revived in town, say), it jumps back the way a player would; false
+        // when it's there already
+        public async Task<bool> GoBackAsync(DateTime now)
+        {
+            int distance = Steps.Distance(this.World.X, this.World.Y, this.Group.X, this.Group.Y);
+            if (distance <= this.Group.Spread + 8)
+                return false;
+            if (now < this.NextMoveAt || this.World.JumpSentAt != null)
+                return true;
+            for (int reach = Math.Min(15, distance); reach >= 2; reach--)
+            {
+                int x = this.World.X + (this.Group.X - this.World.X) * reach / distance;
+                int y = this.World.Y + (this.Group.Y - this.World.Y) * reach / distance;
+                if (this.Walkable(x, y))
+                {
+                    await this.JumpToAsync(x, y, now);
+                    this.NextMoveAt = now + this.Between(900, 1400);
+                    return true;
+                }
+            }
+            await this.StepTowardAsync(this.Group.X, this.Group.Y, now);
+            return true;
+        }
+
         protected bool Walkable(int x, int y) => this.Grid == null || this.Grid.IsWalkable(x, y);
 
         protected bool InArea(int x, int y, int slack = 0) =>
@@ -140,22 +164,46 @@ namespace Comet.Bots
     }
 
     // Goes for the nearest monster in the area: jumps when it's far, walks when it's close,
-    // then attacks it. With none about it wanders.
+    // then attacks it. It picks up the potions monsters drop and drinks one when its health is
+    // under half. With no monster about it wanders.
     public sealed class Hunt : Wander
     {
         private uint prey;
-        private DateTime attackedAt;
+        private DateTime attackedAt, drinkAt;
 
         public Hunt(GameClient game, BotWorld world, BotsConfiguration.Group group, MapGrid grid, BotStats stats)
             : base(game, world, group, grid, stats) { }
 
         public override async Task TickAsync(DateTime now)
         {
+            if (this.World.Health * 2 < this.World.MaxHealth && now >= this.drinkAt &&
+                this.World.Bag.Values.FirstOrDefault(i => Steps.IsHealthPotion(i.TypeId)) is { } potion)
+            {
+                await this.Game.UseAsync(potion.Id);
+                this.World.Bag.Remove(potion.Id);
+                this.drinkAt = now + TimeSpan.FromSeconds(1.5);
+                this.Stats.Drank();
+            }
+
             var target = this.World.Around.Values
                 .Where(s => s.Monster && !s.Dead && this.InArea(s.X, s.Y, slack: 10))
                 .OrderBy(s => s.Id == this.prey ? 0 : 1)
                 .ThenBy(s => Steps.Distance(this.World.X, this.World.Y, s.X, s.Y))
                 .FirstOrDefault();
+            int distance = target == null ? int.MaxValue : Steps.Distance(this.World.X, this.World.Y, target.X, target.Y);
+
+            // A potion nearer than the next monster is worth the detour
+            var loot = this.World.Ground.Values
+                .Where(g => Steps.IsPotion(g.TypeId) && this.InArea(g.X, g.Y, slack: 10))
+                .OrderBy(g => Steps.Distance(this.World.X, this.World.Y, g.X, g.Y))
+                .FirstOrDefault();
+            if (loot != null && distance > 1 &&
+                Steps.Distance(this.World.X, this.World.Y, loot.X, loot.Y) < Math.Min(distance, 10))
+            {
+                await this.LootAsync(loot, now);
+                return;
+            }
+
             if (target == null)
             {
                 this.prey = 0;
@@ -163,7 +211,6 @@ namespace Comet.Bots
                 return;
             }
 
-            int distance = Steps.Distance(this.World.X, this.World.Y, target.X, target.Y);
             if (distance <= 1)
             {
                 // The server keeps swinging at a target until something stops it
@@ -179,17 +226,33 @@ namespace Comet.Bots
             this.prey = target.Id;
             if (now < this.NextMoveAt || this.World.JumpSentAt != null)
                 return;
-            if (distance > 6 && this.NextTo(target) is { } landing)
+            if (distance > 6 && this.NextTo(target.X, target.Y) is { } landing)
                 await this.JumpToAsync(landing.X, landing.Y, now);
             else
                 await this.StepTowardAsync(target.X, target.Y, now);
         }
 
-        private (int X, int Y)? NextTo(Seen target)
+        private async Task LootAsync(GroundItemMessage loot, DateTime now)
+        {
+            if (Steps.Distance(this.World.X, this.World.Y, loot.X, loot.Y) <= 1)
+            {
+                // Forgotten whether or not it works: another's loot stays theirs for a while
+                await this.Game.PickUpAsync(loot.Id, loot.X, loot.Y);
+                this.World.Ground.Remove(loot.Id);
+                this.Stats.PickedUp();
+                return;
+            }
+            if (now < this.NextMoveAt || this.World.JumpSentAt != null)
+                return;
+            if (!await this.StepTowardAsync(loot.X, loot.Y, now))
+                this.World.Ground.Remove(loot.Id);
+        }
+
+        private (int X, int Y)? NextTo(int tx, int ty)
         {
             for (int direction = 0; direction < 8; direction++)
             {
-                int x = target.X + Steps.DeltaX[direction], y = target.Y + Steps.DeltaY[direction];
+                int x = tx + Steps.DeltaX[direction], y = ty + Steps.DeltaY[direction];
                 if (this.Walkable(x, y) && Steps.Distance(this.World.X, this.World.Y, x, y) <= 16 &&
                     !this.World.Around.Values.Any(s => s.X == x && s.Y == y && !s.Dead))
                     return (x, y);

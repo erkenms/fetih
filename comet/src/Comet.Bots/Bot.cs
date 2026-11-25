@@ -69,7 +69,7 @@ namespace Comet.Bots
                 return;
 
             var game = player.Game;
-            var world = new BotWorld(player.User.Id, player.Spawn, player.User.HealthPoints);
+            var world = new BotWorld(player.User.Id, player.Spawn, player.User.HealthPoints, player.Inventory);
             var behavior = Behavior.Create(this.group.Behavior, game, world, this.group, this.grid, this.stats);
             this.stats.Entered();
             try
@@ -105,7 +105,9 @@ namespace Comet.Bots
                     else
                     {
                         ghostAt = reviveAt = null;
-                        await behavior.TickAsync(now);
+                        // Revived in town, or pushed off: it jumps back to its spot first
+                        if (!await behavior.GoBackAsync(now))
+                            await behavior.TickAsync(now);
                     }
                     await Delay(TimeSpan.FromMilliseconds(90 + this.random.Next(30)), stop);
                 }

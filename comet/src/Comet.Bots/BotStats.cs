@@ -6,7 +6,7 @@ namespace Comet.Bots
     // Counters every bot adds to; Report takes what happened since the last report
     public sealed class BotStats
     {
-        private int online, logins, failures, kills, deaths, steps, jumps, attacks, echoes;
+        private int online, logins, failures, kills, deaths, steps, jumps, attacks, echoes, pickups, potions;
         private long echoTicks, slowestEchoTicks;
 
         public int Online => Volatile.Read(ref this.online);
@@ -19,6 +19,8 @@ namespace Comet.Bots
         public void Stepped() => Interlocked.Increment(ref this.steps);
         public void Jumped() => Interlocked.Increment(ref this.jumps);
         public void Attacked() => Interlocked.Increment(ref this.attacks);
+        public void PickedUp() => Interlocked.Increment(ref this.pickups);
+        public void Drank() => Interlocked.Increment(ref this.potions);
 
         // How long the server took to answer a jump
         public void Echo(TimeSpan took)
@@ -42,7 +44,8 @@ namespace Comet.Bots
                 $"failures {Interlocked.Exchange(ref this.failures, 0)} | " +
                 $"steps {Interlocked.Exchange(ref this.steps, 0) / seconds:0.0}/s, jumps {Interlocked.Exchange(ref this.jumps, 0) / seconds:0.0}/s, " +
                 $"attacks {Interlocked.Exchange(ref this.attacks, 0) / seconds:0.0}/s | " +
-                $"kills {Interlocked.Exchange(ref this.kills, 0)}, deaths {Interlocked.Exchange(ref this.deaths, 0)} | jump answer {echo}";
+                $"kills {Interlocked.Exchange(ref this.kills, 0)}, deaths {Interlocked.Exchange(ref this.deaths, 0)}, " +
+                $"pickups {Interlocked.Exchange(ref this.pickups, 0)}, potions {Interlocked.Exchange(ref this.potions, 0)} | jump answer {echo}";
         }
     }
 }
