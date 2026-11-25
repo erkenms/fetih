@@ -9,6 +9,7 @@ import { itemsRoute } from '../features/items'
 import { myAccountRoute, registerRoute } from '../features/public/account'
 import { publicSiteRoutes } from '../features/public/site'
 import { logsRoute } from '../features/logs'
+import { chatRoute } from '../features/chat'
 import { socialRoute } from '../features/social'
 import { mapsRoutes } from '../features/maps'
 import { accountsRoutes } from '../features/accounts'
@@ -27,6 +28,7 @@ export const featureRoutes: FeatureRoute[] = [
   myAccountRoute,
   ...publicSiteRoutes,
   logsRoute,
+  chatRoute,
   changesRoute,
   socialRoute,
   ...mapsRoutes,

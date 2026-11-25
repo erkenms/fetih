@@ -21,5 +21,6 @@ public static class FeatureRegistry
         new MonsterEdit.MonsterEditFeature(),
         new DataEdit.DataEditFeature(),
         new Integrity.IntegrityFeature(),
+        new Chat.ChatFeature(),
     ];
 }

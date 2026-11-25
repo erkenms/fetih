@@ -4450,6 +4450,186 @@
           }
         }
       }
+    },
+    "/api/chat/messages": {
+      "get": {
+        "tags": [
+          "ChatFeature"
+        ],
+        "operationId": "queryChatMessages",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "character",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "words",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatMessagesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chat/gm-commands": {
+      "get": {
+        "tags": [
+          "ChatFeature"
+        ],
+        "operationId": "queryGmCommands",
+        "parameters": [
+          {
+            "name": "character",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "command",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "words",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GmCommandsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -6368,6 +6548,118 @@
           }
         }
       },
+      "ChatLogEntry": {
+        "required": [
+          "timestamp",
+          "event",
+          "channel",
+          "characterId",
+          "accountId",
+          "sender",
+          "recipient",
+          "text",
+          "command",
+          "arguments",
+          "result",
+          "rawMessage"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "command": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "arguments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "result": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rawMessage": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatMessagesResponse": {
+        "required": [
+          "entries",
+          "query",
+          "grafanaExploreUrl",
+          "from",
+          "to",
+          "truncated"
+        ],
+        "type": "object",
+        "properties": {
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatLogEntry"
+            }
+          },
+          "query": {
+            "type": "string"
+          },
+          "grafanaExploreUrl": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        }
+      },
       "DashboardCounts": {
         "required": [
           "accounts",
@@ -6973,6 +7265,57 @@
               "integer"
             ],
             "format": "uint8"
+          }
+        }
+      },
+      "GmCommandsResponse": {
+        "required": [
+          "commands",
+          "audit",
+          "canViewAudit",
+          "lokiAvailable",
+          "query",
+          "grafanaExploreUrl",
+          "from",
+          "to",
+          "truncated"
+        ],
+        "type": "object",
+        "properties": {
+          "commands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChatLogEntry"
+            }
+          },
+          "audit": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          },
+          "canViewAudit": {
+            "type": "boolean"
+          },
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "query": {
+            "type": "string"
+          },
+          "grafanaExploreUrl": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "truncated": {
+            "type": "boolean"
           }
         }
       },
@@ -12098,6 +12441,9 @@
     },
     {
       "name": "CharactersFeature"
+    },
+    {
+      "name": "ChatFeature"
     },
     {
       "name": "Comet.Web"

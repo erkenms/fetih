@@ -1,0 +1,109 @@
+{
+  "nav": "Chat log",
+  "title": "Chat log & GM commands",
+  "description": "Search in-game chat messages and slash commands from Loki, moderate players directly, and review GM commands alongside the web audit log.",
+  "tabs": {
+    "chat": "Chat log",
+    "gmCommands": "GM commands"
+  },
+  "filter": {
+    "range": "Time range",
+    "channel": "Channel",
+    "allChannels": "All channels",
+    "character": "Character",
+    "characterPlaceholder": "Name or ID",
+    "account": "Account",
+    "accountPlaceholder": "Username or ID",
+    "words": "Words",
+    "wordsPlaceholder": "Search text...",
+    "command": "Command",
+    "commandPlaceholder": "tp, item, gw..."
+  },
+  "range": {
+    "1h": "Last 1 hour",
+    "6h": "Last 6 hours",
+    "24h": "Last 24 hours",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days"
+  },
+  "channel": {
+    "Talk": "Talk",
+    "Whisper": "Whisper",
+    "Team": "Team",
+    "Guild": "Guild",
+    "Clan": "Clan",
+    "Friend": "Friend",
+    "World": "World",
+    "Ghost": "Ghost",
+    "Vendor": "Vendor",
+    "Command": "Command",
+    "GmCommand": "GM command"
+  },
+  "column": {
+    "time": "Time",
+    "channel": "Channel",
+    "sender": "Sender",
+    "recipient": "Recipient",
+    "message": "Message",
+    "actions": "Actions",
+    "gm": "GM",
+    "command": "Command",
+    "result": "Result",
+    "who": "Who",
+    "action": "Action",
+    "target": "Target",
+    "summary": "Summary"
+  },
+  "actions": {
+    "refresh": "Refresh",
+    "exploreGrafana": "Explore in Grafana",
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "muteFor": "Mute {{label}}",
+    "jail": "Jail",
+    "jailConfirm": "Send {{name}} to PK jail?",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "duration": {
+    "5": "5 min",
+    "15": "15 min",
+    "60": "1 hour",
+    "1440": "24 hours"
+  },
+  "gm": {
+    "inGameTitle": "In-game / commands",
+    "webAuditTitle": "Web audit log",
+    "auditPermissionNote": "Web audit entries require Game Master authority or higher.",
+    "lokiUnavailable": "Loki is unreachable; showing web audit log only."
+  },
+  "detail": {
+    "title": "Chat entry",
+    "event": "Event",
+    "characterId": "Character ID",
+    "accountId": "Account ID",
+    "command": "Command",
+    "arguments": "Arguments",
+    "result": "Result",
+    "rawMessage": "Raw log message",
+    "before": "Before",
+    "after": "After"
+  },
+  "notifications": {
+    "muted": "Muted {{name}} for {{minutes}} min.",
+    "unmuted": "Unmuted {{name}}.",
+    "jailed": "Jailed {{name}}."
+  },
+  "count": "{{count}} entries",
+  "empty": "No chat entries matched this filter.",
+  "emptyCommands": "No GM commands matched this filter.",
+  "emptyAudit": "No web audit entries matched this filter.",
+  "truncated": "Showing the newest {{count}} entries. Narrow the time range or filters to see more.",
+  "errors": {
+    "loki_unavailable": "Loki log server is unreachable.",
+    "invalid_time_range": "Invalid time range (must be between 1 second and 30 days).",
+    "game_offline": "Game server is offline.",
+    "outranked": "You cannot moderate a character with equal or higher authority.",
+    "not_found": "Character not found."
+  }
+}
