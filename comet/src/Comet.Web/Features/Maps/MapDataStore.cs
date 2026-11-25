@@ -30,26 +30,10 @@ public sealed class MapDataStore
     public MapDataStore(WebConfiguration config, CatalogStore catalogs)
         : this(
             WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory),
-            ResolveDataDir(config.Paths.DataDirectory),
+            StudioData.ResolveDataDirectory(config),
             WebConfiguration.PathsSection.Resolve(config.Paths.ClientDirectory),
             catalogs)
     {
-    }
-
-    private static string? ResolveDataDir(string? configured)
-    {
-        var resolved = WebConfiguration.PathsSection.Resolve(configured);
-        if (resolved != null && Directory.Exists(resolved))
-            return resolved;
-        var dir = AppContext.BaseDirectory;
-        while (dir != null)
-        {
-            var candidate = Path.Combine(dir, "src", "Comet.Game", "Data");
-            if (Directory.Exists(candidate))
-                return candidate;
-            dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar));
-        }
-        return resolved;
     }
 
     internal MapDataStore(string? assetsDir, string? dataDir, string? clientDir, CatalogStore catalogs)
