@@ -22,12 +22,12 @@ public class AccountsTests(WebFixture fixture)
     public async Task PermissionsAreEnforcedOnAccounts()
     {
         var player = await fixture.LoginAsync("test", "test");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/accounts")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/players")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/accounts/1")).StatusCode);
 
         string modEmail = await fixture.CreateAccountAsync(authority: 2);
         var mod = await fixture.LoginAsync(modEmail, "secret1");
-        Assert.Equal(HttpStatusCode.OK, (await mod.GetAsync("/api/accounts")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await mod.GetAsync("/api/players")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await mod.PostAsJsonAsync("/api/accounts/1/ban", new { reason = "x" })).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await mod.PostAsJsonAsync("/api/accounts/1/status", new { statusId = 4 })).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await mod.PostAsJsonAsync("/api/accounts/1/authority", new { authorityId = 2 })).StatusCode);
@@ -93,7 +93,7 @@ public class AccountsTests(WebFixture fixture)
         string modEmail = await fixture.CreateAccountAsync(authority: 2);
         var mod = await fixture.LoginAsync(modEmail, "secret1");
 
-        var byIp = await mod.GetFromJsonAsync<JsonElement>("/api/accounts?ip=203.0.113.42");
+        var byIp = await mod.GetFromJsonAsync<JsonElement>("/api/players?ip=203.0.113.42");
         Assert.Equal(2, byIp.GetProperty("total").GetInt32());
 
         var detail = await mod.GetFromJsonAsync<JsonElement>($"/api/accounts/{targetId}");
@@ -134,7 +134,7 @@ public class AccountsTests(WebFixture fixture)
         // Reset password and verify login with new password works
         Assert.Equal(HttpStatusCode.NoContent, (await admin.PostAsJsonAsync($"/api/accounts/{targetId}/reset-password", new { newPassword = "newsecret9" })).StatusCode);
         var relogin = await fixture.LoginAsync(targetEmail, "newsecret9");
-        Assert.Equal(HttpStatusCode.OK, (await relogin.GetAsync("/api/accounts")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await relogin.GetAsync("/api/players")).StatusCode);
 
         // Verify audit entries exist and password is not leaked
         var audit = await admin.GetFromJsonAsync<JsonElement>($"/api/audit?action=account.&targetId={targetId}");

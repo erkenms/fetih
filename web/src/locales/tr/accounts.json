@@ -1,14 +1,4 @@
 {
-  "nav": "Hesaplar",
-  "title": "Hesaplar",
-  "description": "Oyuncu ve yetkili hesaplarını arayın, giriş geçmişini inceleyin, durum veya yetki yönetin.",
-  "searchPlaceholder": "E-posta, kullanıcı adı, isim, IP veya ID ile ara...",
-  "filter": {
-    "status": "Durum",
-    "authority": "Yetki",
-    "ip": "IP adresi",
-    "clear": "Filtreleri temizle"
-  },
   "status": {
     "1": "Kayıtlı",
     "2": "Aktif",
@@ -19,38 +9,21 @@
   "column": {
     "id": "ID",
     "username": "Hesap",
-    "authority": "Yetki",
     "status": "Durum",
     "ip": "IP adresi",
-    "characters": "Karakterler",
-    "lastLogin": "Son giriş",
     "registered": "Kayıt",
     "time": "Zaman",
-    "sharedIps": "Ortak IP'ler",
-    "name": "İsim",
-    "level": "Seviye",
-    "map": "Harita",
-    "silver": "Gümüş",
-    "cp": "CP"
+    "sharedIps": "Ortak IP'ler"
   },
-  "empty": "Mevcut filtrelere uyan hesap bulunamadı.",
-  "total_other": "{{count}} hesap",
   "detail": {
-    "back": "Hesaplara dön",
-    "overview": "Genel bakış",
     "logins": "Giriş geçmişi",
-    "timeline": "Zaman çizelgesi",
     "email": "E-posta",
     "name": "İsim",
     "lastIp": "Son IP",
     "registered": "Kayıt tarihi",
-    "characters": "Karakterler",
-    "noCharacters": "Bu hesabın karakteri yok.",
     "sameIp": "Aynı IP üzerindeki diğer hesaplar",
     "noSameIp": "Bu hesapla ortak IP kullanan başka hesap yok.",
     "noLogins": "Kayıtlı giriş geçmişi yok.",
-    "online": "Çevrimiçi",
-    "offline": "Çevrimdışı",
     "searchIp": "Hesapları bu IP ile filtrele"
   },
   "actions": {

@@ -14,8 +14,7 @@ import { socialRoute } from '../features/social'
 import { pkRoute } from '../features/pk'
 import { mapsRoutes } from '../features/maps'
 import { mapEditRoute } from '../features/maps/edit'
-import { accountsRoutes } from '../features/accounts'
-import { charactersRoutes } from '../features/characters'
+import { playersRoutes } from '../features/players'
 import { monstersRoute } from '../features/monsters'
 import { integrityRoute } from '../features/integrity'
 import { liveRoutes } from '../features/live'
@@ -37,8 +36,7 @@ export const featureRoutes: FeatureRoute[] = [
   pkRoute,
   ...mapsRoutes,
   mapEditRoute,
-  ...accountsRoutes,
-  ...charactersRoutes,
+  ...playersRoutes,
   monstersRoute,
   dataRoute,
   integrityRoute,

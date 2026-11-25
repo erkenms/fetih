@@ -3,31 +3,6 @@ namespace Comet.Web.Features.Characters;
 using Comet.Shared.Models.Admin;
 using Comet.Web.Features.Items;
 
-public record CharacterListItem(
-    uint CharacterId,
-    uint AccountId,
-    string? AccountUsername,
-    string Name,
-    byte Level,
-    byte Rebirths,
-    byte CurrentClass,
-    uint MapId,
-    string? MapName,
-    ushort X,
-    ushort Y,
-    uint Silver,
-    uint ConquerPoints,
-    ushort KillPoints,
-    bool Online,
-    DateTime Registered);
-
-public record CharacterListResponse(
-    CharacterListItem[] Items,
-    int Total,
-    int Page,
-    int PageSize,
-    bool GameConnected);
-
 public record CharacterItemEntry(
     uint ItemId,
     uint TypeId,

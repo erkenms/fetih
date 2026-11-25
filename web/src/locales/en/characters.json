@@ -1,33 +1,14 @@
 {
-  "nav": "Characters",
-  "title": "Characters",
-  "description": "Search characters, inspect inventory and social links, and run GM actions.",
-  "searchPlaceholder": "Search by character name, ID, or account...",
-  "filter": {
-    "minLevel": "Min level",
-    "maxLevel": "Max level",
-    "map": "Map",
-    "onlineOnly": "Online only",
-    "clear": "Clear filters"
-  },
   "column": {
     "name": "Character",
-    "account": "Account",
     "level": "Level",
     "class": "Class",
     "location": "Location",
-    "silver": "Silver",
-    "cp": "CP",
-    "pk": "PK",
-    "status": "Status",
     "skill": "Skill",
     "type": "Type",
     "experience": "Experience",
     "since": "Since"
   },
-  "empty": "No characters match the current filters.",
-  "total_one": "{{count}} character",
-  "total_other": "{{count}} characters",
   "status": {
     "online": "Online",
     "offline": "Offline",
@@ -35,9 +16,6 @@
     "mutedUntil": "Muted until {{time}}"
   },
   "detail": {
-    "back": "Back to characters",
-    "viewAccount": "View account",
-    "viewOnMap": "View on map",
     "gameOfflineNotice": "Game server is offline. Showing database snapshot; mutations require the game server.",
     "tabs": {
       "profile": "Profile",
@@ -209,7 +187,14 @@
     "silverSuccess": "Silver updated.",
     "cpSuccess": "Conquer Points updated.",
     "levelSuccess": "Level updated.",
-    "teleportSuccess": "Character teleported."
+    "teleportSuccess": "Character teleported.",
+    "ban": "Ban account",
+    "unban": "Unban account",
+    "bulkTitle": "{{action}}: {{count}} players",
+    "jailConfirmBulk": "Send {{count}} players to Bot Jail?",
+    "bulkResult": "{{succeeded}} done, {{failed}} failed.",
+    "bulkFailures_one": "{{count}} failed:",
+    "bulkFailures_other": "{{count}} failed:"
   },
   "errors": {
     "offline": "Character is not online.",
@@ -220,6 +205,9 @@
     "out_of_range": "Value is out of the allowed range.",
     "bad_destination": "Destination map or coordinates are not walkable.",
     "invalid_message": "Message cannot be empty.",
-    "outranked": "This account's authority is equal to or above yours."
+    "outranked": "This account's authority is equal to or above yours.",
+    "no_character": "Account has no character.",
+    "self_ban": "You cannot ban your own account.",
+    "not_banned": "This account is not banned."
   }
 }

@@ -347,7 +347,7 @@ export function ChatLogTab() {
                         </Text>
                       )}
                       {entry.accountId != null && (
-                        <Anchor component={Link} to={`/admin/accounts/${entry.accountId}`} size="xs" c="dimmed">
+                        <Anchor component={Link} to={`/admin/players/${entry.accountId}`} size="xs" c="dimmed">
                           #{entry.accountId}
                         </Anchor>
                       )}
@@ -417,7 +417,7 @@ export function ChatLogTab() {
             {selected.accountId != null && (
               <Text size="sm">
                 {t('detail.accountId')}:{' '}
-                <Anchor component={Link} to={`/admin/accounts/${selected.accountId}`}>
+                <Anchor component={Link} to={`/admin/players/${selected.accountId}`}>
                   #{selected.accountId}
                 </Anchor>
               </Text>

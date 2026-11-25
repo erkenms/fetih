@@ -1,0 +1,59 @@
+{
+  "nav": "Players",
+  "title": "Players",
+  "description": "Accounts and their characters. Filter, tick the players you want and act on all of them at once.",
+  "searchPlaceholder": "Character, account, email, IP or ID...",
+  "filter": {
+    "online": "Online only",
+    "class": "Class",
+    "map": "Map",
+    "minLevel": "Min level",
+    "maxLevel": "Max level",
+    "status": "Account status",
+    "authority": "Authority",
+    "ip": "IP address",
+    "sort": "Sort",
+    "clear": "Clear filters"
+  },
+  "sort": {
+    "level": "Level",
+    "newest": "Newest account",
+    "name": "Name",
+    "silver": "Silver",
+    "cp": "CP",
+    "pk": "PK points"
+  },
+  "column": {
+    "character": "Character",
+    "account": "Account",
+    "level": "Level",
+    "class": "Class",
+    "location": "Location",
+    "silver": "Silver",
+    "cp": "CP",
+    "pk": "PK",
+    "status": "Status",
+    "lastLogin": "Last login"
+  },
+  "noCharacter": "No character",
+  "online": "Online",
+  "offline": "Offline",
+  "empty": "No players match the current filters.",
+  "gameOffline": "The game server is offline, so nobody shows as online.",
+  "total_one": "{{count}} player",
+  "total_other": "{{count}} players",
+  "perPage": "Per page",
+  "selection": {
+    "count_one": "{{count}} player selected",
+    "count_other": "{{count}} players selected",
+    "pageSelected": "All {{count}} on this page are selected.",
+    "selectAll": "Select all {{count}} matching",
+    "clear": "Clear selection"
+  },
+  "detail": {
+    "back": "Back to players",
+    "viewOnMap": "View on map",
+    "account": "Account",
+    "noCharacter": "This account has no character yet."
+  }
+}

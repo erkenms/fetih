@@ -1,32 +1,14 @@
 {
-  "nav": "Karakterler",
-  "title": "Karakterler",
-  "description": "Karakterleri arayın, envanter ve sosyal bilgileri inceleyin, GM işlemlerini uygulayın.",
-  "searchPlaceholder": "Karakter adı, ID veya hesap ile ara...",
-  "filter": {
-    "minLevel": "Min seviye",
-    "maxLevel": "Maks seviye",
-    "map": "Harita",
-    "onlineOnly": "Yalnızca çevrimiçi",
-    "clear": "Filtreleri temizle"
-  },
   "column": {
     "name": "Karakter",
-    "account": "Hesap",
     "level": "Seviye",
     "class": "Sınıf",
     "location": "Konum",
-    "silver": "Gümüş",
-    "cp": "CP",
-    "pk": "PK",
-    "status": "Durum",
     "skill": "Yetenek",
     "type": "Tür",
     "experience": "Tecrübe",
     "since": "Tarih"
   },
-  "empty": "Mevcut filtrelere uyan karakter bulunamadı.",
-  "total_other": "{{count}} karakter",
   "status": {
     "online": "Çevrimiçi",
     "offline": "Çevrimdışı",
@@ -34,9 +16,6 @@
     "mutedUntil": "{{time}} tarihine kadar susturuldu"
   },
   "detail": {
-    "back": "Karakterlere dön",
-    "viewAccount": "Hesabı gör",
-    "viewOnMap": "Haritada gör",
     "gameOfflineNotice": "Oyun sunucusu çevrimdışı. Veritabanı görüntüsü gösteriliyor; değişiklikler için oyun sunucusu gerekir.",
     "tabs": {
       "profile": "Profil",
@@ -208,7 +187,13 @@
     "silverSuccess": "Gümüş güncellendi.",
     "cpSuccess": "Conquer Puanı güncellendi.",
     "levelSuccess": "Seviye güncellendi.",
-    "teleportSuccess": "Karakter ışınlandı."
+    "teleportSuccess": "Karakter ışınlandı.",
+    "ban": "Hesabı yasakla",
+    "unban": "Yasağı kaldır",
+    "bulkTitle": "{{action}}: {{count}} oyuncu",
+    "jailConfirmBulk": "{{count}} oyuncuyu hapse gönder?",
+    "bulkResult": "{{succeeded}} başarılı, {{failed}} başarısız.",
+    "bulkFailures_other": "{{count}} başarısız:"
   },
   "errors": {
     "offline": "Karakter çevrimiçi değil.",
@@ -219,6 +204,9 @@
     "out_of_range": "Değer izin verilen aralığın dışında.",
     "bad_destination": "Hedef harita veya koordinatlar yürünebilir değil.",
     "invalid_message": "Mesaj boş olamaz.",
-    "outranked": "Bu hesabın yetkisi sizinkine eşit ya da daha yüksek."
+    "outranked": "Bu hesabın yetkisi sizinkine eşit ya da daha yüksek.",
+    "no_character": "Hesabın karakteri yok.",
+    "self_ban": "Kendi hesabını yasaklayamazsın.",
+    "not_banned": "Bu hesap yasaklı değil."
   }
 }

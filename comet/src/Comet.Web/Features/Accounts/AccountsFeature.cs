@@ -22,7 +22,6 @@ public sealed class AccountsFeature : IFeature
     public void Map(RouteGroupBuilder api)
     {
         var group = api.MapGroup("/accounts").RequirePermission(Permission.AdminArea);
-        group.MapGet("/", ListAsync).WithName("listAccounts");
         group.MapGet("/{id:int}", GetAsync)
             .WithName("getAccount")
             .Produces<ApiError>(StatusCodes.Status404NotFound);
@@ -53,92 +52,6 @@ public sealed class AccountsFeature : IFeature
             .WithName("resetAccountPassword")
             .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status404NotFound);
-    }
-
-    private static async Task<Ok<AccountListResponse>> ListAsync(
-        string? q = null,
-        ushort? status = null,
-        ushort? authority = null,
-        string? ip = null,
-        int page = 1,
-        int pageSize = 25,
-        CancellationToken ct = default)
-    {
-        page = Math.Max(1, page);
-        pageSize = Math.Clamp(pageSize, 1, 100);
-
-        await using var accountDb = new AccountDbContext();
-        var query = accountDb.Accounts.AsNoTracking().AsQueryable();
-
-        if (status.HasValue)
-            query = query.Where(a => a.StatusID == status.Value);
-        if (authority.HasValue)
-            query = query.Where(a => a.AuthorityID == authority.Value);
-
-        string? ipFilter = string.IsNullOrWhiteSpace(ip) ? null : ip.Trim();
-        if (ipFilter != null)
-        {
-            var loginAccountIds = accountDb.Logins.AsNoTracking()
-                .Where(l => l.IPAddress == ipFilter)
-                .Select(l => l.AccountID);
-            query = query.Where(a => a.IPAddress == ipFilter || loginAccountIds.Contains(a.AccountID));
-        }
-
-        string? term = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
-        if (term != null)
-        {
-            bool isId = uint.TryParse(term, NumberStyles.None, CultureInfo.InvariantCulture, out uint parsedId);
-            var matchingLoginIds = accountDb.Logins.AsNoTracking()
-                .Where(l => l.IPAddress != null && l.IPAddress.Contains(term))
-                .Select(l => l.AccountID);
-
-            query = query.Where(a =>
-                (isId && a.AccountID == parsedId) ||
-                a.Username.Contains(term) ||
-                (a.Email != null && a.Email.Contains(term)) ||
-                (a.Name != null && a.Name.Contains(term)) ||
-                (a.IPAddress != null && a.IPAddress.Contains(term)) ||
-                matchingLoginIds.Contains(a.AccountID));
-        }
-
-        int total = await query.CountAsync(ct);
-        var accounts = await query
-            .OrderByDescending(a => a.AccountID)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToArrayAsync(ct);
-
-        var ids = accounts.Select(a => a.AccountID).ToArray();
-        var lastLogins = ids.Length == 0
-            ? new Dictionary<uint, DateTime>()
-            : await accountDb.Logins.AsNoTracking()
-                .Where(l => ids.Contains(l.AccountID))
-                .GroupBy(l => l.AccountID)
-                .Select(g => new { AccountId = g.Key, Last = g.Max(x => x.Timestamp) })
-                .ToDictionaryAsync(x => x.AccountId, x => DateTime.SpecifyKind(x.Last, DateTimeKind.Utc), ct);
-
-        await using var gameDb = new GameDbContext();
-        var charCounts = ids.Length == 0
-            ? new Dictionary<uint, int>()
-            : await gameDb.Characters.AsNoTracking()
-                .Where(c => ids.Contains(c.AccountID))
-                .GroupBy(c => c.AccountID)
-                .Select(g => new { AccountId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.AccountId, x => x.Count, ct);
-
-        var items = accounts.Select(a => new AccountListItem(
-            a.AccountID,
-            a.Username,
-            a.Email,
-            a.Name,
-            a.AuthorityID,
-            a.StatusID,
-            a.IPAddress,
-            DateTime.SpecifyKind(a.Registered, DateTimeKind.Utc),
-            lastLogins.TryGetValue(a.AccountID, out var last) ? last : null,
-            charCounts.GetValueOrDefault(a.AccountID))).ToArray();
-
-        return TypedResults.Ok(new AccountListResponse(items, total, page, pageSize));
     }
 
     private static async Task<Results<Ok<AccountDetailResponse>, JsonHttpResult<ApiError>>> GetAsync(
@@ -268,7 +181,7 @@ public sealed class AccountsFeature : IFeature
             sameIp));
     }
 
-    private static async Task<Results<Ok<AccountActionResponse>, JsonHttpResult<ApiError>>> BanAsync(
+    internal static async Task<Results<Ok<AccountActionResponse>, JsonHttpResult<ApiError>>> BanAsync(
         uint id,
         AccountBanRequest request,
         ClaimsPrincipal user,
@@ -296,7 +209,7 @@ public sealed class AccountsFeature : IFeature
         return TypedResults.Ok(new AccountActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<AccountActionResponse>, JsonHttpResult<ApiError>>> UnbanAsync(
+    internal static async Task<Results<Ok<AccountActionResponse>, JsonHttpResult<ApiError>>> UnbanAsync(
         uint id,
         AccountBanRequest request,
         ClaimsPrincipal user,
@@ -321,7 +234,7 @@ public sealed class AccountsFeature : IFeature
         return TypedResults.Ok(new AccountActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<NoContent, JsonHttpResult<ApiError>>> SetStatusAsync(
+    internal static async Task<Results<NoContent, JsonHttpResult<ApiError>>> SetStatusAsync(
         uint id,
         SetAccountStatusRequest request,
         ClaimsPrincipal user,

@@ -3099,76 +3099,6 @@
         }
       }
     },
-    "/api/accounts": {
-      "get": {
-        "tags": [
-          "AccountsFeature"
-        ],
-        "operationId": "listAccounts",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "uint16"
-            }
-          },
-          {
-            "name": "authority",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "uint16"
-            }
-          },
-          {
-            "name": "ip",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 25
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AccountListResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/accounts/{id}": {
       "get": {
         "tags": [
@@ -3487,85 +3417,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/characters": {
-      "get": {
-        "tags": [
-          "CharactersFeature"
-        ],
-        "operationId": "listCharacters",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "minLevel",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "uint8"
-            }
-          },
-          {
-            "name": "maxLevel",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "uint8"
-            }
-          },
-          {
-            "name": "mapId",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "uint32"
-            }
-          },
-          {
-            "name": "onlineOnly",
-            "in": "query",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 25
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CharacterListResponse"
                 }
               }
             }
@@ -4203,6 +4054,272 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players": {
+      "get": {
+        "tags": [
+          "PlayersFeature"
+        ],
+        "operationId": "listPlayers",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "authority",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "online",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "classLine",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "minLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "maxLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players/ids": {
+      "get": {
+        "tags": [
+          "PlayersFeature"
+        ],
+        "operationId": "listPlayerIds",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "authority",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "online",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "classLine",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "minLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "maxLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerIdsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/players/bulk": {
+      "post": {
+        "tags": [
+          "PlayersFeature"
+        ],
+        "operationId": "bulkPlayerAction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayerBulkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlayerBulkResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
             "content": {
               "application/json": {
                 "schema": {
@@ -5211,100 +5328,6 @@
             "items": {
               "$ref": "#/components/schemas/SameIpAccountSummary"
             }
-          }
-        }
-      },
-      "AccountListItem": {
-        "required": [
-          "accountId",
-          "username",
-          "email",
-          "name",
-          "authorityId",
-          "statusId",
-          "ipAddress",
-          "registered",
-          "lastLogin",
-          "characterCount"
-        ],
-        "type": "object",
-        "properties": {
-          "accountId": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "username": {
-            "type": "string"
-          },
-          "email": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "name": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "authorityId": {
-            "type": "integer",
-            "format": "uint16"
-          },
-          "statusId": {
-            "type": "integer",
-            "format": "uint16"
-          },
-          "ipAddress": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "registered": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastLogin": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "characterCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "AccountListResponse": {
-        "required": [
-          "items",
-          "total",
-          "page",
-          "pageSize"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AccountListItem"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
           }
         }
       },
@@ -6801,128 +6824,6 @@
                 "$ref": "#/components/schemas/CatalogItem"
               }
             ]
-          }
-        }
-      },
-      "CharacterListItem": {
-        "required": [
-          "characterId",
-          "accountId",
-          "accountUsername",
-          "name",
-          "level",
-          "rebirths",
-          "currentClass",
-          "mapId",
-          "mapName",
-          "x",
-          "y",
-          "silver",
-          "conquerPoints",
-          "killPoints",
-          "online",
-          "registered"
-        ],
-        "type": "object",
-        "properties": {
-          "characterId": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "accountId": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "accountUsername": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "name": {
-            "type": "string"
-          },
-          "level": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "rebirths": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "currentClass": {
-            "type": "integer",
-            "format": "uint8"
-          },
-          "mapId": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "mapName": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "x": {
-            "type": "integer",
-            "format": "uint16"
-          },
-          "y": {
-            "type": "integer",
-            "format": "uint16"
-          },
-          "silver": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "conquerPoints": {
-            "type": "integer",
-            "format": "uint32"
-          },
-          "killPoints": {
-            "type": "integer",
-            "format": "uint16"
-          },
-          "online": {
-            "type": "boolean"
-          },
-          "registered": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CharacterListResponse": {
-        "required": [
-          "items",
-          "total",
-          "page",
-          "pageSize",
-          "gameConnected"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CharacterListItem"
-            }
-          },
-          "total": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "pageSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "gameConnected": {
-            "type": "boolean"
           }
         }
       },
@@ -12223,6 +12124,291 @@
           }
         }
       },
+      "PlayerBulkFailure": {
+        "required": [
+          "accountId",
+          "name",
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "PlayerBulkRequest": {
+        "required": [
+          "action",
+          "accountIds"
+        ],
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "accountIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "minutes": {
+            "type": "integer",
+            "format": "int32",
+            "default": 0
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "item": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/GiveItemRequest"
+              }
+            ]
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int64",
+            "default": 0
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8",
+            "default": 0
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32",
+            "default": 0
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16",
+            "default": 0
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16",
+            "default": 0
+          }
+        }
+      },
+      "PlayerBulkResponse": {
+        "required": [
+          "succeeded",
+          "failures"
+        ],
+        "type": "object",
+        "properties": {
+          "succeeded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerBulkFailure"
+            }
+          }
+        }
+      },
+      "PlayerIdsResponse": {
+        "required": [
+          "accountIds"
+        ],
+        "type": "object",
+        "properties": {
+          "accountIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        }
+      },
+      "PlayerListItem": {
+        "required": [
+          "accountId",
+          "username",
+          "email",
+          "authorityId",
+          "statusId",
+          "ipAddress",
+          "registered",
+          "lastLogin",
+          "characterId",
+          "name",
+          "level",
+          "rebirths",
+          "currentClass",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "silver",
+          "conquerPoints",
+          "killPoints",
+          "online"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authorityId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "statusId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "ipAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastLogin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "characterId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "killPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PlayerListResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "gameConnected"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlayerListItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gameConnected": {
+            "type": "boolean"
+          }
+        }
+      },
       "PublicAccountConfigResponse": {
         "required": [
           "captchaEnabled",
@@ -14401,6 +14587,9 @@
     },
     {
       "name": "PkFeature"
+    },
+    {
+      "name": "PlayersFeature"
     },
     {
       "name": "PublicAccountFeature"

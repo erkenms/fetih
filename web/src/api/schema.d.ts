@@ -1156,22 +1156,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listAccounts"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/accounts/{id}": {
         parameters: {
             query?: never;
@@ -1262,22 +1246,6 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["resetAccountPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/characters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listCharacters"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1454,6 +1422,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["teleportCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/players": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlayers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/players/ids": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPlayerIds"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/players/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["bulkPlayerAction"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1731,33 +1747,6 @@ export interface components {
             characters: components["schemas"]["AccountCharacterSummary"][];
             logins: components["schemas"]["AccountLoginEntry"][];
             sameIpAccounts: components["schemas"]["SameIpAccountSummary"][];
-        };
-        AccountListItem: {
-            /** Format: uint32 */
-            accountId: number;
-            username: string;
-            email: null | string;
-            name: null | string;
-            /** Format: uint16 */
-            authorityId: number;
-            /** Format: uint16 */
-            statusId: number;
-            ipAddress: null | string;
-            /** Format: date-time */
-            registered: string;
-            /** Format: date-time */
-            lastLogin: null | string;
-            /** Format: int32 */
-            characterCount: number;
-        };
-        AccountListResponse: {
-            items: components["schemas"]["AccountListItem"][];
-            /** Format: int32 */
-            total: number;
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
         };
         AccountLoginEntry: {
             /** Format: date-time */
@@ -2224,46 +2213,6 @@ export interface components {
             /** Format: uint32 */
             package: number;
             catalog: null | components["schemas"]["CatalogItem"];
-        };
-        CharacterListItem: {
-            /** Format: uint32 */
-            characterId: number;
-            /** Format: uint32 */
-            accountId: number;
-            accountUsername: null | string;
-            name: string;
-            /** Format: uint8 */
-            level: number;
-            /** Format: uint8 */
-            rebirths: number;
-            /** Format: uint8 */
-            currentClass: number;
-            /** Format: uint32 */
-            mapId: number;
-            mapName: null | string;
-            /** Format: uint16 */
-            x: number;
-            /** Format: uint16 */
-            y: number;
-            /** Format: uint32 */
-            silver: number;
-            /** Format: uint32 */
-            conquerPoints: number;
-            /** Format: uint16 */
-            killPoints: number;
-            online: boolean;
-            /** Format: date-time */
-            registered: string;
-        };
-        CharacterListResponse: {
-            items: components["schemas"]["CharacterListItem"][];
-            /** Format: int32 */
-            total: number;
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            pageSize: number;
-            gameConnected: boolean;
         };
         CharacterMagicEntry: {
             /** Format: uint16 */
@@ -3814,6 +3763,105 @@ export interface components {
             detainedRedeemed: number;
             /** Format: date-time */
             snapshotAt: null | string;
+        };
+        PlayerBulkFailure: {
+            /** Format: uint32 */
+            accountId: number;
+            name: null | string;
+            error: string;
+        };
+        PlayerBulkRequest: {
+            action: string;
+            accountIds: number[];
+            reason?: null | string;
+            /**
+             * Format: int32
+             * @default 0
+             */
+            minutes: number;
+            text?: null | string;
+            item?: null | components["schemas"]["GiveItemRequest"];
+            /**
+             * Format: int64
+             * @default 0
+             */
+            amount: number;
+            /**
+             * Format: uint8
+             * @default 0
+             */
+            level: number;
+            /**
+             * Format: uint32
+             * @default 0
+             */
+            mapId: number;
+            /**
+             * Format: uint16
+             * @default 0
+             */
+            x: number;
+            /**
+             * Format: uint16
+             * @default 0
+             */
+            y: number;
+        };
+        PlayerBulkResponse: {
+            /** Format: int32 */
+            succeeded: number;
+            failures: components["schemas"]["PlayerBulkFailure"][];
+        };
+        PlayerIdsResponse: {
+            accountIds: number[];
+        };
+        PlayerListItem: {
+            /** Format: uint32 */
+            accountId: number;
+            username: string;
+            email: null | string;
+            /** Format: uint16 */
+            authorityId: number;
+            /** Format: uint16 */
+            statusId: number;
+            ipAddress: null | string;
+            /** Format: date-time */
+            registered: string;
+            /** Format: date-time */
+            lastLogin: null | string;
+            /** Format: uint32 */
+            characterId: null | number;
+            name: null | string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: uint32 */
+            conquerPoints: number;
+            /** Format: uint16 */
+            killPoints: number;
+            online: boolean;
+        };
+        PlayerListResponse: {
+            items: components["schemas"]["PlayerListItem"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            gameConnected: boolean;
         };
         PublicAccountConfigResponse: {
             captchaEnabled: boolean;
@@ -6453,33 +6501,6 @@ export interface operations {
             };
         };
     };
-    listAccounts: {
-        parameters: {
-            query?: {
-                q?: string;
-                status?: number;
-                authority?: number;
-                ip?: string;
-                page?: number;
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccountListResponse"];
-                };
-            };
-        };
-    };
     getAccount: {
         parameters: {
             query?: never;
@@ -6721,34 +6742,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    listCharacters: {
-        parameters: {
-            query?: {
-                q?: string;
-                minLevel?: number;
-                maxLevel?: number;
-                mapId?: number;
-                onlineOnly?: boolean;
-                page?: number;
-                pageSize?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CharacterListResponse"];
                 };
             };
         };
@@ -7211,6 +7204,112 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listPlayers: {
+        parameters: {
+            query?: {
+                q?: string;
+                ip?: string;
+                status?: number;
+                authority?: number;
+                online?: boolean;
+                classLine?: number;
+                mapId?: number;
+                minLevel?: number;
+                maxLevel?: number;
+                sort?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerListResponse"];
+                };
+            };
+        };
+    };
+    listPlayerIds: {
+        parameters: {
+            query?: {
+                q?: string;
+                ip?: string;
+                status?: number;
+                authority?: number;
+                online?: boolean;
+                classLine?: number;
+                mapId?: number;
+                minLevel?: number;
+                maxLevel?: number;
+                sort?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerIdsResponse"];
+                };
+            };
+        };
+    };
+    bulkPlayerAction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlayerBulkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlayerBulkResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Forbidden */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

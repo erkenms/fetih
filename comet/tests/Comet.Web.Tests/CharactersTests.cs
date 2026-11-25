@@ -27,7 +27,7 @@ public class CharactersTests(WebFixture fixture)
     public async Task PermissionsAreEnforcedOnCharacters()
     {
         var player = await fixture.LoginAsync("test", "test");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/characters")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/players")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/characters/1")).StatusCode);
 
         uint target = await this.CharacterAsync(900201, "PermP1", authority: 1);
@@ -35,7 +35,7 @@ public class CharactersTests(WebFixture fixture)
 
         string modEmail = await fixture.CreateAccountAsync(authority: 2);
         var mod = await fixture.LoginAsync(modEmail, "secret1");
-        Assert.Equal(HttpStatusCode.OK, (await mod.GetAsync("/api/characters")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await mod.GetAsync("/api/players")).StatusCode);
         // Mod can run moderation actions (reaches GameRpc -> 503 offline), but not GM actions
         Assert.Equal(HttpStatusCode.ServiceUnavailable, (await mod.PostAsJsonAsync($"/api/characters/{target}/kick", new { reason = "test" })).StatusCode);
         Assert.Equal(HttpStatusCode.ServiceUnavailable, (await mod.PostAsJsonAsync($"/api/characters/{target}/mute", new { minutes = 10 })).StatusCode);
@@ -115,7 +115,7 @@ public class CharactersTests(WebFixture fixture)
         string modEmail = await fixture.CreateAccountAsync(authority: 2);
         var mod = await fixture.LoginAsync(modEmail, "secret1");
 
-        var list = await mod.GetFromJsonAsync<JsonElement>("/api/characters?q=HeroP1&minLevel=100");
+        var list = await mod.GetFromJsonAsync<JsonElement>("/api/players?q=HeroP1&minLevel=100");
         Assert.Equal(1, list.GetProperty("total").GetInt32());
         Assert.Equal("HeroP1", list.GetProperty("items")[0].GetProperty("name").GetString());
 

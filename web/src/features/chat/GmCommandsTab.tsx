@@ -198,7 +198,7 @@ export function GmCommandsTab() {
                           </Text>
                         )}
                         {entry.accountId != null && (
-                          <Anchor component={Link} to={`/admin/accounts/${entry.accountId}`} size="xs" c="dimmed">
+                          <Anchor component={Link} to={`/admin/players/${entry.accountId}`} size="xs" c="dimmed">
                             #{entry.accountId}
                           </Anchor>
                         )}
@@ -272,7 +272,7 @@ export function GmCommandsTab() {
                         {new Date(entry.timestamp).toLocaleString(i18n.language)}
                       </Table.Td>
                       <Table.Td style={{ whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
-                        <Anchor component={Link} to={`/admin/accounts/${entry.accountId}`} size="sm">
+                        <Anchor component={Link} to={`/admin/players/${entry.accountId}`} size="sm">
                           {entry.username}
                         </Anchor>{' '}
                         <Text span c="dimmed" size="xs">

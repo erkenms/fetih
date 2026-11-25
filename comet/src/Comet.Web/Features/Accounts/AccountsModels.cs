@@ -1,23 +1,5 @@
 namespace Comet.Web.Features.Accounts;
 
-public record AccountListItem(
-    uint AccountId,
-    string Username,
-    string? Email,
-    string? Name,
-    ushort AuthorityId,
-    ushort StatusId,
-    string? IpAddress,
-    DateTime Registered,
-    DateTime? LastLogin,
-    int CharacterCount);
-
-public record AccountListResponse(
-    AccountListItem[] Items,
-    int Total,
-    int Page,
-    int PageSize);
-
 public record AccountCharacterSummary(
     uint CharacterId,
     string Name,

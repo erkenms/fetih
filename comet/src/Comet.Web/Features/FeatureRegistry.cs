@@ -20,6 +20,7 @@ public static class FeatureRegistry
         new MapEdit.MapEditFeature(),
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),
+        new Players.PlayersFeature(),
         new MonsterEdit.MonsterEditFeature(),
         new DataEdit.DataEditFeature(),
         new Integrity.IntegrityFeature(),

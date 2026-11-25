@@ -26,7 +26,6 @@ public sealed class CharactersFeature : IFeature
     public void Map(RouteGroupBuilder api)
     {
         var group = api.MapGroup("/characters").RequirePermission(Permission.AdminArea);
-        group.MapGet("/", ListAsync).WithName("listCharacters");
         group.MapGet("/{id:int}", GetAsync)
             .WithName("getCharacter")
             .Produces<ApiError>(StatusCodes.Status404NotFound);
@@ -82,115 +81,6 @@ public sealed class CharactersFeature : IFeature
             .WithName("teleportCharacter")
             .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status404NotFound);
-    }
-
-    private static async Task<Ok<CharacterListResponse>> ListAsync(
-        GameRpc rpc,
-        CatalogStore catalogs,
-        string? q = null,
-        byte? minLevel = null,
-        byte? maxLevel = null,
-        uint? mapId = null,
-        bool onlineOnly = false,
-        int page = 1,
-        int pageSize = 25,
-        CancellationToken ct = default)
-    {
-        page = Math.Max(1, page);
-        pageSize = Math.Clamp(pageSize, 1, 100);
-
-        var onlineById = new Dictionary<uint, OnlinePlayer>();
-        bool gameConnected = rpc.Connected;
-        if (gameConnected)
-        {
-            try
-            {
-                var online = await rpc.CallAsync<List<OnlinePlayer>>("OnlinePlayers");
-                foreach (var p in online)
-                    onlineById[p.CharacterID] = p;
-            }
-            catch (GameOfflineException)
-            {
-                gameConnected = false;
-            }
-        }
-
-        if (onlineOnly && onlineById.Count == 0)
-            return TypedResults.Ok(new CharacterListResponse([], 0, page, pageSize, gameConnected));
-
-        await using var gameDb = new GameDbContext();
-        var query = gameDb.Characters.AsNoTracking().AsQueryable();
-
-        if (onlineOnly)
-        {
-            var onlineIds = onlineById.Keys.ToArray();
-            query = query.Where(c => onlineIds.Contains(c.CharacterID));
-        }
-
-        if (minLevel.HasValue)
-            query = query.Where(c => c.Level >= minLevel.Value);
-        if (maxLevel.HasValue)
-            query = query.Where(c => c.Level <= maxLevel.Value);
-        if (mapId.HasValue)
-            query = query.Where(c => c.MapID == mapId.Value);
-
-        string? term = string.IsNullOrWhiteSpace(q) ? null : q.Trim();
-        if (term != null)
-        {
-            bool isId = uint.TryParse(term, NumberStyles.None, CultureInfo.InvariantCulture, out uint parsedId);
-            await using var accountLookupDb = new AccountDbContext();
-            var matchingAccountIds = await accountLookupDb.Accounts.AsNoTracking()
-                .Where(a => a.Username.Contains(term) || (a.Email != null && a.Email.Contains(term)))
-                .Select(a => a.AccountID)
-                .Take(200)
-                .ToArrayAsync(ct);
-
-            query = query.Where(c =>
-                (isId && (c.CharacterID == parsedId || c.AccountID == parsedId)) ||
-                c.Name.Contains(term) ||
-                matchingAccountIds.Contains(c.AccountID));
-        }
-
-        int total = await query.CountAsync(ct);
-        var rows = await query
-            .OrderByDescending(c => c.Level)
-            .ThenBy(c => c.Name)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToArrayAsync(ct);
-
-        var accountIds = rows.Select(r => r.AccountID).Distinct().ToArray();
-        await using var accountDb = new AccountDbContext();
-        var usernames = accountIds.Length == 0
-            ? new Dictionary<uint, string>()
-            : await accountDb.Accounts.AsNoTracking()
-                .Where(a => accountIds.Contains(a.AccountID))
-                .ToDictionaryAsync(a => a.AccountID, a => a.Username, ct);
-
-        var items = rows.Select(c =>
-        {
-            bool isOnline = onlineById.TryGetValue(c.CharacterID, out var live);
-            uint currentMap = live?.MapID ?? c.MapID;
-            return new CharacterListItem(
-                c.CharacterID,
-                c.AccountID,
-                usernames.GetValueOrDefault(c.AccountID),
-                c.Name,
-                live?.Level ?? c.Level,
-                live?.Rebirths ?? c.Rebirths,
-                live?.Class ?? c.CurrentClass,
-                currentMap,
-                catalogs.MapDisplayName(currentMap),
-                live?.X ?? c.X,
-                live?.Y ?? c.Y,
-                c.Silver,
-                c.Jewels,
-                live?.PkPoints ?? c.KillPoints,
-                isOnline,
-                DateTime.SpecifyKind(c.Registered, DateTimeKind.Utc));
-        }).ToArray();
-
-        return TypedResults.Ok(new CharacterListResponse(items, total, page, pageSize, gameConnected));
     }
 
     private static async Task<Results<Ok<CharacterDetailResponse>, JsonHttpResult<ApiError>>> GetAsync(
@@ -493,7 +383,7 @@ public sealed class CharactersFeature : IFeature
         return total;
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> KickAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> KickAsync(
         uint id, KickCharacterRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -514,7 +404,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> MuteAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> MuteAsync(
         uint id, MuteCharacterRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -534,7 +424,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> JailAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> JailAsync(
         uint id, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -552,7 +442,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> MessageAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> MessageAsync(
         uint id, MessageCharacterRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -576,7 +466,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> GiveItemAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> GiveItemAsync(
         uint id, GiveItemRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -601,7 +491,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> TakeItemAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> TakeItemAsync(
         uint id, TakeItemRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -621,7 +511,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> AdjustSilverAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> AdjustSilverAsync(
         uint id, AdjustAmountRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -644,7 +534,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> AdjustConquerPointsAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> AdjustConquerPointsAsync(
         uint id, AdjustAmountRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -667,7 +557,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> SetLevelAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> SetLevelAsync(
         uint id, SetLevelRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)
@@ -687,7 +577,7 @@ public sealed class CharactersFeature : IFeature
         return TypedResults.Ok(new CharacterActionResponse(true, result.Online));
     }
 
-    private static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> TeleportAsync(
+    internal static async Task<Results<Ok<CharacterActionResponse>, JsonHttpResult<ApiError>>> TeleportAsync(
         uint id, TeleportCharacterRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
     {
         if (await OutrankedAsync(id, user) is { } outranked)

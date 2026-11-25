@@ -3,6 +3,7 @@ import {
   Group,
   Modal,
   NumberInput,
+  ScrollArea,
   Select,
   SimpleGrid,
   Stack,
@@ -13,6 +14,8 @@ import {
 import { notifications } from '@mantine/notifications'
 import {
   IconArrowUpCircle,
+  IconBan,
+  IconCheck,
   IconCoin,
   IconDiamond,
   IconGift,
@@ -25,7 +28,7 @@ import {
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, unwrap } from '../../api/client'
+import { ApiError, api, unwrap, type Schemas } from '../../api/client'
 import { useErrorText } from '../../app/ErrorAlert'
 import { ItemPicker, decodeSocket, type CatalogItem } from '../../components/items'
 import { MapPicker } from '../../components/pickers'
@@ -41,31 +44,38 @@ type ActionKind =
   | 'cp'
   | 'level'
   | 'teleport'
+  | 'ban'
+  | 'unban'
   | null
 
 interface CharacterActionsBarProps {
-  characterId: number
-  characterName: string
-  currentLevel: number
-  currentMapId: number
-  currentX: number
-  currentY: number
-  online: boolean
-  muted: boolean
+  // One character, or with bulkAccountIds every character of those accounts (ban and unban too)
+  characterId?: number
+  characterName?: string
+  bulkAccountIds?: number[]
+  currentLevel?: number
+  currentMapId?: number
+  currentX?: number
+  currentY?: number
+  online?: boolean
+  muted?: boolean
   canModerate: boolean
   canManage: boolean
   onChanged: () => void
 }
 
+type BulkFailure = Schemas['PlayerBulkFailure']
+
 export function CharacterActionsBar({
-  characterId,
-  characterName,
-  currentLevel,
+  characterId = 0,
+  characterName = '',
+  bulkAccountIds,
+  currentLevel = 1,
   currentMapId,
-  currentX,
-  currentY,
-  online,
-  muted,
+  currentX = 0,
+  currentY = 0,
+  online = true,
+  muted = false,
   canModerate,
   canManage,
   onChanged,
@@ -87,18 +97,22 @@ export function CharacterActionsBar({
   const [gem2, setGem2] = useState<string>('default')
   const [amount, setAmount] = useState<number | string>(0)
   const [level, setLevel] = useState<number | string>(currentLevel)
-  const [mapId, setMapId] = useState<number | null>(currentMapId)
+  const [mapId, setMapId] = useState<number | null>(currentMapId ?? null)
+  const [failures, setFailures] = useState<BulkFailure[]>([])
+  const bulk = bulkAccountIds !== undefined
+  const count_ = bulkAccountIds?.length ?? 0
   const [x, setX] = useState<number | string>(currentX)
   const [y, setY] = useState<number | string>(currentY)
 
   const openModal = (kind: ActionKind) => {
     setError(null)
+    setFailures([])
     setReason('')
     setMessageText('')
     if (kind === 'mute') setMinutes(muted ? 0 : 30)
     if (kind === 'level') setLevel(currentLevel)
     if (kind === 'teleport') {
-      setMapId(currentMapId)
+      setMapId(currentMapId ?? null)
       setX(currentX)
       setY(currentY)
     }
@@ -131,6 +145,35 @@ export function CharacterActionsBar({
 
   const runMutation = useMutation({
     mutationFn: async (kind: Exclude<ActionKind, null>) => {
+      if (bulk) {
+        return unwrap(
+          api.POST('/api/players/bulk', {
+            body: {
+              action: kind,
+              accountIds: bulkAccountIds,
+              reason: reason.trim() || null,
+              minutes: Number(minutes) || 0,
+              text: messageText.trim(),
+              item:
+                kind === 'giveItem' && pickedItem
+                  ? {
+                      typeId: pickedItem.id!,
+                      count: Number(count) || 1,
+                      plus: Number(plus) || 0,
+                      bless: Number(bless) || 0,
+                      gem1: parseGem(gem1),
+                      gem2: parseGem(gem2),
+                    }
+                  : null,
+              amount: Number(amount) || 0,
+              level: Number(level) || 1,
+              mapId: mapId ?? 0,
+              x: Number(x) || 0,
+              y: Number(y) || 0,
+            },
+          }),
+        )
+      }
       const path = { id: characterId }
       switch (kind) {
         case 'kick':
@@ -196,22 +239,36 @@ export function CharacterActionsBar({
             api.POST('/api/characters/{id}/teleport', {
               params: { path },
               body: {
-                mapId: mapId ?? currentMapId,
+                mapId: mapId ?? currentMapId ?? 0,
                 x: Number(x) || 0,
                 y: Number(y) || 0,
               },
             }),
           )
+        default:
+          throw new Error(kind)
       }
     },
-    onSuccess: (_, kind) => {
+    onSuccess: (result, kind) => {
+      setError(null)
+      onChanged()
+      if (result && 'failures' in result) {
+        notifications.show({
+          message: t('characters:actions.bulkResult', {
+            succeeded: result.succeeded,
+            failed: result.failures.length,
+          }),
+          color: result.failures.length === 0 ? 'green' : result.succeeded === 0 ? 'red' : 'yellow',
+        })
+        setFailures(result.failures)
+        if (result.failures.length === 0) setModal(null)
+        return
+      }
       notifications.show({
         message: t(`characters:actions.${kind}Success` as never),
         color: 'green',
       })
       setModal(null)
-      setError(null)
-      onChanged()
     },
     onError: setError,
   })
@@ -227,7 +284,7 @@ export function CharacterActionsBar({
               size="xs"
               variant="light"
               color="red"
-              disabled={!online}
+              disabled={!bulk && !online}
               leftSection={<IconUserOff size={15} />}
               onClick={() => openModal('kick')}
             >
@@ -240,7 +297,7 @@ export function CharacterActionsBar({
               leftSection={<IconVolumeOff size={15} />}
               onClick={() => openModal('mute')}
             >
-              {t(muted ? 'characters:actions.unmute' : 'characters:actions.mute')}
+              {t(muted && !bulk ? 'characters:actions.unmute' : 'characters:actions.mute')}
             </Button>
             <Button
               size="xs"
@@ -254,7 +311,7 @@ export function CharacterActionsBar({
             <Button
               size="xs"
               variant="light"
-              disabled={!online}
+              disabled={!bulk && !online}
               leftSection={<IconMessage size={15} />}
               onClick={() => openModal('message')}
             >
@@ -311,12 +368,43 @@ export function CharacterActionsBar({
             </Button>
           </>
         )}
+        {canManage && bulk && (
+          <>
+            <Button
+              size="xs"
+              variant="light"
+              color="red"
+              leftSection={<IconBan size={15} />}
+              onClick={() => openModal('ban')}
+            >
+              {t('characters:actions.ban')}
+            </Button>
+            <Button
+              size="xs"
+              variant="light"
+              color="green"
+              leftSection={<IconCheck size={15} />}
+              onClick={() => openModal('unban')}
+            >
+              {t('characters:actions.unban')}
+            </Button>
+          </>
+        )}
       </Group>
 
       <Modal
         opened={modal !== null}
         onClose={() => setModal(null)}
-        title={modal ? t(`characters:actions.${modal}` as never) : ''}
+        title={
+          modal
+            ? bulk
+              ? t('characters:actions.bulkTitle', {
+                  action: t(`characters:actions.${modal}` as never),
+                  count: count_,
+                })
+              : t(`characters:actions.${modal}` as never)
+            : ''
+        }
         size={modal === 'giveItem' ? 'lg' : 'md'}
       >
         {modal && (
@@ -327,7 +415,22 @@ export function CharacterActionsBar({
               </Text>
             )}
 
-            {modal === 'kick' && (
+            {failures.length > 0 && (
+              <Stack gap={2}>
+                <Text size="sm" fw={600}>
+                  {t('characters:actions.bulkFailures', { count: failures.length })}
+                </Text>
+                <ScrollArea.Autosize mah={160}>
+                  {failures.map((f) => (
+                    <Text size="xs" key={f.accountId}>
+                      {f.name ?? `#${f.accountId}`}: {formatError(new ApiError(400, f.error))}
+                    </Text>
+                  ))}
+                </ScrollArea.Autosize>
+              </Stack>
+            )}
+
+            {(modal === 'kick' || modal === 'ban' || modal === 'unban') && (
               <TextInput
                 label={t('characters:actions.reason')}
                 value={reason}
@@ -347,7 +450,9 @@ export function CharacterActionsBar({
 
             {modal === 'jail' && (
               <Text size="sm">
-                {t('characters:actions.jailConfirm', { name: characterName })}
+                {bulk
+                  ? t('characters:actions.jailConfirmBulk', { count: count_ })
+                  : t('characters:actions.jailConfirm', { name: characterName })}
               </Text>
             )}
 
@@ -463,9 +568,12 @@ export function CharacterActionsBar({
                   (modal === 'message' && !messageText.trim()) ||
                   (modal === 'giveItem' && !pickedItem) ||
                   ((modal === 'silver' || modal === 'cp') && Number(amount) === 0) ||
+                  (modal === 'level' && level === '') ||
+                  (bulk && count_ === 0) ||
                   (modal === 'teleport' && mapId == null)
                 }
                 loading={runMutation.isPending}
+                color={modal === 'ban' ? 'red' : undefined}
                 onClick={() => runMutation.mutate(modal)}
               >
                 {t('characters:actions.confirm')}

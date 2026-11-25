@@ -1,14 +1,4 @@
 {
-  "nav": "Accounts",
-  "title": "Accounts",
-  "description": "Search player and staff accounts, inspect login history, and manage status or authority.",
-  "searchPlaceholder": "Search by email, username, name, IP, or ID...",
-  "filter": {
-    "status": "Status",
-    "authority": "Authority",
-    "ip": "IP address",
-    "clear": "Clear filters"
-  },
   "status": {
     "1": "Registered",
     "2": "Activated",
@@ -19,39 +9,21 @@
   "column": {
     "id": "ID",
     "username": "Account",
-    "authority": "Authority",
     "status": "Status",
     "ip": "IP address",
-    "characters": "Characters",
-    "lastLogin": "Last login",
     "registered": "Registered",
     "time": "Time",
-    "sharedIps": "Shared IPs",
-    "name": "Name",
-    "level": "Level",
-    "map": "Map",
-    "silver": "Silver",
-    "cp": "CP"
+    "sharedIps": "Shared IPs"
   },
-  "empty": "No accounts match the current filters.",
-  "total_one": "{{count}} account",
-  "total_other": "{{count}} accounts",
   "detail": {
-    "back": "Back to accounts",
-    "overview": "Overview",
     "logins": "Login history",
-    "timeline": "Timeline",
     "email": "Email",
     "name": "Name",
     "lastIp": "Last IP",
     "registered": "Registered",
-    "characters": "Characters",
-    "noCharacters": "This account has no characters.",
     "sameIp": "Other accounts on the same IP",
     "noSameIp": "No other accounts share an IP with this account.",
     "noLogins": "No login history recorded.",
-    "online": "Online",
-    "offline": "Offline",
     "searchIp": "Filter accounts by this IP"
   },
   "actions": {
