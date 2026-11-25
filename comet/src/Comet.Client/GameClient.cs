@@ -443,6 +443,14 @@ namespace Comet.Client
             return packet == null ? null : PlayerSpawn.Parse(packet);
         }
 
+        public async Task<PlayerSpawn> WaitForPlayerAsync(Func<PlayerSpawn, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgPlayer &&
+                PlayerSpawn.Parse(p) is var s && !s.IsMonster && match(s), timeout);
+            return packet == null ? null : PlayerSpawn.Parse(packet);
+        }
+
         public async Task<PlayerSpawn> WaitForMonsterAsync(Func<PlayerSpawn, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

@@ -332,6 +332,8 @@ namespace Comet.Integration.Tests
         private static readonly string DbUser = Env("COMET_TEST_DB_USER", "root");
         private static readonly string DbPassword = Env("COMET_TEST_DB_PASSWORD", "password");
 
+        public (string Host, string User, string Password) Database => (DbHost, DbUser, DbPassword);
+
         private readonly string RunId = Guid.NewGuid().ToString("N")[..8];
         private readonly List<Process> Processes = new List<Process>();
         private Process Game;

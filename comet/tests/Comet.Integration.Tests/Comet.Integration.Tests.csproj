@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Comet.Client\Comet.Client.csproj" />
+    <ProjectReference Include="..\..\src\Comet.Bots\Comet.Bots.csproj" />
     <!-- Account code is used directly to create test accounts -->
     <ProjectReference Include="..\..\src\Comet.Account\Comet.Account.csproj" />
     <!-- The game server only needs to be built; the tests run it as a process -->

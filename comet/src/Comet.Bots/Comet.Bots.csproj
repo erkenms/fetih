@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Comet.Client\Comet.Client.csproj" />
+    <!-- Bot accounts are made with the account server's own code, and maps read with the game's -->
+    <ProjectReference Include="..\Comet.Account\Comet.Account.csproj" />
+    <ProjectReference Include="..\Comet.Game\Comet.Game.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Comet.Bots.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+  </PropertyGroup>
+
+</Project>

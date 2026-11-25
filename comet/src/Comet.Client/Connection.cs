@@ -100,6 +100,16 @@ namespace Comet.Client
 
         public void ForgetKept() => this.Kept.Clear();
 
+        // Every packet already in, without waiting
+        public List<byte[]> Drain()
+        {
+            var packets = new List<byte[]>(this.Kept);
+            this.Kept.Clear();
+            while (this.Packets.Reader.TryRead(out var packet))
+                packets.Add(packet);
+            return packets;
+        }
+
         public async Task<bool> WaitClosedAsync(TimeSpan? timeout = null)
         {
             try

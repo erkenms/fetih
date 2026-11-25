@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Comet.Account/Comet.Account.csproj" />
+    <Project Path="src/Comet.Bots/Comet.Bots.csproj" />
     <Project Path="src/Comet.Client/Comet.Client.csproj" />
     <Project Path="src/Comet.Core/Comet.Core.csproj" />
     <Project Path="src/Comet.Game/Comet.Game.csproj" />
