@@ -55,6 +55,7 @@ builder.Services.AddDbContextFactory<WebDbContext>(options => options.UseMySql(
     config.Database.ConnectionString, MySqlServerVersion.LatestSupportedServerVersion));
 builder.Services.AddSingleton<AccountStore>();
 builder.Services.AddSingleton<AuditLog>();
+builder.Services.AddSingleton<ClientFiles>();
 builder.Services.AddSingleton<GameRpc>();
 builder.Services.AddHostedService(services => services.GetRequiredService<GameRpc>());
 builder.Services.AddWebAuth(config);

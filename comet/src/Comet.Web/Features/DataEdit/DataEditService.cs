@@ -11,14 +11,19 @@ public sealed class DataEditService
 {
     private readonly WebConfiguration Config;
     private readonly CatalogStore Catalogs;
+    private readonly ClientFiles Client;
     private readonly SemaphoreSlim WriteGate = new(1, 1);
-    private readonly Lazy<MapStore?> Maps;
 
-    public DataEditService(WebConfiguration config, CatalogStore catalogs)
+    public DataEditService(WebConfiguration config, CatalogStore catalogs, ClientFiles clientFiles)
     {
         this.Config = config;
         this.Catalogs = catalogs;
-        this.Maps = new Lazy<MapStore?>(this.LoadMapStore, LazyThreadSafetyMode.ExecutionAndPublication);
+        this.Client = clientFiles;
+    }
+
+    internal DataEditService(WebConfiguration config, CatalogStore catalogs)
+        : this(config, catalogs, new ClientFiles(config))
+    {
     }
 
     public LevelsFileResponse ReadLevels()
@@ -177,22 +182,9 @@ public sealed class DataEditService
     public MapPickInfoResponse GetMapPickInfo(uint mapId)
     {
         this.Catalogs.MapsById.TryGetValue(mapId, out var cat);
-        int? width = null;
-        int? height = null;
-        var store = this.Maps.Value;
-        if (store != null && store.Exists(mapId))
-        {
-            try
-            {
-                var grid = store.Get(mapId);
-                width = grid.Width;
-                height = grid.Height;
-            }
-            catch
-            {
-                // Grid unreadable; fall back to catalog metadata only
-            }
-        }
+        var grid = this.Client.TryGetGrid(mapId);
+        int? width = grid?.Width;
+        int? height = grid?.Height;
 
         string? background = null;
         var assetsDir = WebConfiguration.PathsSection.Resolve(this.Config.Paths.AssetsDirectory);
@@ -210,21 +202,13 @@ public sealed class DataEditService
 
     public CellCheckResponse CheckCell(uint mapId, int x, int y)
     {
-        var store = this.Maps.Value;
-        if (store == null || !store.Exists(mapId))
+        var grid = this.Client.TryGetGrid(mapId);
+        if (grid == null)
             return new CellCheckResponse(mapId, x, y, false, false, false);
 
-        try
-        {
-            var grid = store.Get(mapId);
-            bool inBounds = grid.Contains(x, y);
-            bool walkable = inBounds && grid.IsWalkable(x, y);
-            return new CellCheckResponse(mapId, x, y, true, inBounds, walkable);
-        }
-        catch
-        {
-            return new CellCheckResponse(mapId, x, y, false, false, false);
-        }
+        bool inBounds = grid.Contains(x, y);
+        bool walkable = inBounds && grid.IsWalkable(x, y);
+        return new CellCheckResponse(mapId, x, y, true, inBounds, walkable);
     }
 
     private async Task<SaveDataResponse> SaveAsync<T, TKey>(
@@ -400,22 +384,7 @@ public sealed class DataEditService
 
     private string ResolveDataDirectory() => StudioData.ResolveDataDirectory(this.Config);
 
-    private DataSet CreateDataSet(string dataDir)
-    {
-        var store = this.Maps.Value;
-        return store != null
-            ? new DataSet(dataDir, id => store.Exists(id) ? store.Get(id) : null)
-            : StudioData.CreateDataSet(dataDir, this.Config);
-    }
-
-    private MapStore? LoadMapStore()
-    {
-        string? clientDir = WebConfiguration.PathsSection.Resolve(this.Config.Paths.ClientDirectory);
-        if (clientDir == null || !File.Exists(Path.Combine(clientDir, "ini", "GameMap.dat")))
-            return null;
-        try { return new MapStore(clientDir); }
-        catch { return null; }
-    }
+    private DataSet CreateDataSet(string dataDir) => this.Client.CreateDataSet(dataDir);
 
     private static DataProblemDto[] ToDtos(IReadOnlyList<DataProblem> problems) =>
         problems.Select(p => new DataProblemDto(

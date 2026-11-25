@@ -5,13 +5,13 @@ using Comet.Game.DataEditing;
 using Comet.Game.World;
 using Comet.Web.Features.Catalogs;
 
-public sealed class MonsterDataService(WebConfiguration config, CatalogStore catalogs)
+public sealed class MonsterDataService(WebConfiguration config, CatalogStore catalogs, ClientFiles clientFiles)
 {
     private readonly SemaphoreSlim Gate = new(1, 1);
     private readonly string? DataDirectoryOverride;
 
     internal MonsterDataService(string dataDirectoryOverride, WebConfiguration config, CatalogStore catalogs)
-        : this(config, catalogs)
+        : this(config, catalogs, new ClientFiles(config))
     {
         this.DataDirectoryOverride = dataDirectoryOverride;
     }
@@ -19,7 +19,7 @@ public sealed class MonsterDataService(WebConfiguration config, CatalogStore cat
     public string ResolveDataDirectory() =>
         !string.IsNullOrEmpty(this.DataDirectoryOverride) ? this.DataDirectoryOverride : StudioData.ResolveDataDirectory(config);
 
-    public DataSet CreateDataSet(string dataDir) => StudioData.CreateDataSet(dataDir, config);
+    public DataSet CreateDataSet(string dataDir) => clientFiles.CreateDataSet(dataDir);
 
     public DataFile<MonsterType> LoadMonstersFile(string dataDir) =>
         (DataFile<MonsterType>)DataFileKinds.Monsters.Load(Path.Combine(dataDir, DataFileKinds.Monsters.FileName));

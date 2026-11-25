@@ -100,8 +100,10 @@ namespace Comet.Game.World
         }
 
         // The client's lists don't always match file name case, which matters on Linux.
-        private static string ResolveFile(string root, string relativePath)
+        public static string ResolveFile(string root, string relativePath)
         {
+            if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(relativePath))
+                return null;
             string current = root;
             var parts = relativePath.Split('/', '\\', StringSplitOptions.RemoveEmptyEntries);
             for (int i = 0; i < parts.Length; i++)

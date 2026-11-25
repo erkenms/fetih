@@ -1,10 +1,9 @@
 namespace Comet.Web.Features.Maps;
 
 using System.Collections.Concurrent;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Comet.Game.Combat;
+using Comet.Game.DataEditing;
 using Comet.Game.Npcs;
 using Comet.Game.Social;
 using Comet.Game.World;
@@ -21,29 +20,30 @@ public sealed class MapDataStore
 
     private readonly string? AssetsDir;
     private readonly string? DataDir;
-    private readonly string? ClientDir;
     private readonly CatalogStore Catalogs;
-    private readonly Lazy<MapStore?> Grids;
-    private readonly Lazy<Dictionary<int, string>> NpcNames;
+    private readonly ClientFiles Client;
     private readonly ConcurrentDictionary<uint, MapGridResponse?> EncodedGrids = new();
 
-    public MapDataStore(WebConfiguration config, CatalogStore catalogs)
+    public MapDataStore(WebConfiguration config, CatalogStore catalogs, ClientFiles clientFiles)
         : this(
             WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory),
             StudioData.ResolveDataDirectory(config),
-            WebConfiguration.PathsSection.Resolve(config.Paths.ClientDirectory),
-            catalogs)
+            catalogs,
+            clientFiles)
     {
     }
 
     internal MapDataStore(string? assetsDir, string? dataDir, string? clientDir, CatalogStore catalogs)
+        : this(assetsDir, dataDir, catalogs, new ClientFiles(clientDir))
+    {
+    }
+
+    private MapDataStore(string? assetsDir, string? dataDir, CatalogStore catalogs, ClientFiles clientFiles)
     {
         this.AssetsDir = assetsDir;
         this.DataDir = dataDir;
-        this.ClientDir = clientDir;
         this.Catalogs = catalogs;
-        this.Grids = new Lazy<MapStore?>(this.LoadMapStore, LazyThreadSafetyMode.ExecutionAndPublication);
-        this.NpcNames = new Lazy<Dictionary<int, string>>(this.LoadNpcNames, LazyThreadSafetyMode.ExecutionAndPublication);
+        this.Client = clientFiles;
     }
 
     public MapSummary[] ListMaps()
@@ -72,14 +72,14 @@ public sealed class MapDataStore
         var data = this.ReadDataFiles();
         this.Catalogs.MapsById.TryGetValue(mapId, out var catalog);
         data.MapTypes.TryGetValue(mapId, out var mapType);
-        var grid = this.TryGetGrid(mapId);
+        var grid = this.Client.TryGetGrid(mapId);
         var meta = this.ReadTileMeta(mapId);
 
         if (catalog == null && mapType == null && grid == null && meta == null)
             return null;
 
         var facesById = this.Catalogs.Faces.Npc.ToDictionary(f => f.Id, f => f.Path);
-        var npcNames = this.NpcNames.Value;
+        var npcNames = this.Client.NpcNames;
 
         var npcs = new List<MapNpcEntry>();
         var npcsById = new Dictionary<uint, Npc>();
@@ -154,7 +154,7 @@ public sealed class MapDataStore
     public MapGridResponse? GetMapGrid(uint mapId) =>
         this.EncodedGrids.GetOrAdd(mapId, id =>
         {
-            var grid = this.TryGetGrid(id);
+            var grid = this.Client.TryGetGrid(id);
             return grid == null ? null : EncodeGrid(id, grid);
         });
 
@@ -275,7 +275,7 @@ public sealed class MapDataStore
     private MapTeleporterEntry[] BuildTeleporters(
         Dictionary<uint, Npc> npcsById,
         DataSnapshot data,
-        Dictionary<int, string> npcNames,
+        IReadOnlyDictionary<int, string> npcNames,
         Dictionary<uint, string> facesById)
     {
         var result = new List<MapTeleporterEntry>();
@@ -348,7 +348,7 @@ public sealed class MapDataStore
         Npc npc,
         bool isGoal,
         DataSnapshot data,
-        Dictionary<int, string> npcNames,
+        IReadOnlyDictionary<int, string> npcNames,
         Dictionary<uint, string> facesById)
     {
         string kind;
@@ -390,7 +390,7 @@ public sealed class MapDataStore
             Kind: kind);
     }
 
-    private static string? ResolveNpcName(Npc npc, Dictionary<int, string> npcNames)
+    private static string? ResolveNpcName(Npc npc, IReadOnlyDictionary<int, string> npcNames)
     {
         if (npc.NpcID == GuildWar.PoleID) return GuildWar.DefaultPoleName;
         if (npc.NpcID == GuildWar.LeftGateID) return GuildWar.LeftGateName;
@@ -416,35 +416,6 @@ public sealed class MapDataStore
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private MapStore? LoadMapStore()
-    {
-        if (string.IsNullOrEmpty(this.ClientDir) || !Directory.Exists(this.ClientDir))
-            return null;
-        try
-        {
-            return new MapStore(this.ClientDir);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private MapGrid? TryGetGrid(uint mapId)
-    {
-        var store = this.Grids.Value;
-        if (store == null || !store.Exists(mapId))
-            return null;
-        try
-        {
-            return store.Get(mapId);
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     private bool HasTileMeta(uint mapId) =>
         !string.IsNullOrEmpty(this.AssetsDir)
         && File.Exists(Path.Combine(this.AssetsDir, "maps", mapId.ToString(), "meta.json"));
@@ -466,45 +437,6 @@ public sealed class MapDataStore
         }
     }
 
-    // Reads ini/npc.ini: [NpcType<n>] -> Name=<name>
-    private Dictionary<int, string> LoadNpcNames()
-    {
-        var result = new Dictionary<int, string>();
-        if (string.IsNullOrEmpty(this.ClientDir))
-            return result;
-        var iniPath = ResolveCaseInsensitive(Path.Combine(this.ClientDir, "ini"), "npc.ini");
-        if (iniPath == null)
-            return result;
-
-        try
-        {
-            int currentType = -1;
-            foreach (var raw in File.ReadLines(iniPath, Encoding.Latin1))
-            {
-                var line = raw.Trim();
-                if (line.StartsWith('[') && line.EndsWith(']'))
-                {
-                    var section = line[1..^1];
-                    currentType = section.StartsWith("NpcType", StringComparison.OrdinalIgnoreCase)
-                        && int.TryParse(section[7..], out var id)
-                        ? id : -1;
-                }
-                else if (currentType >= 0 && line.StartsWith("Name=", StringComparison.OrdinalIgnoreCase))
-                {
-                    var name = line[5..].Trim();
-                    if (name.Length > 0)
-                        result.TryAdd(currentType, name);
-                }
-            }
-        }
-        catch
-        {
-            // Ignore unreadable npc.ini
-        }
-
-        return result;
-    }
-
     private DataSnapshot ReadDataFiles()
     {
         var mapTypes = new Dictionary<uint, MapType>();
@@ -518,72 +450,38 @@ public sealed class MapDataStore
         if (string.IsNullOrEmpty(this.DataDir) || !Directory.Exists(this.DataDir))
             return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkerFacesByNpc);
 
-        foreach (var m in ReadArray<MapType>("maps.json", "maps"))
+        foreach (var m in ReadEntries<MapType>(DataFileKinds.Maps))
             mapTypes.TryAdd(m.MapID, m);
 
-        foreach (var n in ReadArray<Npc>("npcs.json", "npcs"))
+        foreach (var n in ReadEntries<Npc>(DataFileKinds.Npcs))
             AddTo(npcsByMap, n.MapID, n);
 
-        foreach (var g in ReadArray<Npc>("goals.json", "npcs"))
+        foreach (var g in ReadEntries<Npc>(DataFileKinds.Goals))
             AddTo(goalsByMap, g.MapID, g);
 
-        foreach (var s in ReadArray<Generator>("spawns.json", "spawns"))
+        foreach (var s in ReadEntries<Generator>(DataFileKinds.Spawns))
             AddTo(spawnsByMap, s.MapID, s);
 
-        foreach (var p in ReadArray<Portal>("portals.json", "portals"))
+        foreach (var p in ReadEntries<Portal>(DataFileKinds.Portals))
             AddTo(portalsByMap, p.MapID, p);
 
-        foreach (var t in ReadArray<Teleporter>("teleporters.json", "teleporters"))
+        foreach (var t in ReadEntries<Teleporter>(DataFileKinds.Teleporters))
             teleportersByNpc.TryAdd(t.NpcID, t);
 
-        var talkersPath = Path.Combine(this.DataDir, "talkers.json");
-        if (File.Exists(talkersPath))
-        {
-            try
-            {
-                var node = JsonNode.Parse(File.ReadAllText(talkersPath), documentOptions: new JsonDocumentOptions
-                {
-                    CommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true,
-                });
-                if (node?["talkers"] is JsonArray arr)
-                {
-                    foreach (var obj in arr.OfType<JsonObject>())
-                    {
-                        if (obj["id"]?.GetValueKind() == JsonValueKind.Number
-                            && obj["face"]?.GetValueKind() == JsonValueKind.Number)
-                        {
-                            uint id = obj["id"]!.GetValue<uint>();
-                            byte face = (byte)obj["face"]!.GetValue<int>();
-                            if (face > 0)
-                                talkerFacesByNpc.TryAdd(id, face);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                // Ignore malformed talkers.json
-            }
-        }
+        foreach (var t in ReadEntries<Talker>(DataFileKinds.Talkers))
+            if (t.Face > 0)
+                talkerFacesByNpc.TryAdd(t.NpcID, t.Face);
 
         return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkerFacesByNpc);
 
-        List<T> ReadArray<T>(string file, string key)
+        IReadOnlyList<T> ReadEntries<T>(DataFileKind kind) where T : class
         {
-            var path = Path.Combine(this.DataDir!, file);
+            var path = Path.Combine(this.DataDir!, kind.FileName);
             if (!File.Exists(path))
                 return [];
             try
             {
-                var node = JsonNode.Parse(File.ReadAllText(path), documentOptions: new JsonDocumentOptions
-                {
-                    CommentHandling = JsonCommentHandling.Skip,
-                    AllowTrailingCommas = true,
-                });
-                if (node?[key] is not JsonArray arr)
-                    return [];
-                return arr.Deserialize<List<T>>(JsonOptions) ?? [];
+                return ((DataFile<T>)kind.Load(path)).All();
             }
             catch
             {
@@ -597,17 +495,6 @@ public sealed class MapDataStore
         if (!dict.TryGetValue(key, out var list))
             dict[key] = list = [];
         list.Add(value);
-    }
-
-    private static string? ResolveCaseInsensitive(string directory, string fileName)
-    {
-        if (!Directory.Exists(directory))
-            return null;
-        var direct = Path.Combine(directory, fileName);
-        if (File.Exists(direct))
-            return direct;
-        return Directory.EnumerateFiles(directory)
-            .FirstOrDefault(f => Path.GetFileName(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
     }
 
     private sealed record DataSnapshot(

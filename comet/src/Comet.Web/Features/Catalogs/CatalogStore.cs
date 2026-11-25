@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Comet.Game.Magic;
+using Comet.Game.World;
 
 public sealed class CatalogStore
 {
@@ -132,7 +133,7 @@ public sealed class CatalogStore
 
         if (this.ClientDir != null)
         {
-            var magicDat = ResolveExisting(Path.Combine(this.ClientDir, "ini"), "magictype.dat");
+            var magicDat = MapStore.ResolveFile(this.ClientDir, "ini/magictype.dat");
             if (magicDat != null)
             {
                 try
@@ -298,19 +299,16 @@ public sealed class CatalogStore
         Dictionary<uint, ItemLookup> items,
         Dictionary<uint, (uint MapId, ushort X, ushort Y)> npcs)
     {
-        if (this.ClientDir == null)
-            return [];
-        var iniDir = ResolveExistingDir(this.ClientDir, "ini");
-        if (iniDir == null)
+        if (string.IsNullOrEmpty(this.ClientDir) || !Directory.Exists(this.ClientDir))
             return [];
 
         var parsed = new List<ParsedShop>();
-        ReadShopFile(iniDir, "Shop.dat", text => parsed.AddRange(ShopParser.ParseShopDat(text)));
-        ReadShopFile(iniDir, "emoneyShopV2.ini", text => parsed.AddRange(ShopParser.ParseEmoneyShopV2(text)));
-        ReadShopFile(iniDir, "emoneyshop.ini", text => parsed.AddRange(ShopParser.ParseEmoneyShop(text)));
-        ReadShopFile(iniDir, "outerwearshop.ini", text => parsed.AddRange(ShopParser.ParseOuterwearShop(text)));
-        ReadShopFile(iniDir, "HonorShop.ini", text => parsed.AddRange(ShopParser.ParseHonorShop(text)));
-        ReadShopFile(iniDir, "RacePointShop.ini", text => parsed.AddRange(ShopParser.ParseRacePointShop(text)));
+        ReadShopFile(this.ClientDir, "ini/Shop.dat", text => parsed.AddRange(ShopParser.ParseShopDat(text)));
+        ReadShopFile(this.ClientDir, "ini/emoneyShopV2.ini", text => parsed.AddRange(ShopParser.ParseEmoneyShopV2(text)));
+        ReadShopFile(this.ClientDir, "ini/emoneyshop.ini", text => parsed.AddRange(ShopParser.ParseEmoneyShop(text)));
+        ReadShopFile(this.ClientDir, "ini/outerwearshop.ini", text => parsed.AddRange(ShopParser.ParseOuterwearShop(text)));
+        ReadShopFile(this.ClientDir, "ini/HonorShop.ini", text => parsed.AddRange(ShopParser.ParseHonorShop(text)));
+        ReadShopFile(this.ClientDir, "ini/RacePointShop.ini", text => parsed.AddRange(ShopParser.ParseRacePointShop(text)));
 
         return parsed.Select(shop =>
         {
@@ -351,9 +349,9 @@ public sealed class CatalogStore
         }).ToArray();
     }
 
-    private static void ReadShopFile(string iniDir, string fileName, Action<string> parse)
+    private static void ReadShopFile(string clientDir, string relativePath, Action<string> parse)
     {
-        var path = ResolveExisting(iniDir, fileName);
+        var path = MapStore.ResolveFile(clientDir, relativePath);
         if (path == null)
             return;
         try
@@ -366,27 +364,8 @@ public sealed class CatalogStore
         }
     }
 
-    private static string? ResolveExisting(string? directory, string fileName)
-    {
-        if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
-            return null;
-        var direct = Path.Combine(directory, fileName);
-        if (File.Exists(direct))
-            return direct;
-        return Directory.EnumerateFiles(directory)
-            .FirstOrDefault(f => Path.GetFileName(f).Equals(fileName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static string? ResolveExistingDir(string? parent, string subDir)
-    {
-        if (string.IsNullOrEmpty(parent) || !Directory.Exists(parent))
-            return null;
-        var direct = Path.Combine(parent, subDir);
-        if (Directory.Exists(direct))
-            return direct;
-        return Directory.EnumerateDirectories(parent)
-            .FirstOrDefault(d => Path.GetFileName(d).Equals(subDir, StringComparison.OrdinalIgnoreCase));
-    }
+    private static string? ResolveExisting(string? directory, string fileName) =>
+        string.IsNullOrEmpty(directory) ? null : MapStore.ResolveFile(directory, fileName);
 
     private static JsonNode? TryReadJsonNode(string path)
     {

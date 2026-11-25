@@ -25,7 +25,7 @@ public class ChangesFeature : IFeature
     }
 
     private static async Task<Ok<ChangesSummaryResponse>> GetChangesAsync(
-        WebConfiguration config, GitDataService git, GameRpc gameRpc, CancellationToken ct)
+        WebConfiguration config, ClientFiles clientFiles, GitDataService git, GameRpc gameRpc, CancellationToken ct)
     {
         string dataDir = StudioData.ResolveDataDirectory(config);
         var (gitAvailable, statusByFile) = Directory.Exists(dataDir)
@@ -33,7 +33,7 @@ public class ChangesFeature : IFeature
             : (false, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
 
         var problems = Directory.Exists(dataDir)
-            ? ValidateAll(dataDir, config)
+            ? ValidateAll(dataDir, clientFiles)
             : [];
         var problemsByFile = problems
             .GroupBy(p => p.File, StringComparer.OrdinalIgnoreCase)
@@ -71,7 +71,7 @@ public class ChangesFeature : IFeature
     }
 
     private static async Task<Results<Ok<FileDiffResponse>, NotFound<ApiError>>> GetDiffAsync(
-        string file, WebConfiguration config, GitDataService git, CancellationToken ct)
+        string file, WebConfiguration config, ClientFiles clientFiles, GitDataService git, CancellationToken ct)
     {
         var kind = DataFileKinds.Find(file);
         if (kind == null)
@@ -85,7 +85,7 @@ public class ChangesFeature : IFeature
         string diff = gitStatus == "clean" || !Directory.Exists(dataDir)
             ? ""
             : await git.GetDiffAsync(dataDir, kind.FileName, gitStatus, ct);
-        var problems = Directory.Exists(dataDir) ? ValidateFile(dataDir, config, kind.FileName) : [];
+        var problems = Directory.Exists(dataDir) ? ValidateFile(dataDir, clientFiles, kind.FileName) : [];
 
         return TypedResults.Ok(new FileDiffResponse(kind.FileName, gitStatus, diff, problems));
     }
@@ -144,11 +144,11 @@ public class ChangesFeature : IFeature
         return TypedResults.Ok(new DiscardResponse(kind.FileName, discarded));
     }
 
-    private static ValidationProblemDto[] ValidateAll(string dataDir, WebConfiguration config) =>
-        StudioData.CreateDataSet(dataDir, config).ValidateAll().Select(ToDto).ToArray();
+    private static ValidationProblemDto[] ValidateAll(string dataDir, ClientFiles clientFiles) =>
+        clientFiles.CreateDataSet(dataDir).ValidateAll().Select(ToDto).ToArray();
 
-    private static ValidationProblemDto[] ValidateFile(string dataDir, WebConfiguration config, string fileName) =>
-        StudioData.CreateDataSet(dataDir, config).Validate(fileName).Select(ToDto).ToArray();
+    private static ValidationProblemDto[] ValidateFile(string dataDir, ClientFiles clientFiles, string fileName) =>
+        clientFiles.CreateDataSet(dataDir).Validate(fileName).Select(ToDto).ToArray();
 
     private static ValidationProblemDto ToDto(DataProblem p) =>
         new(p.File, p.Entry, p.Line, p.Message, p.Level == DataProblemLevel.Warning ? "warning" : "error");
