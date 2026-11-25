@@ -106,8 +106,10 @@ public static class LogQl
         return $"{baseUrl}/explore?schemaVersion=1&panes={encoded}";
     }
 
+    // A regex escape inside a LogQL string, which needs its own backslash escaped. The prefix
+    // is checked against SafeEventPrefix, so a dot is the only regex character left.
     private static string EscapeRegex(string value) =>
-        value.Replace("\\", "\\\\").Replace(".", "\\.");
+        value.Replace(".", "\\\\.");
 
     private static string? SanitizeLineFilter(string? search)
     {

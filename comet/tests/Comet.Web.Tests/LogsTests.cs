@@ -33,7 +33,7 @@ public class LogsTests(WebFixture fixture)
             Search: "dropped \"sword\""));
 
         Assert.Equal(
-            "{server=\"game\", level=\"warn\", event=~\"^item\\..*\"} | json | characterId=\"1000042\" | accountId=\"7\" |= \"dropped \\\"sword\\\"\"",
+            "{server=\"game\", level=\"warn\", event=~\"^item\\\\..*\"} | json | characterId=\"1000042\" | accountId=\"7\" |= \"dropped \\\"sword\\\"\"",
             query);
     }
 
