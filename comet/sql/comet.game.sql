@@ -566,6 +566,43 @@ CREATE TABLE `web_announcement` (
   KEY `Enabled` (`Enabled`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Discord webhook endpoints for bans, errors and cheat reports.
+DROP TABLE IF EXISTS `web_notification_webhook`;
+CREATE TABLE `web_notification_webhook` (
+  `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `Name` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `WebhookUrl` varchar(512) NOT NULL,
+  `Enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `NotifyBans` tinyint(1) NOT NULL DEFAULT '1',
+  `NotifyErrors` tinyint(1) NOT NULL DEFAULT '1',
+  `NotifyCheatReports` tinyint(1) NOT NULL DEFAULT '1',
+  `MinIntervalSeconds` int(10) unsigned NOT NULL DEFAULT '0',
+  `LastSentAt` datetime(3) DEFAULT NULL,
+  `LastError` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `CreatedBy` int(10) unsigned NOT NULL DEFAULT '0',
+  `CreatedAt` datetime(3) NOT NULL,
+  `UpdatedAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `Enabled` (`Enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+DROP TABLE IF EXISTS `web_notification_delivery`;
+CREATE TABLE `web_notification_delivery` (
+  `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `WebhookID` int(10) unsigned NOT NULL,
+  `WebhookName` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Category` varchar(32) NOT NULL,
+  `Title` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Summary` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `Success` tinyint(1) NOT NULL DEFAULT '0',
+  `StatusCode` int(11) DEFAULT NULL,
+  `Error` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `SentAt` datetime(3) NOT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `SentAt` (`SentAt`),
+  KEY `WebhookID` (`WebhookID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

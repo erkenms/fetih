@@ -1,0 +1,70 @@
+{
+  "title": "Bildirimler",
+  "description": "Yasaklamaları, sunucu hatalarını ve hile raporlarını Discord webhook'larına gönder.",
+  "categories": {
+    "ban": "Yasaklamalar",
+    "error": "Hatalar",
+    "cheat_report": "Hile raporları",
+    "test": "Test"
+  },
+  "webhooks": {
+    "title": "Discord webhook'ları",
+    "new": "Webhook ekle",
+    "edit": "Webhook düzenle",
+    "empty": "Henüz Discord webhook'u eklenmedi.",
+    "never": "Hiç",
+    "saved": "Webhook kaydedildi.",
+    "deleted": "Webhook silindi.",
+    "testOk": "Test bildirimi Discord'a iletildi.",
+    "testFailed": "Test gönderimi başarısız: {{error}}",
+    "columns": {
+      "name": "Ad",
+      "events": "Olaylar",
+      "cooldown": "Bekleme",
+      "lastSent": "Son gönderim",
+      "enabled": "Etkin",
+      "actions": "İşlemler"
+    },
+    "actions": {
+      "test": "Test gönder",
+      "edit": "Düzenle",
+      "delete": "Sil"
+    },
+    "form": {
+      "name": "Ad",
+      "namePlaceholder": "Yönetici Uyarıları",
+      "url": "Discord webhook adresi",
+      "urlPlaceholder": "https://discord.com/api/webhooks/...",
+      "urlKeepNote": "Mevcut webhook adresini korumak için boş bırakın.",
+      "urlInvalid": "Geçerli bir https://discord.com/api/webhooks/... adresi girin.",
+      "events": "İletilecek olaylar",
+      "notifyBans": "Hesap ve karakter yasaklamaları",
+      "notifyErrors": "Sunucu hataları ve kritik hatalar",
+      "notifyCheatReports": "Hile raporları (session.cheat_report)",
+      "cooldown": "Kategori başına en az aralık (saniye)",
+      "enabled": "Etkin",
+      "cancel": "İptal",
+      "save": "Kaydet"
+    },
+    "deleteConfirm": {
+      "title": "Webhook sil",
+      "body": "\"{{name}}\" Discord webhook'u silinsin mi?",
+      "cancel": "İptal",
+      "confirm": "Sil"
+    }
+  },
+  "deliveries": {
+    "title": "Son gönderimler",
+    "refresh": "Yenile",
+    "empty": "Henüz bildirim gönderilmedi.",
+    "ok": "İletildi",
+    "failed": "Başarısız",
+    "columns": {
+      "time": "Zaman",
+      "webhook": "Webhook",
+      "category": "Kategori",
+      "summary": "Özet",
+      "result": "Sonuç"
+    }
+  }
+}
