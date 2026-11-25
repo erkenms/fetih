@@ -47,6 +47,7 @@ namespace Comet.Game.Items
                 this.Contents.Add(item);
         }
 
+        // The whole item, all of its stack; spending one goes through ItemActions.SpendOneAsync
         public bool Remove(DbItem item)
         {
             lock (this.Contents)
