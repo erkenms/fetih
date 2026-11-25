@@ -3081,6 +3081,19 @@ export interface components {
             npc: components["schemas"]["NpcLook"][];
             monster: components["schemas"]["MonsterLook"][];
         };
+        MapAnimation: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: int32 */
+            interval: number;
+            frames: string[];
+        };
         MapBooth: {
             /** Format: uint32 */
             id?: number;
@@ -3435,6 +3448,7 @@ export interface components {
             puzzle: components["schemas"]["MapPuzzleMeta"];
             ground: string;
             covers: string;
+            animations?: null | components["schemas"]["MapAnimation"][];
         };
         MapTilePoint: {
             /** Format: int32 */

@@ -9681,6 +9681,45 @@
           }
         }
       },
+      "MapAnimation": {
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height",
+          "interval",
+          "frames"
+        ],
+        "type": "object",
+        "properties": {
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "interval": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "frames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "MapBooth": {
         "type": "object",
         "properties": {
@@ -10967,6 +11006,15 @@
           },
           "covers": {
             "type": "string"
+          },
+          "animations": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MapAnimation"
+            }
           }
         }
       },

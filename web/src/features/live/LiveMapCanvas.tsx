@@ -16,6 +16,7 @@ import {
   type IsoMeta,
 } from '../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from '../maps/gridCanvasLayer'
+import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs } from '../maps/scene'
 import {
   hpPercent,
   pkNameStyle,
@@ -229,7 +230,8 @@ export function LiveMapCanvas({
   onSelectRef.current = onSelect
 
   const layerGroupsRef = useRef<{
-    covers?: L.TileLayer
+    covers?: L.LayerGroup
+    terrainNpcs?: L.Layer
     walkability?: L.GridLayer
     portals: L.LayerGroup
     npcs: L.LayerGroup
@@ -297,7 +299,7 @@ export function LiveMapCanvas({
     })
     leafletRef.current = lmap
 
-    let coversLayer: L.TileLayer | undefined
+    let coversLayer: L.LayerGroup | undefined
     if (map?.meta && meta.ground) {
       L.tileLayer(`/assets/${meta.ground}`, {
         tileSize: meta.tileSize,
@@ -308,17 +310,7 @@ export function LiveMapCanvas({
         bounds,
       }).addTo(lmap)
 
-      if (meta.covers) {
-        coversLayer = L.tileLayer(`/assets/${meta.covers}`, {
-          tileSize: meta.tileSize,
-          minZoom: 0,
-          maxNativeZoom: meta.maxZoom,
-          maxZoom: meta.maxZoom + 2,
-          noWrap: true,
-          bounds,
-          zIndex: 250,
-        })
-      }
+      if (meta.covers) coversLayer = makeCoversLayer(map.meta, bounds).layer
     } else if (map?.minimap && assetUrl(map.minimap)) {
       L.imageOverlay(assetUrl(map.minimap)!, bounds).addTo(lmap)
     }
@@ -402,6 +394,18 @@ export function LiveMapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapId, meta])
 
+  // Scenery of the terrain NPCs, shown with the covers
+  const terrainCatalog = useTerrainNpcs().data
+  useEffect(() => {
+    const lmap = leafletRef.current
+    const groups = layerGroupsRef.current
+    if (!lmap || !groups) return
+    if (groups.terrainNpcs) lmap.removeLayer(groups.terrainNpcs)
+    groups.terrainNpcs = terrainNpcLayer(terrainCatalog, map?.npcs ?? [], meta)
+    if (layers.covers) groups.terrainNpcs.addTo(lmap)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terrainCatalog, map, meta])
+
   // Static context layers (portals & NPCs)
   useEffect(() => {
     const groups = layerGroupsRef.current
@@ -468,6 +472,7 @@ export function LiveMapCanvas({
     }
 
     sync(groups.covers, layers.covers)
+    sync(groups.terrainNpcs, layers.covers)
     sync(groups.walkability, layers.walkability)
     sync(groups.portals, layers.portals)
     sync(groups.npcs, layers.npcs)
@@ -475,7 +480,8 @@ export function LiveMapCanvas({
     sync(groups.groundItems, layers.groundItems)
     sync(groups.booths, layers.booths)
     sync(groups.players, layers.players)
-  }, [layers])
+    // The map is rebuilt with new layers when its tiles' meta arrives
+  }, [layers, mapId, meta])
 
   // Reconcile live entity markers in-place for smooth 1s updates
   useEffect(() => {

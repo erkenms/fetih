@@ -18,9 +18,12 @@ import {
   type IsoMeta,
 } from '../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from './gridCanvasLayer'
+import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs, type SpriteLayer } from './scene'
 
 export interface MapOverlaysState {
   covers: boolean
+  animations: boolean
+  terrainNpcs: boolean
   walkability: boolean
   elevation: boolean
   portals: boolean
@@ -35,6 +38,8 @@ export interface MapOverlaysState {
 
 export const defaultOverlays: MapOverlaysState = {
   covers: true,
+  animations: true,
+  terrainNpcs: true,
   walkability: false,
   elevation: false,
   portals: true,
@@ -127,7 +132,9 @@ export function MapViewer({
   const containerRef = useRef<HTMLDivElement | null>(null)
   const leafletRef = useRef<L.Map | null>(null)
   const layersRef = useRef<{
-    covers?: L.TileLayer
+    covers?: L.LayerGroup
+    coverSprites?: SpriteLayer
+    terrainNpcs?: SpriteLayer
     walkability?: L.GridLayer
     elevation?: L.GridLayer
     portals: L.LayerGroup
@@ -193,7 +200,8 @@ export function MapViewer({
     leafletRef.current = lmap
 
     // Base background: A2 ground tiles, minimap image fallback, or isometric diamond wireframe
-    let coversLayer: L.TileLayer | undefined
+    let coversLayer: L.LayerGroup | undefined
+    let coverSprites: SpriteLayer | undefined
     if (map.meta && meta.ground) {
       L.tileLayer(`/assets/${meta.ground}`, {
         tileSize: meta.tileSize,
@@ -205,15 +213,9 @@ export function MapViewer({
       }).addTo(lmap)
 
       if (meta.covers) {
-        coversLayer = L.tileLayer(`/assets/${meta.covers}`, {
-          tileSize: meta.tileSize,
-          minZoom: 0,
-          maxNativeZoom: meta.maxZoom,
-          maxZoom: meta.maxZoom + 2,
-          noWrap: true,
-          bounds,
-          zIndex: 250,
-        })
+        const covers = makeCoversLayer(map.meta, bounds)
+        coversLayer = covers.layer
+        coverSprites = covers.sprites
       }
     } else if (map.minimap && assetUrl(map.minimap)) {
       L.imageOverlay(assetUrl(map.minimap)!, bounds).addTo(lmap)
@@ -243,6 +245,8 @@ export function MapViewer({
 
     const groups = {
       covers: coversLayer,
+      coverSprites,
+      terrainNpcs: undefined as SpriteLayer | undefined,
       portals: L.layerGroup(),
       portalDestinations: L.layerGroup(),
       npcs: L.layerGroup(),
@@ -493,6 +497,18 @@ export function MapViewer({
     }
   }, [map, meta])
 
+  // Scenery of the terrain NPCs (statues, gates, furniture), redrawn when the NPCs change
+  const terrainCatalog = useTerrainNpcs().data
+  useEffect(() => {
+    const lmap = leafletRef.current
+    const layers = layersRef.current
+    if (!lmap || !layers) return
+    if (layers.terrainNpcs) lmap.removeLayer(layers.terrainNpcs)
+    layers.terrainNpcs = terrainNpcLayer(terrainCatalog, map.npcs, meta).setPlaying(overlays.animations)
+    if (overlays.terrainNpcs) layers.terrainNpcs.addTo(lmap)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [terrainCatalog, map.npcs, meta])
+
   // Manage walkability & elevation canvas layers when grid arrives or changes
   useEffect(() => {
     const lmap = leafletRef.current
@@ -529,6 +545,9 @@ export function MapViewer({
     }
 
     sync(layers.covers, overlays.covers)
+    sync(layers.terrainNpcs, overlays.terrainNpcs)
+    layers.coverSprites?.setPlaying(overlays.animations)
+    layers.terrainNpcs?.setPlaying(overlays.animations)
     sync(layers.walkability, overlays.walkability)
     sync(layers.elevation, overlays.elevation)
     sync(layers.portals, overlays.portals)

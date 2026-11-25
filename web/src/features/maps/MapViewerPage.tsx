@@ -36,6 +36,7 @@ import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { useCan } from '../../app/auth'
 import { AssetImage } from '../../components/pickers'
+import { isTerrainRole } from './scene'
 import {
   defaultOverlays,
   MapViewer,
@@ -178,6 +179,7 @@ export default function MapViewerPage() {
   }, [map, term])
 
   const goalCount = useMemo(() => map?.npcs.filter((n) => n.isGoal).length ?? 0, [map])
+  const terrainNpcCount = useMemo(() => map?.npcs.filter((n) => isTerrainRole(n.role)).length ?? 0, [map])
 
   if (detail.isLoading) {
     return (
@@ -344,6 +346,20 @@ export default function MapViewerPage() {
                     label={t('viewer.overlays.covers')}
                     checked={overlays.covers}
                     onChange={() => toggle('covers')}
+                  />
+                )}
+                {map.hasTiles && (
+                  <Switch
+                    label={t('viewer.overlays.animations')}
+                    checked={overlays.animations}
+                    onChange={() => toggle('animations')}
+                  />
+                )}
+                {terrainNpcCount > 0 && (
+                  <Switch
+                    label={`${t('viewer.overlays.terrainNpcs')} (${terrainNpcCount})`}
+                    checked={overlays.terrainNpcs}
+                    onChange={() => toggle('terrainNpcs')}
                   />
                 )}
                 <Switch

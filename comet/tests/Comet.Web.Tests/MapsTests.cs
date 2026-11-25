@@ -84,7 +84,10 @@ public class MapsTests(WebFixture web)
                   "background": { "x": 0, "y": 0 },
                   "puzzle": { "width": 4, "height": 2, "gridSize": 256 },
                   "ground": "maps/tiles/newplain/ground/{z}/{x}/{y}.webp",
-                  "covers": "maps/tiles/newplain/covers/{z}/{x}/{y}.webp"
+                  "covers": "maps/tiles/newplain/covers/{z}/{x}/{y}.webp",
+                  "animations": [
+                    { "x": 10, "y": 20, "width": 30, "height": 40, "interval": 100, "frames": ["maps/tiles/newplain/anim/0/0.png", "maps/tiles/newplain/anim/0/1.png"] }
+                  ]
                 }
                 """);
 
@@ -139,6 +142,9 @@ public class MapsTests(WebFixture web)
             Assert.NotNull(detail);
             Assert.True(detail.HasTiles);
             Assert.True(detail.HasGrid);
+            var animation = Assert.Single(detail.Meta!.Animations!);
+            Assert.Equal(100, animation.Interval);
+            Assert.Equal(2, animation.Frames.Length);
             Assert.Equal(4, detail.Width);
             Assert.Equal(4, detail.Height);
             Assert.Single(detail.Npcs);

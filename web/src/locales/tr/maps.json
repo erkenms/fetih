@@ -53,6 +53,8 @@
     },
     "overlays": {
       "covers": "Örtüler (binalar ve ağaçlar)",
+      "animations": "Animasyonlar (ateş, su, küreler)",
+      "terrainNpcs": "Dekor NPC'leri (heykeller, kapılar, mobilyalar)",
       "walkability": "Yürünebilirlik ızgarası",
       "elevation": "Yükseklik haritası",
       "portals": "Portal hücreleri",

@@ -18,6 +18,7 @@ import {
   type IsoMeta,
 } from '../../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from '../gridCanvasLayer'
+import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs } from '../scene'
 import { cellDistance, clampSpread, type MapEditorSnapshot } from './editorState'
 
 export type EditorMode = 'select' | 'addNpc' | 'drawSpawn' | 'pickStart'
@@ -212,17 +213,7 @@ export function MapEditorCanvas({
         bounds,
       }).addTo(lmap)
 
-      if (meta.covers) {
-        L.tileLayer(`/assets/${meta.covers}`, {
-          tileSize: meta.tileSize,
-          minZoom: 0,
-          maxNativeZoom: meta.maxZoom,
-          maxZoom: meta.maxZoom + 2,
-          noWrap: true,
-          bounds,
-          zIndex: 250,
-        }).addTo(lmap)
-      }
+      if (meta.covers) makeCoversLayer(map.meta, bounds).layer.addTo(lmap)
     } else if (map.minimap && assetUrl(map.minimap)) {
       L.imageOverlay(assetUrl(map.minimap)!, bounds).addTo(lmap)
     }
@@ -368,6 +359,17 @@ export function MapEditorCanvas({
     if (mode === 'drawSpawn') lmap.dragging.disable()
     else lmap.dragging.enable()
   }, [mode])
+
+  // Scenery of the terrain NPCs, following them as they're edited
+  const terrainCatalog = useTerrainNpcs().data
+  useEffect(() => {
+    const lmap = leafletRef.current
+    if (!lmap) return
+    const layer = terrainNpcLayer(terrainCatalog, snapshot.npcs, meta).addTo(lmap)
+    return () => {
+      layer.remove()
+    }
+  }, [terrainCatalog, snapshot.npcs, meta])
 
   // Manage walkability canvas overlay
   useEffect(() => {

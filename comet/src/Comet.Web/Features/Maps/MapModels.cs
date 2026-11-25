@@ -25,6 +25,10 @@ public sealed record MapTilePoint(int X, int Y);
 
 public sealed record MapPuzzleMeta(int Width, int Height, int GridSize);
 
+// A sprite the client loops over the map (fire, orb, dragonfly), left out of the tiles: its top
+// left in background pixels, its size, how long each frame shows in ms, and the frames' paths.
+public sealed record MapAnimation(int X, int Y, int Width, int Height, int Interval, string[] Frames);
+
 public sealed record MapTileMeta(
     int Width,
     int Height,
@@ -36,7 +40,8 @@ public sealed record MapTileMeta(
     MapTilePoint Background,
     MapPuzzleMeta Puzzle,
     string Ground,
-    string Covers);
+    string Covers,
+    MapAnimation[]? Animations = null);
 
 public sealed record MapNpcEntry(
     uint Id,

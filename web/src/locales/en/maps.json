@@ -53,6 +53,8 @@
     },
     "overlays": {
       "covers": "Covers (buildings & trees)",
+      "animations": "Animations (fires, water, orbs)",
+      "terrainNpcs": "Scenery NPCs (statues, gates, furniture)",
       "walkability": "Walkability grid",
       "elevation": "Elevation heatmap",
       "portals": "Portal cells",
