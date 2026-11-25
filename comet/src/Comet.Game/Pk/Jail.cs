@@ -63,15 +63,18 @@ namespace Comet.Game.Pk
                 return;
             }
 
+            if (!await ReleaseAsync(client, black ? "bail" : "free") && black)
+                await Progress.ChangeSilverAsync(client, Bail, "bail_refund");
+        }
+
+        public static async Task<bool> ReleaseAsync(Client client, string reason)
+        {
             if (!await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y))
-            {
-                if (black)
-                    await Progress.ChangeSilverAsync(client, Bail, "bail_refund");
-                return;
-            }
+                return false;
             LogEvents.For(typeof(Jail), LogEvents.PkReleased).Information(
                 "{Name} left jail with {Points} PK points ({Reason})",
-                client.Character.Name, client.Character.KillPoints, black ? "bail" : "free");
+                client.Character.Name, client.Character.KillPoints, reason);
+            return true;
         }
     }
 }

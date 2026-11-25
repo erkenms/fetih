@@ -2590,6 +2590,214 @@
         }
       }
     },
+    "/api/pk/summary": {
+      "get": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkSummary",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PkSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pk/jail": {
+      "get": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkJail",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PkJailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pk/jail/{id}/release": {
+      "post": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkRelease",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pk/active": {
+      "get": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkActive",
+        "parameters": [
+          {
+            "name": "color",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivePkResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pk/leaderboard": {
+      "get": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkLeaderboard",
+        "parameters": [
+          {
+            "name": "color",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PkLeaderboardResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/pk/detained": {
+      "get": {
+        "tags": [
+          "PkFeature"
+        ],
+        "operationId": "pkDetained",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DetainedItemsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/maps": {
       "get": {
         "tags": [
@@ -4904,6 +5112,95 @@
           }
         }
       },
+      "ActivePkResponse": {
+        "required": [
+          "gameConnected",
+          "takenAt",
+          "players"
+        ],
+        "type": "object",
+        "properties": {
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "takenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivePkView"
+            }
+          }
+        }
+      },
+      "ActivePkView": {
+        "required": [
+          "character",
+          "rebirths",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "pkPoints",
+          "flashing",
+          "nameColor",
+          "pkMode",
+          "inJail",
+          "dead"
+        ],
+        "type": "object",
+        "properties": {
+          "character": {
+            "$ref": "#/components/schemas/PkCharacterRef"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "pkPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "flashing": {
+            "type": "boolean"
+          },
+          "nameColor": {
+            "type": "string"
+          },
+          "pkMode": {
+            "type": "string"
+          },
+          "inJail": {
+            "type": "boolean"
+          },
+          "dead": {
+            "type": "boolean"
+          }
+        }
+      },
       "AdjustAmountRequest": {
         "required": [
           "amount"
@@ -6824,6 +7121,171 @@
           }
         }
       },
+      "DetainedItemInstance": {
+        "required": [
+          "itemId",
+          "typeId",
+          "plus",
+          "bless",
+          "enchant",
+          "gem1",
+          "gem2",
+          "color",
+          "amount",
+          "amountLimit",
+          "locked"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "plus": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "bless": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "enchant": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem1": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem2": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "color": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "amountLimit": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "locked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DetainedItemsResponse": {
+        "required": [
+          "items",
+          "redeemableCount",
+          "expiredCount",
+          "redeemedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DetainedItemView"
+            }
+          },
+          "redeemableCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "expiredCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "redeemedCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "DetainedItemView": {
+        "required": [
+          "detainId",
+          "itemId",
+          "instance",
+          "catalogItem",
+          "owner",
+          "killer",
+          "cost",
+          "detainedAt",
+          "expiresAt",
+          "daysElapsed",
+          "redeemed",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "detainId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "instance": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DetainedItemInstance"
+              }
+            ]
+          },
+          "catalogItem": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CatalogItem"
+              }
+            ]
+          },
+          "owner": {
+            "$ref": "#/components/schemas/PkCharacterRef"
+          },
+          "killer": {
+            "$ref": "#/components/schemas/PkCharacterRef"
+          },
+          "cost": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "detainedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "daysElapsed": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "redeemed": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
       "DiscardResponse": {
         "required": [
           "file",
@@ -8068,6 +8530,64 @@
           },
           "assetsAvailable": {
             "type": "boolean"
+          }
+        }
+      },
+      "JailedCharacterView": {
+        "required": [
+          "character",
+          "pkPoints",
+          "nameColor",
+          "flashing",
+          "online",
+          "x",
+          "y",
+          "jailedSince",
+          "jailedReason",
+          "bailRequired"
+        ],
+        "type": "object",
+        "properties": {
+          "character": {
+            "$ref": "#/components/schemas/PkCharacterRef"
+          },
+          "pkPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "nameColor": {
+            "type": "string"
+          },
+          "flashing": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "jailedSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "jailedReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bailRequired": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -10377,6 +10897,122 @@
           "ManageAccounts"
         ]
       },
+      "PkCharacterRef": {
+        "required": [
+          "id",
+          "name",
+          "level",
+          "class"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "class": {
+            "type": "integer",
+            "format": "uint8"
+          }
+        }
+      },
+      "PkJailResponse": {
+        "required": [
+          "gameConnected",
+          "inmates"
+        ],
+        "type": "object",
+        "properties": {
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "inmates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JailedCharacterView"
+            }
+          }
+        }
+      },
+      "PkLeaderboardEntry": {
+        "required": [
+          "position",
+          "character",
+          "rebirths",
+          "pkPoints",
+          "nameColor",
+          "flashing",
+          "online",
+          "mapId",
+          "mapName",
+          "inJail"
+        ],
+        "type": "object",
+        "properties": {
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "character": {
+            "$ref": "#/components/schemas/PkCharacterRef"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "pkPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "nameColor": {
+            "type": "string"
+          },
+          "flashing": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "inJail": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PkLeaderboardResponse": {
+        "required": [
+          "gameConnected",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PkLeaderboardEntry"
+            }
+          }
+        }
+      },
       "PkRankEntry": {
         "required": [
           "rank",
@@ -10435,6 +11071,70 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "PkSummaryResponse": {
+        "required": [
+          "gameConnected",
+          "jailedTotal",
+          "jailedOnline",
+          "activeTotal",
+          "flashingCount",
+          "redCount",
+          "blackCount",
+          "detainedRedeemable",
+          "detainedExpired",
+          "detainedRedeemed",
+          "snapshotAt"
+        ],
+        "type": "object",
+        "properties": {
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "jailedTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "jailedOnline": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "activeTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "flashingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "redCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "blackCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detainedRedeemable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detainedExpired": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "detainedRedeemed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "snapshotAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -12471,6 +13171,9 @@
     },
     {
       "name": "MonsterEditFeature"
+    },
+    {
+      "name": "PkFeature"
     },
     {
       "name": "PublicAccountFeature"

@@ -365,6 +365,7 @@ namespace Comet.Core.Logging
         public const string GmKick = "gm.kick";
         public const string GmMute = "gm.mute";
         public const string GmJail = "gm.jail";
+        public const string GmRelease = "gm.release";
         public const string GmBan = "gm.ban";
         public const string GmUnban = "gm.unban";
         public const string GmTeleport = "gm.teleport";

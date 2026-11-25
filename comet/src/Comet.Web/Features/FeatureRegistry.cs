@@ -15,6 +15,7 @@ public static class FeatureRegistry
         new Logs.LogsFeature(),
         new Changes.ChangesFeature(),
         new Social.SocialFeature(),
+        new Pk.PkFeature(),
         new Maps.MapsFeature(),
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),

@@ -980,6 +980,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/pk/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pkSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pk/jail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pkJail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pk/jail/{id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["pkRelease"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pk/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pkActive"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pk/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pkLeaderboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/pk/detained": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pkDetained"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/maps": {
         parameters: {
             query?: never;
@@ -1604,6 +1700,31 @@ export interface components {
             timestamp: string;
             ipAddress: string;
         };
+        ActivePkResponse: {
+            gameConnected: boolean;
+            /** Format: date-time */
+            takenAt: null | string;
+            players: components["schemas"]["ActivePkView"][];
+        };
+        ActivePkView: {
+            character: components["schemas"]["PkCharacterRef"];
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint16 */
+            pkPoints: number;
+            flashing: boolean;
+            nameColor: string;
+            pkMode: string;
+            inJail: boolean;
+            dead: boolean;
+        };
         AdjustAmountRequest: {
             /** Format: int64 */
             amount: number;
@@ -2195,6 +2316,58 @@ export interface components {
             /** Format: uint32 */
             id: number;
         };
+        DetainedItemInstance: {
+            /** Format: uint32 */
+            itemId: number;
+            /** Format: uint32 */
+            typeId: number;
+            /** Format: uint8 */
+            plus: number;
+            /** Format: uint8 */
+            bless: number;
+            /** Format: uint8 */
+            enchant: number;
+            /** Format: uint8 */
+            gem1: number;
+            /** Format: uint8 */
+            gem2: number;
+            /** Format: uint8 */
+            color: number;
+            /** Format: uint16 */
+            amount: number;
+            /** Format: uint16 */
+            amountLimit: number;
+            locked: boolean;
+        };
+        DetainedItemsResponse: {
+            items: components["schemas"]["DetainedItemView"][];
+            /** Format: int32 */
+            redeemableCount: number;
+            /** Format: int32 */
+            expiredCount: number;
+            /** Format: int32 */
+            redeemedCount: number;
+        };
+        DetainedItemView: {
+            /** Format: uint32 */
+            detainId: number;
+            /** Format: uint32 */
+            itemId: number;
+            instance: null | components["schemas"]["DetainedItemInstance"];
+            catalogItem: null | components["schemas"]["CatalogItem"];
+            owner: components["schemas"]["PkCharacterRef"];
+            killer: components["schemas"]["PkCharacterRef"];
+            /** Format: uint32 */
+            cost: number;
+            /** Format: date-time */
+            detainedAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: uint32 */
+            daysElapsed: number;
+            redeemed: boolean;
+            status: string;
+        };
         DiscardResponse: {
             file: string;
             discarded: boolean;
@@ -2558,6 +2731,23 @@ export interface components {
             /** Format: int32 */
             total: number;
             assetsAvailable: boolean;
+        };
+        JailedCharacterView: {
+            character: components["schemas"]["PkCharacterRef"];
+            /** Format: uint16 */
+            pkPoints: number;
+            nameColor: string;
+            flashing: boolean;
+            online: boolean;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: date-time */
+            jailedSince: null | string;
+            jailedReason: null | string;
+            /** Format: uint32 */
+            bailRequired: number;
         };
         KickCharacterRequest: {
             reason?: null | string;
@@ -3198,6 +3388,39 @@ export interface components {
         };
         /** @enum {unknown} */
         Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
+        PkCharacterRef: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            class: number;
+        };
+        PkJailResponse: {
+            gameConnected: boolean;
+            inmates: components["schemas"]["JailedCharacterView"][];
+        };
+        PkLeaderboardEntry: {
+            /** Format: int32 */
+            position: number;
+            character: components["schemas"]["PkCharacterRef"];
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint16 */
+            pkPoints: number;
+            nameColor: string;
+            flashing: boolean;
+            online: boolean;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            inJail: boolean;
+        };
+        PkLeaderboardResponse: {
+            gameConnected: boolean;
+            entries: components["schemas"]["PkLeaderboardEntry"][];
+        };
         PkRankEntry: {
             /** Format: int32 */
             rank: number;
@@ -3217,6 +3440,29 @@ export interface components {
             /** Format: uint32 */
             guildId: null | number;
             guildName: null | string;
+        };
+        PkSummaryResponse: {
+            gameConnected: boolean;
+            /** Format: int32 */
+            jailedTotal: number;
+            /** Format: int32 */
+            jailedOnline: number;
+            /** Format: int32 */
+            activeTotal: number;
+            /** Format: int32 */
+            flashingCount: number;
+            /** Format: int32 */
+            redCount: number;
+            /** Format: int32 */
+            blackCount: number;
+            /** Format: int32 */
+            detainedRedeemable: number;
+            /** Format: int32 */
+            detainedExpired: number;
+            /** Format: int32 */
+            detainedRedeemed: number;
+            /** Format: date-time */
+            snapshotAt: null | string;
         };
         PublicAccountConfigResponse: {
             captchaEnabled: boolean;
@@ -5475,6 +5721,157 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pkSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PkSummaryResponse"];
+                };
+            };
+        };
+    };
+    pkJail: {
+        parameters: {
+            query?: {
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PkJailResponse"];
+                };
+            };
+        };
+    };
+    pkRelease: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminResult"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    pkActive: {
+        parameters: {
+            query?: {
+                color?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivePkResponse"];
+                };
+            };
+        };
+    };
+    pkLeaderboard: {
+        parameters: {
+            query?: {
+                color?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PkLeaderboardResponse"];
+                };
+            };
+        };
+    };
+    pkDetained: {
+        parameters: {
+            query?: {
+                status?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetainedItemsResponse"];
                 };
             };
         };
