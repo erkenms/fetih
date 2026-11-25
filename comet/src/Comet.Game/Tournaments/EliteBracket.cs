@@ -9,10 +9,11 @@ namespace Comet.Game.Tournaments
     public sealed record EliteRound(EliteStage Stage, IReadOnlyList<(uint A, uint B)> Pairs, uint Bye,
         (uint A, uint B)? ThirdPlace);
 
-    // A knock-out bracket of character IDs. Rounds pair the players still in at random, an odd
-    // one out going through; who loses is out. With eight or fewer left the final phase starts:
-    // those are the final eight. The two semifinal losers fight for third place alongside the
-    // final. Not thread-safe; the tournament changes it under its lock.
+    // A knock-out bracket of entrant IDs: characters in the Elite PK, team leaders in the Team
+    // PK tournaments. Rounds pair the entrants still in at random, an odd one out going
+    // through; who loses is out. With eight or fewer left the final phase starts: those are the
+    // final eight. The two semifinal losers fight for third place alongside the final. Not
+    // thread-safe; the tournament changes it under its lock.
     public sealed class EliteBracket
     {
         public const int FinalSize = 8;

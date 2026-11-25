@@ -137,6 +137,7 @@ namespace Comet.Game
                 await Social.Teams.LeaveAsync(actor, "logout");
                 await Arena.Qualifier.LeaveAsync(actor, "logout");
                 await Tournaments.ElitePk.LeaveAsync(actor, "logout");
+                await Tournaments.TeamPk.LeaveAsync(actor, "logout");
                 await Social.Relationships.LogoutAsync(actor);
                 await Social.TradePartners.LogoutAsync(actor);
                 await Social.Mentors.LogoutAsync(actor);

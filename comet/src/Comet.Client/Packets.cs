@@ -41,6 +41,8 @@ namespace Comet.Client
         public const ushort MsgArenicScore = 2210;
         public const ushort MsgElitePKArenic = 2218;
         public const ushort MsgElitePKScore = 2222;
+        public const ushort MsgTeamPKArenic = 2230;
+        public const ushort MsgTeamPKArenicScore = 2231;
         public const ushort MsgSynpOffer = 1058;
         public const ushort MsgSyndicateAttributeInfo = 1106;
         public const ushort MsgSyndicate = 1107;
@@ -1008,6 +1010,24 @@ namespace Comet.Client
 
         public static ElitePkArenic Parse(byte[] packet) => new ElitePkArenic(
             BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt32(packet, 8) == 1, BitConverter.ToUInt16(packet, 44));
+    }
+
+    // A Team PK match for one fighter: action at 4 (2 start, 3 result, 4 left the match, 7
+    // closed, 8 awarded), won at 8, match seconds (u16) at 44
+    public sealed record TeamPkArenic(ushort Action, bool Won, ushort Seconds)
+    {
+        public const ushort Start = 2, Result = 3, Leave = 4, Close = 7, Awarded = 8;
+
+        public static TeamPkArenic Parse(byte[] packet) => new TeamPkArenic(
+            BitConverter.ToUInt16(packet, 4), BitConverter.ToUInt32(packet, 8) == 1, BitConverter.ToUInt16(packet, 44));
+    }
+
+    // A Team PK score: the teams' leader IDs at 4 and 64, their scores at 60 and 120
+    public sealed record TeamPkScore(uint TeamA, uint ScoreA, uint TeamB, uint ScoreB)
+    {
+        public static TeamPkScore Parse(byte[] packet) => new TeamPkScore(
+            BitConverter.ToUInt32(packet, 4), BitConverter.ToUInt32(packet, 60),
+            BitConverter.ToUInt32(packet, 64), BitConverter.ToUInt32(packet, 120));
     }
 
     public sealed record ArenaScore(uint IdA, uint DamageA, uint IdB, uint DamageB)

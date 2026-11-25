@@ -320,6 +320,7 @@ namespace Comet.Game.Arena
             string reason;
             uint points;
             bool tournament = Tournaments.ElitePk.IsTakingPart(client);
+            bool teamPk = Tournaments.TeamPk.IsTakingPart(client);
             lock (Sync)
             {
                 var record = RecordOf(character, now);
@@ -327,6 +328,7 @@ namespace Comet.Game.Arena
                 reason =
                     character.Level < ArenaRecord.MinLevel ? "level" :
                     tournament ? "tournament" :
+                    teamPk ? "team_pk" :
                     InJail(character) ? "jail" :
                     Kernel.Maps?.Exists(MapID) != true ? "no_arena_map" :
                     MatchOf(client.ID) != null ? "in_match" :
@@ -792,6 +794,7 @@ namespace Comet.Game.Arena
                 "jail" => "You can't sign up for the Qualifier in jail.",
                 "in_match" => "You are already in a Qualifier match.",
                 "tournament" => "You can't join the Arena during the Elite PK Tournament.",
+                "team_pk" => "You can't enter the Arena during the Team PK Tournament.",
                 "no_arena_map" => "The Qualifier is closed.",
                 "silver" => "Sorry, you don't have enough silver.",
                 "enough_points" => $"You can only buy Arena Points up to {PointsForSale}.",

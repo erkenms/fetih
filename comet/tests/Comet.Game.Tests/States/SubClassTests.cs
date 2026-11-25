@@ -177,6 +177,21 @@ EffectProportion=300
         }
 
         [Fact]
+        public void APhaseCapLowersEverySubClassButTheApothecary()
+        {
+            var table = SampleTable();
+            var subs = new SubClasses();
+            subs.Set(SubClassId.Performer, level: 2, phase: 2);
+            subs.Set(SubClassId.Apothecary, level: 3, phase: 3);
+            subs.Active = SubClassId.Performer;
+            Assert.Equal(200, subs.AttackBonus(table, maxPhase: 2));
+            // Capped to phase 1, which the sample table gives nothing
+            Assert.Equal(0, subs.AttackBonus(table, maxPhase: 1));
+            subs.Active = SubClassId.Apothecary;
+            Assert.Equal(24, subs.DetoxicationPercent(table, maxPhase: 1));
+        }
+
+        [Fact]
         public void CombatHelpersApplyCriticalImmunityPenetrationAndDetoxication()
         {
             var fixedZero = new Random(0);

@@ -112,6 +112,10 @@ namespace Comet.Network.Packets
         MsgWarFlag = 2224,
         // Faction recruiting ad-list paging sent by CFactionRecruitMgr::QueryAdList.
         MsgSynRecruitAdvertisingList = 2226,
+        MsgTeamPKArenic = 2230,
+        MsgTeamPKArenicScore = 2231,
+        MsgTeamPopPKArenic = 2250,
+        MsgTeamPopPKArenicScore = 2251,
         Msg2ndPsw = 2261,
         MsgSubPro = 2320,
         MsgAura = 2410,

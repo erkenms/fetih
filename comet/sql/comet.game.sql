@@ -295,6 +295,21 @@ CREATE TABLE `elite_pk_reward` (
   PRIMARY KEY (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Team PK (Event 0) and Skill Team PK (Event 1) Tournament placements waiting to be claimed
+-- by the team's leader at the event's manager: Group 0-3 as in elite_pk_reward, Rank 1-3 the
+-- podium and 4 the rest of the final eight. Unclaimed rows go when the group's next
+-- tournament of the same event opens.
+DROP TABLE IF EXISTS `team_pk_reward`;
+CREATE TABLE `team_pk_reward` (
+  `Event` tinyint(3) unsigned NOT NULL,
+  `LeaderID` int(10) unsigned NOT NULL,
+  `Group` tinyint(3) unsigned NOT NULL,
+  `Rank` tinyint(3) unsigned NOT NULL,
+  `Name` varchar(16) NOT NULL DEFAULT '',
+  `Claimed` tinyint(1) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`Event`,`LeaderID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
 DROP TABLE IF EXISTS `arena`;

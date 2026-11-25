@@ -27,6 +27,7 @@ namespace Comet.Game.Database
         public GuildWarConfiguration GuildWar { get; set; } = new GuildWarConfiguration();
         public ClanWarConfiguration ClanWar { get; set; } = new ClanWarConfiguration();
         public ElitePkConfiguration ElitePk { get; set; } = new ElitePkConfiguration();
+        public TeamPkConfiguration TeamPk { get; set; } = new TeamPkConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
@@ -179,6 +180,16 @@ namespace Comet.Game.Database
         {
             public int KnockoutSeconds { get; set; } = 180;
             public int FinalSeconds { get; set; } = 300;
+            public int CountdownSeconds { get; set; } = 10;
+            public int RoundBreakSeconds { get; set; } = 15;
+            public int LeaveSeconds { get; set; } = 3;
+        }
+
+        // Team PK and Skill Team PK match timings, as the client's rule texts give them
+        public class TeamPkConfiguration
+        {
+            public int KnockoutSeconds { get; set; } = 600;
+            public int FinalSeconds { get; set; } = 900;
             public int CountdownSeconds { get; set; } = 10;
             public int RoundBreakSeconds { get; set; } = 15;
             public int LeaveSeconds { get; set; } = 3;

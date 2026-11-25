@@ -41,6 +41,7 @@ namespace Comet.Game.Npcs
                             "signed_up" => "You have already signed up.",
                             "dead" => "You can't sign up while you are dead.",
                             "qualifier" => "Quit the Arena Qualifier first.",
+                            "team_pk" => "You are taking part in a team tournament.",
                             _ => "Sign-up isn't open now. " + ScheduleText(group),
                         });
                     return;

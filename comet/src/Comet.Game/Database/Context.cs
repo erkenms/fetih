@@ -25,6 +25,7 @@ namespace Comet.Game.Database
         public virtual DbSet<DbFamilyOccupy> FamilyOccupations { get; set; }
         public virtual DbSet<DbFamilyWarSignup> FamilyWarSignups { get; set; }
         public virtual DbSet<DbElitePkReward> ElitePkRewards { get; set; }
+        public virtual DbSet<DbTeamPkReward> TeamPkRewards { get; set; }
         public virtual DbSet<DbArena> Arena { get; set; }
         public virtual DbSet<DbArenaSeason> ArenaSeasons { get; set; }
         public virtual DbSet<DbNobility> Nobility { get; set; }
@@ -68,6 +69,7 @@ namespace Comet.Game.Database
             builder.Entity<DbFamilyOccupy>(e => e.HasKey(x => x.NpcID));
             builder.Entity<DbFamilyWarSignup>(e => e.HasKey(x => x.FamilyID));
             builder.Entity<DbElitePkReward>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbTeamPkReward>(e => e.HasKey(x => new { x.Event, x.LeaderID }));
             builder.Entity<DbArena>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbArenaSeason>(e => e.HasKey(x => new { x.Season, x.Rank }));
             builder.Entity<DbNobility>(e => e.HasKey(x => x.CharacterID));

@@ -292,6 +292,7 @@
                 Social.ClanWar.Fee = config.ClanWar.Fee;
                 await Social.ClanWar.LoadAsync();
                 await Tournaments.ElitePk.LoadAsync();
+                await Tournaments.TeamPk.LoadAllAsync();
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
@@ -429,6 +430,13 @@
             Tournaments.ElitePk.LeaveDelay = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.LeaveSeconds));
             Tournaments.ElitePk.Subscribe();
             _ = Tournaments.ElitePk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
+            Tournaments.TeamPk.KnockoutTime = TimeSpan.FromSeconds(Math.Max(1, config.TeamPk.KnockoutSeconds));
+            Tournaments.TeamPk.FinalTime = TimeSpan.FromSeconds(Math.Max(1, config.TeamPk.FinalSeconds));
+            Tournaments.TeamPk.CountdownTime = TimeSpan.FromSeconds(Math.Max(0, config.TeamPk.CountdownSeconds));
+            Tournaments.TeamPk.RoundBreak = TimeSpan.FromSeconds(Math.Max(0, config.TeamPk.RoundBreakSeconds));
+            Tournaments.TeamPk.LeaveDelay = TimeSpan.FromSeconds(Math.Max(0, config.TeamPk.LeaveSeconds));
+            Tournaments.TeamPk.SubscribeAll();
+            _ = Tournaments.TeamPk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Events.EventScheduler.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Chat.Broadcasts.Interval = TimeSpan.FromSeconds(Math.Max(1, config.Broadcast.IntervalSeconds));
             _ = Chat.Broadcasts.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);

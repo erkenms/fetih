@@ -173,6 +173,7 @@ namespace Comet.Game.Tournaments
             Tournament t = Tournaments[group];
             string reason;
             bool qualifier = Arena.Qualifier.IsSignedUp(client);
+            bool teamPk = TeamPk.IsTakingPart(client);
             lock (Sync)
             {
                 reason =
@@ -181,6 +182,7 @@ namespace Comet.Game.Tournaments
                     Tournaments.Any(x => x.Entrants.Contains(client.ID)) ? "signed_up" :
                     client.Life.Dead ? "dead" :
                     qualifier ? "qualifier" :
+                    teamPk ? "team_pk" :
                     null;
                 if (reason == null)
                 {
@@ -693,7 +695,7 @@ namespace Comet.Game.Tournaments
                 await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
         }
 
-        private static async Task RestoreAsync(Client client)
+        internal static async Task RestoreAsync(Client client)
         {
             var character = client.Character;
             character.HealthPoints = Attributes.MaxHealth(client);
@@ -715,7 +717,7 @@ namespace Comet.Game.Tournaments
                 await player.SendAsync(message);
         }
 
-        private static async Task BroadcastAsync(string text)
+        internal static async Task BroadcastAsync(string text)
         {
             var message = new MsgTalk(0, MsgTalk.TalkChannel.Center, text);
             foreach (var player in Kernel.Players.Values.ToList())

@@ -299,6 +299,17 @@ namespace Comet.Core.Logging
         public const string ElitePkRewardClaimed = "elitepk.reward_claimed";
         public const string ElitePkRejected = "elitepk.rejected";
         public const string ElitePkFailed = "elitepk.failed";
+        public const string TeamPkLoaded = "teampk.loaded";
+        public const string TeamPkOpened = "teampk.opened";
+        public const string TeamPkSignedUp = "teampk.signed_up";
+        public const string TeamPkLeft = "teampk.left";
+        public const string TeamPkStarted = "teampk.started";
+        public const string TeamPkRound = "teampk.round";
+        public const string TeamPkMatchEnded = "teampk.match_ended";
+        public const string TeamPkEnded = "teampk.ended";
+        public const string TeamPkRewardClaimed = "teampk.reward_claimed";
+        public const string TeamPkRejected = "teampk.rejected";
+        public const string TeamPkFailed = "teampk.failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

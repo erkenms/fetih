@@ -69,22 +69,24 @@ namespace Comet.Game.States
             return mask;
         }
 
-        public int EffectOf(SubClassId id, SubClassTable table = null)
+        // maxPhase caps the phase counted, except the Apothecary's
+        public int EffectOf(SubClassId id, SubClassTable table = null, byte maxPhase = byte.MaxValue)
         {
             table ??= Kernel.SubClasses;
             if (id != this.Active || !this.Entries.TryGetValue(id, out var entry) || !table.TryGet(id, out var def))
                 return 0;
-            return def.Phase(entry.Phase)?.Effect ?? 0;
+            byte phase = id == SubClassId.Apothecary ? entry.Phase : Math.Min(entry.Phase, maxPhase);
+            return def.Phase(phase)?.Effect ?? 0;
         }
 
-        public int AttackBonus(SubClassTable table = null) => this.EffectOf(SubClassId.Performer, table);
-        public int MagicAttackBonus(SubClassTable table = null) => this.EffectOf(SubClassId.Performer, table);
-        public int MaxHealthBonus(SubClassTable table = null) => this.EffectOf(SubClassId.Wrangler, table);
-        public int CriticalStrikePercent(SubClassTable table = null) => this.EffectOf(SubClassId.MartialArtist, table);
-        public int SkillCriticalStrikePercent(SubClassTable table = null) => this.EffectOf(SubClassId.Warlock, table);
-        public int ImmunityPercent(SubClassTable table = null) => this.EffectOf(SubClassId.ChiMaster, table);
-        public int PenetrationPercent(SubClassTable table = null) => this.EffectOf(SubClassId.Sage, table);
-        public int DetoxicationPercent(SubClassTable table = null) => this.EffectOf(SubClassId.Apothecary, table);
+        public int AttackBonus(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Performer, table, maxPhase);
+        public int MagicAttackBonus(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Performer, table, maxPhase);
+        public int MaxHealthBonus(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Wrangler, table, maxPhase);
+        public int CriticalStrikePercent(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.MartialArtist, table, maxPhase);
+        public int SkillCriticalStrikePercent(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Warlock, table, maxPhase);
+        public int ImmunityPercent(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.ChiMaster, table, maxPhase);
+        public int PenetrationPercent(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Sage, table, maxPhase);
+        public int DetoxicationPercent(SubClassTable table = null, byte maxPhase = byte.MaxValue) => this.EffectOf(SubClassId.Apothecary, table, maxPhase);
 
         public void Set(SubClassId id, byte level, byte phase) =>
             this.Entries[id] = new SubClassEntry { Id = id, Level = level, Phase = phase };

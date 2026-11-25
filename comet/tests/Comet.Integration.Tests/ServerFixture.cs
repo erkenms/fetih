@@ -55,6 +55,8 @@ namespace Comet.Integration.Tests
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExpBall = (723700, "ExpBall", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ElitePkExpPack = (720713, "ElitePKEXPPack", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ElitePkChampionPack = (720714, "RefinedElitePKChampionPack", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) TeamPkPack = (720793, "TeamPKPack", 1, 0);
+        public static readonly (uint Id, string Name, ushort Amount, byte Level) TeamPkChampionPack = (720794, "RefinedTeamPKChampionPack", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) CelestialStone = (721259, "CelestialStone", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) ExemptionToken = (723701, "ExemptionToken", 1, 0);
         public static readonly (uint Id, string Name, ushort Amount, byte Level) OblivionDew = (711083, "OblivionDew", 1, 0);
@@ -473,6 +475,8 @@ namespace Comet.Integration.Tests
                 "--ClanWar:SignUpCloseHour=0", "--ClanWar:SignUpCloseMinute=0",
                 "--ElitePk:CountdownSeconds=" + ElitePkCountdownSeconds, "--ElitePk:RoundBreakSeconds=1",
                 "--ElitePk:LeaveSeconds=1",
+                "--TeamPk:CountdownSeconds=" + ElitePkCountdownSeconds, "--TeamPk:RoundBreakSeconds=1",
+                "--TeamPk:LeaveSeconds=1",
                 "--Broadcast:IntervalSeconds=2", "--Metrics:Port=0",
                 "--RpcNetwork:IPAddress=" + Host, "--RpcNetwork:Port=" + rpcPort,
                 "--AccountDatabase:Hostname=" + DbHost, "--AccountDatabase:Schema=" + this.AccountSchema,
@@ -521,7 +525,7 @@ namespace Comet.Integration.Tests
                 ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
                     HelmetRefinedLowest, HelmetLevelUp, HelmetRefined, DragonBall, Meteor, MeteorTear, Emerald, OblivionDew,
-                    SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, ElitePkExpPack, ElitePkChampionPack, MeteorScroll, ThunderBook,
+                    SuperDragonGem, NormalTortoiseGem, SuperThunderGem, ExpBall, ElitePkExpPack, ElitePkChampionPack, TeamPkPack, TeamPkChampionPack, MeteorScroll, ThunderBook,
                     CelestialStone, ExemptionToken, PlusOneStone, PickAxe,
                     ExpPotion, PenitenceAmulet, AtonementPotion, BlackDye, WhiteDye, Firework, EndlessLove,
                     Class1MoneyBag, CpBag, AmritaBundle, Amrita, NineLilies, NormalTwinCityClanPack,

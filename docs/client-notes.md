@@ -167,3 +167,12 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   drawn at that cell's pixel plus its pixel offset; a cover (DMap object 4) is drawn at its
   cell's pixel minus its offset. Scene parts whose picture is a `.msk` are masks only.
   `tools/assets/Maps/` renders maps this way.
+- **Team PK** (2026-11-25, Mac `CMsgTeamPKArenic*::Process`, `CDlgTeamPKArenicScore`): MsgTeamPKArenic
+  2230 and the Skill Team PK's MsgTeamPopPKArenic 2250 read the same: action u16 at 4, 2 match start
+  (seconds u16 at 44), 3 result (victory if u32 at 8 is 1), 4 leaves the match, 5 back in a fight, 6
+  out of the fight if u32 at 12 is the hero, 7 closes the windows, 8 the "received EXP and Honor"
+  box. MsgTeamPKArenicScore 2231 (Pop: 2251) is two 60-byte `TEAM_PK_ARENIC_SCORE_INFO` at 4 and 64:
+  ID at 0, team ID at 4 (the window labels the side equal to `CPlayer::GetTeamID` "my team", the
+  rest "enemy"), name at 24, score at 56. Team PK Manager 8158 (lookface 9736) at 1002 440,246,
+  Skill Team PK Manager 8592 (11226) at 428,246, from Questinfo.ini and npc.ini. Packs: Team PK
+  720794-720809 and per match 720793; Skill Team PK 721300-721315 and per match 720981.

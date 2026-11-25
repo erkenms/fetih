@@ -52,6 +52,8 @@ namespace Comet.Game.Npcs
                 [Social.GuildWar.RightGateID] = GuildWarNpc.RightGateAsync,
                 [GuildWarNpc.BeastGuardID] = GuildWarNpc.BeastGuardAsync,
                 [ElitePkEnvoy.ID] = ElitePkEnvoy.TalkAsync,
+                [Tournaments.TeamPk.Team.ManagerID] = TeamPkManager.TalkAsync,
+                [Tournaments.TeamPk.Skill.ManagerID] = TeamPkManager.TalkAsync,
             };
 
         static Dialogs()

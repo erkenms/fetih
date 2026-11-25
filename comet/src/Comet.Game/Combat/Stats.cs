@@ -41,12 +41,16 @@ namespace Comet.Game.Combat
             int magicAttack = 0, magicDefense = 0, attackPercent = 0, magicPercent = 0, tortoise = 0, bless = 0;
             var refined = new Dictionary<RefineryKind, int>();
             var now = DateTime.UtcNow;
+            bool capped = Tournaments.SkillCaps.Applies(client);
+            byte maxPhase = capped ? Tournaments.SkillCaps.MaxSubClassPhase : byte.MaxValue;
             if (client.Equipment != null)
             {
                 foreach (var item in client.Equipment.Items)
                 {
+                    uint typeID = capped ? Tournaments.SkillCaps.TypeOf(item.TypeID) : item.TypeID;
+                    byte plusLevel = capped ? Tournaments.SkillCaps.PlusOf(item.Plus) : item.Plus;
                     if (ItemSlots.IsArrow(item.TypeID) || ItemSlots.IsSteed(item.TypeID) ||
-                        Durability.IsBroken(item) || !Kernel.ItemTypes.TryGet(item.TypeID, out var type))
+                        Durability.IsBroken(item) || !Kernel.ItemTypes.TryGet(typeID, out var type))
                         continue;
                     min += type.MinAttack;
                     max += type.MaxAttack;
@@ -54,7 +58,7 @@ namespace Comet.Game.Combat
                     dodge += type.Dodge;
                     magicAttack += type.MagicAttack;
                     magicDefense += type.MagicDefense;
-                    if (item.Plus > 0 && Kernel.ItemAdditions.Of(item.TypeID, item.Plus) is { } plus)
+                    if (plusLevel > 0 && Kernel.ItemAdditions.Of(typeID, plusLevel) is { } plus)
                     {
                         min += plus.MinAttack;
                         max += plus.MaxAttack;
@@ -64,7 +68,7 @@ namespace Comet.Game.Combat
                         magicDefense += plus.MagicDefense;
                     }
 
-                    foreach (byte gem in new[] { item.Gem1, item.Gem2 })
+                    foreach (byte gem in capped ? new[] { item.Gem1 } : new[] { item.Gem1, item.Gem2 })
                     {
                         switch (Gems.Kind(gem))
                         {
@@ -93,10 +97,10 @@ namespace Comet.Game.Combat
             var sub = client.SubClasses;
             if (sub != null)
             {
-                int attackBonus = sub.AttackBonus();
+                int attackBonus = sub.AttackBonus(maxPhase: maxPhase);
                 min += attackBonus;
                 max += attackBonus;
-                magicAttack += sub.MagicAttackBonus();
+                magicAttack += sub.MagicAttackBonus(maxPhase: maxPhase);
             }
             dodge = Magic.Buffs.Dodge(client.Effects, dodge, now);
             magicDefense = magicDefense * (100 + refined.GetValueOrDefault(RefineryKind.MagicDefense)) / 100;
@@ -106,11 +110,11 @@ namespace Comet.Game.Combat
                 MagicPercent = magicPercent,
                 TortoisePercent = Math.Min(Gems.MaxTortoisePercent, tortoise),
                 BlessPercent = Math.Min(100, bless),
-                CriticalStrike = (sub?.CriticalStrikePercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.CriticalStrike),
-                SkillCriticalStrike = (sub?.SkillCriticalStrikePercent() ?? 0) +
+                CriticalStrike = (sub?.CriticalStrikePercent(maxPhase: maxPhase) ?? 0) + refined.GetValueOrDefault(RefineryKind.CriticalStrike),
+                SkillCriticalStrike = (sub?.SkillCriticalStrikePercent(maxPhase: maxPhase) ?? 0) +
                     refined.GetValueOrDefault(RefineryKind.SkillCriticalStrike),
-                Immunity = (sub?.ImmunityPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Immunity),
-                Penetration = (sub?.PenetrationPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Penetration),
+                Immunity = (sub?.ImmunityPercent(maxPhase: maxPhase) ?? 0) + refined.GetValueOrDefault(RefineryKind.Immunity),
+                Penetration = (sub?.PenetrationPercent(maxPhase: maxPhase) ?? 0) + refined.GetValueOrDefault(RefineryKind.Penetration),
                 Detoxication = (sub?.DetoxicationPercent() ?? 0) + refined.GetValueOrDefault(RefineryKind.Detoxication),
                 Block = refined.GetValueOrDefault(RefineryKind.Block),
                 Breakthrough = refined.GetValueOrDefault(RefineryKind.Breakthrough),

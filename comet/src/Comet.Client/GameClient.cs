@@ -880,6 +880,20 @@ namespace Comet.Client
             return packet == null ? null : ArenaScore.Parse(packet);
         }
 
+        public async Task<TeamPkArenic> WaitForTeamPkAsync(Func<TeamPkArenic, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTeamPKArenic && match(TeamPkArenic.Parse(p)), timeout);
+            return packet == null ? null : TeamPkArenic.Parse(packet);
+        }
+
+        public async Task<TeamPkScore> WaitForTeamPkScoreAsync(Func<TeamPkScore, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgTeamPKArenicScore && match(TeamPkScore.Parse(p)), timeout);
+            return packet == null ? null : TeamPkScore.Parse(packet);
+        }
+
         public Task AllotAsync(byte strength, byte agility, byte vitality, byte spirit) =>
             this.SendAsync(AllotMessage.Build(strength, agility, vitality, spirit));
 

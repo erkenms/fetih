@@ -63,6 +63,8 @@ namespace Comet.Game.Chat
             new Command(new[] { "guildwar", "gw" }, Authority.GameMaster, "/guildwar <start|end|status>", GuildWarAsync),
             new Command(new[] { "clanwar", "cw" }, Authority.GameMaster, ClanWarUsage, ClanWarAsync),
             new Command(new[] { "elitepk", "epk" }, Authority.GameMaster, ElitePkUsage, ElitePkAsync),
+            new Command(new[] { "teampk", "tpk" }, Authority.GameMaster, TeamPkUsage, (c, a, r) => TeamPkAsync(Tournaments.TeamPk.Team, TeamPkUsage, c, a)),
+            new Command(new[] { "skillteampk", "stpk" }, Authority.GameMaster, SkillTeamPkUsage, (c, a, r) => TeamPkAsync(Tournaments.TeamPk.Skill, SkillTeamPkUsage, c, a)),
             new Command(new[] { "events" }, Authority.GameMaster, "/events", EventsAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
             new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
@@ -640,6 +642,37 @@ namespace Comet.Game.Chat
                     return true;
                 default:
                     return await UsageAsync(client, ElitePkUsage);
+            }
+        }
+
+        private const string TeamPkUsage = "/teampk <open|start|status> [group 0-3, default yours]";
+        private const string SkillTeamPkUsage = "/skillteampk <open|start|status> [group 0-3, default yours]";
+
+        // Opens sign-up or starts a level group's Team PK or Skill Team PK now, outside its schedule
+        private static async Task<bool> TeamPkAsync(Tournaments.TeamPk ev, string usage, Client client, string[] args)
+        {
+            if (args.Length < 1 || args.Length > 2)
+                return await UsageAsync(client, usage);
+            int group = Tournaments.TeamPk.GroupOf(client.Character.Level);
+            if (args.Length == 2 && (!int.TryParse(args[1], out group) || group < 0 || group >= Tournaments.TeamPk.Groups))
+                return await UsageAsync(client, usage);
+            switch (args[0].ToLowerInvariant())
+            {
+                case "open":
+                    await Talk.NoticeAsync(client, await ev.OpenAsync(group, DateTime.UtcNow)
+                        ? $"{ev.EventName} sign-up opened for {Tournaments.TeamPk.GroupNames[group]}."
+                        : "That group's tournament is already open or running, or its maps are missing.");
+                    return true;
+                case "start":
+                    await Talk.NoticeAsync(client, await ev.StartAsync(group, DateTime.UtcNow)
+                        ? $"{ev.EventName} started for {Tournaments.TeamPk.GroupNames[group]}."
+                        : "Not started: sign-up isn't open, or fewer than 2 teams are waiting.");
+                    return true;
+                case "status":
+                    await Talk.NoticeAsync(client, ev.StatusText());
+                    return true;
+                default:
+                    return await UsageAsync(client, usage);
             }
         }
 

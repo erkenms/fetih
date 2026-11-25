@@ -76,6 +76,7 @@ namespace Comet.Game.Combat
                 !life.Dead ? "alive" :
                 !anyTime && now - life.DiedAt < ReviveDelay ? "too_soon" :
                 Magic.Buffs.Shackled(client.Effects, now) ? "shackled" :
+                Tournaments.TeamPk.BlocksRevive(client) ? "team_pk" :
                 null;
             if (refused != null)
             {
