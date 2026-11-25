@@ -1028,10 +1028,394 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAccount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}/ban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["banAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}/unban": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["unbanAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setAccountStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}/authority": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setAccountAuthority"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{id}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resetAccountPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCharacters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getCharacter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/kick": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["kickCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/mute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["muteCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/jail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["jailCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/message": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["messageCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/give-item": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["giveCharacterItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/take-item": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["takeCharacterItem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/silver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adjustCharacterSilver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/conquer-points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["adjustCharacterConquerPoints"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/level": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setCharacterLevel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/characters/{id}/teleport": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["teleportCharacter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AccountActionResponse: {
+            ok: boolean;
+            online: boolean;
+        };
+        AccountBanRequest: {
+            reason?: null | string;
+        };
+        AccountCharacterSummary: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: uint32 */
+            conquerPoints: number;
+            online: boolean;
+        };
+        AccountDetailResponse: {
+            /** Format: uint32 */
+            accountId: number;
+            username: string;
+            email: null | string;
+            name: null | string;
+            /** Format: uint16 */
+            authorityId: number;
+            /** Format: uint16 */
+            statusId: number;
+            ipAddress: null | string;
+            /** Format: date-time */
+            registered: string;
+            gameConnected: boolean;
+            characters: components["schemas"]["AccountCharacterSummary"][];
+            logins: components["schemas"]["AccountLoginEntry"][];
+            sameIpAccounts: components["schemas"]["SameIpAccountSummary"][];
+        };
+        AccountListItem: {
+            /** Format: uint32 */
+            accountId: number;
+            username: string;
+            email: null | string;
+            name: null | string;
+            /** Format: uint16 */
+            authorityId: number;
+            /** Format: uint16 */
+            statusId: number;
+            ipAddress: null | string;
+            /** Format: date-time */
+            registered: string;
+            /** Format: date-time */
+            lastLogin: null | string;
+            /** Format: int32 */
+            characterCount: number;
+        };
+        AccountListResponse: {
+            items: components["schemas"]["AccountListItem"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+        };
+        AccountLoginEntry: {
+            /** Format: date-time */
+            timestamp: string;
+            ipAddress: string;
+        };
+        AdjustAmountRequest: {
+            /** Format: int64 */
+            amount: number;
+        };
         AdminResult: {
             ok?: boolean;
             error?: null | string;
@@ -1268,6 +1652,251 @@ export interface components {
             files: components["schemas"]["DataFileChange"][];
             allProblems: components["schemas"]["ValidationProblemDto"][];
         };
+        CharacterActionResponse: {
+            ok: boolean;
+            online: boolean;
+        };
+        CharacterArenaSummary: {
+            /** Format: uint32 */
+            points: number;
+            /** Format: uint32 */
+            winsToday: number;
+            /** Format: uint32 */
+            lossesToday: number;
+            /** Format: uint32 */
+            winsTotal: number;
+            /** Format: uint32 */
+            lossesTotal: number;
+            /** Format: uint32 */
+            honorPoints: number;
+            /** Format: uint32 */
+            honorTotal: number;
+        };
+        CharacterDetailResponse: {
+            /** Format: uint32 */
+            characterId: number;
+            /** Format: uint32 */
+            accountId: number;
+            accountUsername: null | string;
+            /** Format: uint16 */
+            accountStatusId: null | number;
+            /** Format: uint16 */
+            accountAuthorityId: null | number;
+            name: string;
+            spouse: string;
+            /** Format: uint32 */
+            mesh: number;
+            /** Format: uint16 */
+            hairstyle: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint64 */
+            experience: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint8 */
+            previousClass: number;
+            /** Format: uint8 */
+            ancestorClass: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: uint32 */
+            storedSilver: number;
+            /** Format: uint32 */
+            conquerPoints: number;
+            /** Format: uint16 */
+            strength: number;
+            /** Format: uint16 */
+            agility: number;
+            /** Format: uint16 */
+            vitality: number;
+            /** Format: uint16 */
+            spirit: number;
+            /** Format: uint16 */
+            attributePoints: number;
+            /** Format: uint32 */
+            health: number;
+            /** Format: uint32 */
+            maxHealth: null | number;
+            /** Format: uint32 */
+            mana: number;
+            /** Format: uint32 */
+            maxMana: null | number;
+            /** Format: uint16 */
+            killPoints: number;
+            /** Format: uint32 */
+            virtue: number;
+            /** Format: uint32 */
+            vipLevel: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: date-time */
+            mutedUntil: null | string;
+            /** Format: date-time */
+            registered: string;
+            online: boolean;
+            dead: boolean;
+            ipAddress: null | string;
+            /** Format: date-time */
+            loggedInAt: null | string;
+            gameConnected: boolean;
+            equipment: components["schemas"]["CharacterItemEntry"][];
+            inventory: components["schemas"]["CharacterItemEntry"][];
+            warehouses: components["schemas"]["CharacterWarehouseGroup"][];
+            detained: components["schemas"]["CharacterItemEntry"][];
+            magics: components["schemas"]["CharacterMagicEntry"][];
+            proficiencies: components["schemas"]["CharacterProficiencyEntry"][];
+            friends: components["schemas"]["CharacterRelationEntry"][];
+            enemies: components["schemas"]["CharacterRelationEntry"][];
+            tradePartners: components["schemas"]["CharacterRelationEntry"][];
+            guild: null | components["schemas"]["CharacterGuildSummary"];
+            family: null | components["schemas"]["CharacterFamilySummary"];
+            nobility: null | components["schemas"]["CharacterNobilitySummary"];
+            flowers: null | components["schemas"]["CharacterFlowerSummary"];
+            arena: null | components["schemas"]["CharacterArenaSummary"];
+        };
+        CharacterFamilySummary: {
+            /** Format: uint32 */
+            familyId: number;
+            name: string;
+            /** Format: uint16 */
+            rank: number;
+            /** Format: uint64 */
+            donation: number;
+            /** Format: uint32 */
+            joined: number;
+        };
+        CharacterFlowerSummary: {
+            /** Format: uint32 */
+            redRoses: number;
+            /** Format: uint32 */
+            redRosesToday: number;
+            /** Format: uint32 */
+            lilies: number;
+            /** Format: uint32 */
+            liliesToday: number;
+            /** Format: uint32 */
+            orchids: number;
+            /** Format: uint32 */
+            orchidsToday: number;
+            /** Format: uint32 */
+            tulips: number;
+            /** Format: uint32 */
+            tulipsToday: number;
+        };
+        CharacterGuildSummary: {
+            /** Format: uint32 */
+            syndicateId: number;
+            name: string;
+            /** Format: uint16 */
+            rank: number;
+            /** Format: uint32 */
+            silverDonation: number;
+            /** Format: uint32 */
+            conquerPointsDonation: number;
+            /** Format: uint32 */
+            joined: number;
+        };
+        CharacterItemEntry: {
+            /** Format: uint32 */
+            itemId: number;
+            /** Format: uint32 */
+            typeId: number;
+            /** Format: uint8 */
+            position: number;
+            /** Format: uint16 */
+            amount: number;
+            /** Format: uint16 */
+            amountLimit: number;
+            /** Format: uint16 */
+            stackAmount: number;
+            /** Format: uint8 */
+            plus: number;
+            /** Format: uint8 */
+            bless: number;
+            /** Format: uint8 */
+            enchant: number;
+            /** Format: uint8 */
+            gem1: number;
+            /** Format: uint8 */
+            gem2: number;
+            /** Format: uint8 */
+            color: number;
+            locked: boolean;
+            /** Format: uint32 */
+            package: number;
+            catalog: null | components["schemas"]["CatalogItem"];
+        };
+        CharacterListItem: {
+            /** Format: uint32 */
+            characterId: number;
+            /** Format: uint32 */
+            accountId: number;
+            accountUsername: null | string;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            rebirths: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            silver: number;
+            /** Format: uint32 */
+            conquerPoints: number;
+            /** Format: uint16 */
+            killPoints: number;
+            online: boolean;
+            /** Format: date-time */
+            registered: string;
+        };
+        CharacterListResponse: {
+            items: components["schemas"]["CharacterListItem"][];
+            /** Format: int32 */
+            total: number;
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            pageSize: number;
+            gameConnected: boolean;
+        };
+        CharacterMagicEntry: {
+            /** Format: uint16 */
+            type: number;
+            name: null | string;
+            /** Format: uint16 */
+            level: number;
+            /** Format: uint32 */
+            experience: number;
+            /** Format: uint16 */
+            oldLevel: number;
+        };
+        CharacterNobilitySummary: {
+            /** Format: uint64 */
+            donation: number;
+        };
+        CharacterProficiencyEntry: {
+            /** Format: uint16 */
+            type: number;
+            /** Format: uint16 */
+            level: number;
+            /** Format: uint32 */
+            experience: number;
+        };
         CharacterRef: {
             /** Format: uint32 */
             id: number;
@@ -1276,6 +1905,22 @@ export interface components {
             level: number;
             /** Format: uint8 */
             class: number;
+        };
+        CharacterRelationEntry: {
+            /** Format: uint32 */
+            characterId: number;
+            name: string;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint8 */
+            currentClass: number;
+            /** Format: date-time */
+            since: null | string;
+        };
+        CharacterWarehouseGroup: {
+            /** Format: uint32 */
+            packageId: number;
+            items: components["schemas"]["CharacterItemEntry"][];
         };
         DashboardCounts: {
             /** Format: int32 */
@@ -1423,6 +2068,29 @@ export interface components {
             /** Format: uint32 */
             tulips: number;
         };
+        GiveItemRequest: {
+            /** Format: uint32 */
+            typeId: number;
+            /**
+             * Format: int32
+             * @default 1
+             */
+            count: number;
+            /**
+             * Format: uint8
+             * @default 0
+             */
+            plus: number;
+            /**
+             * Format: uint8
+             * @default 0
+             */
+            bless: number;
+            /** Format: uint8 */
+            gem1?: null | number;
+            /** Format: uint8 */
+            gem2?: null | number;
+        };
         GuildDetail: {
             guild: components["schemas"]["GuildSummary"];
             announcement: string;
@@ -1556,6 +2224,9 @@ export interface components {
             /** Format: int32 */
             total: number;
             assetsAvailable: boolean;
+        };
+        KickCharacterRequest: {
+            reason?: null | string;
         };
         LevelRankEntry: {
             /** Format: int32 */
@@ -1890,6 +2561,9 @@ export interface components {
             authority: number;
             permissions: components["schemas"]["Permission"][];
         };
+        MessageCharacterRequest: {
+            text: string;
+        };
         MonsterCatalogEntry: {
             /** Format: uint32 */
             id: number;
@@ -1945,6 +2619,10 @@ export interface components {
             items: components["schemas"]["MonsterCatalogEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        MuteCharacterRequest: {
+            /** Format: int32 */
+            minutes: number;
         };
         MyAccountResponse: {
             /** Format: uint32 */
@@ -2300,6 +2978,21 @@ export interface components {
             warnings: string[];
             summary: null | string;
         };
+        ResetAccountPasswordRequest: {
+            newPassword: string;
+        };
+        SameIpAccountSummary: {
+            /** Format: uint32 */
+            accountId: number;
+            username: string;
+            /** Format: uint16 */
+            authorityId: number;
+            /** Format: uint16 */
+            statusId: number;
+            /** Format: date-time */
+            registered: string;
+            sharedIps: string[];
+        };
         SaveAnnouncementRequest: {
             title: string;
             channel: components["schemas"]["BroadcastChannel"];
@@ -2348,6 +3041,19 @@ export interface components {
             slowestMonsterTickMilliseconds?: number;
             /** Format: int64 */
             workingSetBytes?: number;
+        };
+        SetAccountAuthorityRequest: {
+            /** Format: uint16 */
+            authorityId: number;
+        };
+        SetAccountStatusRequest: {
+            /** Format: uint16 */
+            statusId: number;
+            reason?: null | string;
+        };
+        SetLevelRequest: {
+            /** Format: uint8 */
+            level: number;
         };
         ShopCatalogEntry: {
             key: string;
@@ -2438,6 +3144,18 @@ export interface components {
             useItemCount: number;
             /** Format: uint32 */
             delayMilliseconds: number;
+        };
+        TakeItemRequest: {
+            /** Format: uint32 */
+            itemId: number;
+        };
+        TeleportCharacterRequest: {
+            /** Format: uint32 */
+            mapId: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
         };
         TimelineResponse: {
             entries: components["schemas"]["LogEntry"][];
@@ -4228,6 +4946,773 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MapGridResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listAccounts: {
+        parameters: {
+            query?: {
+                q?: string;
+                status?: number;
+                authority?: number;
+                ip?: string;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountListResponse"];
+                };
+            };
+        };
+    };
+    getAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDetailResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    banAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountBanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    unbanAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AccountBanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    setAccountStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAccountStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    setAccountAuthority: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetAccountAuthorityRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    resetAccountPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetAccountPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listCharacters: {
+        parameters: {
+            query?: {
+                q?: string;
+                minLevel?: number;
+                maxLevel?: number;
+                mapId?: number;
+                onlineOnly?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterListResponse"];
+                };
+            };
+        };
+    };
+    getCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterDetailResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    kickCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["KickCharacterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    muteCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MuteCharacterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    jailCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    messageCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MessageCharacterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    giveCharacterItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GiveItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    takeCharacterItem: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TakeItemRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    adjustCharacterSilver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustAmountRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    adjustCharacterConquerPoints: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdjustAmountRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    setCharacterLevel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetLevelRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    teleportCharacter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TeleportCharacterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CharacterActionResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
                 };
             };
             /** @description Not Found */

@@ -16,5 +16,7 @@ public static class FeatureRegistry
         new Changes.ChangesFeature(),
         new Social.SocialFeature(),
         new Maps.MapsFeature(),
+        new Accounts.AccountsFeature(),
+        new Characters.CharactersFeature(),
     ];
 }

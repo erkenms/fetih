@@ -26,6 +26,10 @@ public static class WebUser
     public static Authority Authority(this ClaimsPrincipal user) =>
         ushort.TryParse(user.FindFirstValue(AuthorityClaim), out ushort a) ? (Authority)a : 0;
 
+    // Staff act only on accounts below their own authority; administrators on any
+    public static bool Outranks(this ClaimsPrincipal user, ushort targetAuthority) =>
+        user.Authority() == Comet.Game.States.Authority.Administrator || (ushort)user.Authority() > targetAuthority;
+
     public static bool Has(this ClaimsPrincipal user, Permission permission) =>
         user.Identity?.IsAuthenticated == true && user.Authority() >= Permissions.Minimum(permission);
 }

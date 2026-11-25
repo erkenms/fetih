@@ -2739,10 +2739,1407 @@
           }
         }
       }
+    },
+    "/api/accounts": {
+      "get": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "listAccounts",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "authority",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          },
+          {
+            "name": "ip",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}": {
+      "get": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "getAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/ban": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "banAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountBanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/unban": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "unbanAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountBanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/status": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "setAccountStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAccountStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/authority": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "setAccountAuthority",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAccountAuthorityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/accounts/{id}/reset-password": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "resetAccountPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetAccountPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters": {
+      "get": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "listCharacters",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "minLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "maxLevel",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint8"
+            }
+          },
+          {
+            "name": "mapId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "onlineOnly",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}": {
+      "get": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "getCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/kick": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "kickCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KickCharacterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/mute": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "muteCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MuteCharacterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/jail": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "jailCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/message": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "messageCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageCharacterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/give-item": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "giveCharacterItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GiveItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/take-item": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "takeCharacterItem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TakeItemRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/silver": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "adjustCharacterSilver",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustAmountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/conquer-points": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "adjustCharacterConquerPoints",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustAmountRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/level": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "setCharacterLevel",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLevelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/characters/{id}/teleport": {
+      "post": {
+        "tags": [
+          "CharactersFeature"
+        ],
+        "operationId": "teleportCharacter",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeleportCharacterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AccountActionResponse": {
+        "required": [
+          "ok",
+          "online"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AccountBanRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AccountCharacterSummary": {
+        "required": [
+          "characterId",
+          "name",
+          "level",
+          "rebirths",
+          "currentClass",
+          "mapId",
+          "mapName",
+          "silver",
+          "conquerPoints",
+          "online"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AccountDetailResponse": {
+        "required": [
+          "accountId",
+          "username",
+          "email",
+          "name",
+          "authorityId",
+          "statusId",
+          "ipAddress",
+          "registered",
+          "gameConnected",
+          "characters",
+          "logins",
+          "sameIpAccounts"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authorityId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "statusId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "ipAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "characters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountCharacterSummary"
+            }
+          },
+          "logins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountLoginEntry"
+            }
+          },
+          "sameIpAccounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SameIpAccountSummary"
+            }
+          }
+        }
+      },
+      "AccountListItem": {
+        "required": [
+          "accountId",
+          "username",
+          "email",
+          "name",
+          "authorityId",
+          "statusId",
+          "ipAddress",
+          "registered",
+          "lastLogin",
+          "characterCount"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "authorityId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "statusId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "ipAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastLogin": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "characterCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AccountListResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountListItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AccountLoginEntry": {
+        "required": [
+          "timestamp",
+          "ipAddress"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "ipAddress": {
+            "type": "string"
+          }
+        }
+      },
+      "AdjustAmountRequest": {
+        "required": [
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "AdminResult": {
         "type": "object",
         "properties": {
@@ -3465,6 +4862,803 @@
           }
         }
       },
+      "CharacterActionResponse": {
+        "required": [
+          "ok",
+          "online"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "online": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CharacterArenaSummary": {
+        "required": [
+          "points",
+          "winsToday",
+          "lossesToday",
+          "winsTotal",
+          "lossesTotal",
+          "honorPoints",
+          "honorTotal"
+        ],
+        "type": "object",
+        "properties": {
+          "points": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "winsToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lossesToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "winsTotal": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lossesTotal": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "honorPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "honorTotal": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CharacterDetailResponse": {
+        "required": [
+          "characterId",
+          "accountId",
+          "accountUsername",
+          "accountStatusId",
+          "accountAuthorityId",
+          "name",
+          "spouse",
+          "mesh",
+          "hairstyle",
+          "level",
+          "experience",
+          "currentClass",
+          "previousClass",
+          "ancestorClass",
+          "rebirths",
+          "silver",
+          "storedSilver",
+          "conquerPoints",
+          "strength",
+          "agility",
+          "vitality",
+          "spirit",
+          "attributePoints",
+          "health",
+          "maxHealth",
+          "mana",
+          "maxMana",
+          "killPoints",
+          "virtue",
+          "vipLevel",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "mutedUntil",
+          "registered",
+          "online",
+          "dead",
+          "ipAddress",
+          "loggedInAt",
+          "gameConnected",
+          "equipment",
+          "inventory",
+          "warehouses",
+          "detained",
+          "magics",
+          "proficiencies",
+          "friends",
+          "enemies",
+          "tradePartners",
+          "guild",
+          "family",
+          "nobility",
+          "flowers",
+          "arena"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "accountUsername": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "accountStatusId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "accountAuthorityId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "name": {
+            "type": "string"
+          },
+          "spouse": {
+            "type": "string"
+          },
+          "mesh": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "hairstyle": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "experience": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "previousClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "ancestorClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "storedSilver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "strength": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "agility": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "vitality": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "spirit": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "attributePoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "health": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "maxHealth": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "mana": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "maxMana": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "killPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "virtue": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "vipLevel": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "mutedUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "dead": {
+            "type": "boolean"
+          },
+          "ipAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loggedInAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "equipment": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterItemEntry"
+            }
+          },
+          "inventory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterItemEntry"
+            }
+          },
+          "warehouses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterWarehouseGroup"
+            }
+          },
+          "detained": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterItemEntry"
+            }
+          },
+          "magics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterMagicEntry"
+            }
+          },
+          "proficiencies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterProficiencyEntry"
+            }
+          },
+          "friends": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterRelationEntry"
+            }
+          },
+          "enemies": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterRelationEntry"
+            }
+          },
+          "tradePartners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterRelationEntry"
+            }
+          },
+          "guild": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterGuildSummary"
+              }
+            ]
+          },
+          "family": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterFamilySummary"
+              }
+            ]
+          },
+          "nobility": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterNobilitySummary"
+              }
+            ]
+          },
+          "flowers": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterFlowerSummary"
+              }
+            ]
+          },
+          "arena": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CharacterArenaSummary"
+              }
+            ]
+          }
+        }
+      },
+      "CharacterFamilySummary": {
+        "required": [
+          "familyId",
+          "name",
+          "rank",
+          "donation",
+          "joined"
+        ],
+        "type": "object",
+        "properties": {
+          "familyId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "donation": {
+            "type": "integer",
+            "format": "uint64"
+          },
+          "joined": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CharacterFlowerSummary": {
+        "required": [
+          "redRoses",
+          "redRosesToday",
+          "lilies",
+          "liliesToday",
+          "orchids",
+          "orchidsToday",
+          "tulips",
+          "tulipsToday"
+        ],
+        "type": "object",
+        "properties": {
+          "redRoses": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "redRosesToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lilies": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "liliesToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "orchids": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "orchidsToday": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "tulips": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "tulipsToday": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CharacterGuildSummary": {
+        "required": [
+          "syndicateId",
+          "name",
+          "rank",
+          "silverDonation",
+          "conquerPointsDonation",
+          "joined"
+        ],
+        "type": "object",
+        "properties": {
+          "syndicateId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "silverDonation": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPointsDonation": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "joined": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "CharacterItemEntry": {
+        "required": [
+          "itemId",
+          "typeId",
+          "position",
+          "amount",
+          "amountLimit",
+          "stackAmount",
+          "plus",
+          "bless",
+          "enchant",
+          "gem1",
+          "gem2",
+          "color",
+          "locked",
+          "package",
+          "catalog"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "position": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "amountLimit": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "stackAmount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "plus": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "bless": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "enchant": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem1": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem2": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "color": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "package": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "catalog": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CatalogItem"
+              }
+            ]
+          }
+        }
+      },
+      "CharacterListItem": {
+        "required": [
+          "characterId",
+          "accountId",
+          "accountUsername",
+          "name",
+          "level",
+          "rebirths",
+          "currentClass",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "silver",
+          "conquerPoints",
+          "killPoints",
+          "online",
+          "registered"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "accountUsername": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "rebirths": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "silver": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "conquerPoints": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "killPoints": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "online": {
+            "type": "boolean"
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CharacterListResponse": {
+        "required": [
+          "items",
+          "total",
+          "page",
+          "pageSize",
+          "gameConnected"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterListItem"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "gameConnected": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CharacterMagicEntry": {
+        "required": [
+          "type",
+          "name",
+          "level",
+          "experience",
+          "oldLevel"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "experience": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "oldLevel": {
+            "type": "integer",
+            "format": "uint16"
+          }
+        }
+      },
+      "CharacterNobilitySummary": {
+        "required": [
+          "donation"
+        ],
+        "type": "object",
+        "properties": {
+          "donation": {
+            "type": "integer",
+            "format": "uint64"
+          }
+        }
+      },
+      "CharacterProficiencyEntry": {
+        "required": [
+          "type",
+          "level",
+          "experience"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "experience": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "CharacterRef": {
         "required": [
           "id",
@@ -3488,6 +5682,59 @@
           "class": {
             "type": "integer",
             "format": "uint8"
+          }
+        }
+      },
+      "CharacterRelationEntry": {
+        "required": [
+          "characterId",
+          "name",
+          "level",
+          "currentClass",
+          "since"
+        ],
+        "type": "object",
+        "properties": {
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "currentClass": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "since": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CharacterWarehouseGroup": {
+        "required": [
+          "packageId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CharacterItemEntry"
+            }
           }
         }
       },
@@ -4007,6 +6254,47 @@
           }
         }
       },
+      "GiveItemRequest": {
+        "required": [
+          "typeId"
+        ],
+        "type": "object",
+        "properties": {
+          "typeId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32",
+            "default": 1
+          },
+          "plus": {
+            "type": "integer",
+            "format": "uint8",
+            "default": 0
+          },
+          "bless": {
+            "type": "integer",
+            "format": "uint8",
+            "default": 0
+          },
+          "gem1": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint8"
+          },
+          "gem2": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint8"
+          }
+        }
+      },
       "GuildDetail": {
         "required": [
           "guild",
@@ -4508,6 +6796,17 @@
           },
           "assetsAvailable": {
             "type": "boolean"
+          }
+        }
+      },
+      "KickCharacterRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5753,6 +8052,17 @@
           }
         }
       },
+      "MessageCharacterRequest": {
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        }
+      },
       "MonsterCatalogEntry": {
         "required": [
           "id",
@@ -5970,6 +8280,18 @@
             }
           },
           "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MuteCharacterRequest": {
+        "required": [
+          "minutes"
+        ],
+        "type": "object",
+        "properties": {
+          "minutes": {
             "type": "integer",
             "format": "int32"
           }
@@ -7170,6 +9492,55 @@
           }
         }
       },
+      "ResetAccountPasswordRequest": {
+        "required": [
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "type": "string"
+          }
+        }
+      },
+      "SameIpAccountSummary": {
+        "required": [
+          "accountId",
+          "username",
+          "authorityId",
+          "statusId",
+          "registered",
+          "sharedIps"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "username": {
+            "type": "string"
+          },
+          "authorityId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "statusId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "registered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sharedIps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "SaveAnnouncementRequest": {
         "required": [
           "title",
@@ -7302,6 +9673,48 @@
           "workingSetBytes": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "SetAccountAuthorityRequest": {
+        "required": [
+          "authorityId"
+        ],
+        "type": "object",
+        "properties": {
+          "authorityId": {
+            "type": "integer",
+            "format": "uint16"
+          }
+        }
+      },
+      "SetAccountStatusRequest": {
+        "required": [
+          "statusId"
+        ],
+        "type": "object",
+        "properties": {
+          "statusId": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SetLevelRequest": {
+        "required": [
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "integer",
+            "format": "uint8"
           }
         }
       },
@@ -7629,6 +10042,40 @@
           }
         }
       },
+      "TakeItemRequest": {
+        "required": [
+          "itemId"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "TeleportCharacterRequest": {
+        "required": [
+          "mapId",
+          "x",
+          "y"
+        ],
+        "type": "object",
+        "properties": {
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          }
+        }
+      },
       "TimelineResponse": {
         "required": [
           "entries",
@@ -7708,6 +10155,9 @@
   },
   "tags": [
     {
+      "name": "AccountsFeature"
+    },
+    {
       "name": "AuditFeature"
     },
     {
@@ -7721,6 +10171,9 @@
     },
     {
       "name": "ChangesFeature"
+    },
+    {
+      "name": "CharactersFeature"
     },
     {
       "name": "Comet.Web"
