@@ -14,6 +14,7 @@ public static class FeatureRegistry
         new Dashboard.DashboardFeature(),
         new Broadcasts.BroadcastsFeature(),
         new Logs.LogsFeature(),
+        new ItemHistory.ItemHistoryFeature(),
         new Changes.ChangesFeature(),
         new Social.SocialFeature(),
         new Pk.PkFeature(),

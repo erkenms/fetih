@@ -724,6 +724,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/item-history/{itemId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getItemHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/item-history/duplicates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getItemDuplicates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/changes": {
         parameters: {
             query?: never;
@@ -3052,6 +3084,88 @@ export interface components {
         };
         /** @enum {unknown} */
         ItemCategory: "Weapon" | "Armor" | "Headwear" | "Necklace" | "Ring" | "Boots" | "Shield" | "Garment" | "Steed" | "Crop" | "Bottle" | "Arrow" | "Gem" | "Consumable" | "Other";
+        ItemDuplicateFlag: {
+            kind: string;
+            reason: string;
+            /** Format: uint32 */
+            itemId: number;
+            characterIds: number[];
+            timestamps: string[];
+        };
+        ItemDuplicatesResponse: {
+            flags: components["schemas"]["ItemDuplicateFlag"][];
+            lokiAvailable: boolean;
+            lokiError: null | string;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+        };
+        ItemHistoryResponse: {
+            /** Format: uint32 */
+            itemId: number;
+            /** Format: uint32 */
+            typeId: null | number;
+            itemName: null | string;
+            itemIcon: null | string;
+            currentHolders: components["schemas"]["ItemHolderInfo"][];
+            steps: components["schemas"]["ItemHistoryStep"][];
+            duplicates: components["schemas"]["ItemDuplicateFlag"][];
+            lokiAvailable: boolean;
+            lokiError: null | string;
+            query: string;
+            grafanaExploreUrl: string;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            truncated: boolean;
+        };
+        ItemHistoryStep: {
+            /** Format: date-time */
+            timestamp: string;
+            event: string;
+            message: string;
+            /** Format: uint32 */
+            ownerCharacterId: null | number;
+            ownerName: null | string;
+            /** Format: uint32 */
+            fromCharacterId: null | number;
+            fromName: null | string;
+            /** Format: uint32 */
+            typeId: null | number;
+            fields: {
+                [key: string]: string;
+            };
+        };
+        ItemHolderInfo: {
+            /** Format: uint32 */
+            itemId: number;
+            /** Format: uint32 */
+            typeId: number;
+            itemName: null | string;
+            itemIcon: null | string;
+            /** Format: uint32 */
+            characterId: number;
+            characterName: null | string;
+            /** Format: uint8 */
+            position: number;
+            /** Format: uint32 */
+            package: number;
+            /** Format: uint16 */
+            stackAmount: number;
+            /** Format: uint8 */
+            plus: number;
+            /** Format: uint8 */
+            bless: number;
+            /** Format: uint8 */
+            gem1: number;
+            /** Format: uint8 */
+            gem2: number;
+            /** Format: uint8 */
+            enchant: number;
+            locked: boolean;
+        };
         /** @enum {unknown} */
         ItemQuality: "None" | "Normal" | "Refined" | "Unique" | "Elite" | "Super";
         ItemSearchPage: {
@@ -6098,6 +6212,73 @@ export interface operations {
             };
             /** @description Service Unavailable */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getItemHistory: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                itemId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemHistoryResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getItemDuplicates: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ItemDuplicatesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

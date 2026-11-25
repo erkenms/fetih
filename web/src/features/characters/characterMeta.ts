@@ -93,3 +93,5 @@ export function isMuted(mutedUntil?: string | null, now = Date.now()): boolean {
   const ms = Date.parse(mutedUntil)
   return !Number.isNaN(ms) && ms > now
 }
+
+export const itemHistoryPath = (itemId: number) => `/admin/item-history/${itemId}`

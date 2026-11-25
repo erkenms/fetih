@@ -2021,6 +2021,120 @@
         }
       }
     },
+    "/api/item-history/{itemId}": {
+      "get": {
+        "tags": [
+          "ItemHistoryFeature"
+        ],
+        "operationId": "getItemHistory",
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/item-history/duplicates": {
+      "get": {
+        "tags": [
+          "ItemHistoryFeature"
+        ],
+        "operationId": "getItemDuplicates",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemDuplicatesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/changes": {
       "get": {
         "tags": [
@@ -9359,6 +9473,317 @@
           "Other"
         ]
       },
+      "ItemDuplicateFlag": {
+        "required": [
+          "kind",
+          "reason",
+          "itemId",
+          "characterIds",
+          "timestamps"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "characterIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          "timestamps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      },
+      "ItemDuplicatesResponse": {
+        "required": [
+          "flags",
+          "lokiAvailable",
+          "lokiError",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "flags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDuplicateFlag"
+            }
+          },
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "lokiError": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ItemHistoryResponse": {
+        "required": [
+          "itemId",
+          "typeId",
+          "itemName",
+          "itemIcon",
+          "currentHolders",
+          "steps",
+          "duplicates",
+          "lokiAvailable",
+          "lokiError",
+          "query",
+          "grafanaExploreUrl",
+          "from",
+          "to",
+          "truncated"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "itemName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currentHolders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemHolderInfo"
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemHistoryStep"
+            }
+          },
+          "duplicates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemDuplicateFlag"
+            }
+          },
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "lokiError": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "query": {
+            "type": "string"
+          },
+          "grafanaExploreUrl": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ItemHistoryStep": {
+        "required": [
+          "timestamp",
+          "event",
+          "message",
+          "ownerCharacterId",
+          "ownerName",
+          "fromCharacterId",
+          "fromName",
+          "typeId",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "ownerCharacterId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "ownerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fromCharacterId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "fromName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "typeId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "fields": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ItemHolderInfo": {
+        "required": [
+          "itemId",
+          "typeId",
+          "itemName",
+          "itemIcon",
+          "characterId",
+          "characterName",
+          "position",
+          "package",
+          "stackAmount",
+          "plus",
+          "bless",
+          "gem1",
+          "gem2",
+          "enchant",
+          "locked"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "typeId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "itemName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itemIcon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "characterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "characterName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "position": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "package": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "stackAmount": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "plus": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "bless": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem1": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "gem2": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "enchant": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "locked": {
+            "type": "boolean"
+          }
+        }
+      },
       "ItemQuality": {
         "enum": [
           "None",
@@ -15669,6 +16094,9 @@
     },
     {
       "name": "IntegrityFeature"
+    },
+    {
+      "name": "ItemHistoryFeature"
     },
     {
       "name": "ItemsFeature"

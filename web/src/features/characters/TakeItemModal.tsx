@@ -3,9 +3,10 @@ import { notifications } from '@mantine/notifications'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import { api, unwrap } from '../../api/client'
 import { useErrorText } from '../../app/ErrorAlert'
-import { toCatalogItem, type CharacterItemEntry } from './characterMeta'
+import { itemHistoryPath, toCatalogItem, type CharacterItemEntry } from './characterMeta'
 
 interface TakeItemModalProps {
   characterId: number
@@ -16,7 +17,7 @@ interface TakeItemModalProps {
 }
 
 export function TakeItemModal({ characterId, characterName, item, onClose, onTaken }: TakeItemModalProps) {
-  const { t } = useTranslation('characters')
+  const { t } = useTranslation(['characters', 'itemHistory'])
   const formatError = useErrorText('characters')
   const [error, setError] = useState<unknown>(null)
 
@@ -58,6 +59,9 @@ export function TakeItemModal({ characterId, characterName, item, onClose, onTak
             })}
           </Text>
           <Group justify="flex-end">
+            <Button component={Link} to={itemHistoryPath(item.itemId)} variant="subtle" mr="auto">
+              {t('itemHistory:openHistory')}
+            </Button>
             <Button variant="subtle" onClick={close}>
               {t('actions.cancel')}
             </Button>

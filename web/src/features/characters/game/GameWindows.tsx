@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState, type CSSProperties, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import type { Schemas } from '../../../api/client'
 import { ItemTooltip, itemIconUrl } from '../../../components/items'
 import { formatProfession } from '../../../lib/gameMeta'
 import { guildRankKey } from '../../social/names'
-import { mapEquipmentSlots, toCatalogItem, toItemInstance, type CharacterItemEntry } from '../characterMeta'
+import { itemHistoryPath, mapEquipmentSlots, toCatalogItem, toItemInstance, type CharacterItemEntry } from '../characterMeta'
 import { TakeItemModal } from '../TakeItemModal'
 import {
   ATTRIBUTES,
@@ -102,6 +103,7 @@ function StatsPage({ ch }: { ch: Character }) {
 }
 
 function EquipmentPage({ ch }: { ch: Character }) {
+  const navigate = useNavigate()
   const bySlot = mapEquipmentSlots(ch.equipment)
   return (
     <>
@@ -121,7 +123,7 @@ function EquipmentPage({ ch }: { ch: Character }) {
                 }}
               />
             )}
-            {entry && <GameItem entry={entry} box={inner} />}
+            {entry && <GameItem entry={entry} box={inner} onClick={() => void navigate(itemHistoryPath(entry.itemId))} />}
           </div>
         )
       })}
@@ -310,6 +312,7 @@ export function InventoryWindow({
   onChanged: () => void
 }) {
   const { t, i18n } = useTranslation('characters')
+  const navigate = useNavigate()
   const [taking, setTaking] = useState<CharacterItemEntry | null>(null)
   const { slot } = INVENTORY
   return (
@@ -324,7 +327,7 @@ export function InventoryWindow({
             w: slot.size - 2,
             h: slot.size - 2,
           }}
-          onClick={canManage ? () => setTaking(entry) : undefined}
+          onClick={canManage ? () => setTaking(entry) : () => void navigate(itemHistoryPath(entry.itemId))}
         />
       ))}
       <img src="/assets/ui/silver.png" alt="" title={t('detail.silver')} style={at(INVENTORY.silverIcon)} />

@@ -1,8 +1,9 @@
 import { Box, Card, Group, Stack, Text, Title } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router'
 import type { Schemas } from '../../api/client'
 import { ItemIcon, ItemTooltip } from '../../components/items'
-import { toCatalogItem, toItemInstance, type CharacterItemEntry } from './characterMeta'
+import { itemHistoryPath, toCatalogItem, toItemInstance, type CharacterItemEntry } from './characterMeta'
 
 // Equipment the 5619 status window has no slot for
 const EXTRA_SLOTS = [12, 18]
@@ -19,7 +20,7 @@ function ItemTile({ entry }: { entry: CharacterItemEntry }) {
   const instance = toItemInstance(entry)
   return (
     <ItemTooltip item={catalog} instance={instance}>
-      <Box style={{ display: 'inline-flex' }}>
+      <Box component={Link} to={itemHistoryPath(entry.itemId)} style={{ display: 'inline-flex' }}>
         <ItemIcon item={catalog} instance={instance} size={48} />
       </Box>
     </ItemTooltip>
