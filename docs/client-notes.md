@@ -205,6 +205,12 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   drawn at that cell's pixel plus its pixel offset; a cover (DMap object 4) is drawn at its
   cell's pixel minus its offset. Scene parts whose picture is a `.msk` are masks only.
   `tools/assets/Maps/` renders maps this way.
+- **Map animations and terrain NPCs** (2026-11-25, Mac 1133): a cover's frame is
+  ((TimeGet() − start) / interval) mod frames, so its interval (int32 at 412 of the DMap object) is
+  ms per frame, looping (`C2DMapCoverObj::Process`). `CMsgNpcInfo::Process` creates NPC types 25,
+  26, 39, 41, 42, 102 and 103 as view 9, which `CRole::Create` hands to
+  `CGameMap::AddTerrainNpc(look / 10, look % 10, ...)`: the `ini/terrainnpc.ini` scene of that
+  type and direction, placed like a DMap terrain object at the NPC's cell.
 - **Team PK** (2026-11-25, Mac `CMsgTeamPKArenic*::Process`, `CDlgTeamPKArenicScore`): MsgTeamPKArenic
   2230 and the Skill Team PK's MsgTeamPopPKArenic 2250 read the same: action u16 at 4, 2 match start
   (seconds u16 at 44), 3 result (victory if u32 at 8 is 1), 4 leaves the match, 5 back in a fight, 6

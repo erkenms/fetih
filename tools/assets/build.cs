@@ -31,6 +31,7 @@
 #:include Looks/Looks.cs
 #:include Maps/MapFiles.cs
 #:include Maps/MapTiles.cs
+#:include Maps/TerrainNpcs.cs
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -70,6 +71,8 @@ var catalogs = new Catalogs(files, outputs, Path.Combine(root, "comet", "src", "
 catalogs.BuildAll();
 var looks = new Looks(files, outputs, Path.Combine(root, "comet", "src", "Comet.Game", "Data"));
 looks.Build();
+var terrainNpcs = new TerrainNpcs(files, outputs);
+terrainNpcs.Build();
 var mapTiles = new MapTiles(files, outputs);
 mapTiles.Build(onlyMaps);
 var removed = outputs.Finish();
@@ -80,7 +83,7 @@ if (outputs.Errors.Count > 20)
     Console.Error.WriteLine($"  ...and {outputs.Errors.Count - 20} more");
 foreach (var error in mapTiles.Errors.Distinct().Order().Take(20))
     Console.Error.WriteLine($"  map: {error}");
-foreach (var line in catalogs.Summary.Concat(looks.Summary).Concat(mapTiles.Summary))
+foreach (var line in catalogs.Summary.Concat(looks.Summary).Concat(terrainNpcs.Summary).Concat(mapTiles.Summary))
     Console.WriteLine(line);
 Console.WriteLine($"{outputs.Written} written, {outputs.Skipped} unchanged, {removed} removed, " +
     $"{outputs.Errors.Count} unreadable, in {clock.Elapsed.TotalSeconds:0.0}s -> {output}");

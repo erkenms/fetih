@@ -3,8 +3,9 @@ using System.Text;
 using SharpCompress.Archives.SevenZip;
 
 // A picture of an .ani section drawn on the map. Its top left corner is the world pixel of
-// cell (CellX, CellY) plus (OffsetX, OffsetY).
-sealed record MapSprite(string Ani, string Title, int CellX, int CellY, int OffsetX, int OffsetY);
+// cell (CellX, CellY) plus (OffsetX, OffsetY). A section with several frames is an animation
+// the client loops, showing each frame for Interval ms.
+sealed record MapSprite(string Ani, string Title, int CellX, int CellY, int OffsetX, int OffsetY, int Interval);
 
 // What the client draws of a map: the puzzle background, the terrain objects' scene parts
 // (bridges, platforms) on the ground, and the covers (buildings, trees, roofs) that it sorts
@@ -86,12 +87,13 @@ static class MapFiles
                 case 1:
                     int x = BinaryPrimitives.ReadInt32LittleEndian(o[260..]), y = BinaryPrimitives.ReadInt32LittleEndian(o[264..]);
                     foreach (var part in scene(Text(o[..260])) ?? [])
-                        ground.Add(new MapSprite(part.Ani, part.Title, x + part.CellX, y + part.CellY, part.PixelX, part.PixelY));
+                        ground.Add(new MapSprite(part.Ani, part.Title, x + part.CellX, y + part.CellY, part.PixelX, part.PixelY, part.Interval));
                     break;
                 case 4:
                     covers.Add(new MapSprite(Text(o[..260]), Text(o.Slice(260, 128)),
                         BinaryPrimitives.ReadInt32LittleEndian(o[388..]), BinaryPrimitives.ReadInt32LittleEndian(o[392..]),
-                        -BinaryPrimitives.ReadInt32LittleEndian(o[404..]), -BinaryPrimitives.ReadInt32LittleEndian(o[408..])));
+                        -BinaryPrimitives.ReadInt32LittleEndian(o[404..]), -BinaryPrimitives.ReadInt32LittleEndian(o[408..]),
+                        BinaryPrimitives.ReadInt32LittleEndian(o[412..])));
                     break;
             }
             offset += type switch
@@ -107,8 +109,8 @@ static class MapFiles
     }
 
     // map/Scene/*.scene parts, as Comet.Game's SceneFile reads them, with the picture: char[256]
-    // .ani file, char[64] section, int32 pixel offset x, y, then after interval, width,
-    // height and thickness the cell offset x, y.
+    // .ani file, char[64] section, int32 pixel offset x, y, frame interval, width, height,
+    // thickness, cell offset x, y.
     public static List<SceneSprite> ParseScene(ReadOnlySpan<byte> data)
     {
         var count = BinaryPrimitives.ReadInt32LittleEndian(data);
@@ -120,7 +122,8 @@ static class MapFiles
             int width = BinaryPrimitives.ReadInt32LittleEndian(h[332..]), height = BinaryPrimitives.ReadInt32LittleEndian(h[336..]);
             parts.Add(new SceneSprite(Text(h[..256]), Text(h.Slice(256, 64)),
                 BinaryPrimitives.ReadInt32LittleEndian(h[320..]), BinaryPrimitives.ReadInt32LittleEndian(h[324..]),
-                BinaryPrimitives.ReadInt32LittleEndian(h[344..]), BinaryPrimitives.ReadInt32LittleEndian(h[348..])));
+                BinaryPrimitives.ReadInt32LittleEndian(h[344..]), BinaryPrimitives.ReadInt32LittleEndian(h[348..]),
+                BinaryPrimitives.ReadInt32LittleEndian(h[328..])));
             offset += 356 + width * height * 12;
         }
         return parts;
@@ -133,4 +136,4 @@ static class MapFiles
     }
 }
 
-sealed record SceneSprite(string Ani, string Title, int PixelX, int PixelY, int CellX, int CellY);
+sealed record SceneSprite(string Ani, string Title, int PixelX, int PixelY, int CellX, int CellY, int Interval);

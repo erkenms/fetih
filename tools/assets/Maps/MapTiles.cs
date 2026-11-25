@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 using Comet.Game.World;
 using SkiaSharp;
 
@@ -12,10 +13,14 @@ using SkiaSharp;
 // Cell2World). The background's top left sits at world (32·mapWidth − bgWidth/2,
 // 16·mapHeight − bgHeight/2), 16 lower when mapHeight is odd, and the tiles are in background
 // pixels. The background is width × height puzzle tiles of the GameMap.dat puzzle size.
+//
+// Sprites with several frames (fires, orbs, dragonflies) aren't in the pyramids: their frames
+// go to anim/<n>/<frame>.png beside them, listed in animations.json and meta.json, and the
+// viewer loops them over the tiles.
 sealed class MapTiles(ClientFiles files, Output output)
 {
     // Raise it when the rendering changes, so every map is rendered again
-    public const string Version = "1";
+    public const string Version = "2";
     public const int TileSize = 256;
 
     public List<string> Summary { get; } = new();
@@ -99,14 +104,18 @@ sealed class MapTiles(ClientFiles files, Output output)
 
         var stamp = string.Join("|", Version, puzzleSize, dmapStamp, files.Stamp(drawing.Puzzle), files.Stamp(puzzle.Ani));
         var stampFile = Path.Combine(folder, ".stamp");
+        var animationsFile = Path.Combine(folder, "animations.json");
         if (File.Exists(stampFile) && File.ReadAllText(stampFile) == stamp)
-            return meta;
+            return File.Exists(animationsFile)
+                ? meta with { Animations = JsonSerializer.Deserialize<List<Animation>>(File.ReadAllText(animationsFile), AnimationJson) }
+                : meta;
 
         if (Directory.Exists(folder))
             Directory.Delete(folder, true);
         var puzzleFrames = Ani(puzzle.Ani);
-        var ground = Place(drawing.Ground, drawing, bgX, bgY);
-        var covers = Place(drawing.Covers, drawing, bgX, bgY);
+        var animations = new List<Animation>();
+        var ground = Place(drawing.Ground, drawing, bgX, bgY, key, folder, animations);
+        var covers = Place(drawing.Covers, drawing, bgX, bgY, key, folder, animations);
 
         Pyramid(Path.Combine(folder, "ground"), maxZoom, width, height, (x, y) =>
         {
@@ -128,14 +137,17 @@ sealed class MapTiles(ClientFiles files, Output output)
             covers.Draw(tile, x * TileSize, y * TileSize);
             return tile;
         });
+        if (animations.Count > 0)
+            File.WriteAllText(animationsFile, JsonSerializer.Serialize(animations, AnimationJson));
         File.WriteAllText(stampFile, stamp);
         fresh = true;
-        return meta;
+        return animations.Count > 0 ? meta with { Animations = animations } : meta;
     }
 
     // The sprites in the order the client draws them, back to front, bucketed by the
-    // max-zoom tiles they touch
-    private Layer Place(List<MapSprite> list, MapDrawing drawing, int bgX, int bgY)
+    // max-zoom tiles they touch. Animated ones are written to anim/ and added to `animations`
+    // instead.
+    private Layer Place(List<MapSprite> list, MapDrawing drawing, int bgX, int bgY, string key, string folder, List<Animation> animations)
     {
         var placed = new List<(Rgba Picture, int X, int Y)>();
         foreach (var sprite in list.OrderBy(s => s.CellX + s.CellY).ThenBy(s => s.CellX))
@@ -149,12 +161,38 @@ sealed class MapTiles(ClientFiles files, Output output)
                 Errors.Add($"{sprite.Ani} [{sprite.Title}]: no picture");
                 continue;
             }
-            placed.Add((picture,
-                32 * (sprite.CellX - sprite.CellY) + 32 * drawing.Width + sprite.OffsetX - bgX,
-                16 * (sprite.CellX + sprite.CellY) + 16 + sprite.OffsetY - bgY));
+            int x = 32 * (sprite.CellX - sprite.CellY) + 32 * drawing.Width + sprite.OffsetX - bgX;
+            int y = 16 * (sprite.CellX + sprite.CellY) + 16 + sprite.OffsetY - bgY;
+            if (frames.Count > 1 && sprite.Interval > 0 && Animate(frames, x, y, sprite.Interval, key, folder, animations))
+                continue;
+            placed.Add((picture, x, y));
         }
         return new Layer(placed);
     }
+
+    // Writes the frames, each drawn at the same top left, padded to the largest of them
+    private bool Animate(List<string> frames, int x, int y, int interval, string key, string folder, List<Animation> animations)
+    {
+        var pictures = frames.Select(Picture).ToList();
+        if (pictures.Any(p => p == null))
+            return false;
+        int width = pictures.Max(p => p!.Width), height = pictures.Max(p => p!.Height);
+        var n = animations.Count;
+        var paths = new List<string>();
+        for (var f = 0; f < pictures.Count; f++)
+        {
+            var padded = new Rgba(width, height, new byte[width * height * 4]);
+            Draw(padded, pictures[f]!, 0, 0);
+            var path = Path.Combine(folder, "anim", n.ToString(), $"{f}.png");
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllBytes(path, Images.Png(padded));
+            paths.Add($"maps/tiles/{key}/anim/{n}/{f}.png");
+        }
+        animations.Add(new Animation(x, y, width, height, interval, paths));
+        return true;
+    }
+
+    private static readonly JsonSerializerOptions AnimationJson = new(JsonSerializerDefaults.Web);
 
     private sealed class Layer(List<(Rgba Picture, int X, int Y)> placed)
     {
@@ -331,8 +369,14 @@ sealed class MapTiles(ClientFiles files, Output output)
         }
     }
 
+    // An animated sprite: its top left in background pixels, its size, the time each frame
+    // shows in ms and the frames' paths
+    private sealed record Animation(int X, int Y, int Width, int Height, int Interval, List<string> Frames);
     private sealed record MapMeta(int Width, int Height, int TileSize, int MaxZoom, Size Cell, Size MapSize,
-        Point Origin, Point Background, PuzzleMeta Puzzle, string Ground, string Covers);
+        Point Origin, Point Background, PuzzleMeta Puzzle, string Ground, string Covers)
+    {
+        public List<Animation>? Animations { get; init; }
+    }
     private sealed record Size(int Width, int Height);
     private sealed record Point(int X, int Y);
     private sealed record PuzzleMeta(int Width, int Height, int GridSize);
