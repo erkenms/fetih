@@ -19,6 +19,9 @@ namespace Comet.Bots
             public string Host { get; set; } = "127.0.0.1";
             public int Port { get; set; } = 9960;
             public string Realm { get; set; } = "Storm";
+
+            // The game server's address in place of the realm's; empty to use the realm's
+            public string GameHost { get; set; }
         }
 
         public sealed class Database

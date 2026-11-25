@@ -23,7 +23,7 @@ namespace Comet.Client
 
         public static async Task<Player> LoginAsync(
             string accountHost, int accountPort, string realm, string username,
-            string password, NewCharacter character = null)
+            string password, NewCharacter character = null, string gameHost = null)
         {
             LoginResult login;
             await using (var account = await AccountClient.ConnectAsync(accountHost, accountPort))
@@ -32,7 +32,8 @@ namespace Comet.Client
                 throw new InvalidOperationException(
                     $"Account server refused {username} with code {login.RejectCode}");
 
-            var game = await GameClient.ConnectAsync(login.GameHost, login.GamePort);
+            // gameHost replaces the realm's address, for a client on the server's own machine
+            var game = await GameClient.ConnectAsync(string.IsNullOrEmpty(gameHost) ? login.GameHost : gameHost, login.GamePort);
             try
             {
                 var result = await game.LoginAsync(login.Token);

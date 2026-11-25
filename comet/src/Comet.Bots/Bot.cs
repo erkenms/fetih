@@ -63,7 +63,7 @@ namespace Comet.Bots
             var look = Looks[this.index % Looks.Length];
             var server = this.config.AccountServer;
             await using var player = await Player.LoginAsync(server.Host, server.Port, server.Realm,
-                this.Username, this.config.Password, new NewCharacter(this.Name, look.Mesh, look.Profession));
+                this.Username, this.config.Password, new NewCharacter(this.Name, look.Mesh, look.Profession), server.GameHost);
             // A new character starts in the birth village; the next login is on the spot
             if (!placed)
                 return;
