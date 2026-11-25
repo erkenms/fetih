@@ -1,5 +1,4 @@
 import {
-  Badge,
   Button,
   Grid,
   Group,
@@ -12,65 +11,52 @@ import {
   Textarea,
   TextInput,
 } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
-import { IconDeviceFloppy, IconPlus, IconRefresh, IconRotate, IconSearch, IconTrash } from '@tabler/icons-react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { IconSearch, IconTrash } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { LookfacePicker } from '../../components/pickers'
+import { DataEditorToolbar } from './DataEditorToolbar'
 import { stringToTextLines, textLinesToString, type TalkerRow } from './dataUtils'
 import { DialogPreview } from './DialogPreview'
-import { ProblemsAlert } from './ProblemsAlert'
-import { useDataReload } from './useDataReload'
-
-type DataProblem = Schemas['DataProblemDto']
+import { useDataFileEditor } from './useDataFileEditor'
 
 export function TalkersEditor() {
   const { t } = useTranslation('data')
-  const queryClient = useQueryClient()
-  const reloadMutation = useDataReload('talkers.json')
-
-  const query = useQuery({
-    queryKey: ['data', 'talkers'],
-    queryFn: () => unwrap(api.GET('/api/data/talkers')),
-  })
-
-  const [rows, setRows] = useState<TalkerRow[]>([])
-  const [hash, setHash] = useState('')
-  const [dirty, setDirty] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null)
-  const [problems, setProblems] = useState<DataProblem[]>([])
 
-  useEffect(() => {
-    if (query.data && !dirty) {
-      setRows(
-        query.data.entries.map((e) => ({
-          id: e.id,
-          face: e.face,
-          text: [...e.text],
-          reply: e.reply,
-          line: e.line,
-          npcMap: e.npcMap,
-          npcX: e.npcX,
-          npcY: e.npcY,
-        })),
-      )
-      setHash(query.data.hash)
-      setProblems(query.data.problems)
-      if (selectedIndex == null && query.data.entries.length > 0) setSelectedIndex(0)
-    }
-  }, [query.data, dirty, selectedIndex])
-
-  const saveMutation = useMutation({
-    mutationFn: () =>
+  const {
+    query,
+    rows,
+    setRows,
+    dirty,
+    setDirty,
+    problems,
+    saveMutation,
+    reloadMutation,
+    resetChanges,
+  } = useDataFileEditor({
+    queryKey: ['data', 'talkers'],
+    fileName: 'talkers.json',
+    queryFn: () => unwrap(api.GET('/api/data/talkers')),
+    mapEntry: (e): TalkerRow => ({
+      id: e.id,
+      face: e.face,
+      text: [...e.text],
+      reply: e.reply,
+      line: e.line,
+      npcMap: e.npcMap,
+      npcX: e.npcX,
+      npcY: e.npcY,
+    }),
+    saveFn: (hash, currentRows) =>
       unwrap(
         api.PUT('/api/data/talkers', {
           body: {
             hash,
-            entries: rows.map((r) => ({
+            entries: currentRows.map((r) => ({
               id: r.id,
               face: r.face,
               text: r.text,
@@ -79,36 +65,8 @@ export function TalkersEditor() {
           },
         }),
       ),
-    onSuccess: (res) => {
-      setProblems(res.problems)
-      if (!res.saved) {
-        notifications.show({
-          color: 'red',
-          title: t('status.validationFailedTitle', { file: 'talkers.json' }),
-          message: t('status.validationFailedMessage'),
-        })
-        return
-      }
-      setHash(res.hash)
-      setDirty(false)
-      void queryClient.invalidateQueries({ queryKey: ['data', 'talkers'] })
-      notifications.show({
-        color: 'green',
-        title: t('status.savedTitle', { file: 'talkers.json' }),
-        message:
-          res.added + res.updated + res.removed > 0
-            ? t('status.savedSummary', { added: res.added, updated: res.updated, removed: res.removed })
-            : t('status.noChanges'),
-      })
-    },
-    onError: (err) => {
-      if (err instanceof ApiError && err.code === 'conflict') {
-        notifications.show({
-          color: 'orange',
-          title: t('status.conflictTitle'),
-          message: t('status.conflictMessage'),
-        })
-      }
+    onSynced: (entries) => {
+      if (selectedIndex == null && entries.length > 0) setSelectedIndex(0)
     },
   })
 
@@ -156,79 +114,34 @@ export function TalkersEditor() {
     setDirty(true)
   }
 
-  function resetChanges() {
-    if (!query.data) return
-    setRows(
-      query.data.entries.map((e) => ({
-        id: e.id,
-        face: e.face,
-        text: [...e.text],
-        reply: e.reply,
-        line: e.line,
-        npcMap: e.npcMap,
-        npcX: e.npcX,
-        npcY: e.npcY,
-      })),
-    )
-    setHash(query.data.hash)
-    setProblems(query.data.problems)
-    setDirty(false)
-  }
-
   if (query.isLoading) return <Loader />
   if (query.error) return <ErrorAlert error={query.error} />
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="wrap">
-        <Group gap="sm">
-          <TextInput
-            placeholder={t('talkers.search')}
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-            w={280}
-          />
-          <Text size="sm" c="dimmed">
-            {t('talkers.summary', { count: rows.length })}
-          </Text>
-          {dirty && (
-            <Badge color="yellow" variant="light">
-              {t('status.unsaved')}
-            </Badge>
-          )}
-        </Group>
-
-        <Group gap="xs">
-          <Button variant="default" leftSection={<IconPlus size={16} />} onClick={addTalker}>
-            {t('talkers.addTalker')}
-          </Button>
-          {dirty && (
-            <Button variant="subtle" color="gray" leftSection={<IconRotate size={16} />} onClick={resetChanges}>
-              {t('actions.reset')}
-            </Button>
-          )}
-          <Button
-            leftSection={<IconDeviceFloppy size={16} />}
-            loading={saveMutation.isPending}
-            disabled={!dirty}
-            onClick={() => saveMutation.mutate()}
-          >
-            {t('actions.save')}
-          </Button>
-          <Button
-            variant="light"
-            leftSection={<IconRefresh size={16} />}
-            loading={reloadMutation.isPending}
-            onClick={() => reloadMutation.mutate()}
-          >
-            {t('actions.reload')}
-          </Button>
-        </Group>
-      </Group>
-
-      {saveMutation.error && <ErrorAlert error={saveMutation.error} />}
-      <ProblemsAlert problems={problems} />
+      <DataEditorToolbar
+        dirty={dirty}
+        addLabel={t('talkers.addTalker')}
+        onAdd={addTalker}
+        onReset={resetChanges}
+        onSave={() => saveMutation.mutate()}
+        savePending={saveMutation.isPending}
+        saveError={saveMutation.error}
+        onReload={() => reloadMutation.mutate()}
+        reloadPending={reloadMutation.isPending}
+        problems={problems}
+      >
+        <TextInput
+          placeholder={t('talkers.search')}
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          w={280}
+        />
+        <Text size="sm" c="dimmed">
+          {t('talkers.summary', { count: rows.length })}
+        </Text>
+      </DataEditorToolbar>
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 4 }}>

@@ -15,69 +15,50 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
-import {
-  IconDeviceFloppy,
-  IconEdit,
-  IconMapPin,
-  IconPlus,
-  IconRefresh,
-  IconRotate,
-  IconSearch,
-  IconTrash,
-} from '@tabler/icons-react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { IconEdit, IconMapPin, IconSearch, IconTrash } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { LookfacePicker, MapPicker } from '../../components/pickers'
+import { DataEditorToolbar } from './DataEditorToolbar'
 import { nextGoalId, type GoalRow } from './dataUtils'
 import { MapCellPickerModal } from './MapCellPickerModal'
-import { ProblemsAlert } from './ProblemsAlert'
-import { useDataReload } from './useDataReload'
-
-type DataProblem = Schemas['DataProblemDto']
+import { useDataFileEditor } from './useDataFileEditor'
 
 const PAGE_SIZE = 50
 
 export function GoalsEditor() {
   const { t } = useTranslation('data')
-  const queryClient = useQueryClient()
-  const reloadMutation = useDataReload('goals.json')
-
-  const query = useQuery({
-    queryKey: ['data', 'goals'],
-    queryFn: () => unwrap(api.GET('/api/data/goals')),
-  })
-
-  const [rows, setRows] = useState<GoalRow[]>([])
-  const [hash, setHash] = useState('')
-  const [dirty, setDirty] = useState(false)
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<'all' | '21' | '22'>('all')
   const [page, setPage] = useState(1)
-  const [problems, setProblems] = useState<DataProblem[]>([])
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState<GoalRow | null>(null)
   const [mapPickerOpen, setMapPickerOpen] = useState(false)
 
-  useEffect(() => {
-    if (query.data && !dirty) {
-      setRows(query.data.entries.map((e) => ({ ...e })))
-      setHash(query.data.hash)
-      setProblems(query.data.problems)
-    }
-  }, [query.data, dirty])
-
-  const saveMutation = useMutation({
-    mutationFn: () =>
+  const {
+    query,
+    rows,
+    setRows,
+    dirty,
+    setDirty,
+    problems,
+    saveMutation,
+    reloadMutation,
+    resetChanges,
+  } = useDataFileEditor({
+    queryKey: ['data', 'goals'],
+    fileName: 'goals.json',
+    queryFn: () => unwrap(api.GET('/api/data/goals')),
+    mapEntry: (e): GoalRow => ({ ...e }),
+    saveFn: (hash, currentRows) =>
       unwrap(
         api.PUT('/api/data/goals', {
           body: {
             hash,
-            entries: rows.map((r) => ({
+            entries: currentRows.map((r) => ({
               id: r.id,
               lookface: r.lookface,
               role: r.role,
@@ -90,37 +71,6 @@ export function GoalsEditor() {
           },
         }),
       ),
-    onSuccess: (res) => {
-      setProblems(res.problems)
-      if (!res.saved) {
-        notifications.show({
-          color: 'red',
-          title: t('status.validationFailedTitle', { file: 'goals.json' }),
-          message: t('status.validationFailedMessage'),
-        })
-        return
-      }
-      setHash(res.hash)
-      setDirty(false)
-      void queryClient.invalidateQueries({ queryKey: ['data', 'goals'] })
-      notifications.show({
-        color: 'green',
-        title: t('status.savedTitle', { file: 'goals.json' }),
-        message:
-          res.added + res.updated + res.removed > 0
-            ? t('status.savedSummary', { added: res.added, updated: res.updated, removed: res.removed })
-            : t('status.noChanges'),
-      })
-    },
-    onError: (err) => {
-      if (err instanceof ApiError && err.code === 'conflict') {
-        notifications.show({
-          color: 'orange',
-          title: t('status.conflictTitle'),
-          message: t('status.conflictMessage'),
-        })
-      }
-    },
   })
 
   const filtered = useMemo(() => {
@@ -178,84 +128,50 @@ export function GoalsEditor() {
     setDirty(true)
   }
 
-  function resetChanges() {
-    if (!query.data) return
-    setRows(query.data.entries.map((e) => ({ ...e })))
-    setHash(query.data.hash)
-    setProblems(query.data.problems)
-    setDirty(false)
-  }
-
   if (query.isLoading) return <Loader />
   if (query.error) return <ErrorAlert error={query.error} />
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="wrap">
-        <Group gap="sm" wrap="wrap">
-          <TextInput
-            placeholder={t('goals.search')}
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.currentTarget.value)
-              setPage(1)
-            }}
-            w={240}
-          />
-          <SegmentedControl
-            size="xs"
-            value={roleFilter}
-            onChange={(v) => {
-              setRoleFilter(v as 'all' | '21' | '22')
-              setPage(1)
-            }}
-            data={[
-              { value: 'all', label: t('goals.roleFilter.all') },
-              { value: '21', label: t('goals.roleFilter.stake') },
-              { value: '22', label: t('goals.roleFilter.scarecrow') },
-            ]}
-          />
-          <Text size="sm" c="dimmed">
-            {t('goals.summary', { count: filtered.length })}
-          </Text>
-          {dirty && (
-            <Badge color="yellow" variant="light">
-              {t('status.unsaved')}
-            </Badge>
-          )}
-        </Group>
-
-        <Group gap="xs">
-          <Button variant="default" leftSection={<IconPlus size={16} />} onClick={openNew}>
-            {t('goals.addGoal')}
-          </Button>
-          {dirty && (
-            <Button variant="subtle" color="gray" leftSection={<IconRotate size={16} />} onClick={resetChanges}>
-              {t('actions.reset')}
-            </Button>
-          )}
-          <Button
-            leftSection={<IconDeviceFloppy size={16} />}
-            loading={saveMutation.isPending}
-            disabled={!dirty}
-            onClick={() => saveMutation.mutate()}
-          >
-            {t('actions.save')}
-          </Button>
-          <Button
-            variant="light"
-            leftSection={<IconRefresh size={16} />}
-            loading={reloadMutation.isPending}
-            onClick={() => reloadMutation.mutate()}
-          >
-            {t('actions.reload')}
-          </Button>
-        </Group>
-      </Group>
-
-      {saveMutation.error && <ErrorAlert error={saveMutation.error} />}
-      <ProblemsAlert problems={problems} />
+      <DataEditorToolbar
+        dirty={dirty}
+        addLabel={t('goals.addGoal')}
+        onAdd={openNew}
+        onReset={resetChanges}
+        onSave={() => saveMutation.mutate()}
+        savePending={saveMutation.isPending}
+        saveError={saveMutation.error}
+        onReload={() => reloadMutation.mutate()}
+        reloadPending={reloadMutation.isPending}
+        problems={problems}
+      >
+        <TextInput
+          placeholder={t('goals.search')}
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => {
+            setSearch(e.currentTarget.value)
+            setPage(1)
+          }}
+          w={240}
+        />
+        <SegmentedControl
+          size="xs"
+          value={roleFilter}
+          onChange={(v) => {
+            setRoleFilter(v as 'all' | '21' | '22')
+            setPage(1)
+          }}
+          data={[
+            { value: 'all', label: t('goals.roleFilter.all') },
+            { value: '21', label: t('goals.roleFilter.stake') },
+            { value: '22', label: t('goals.roleFilter.scarecrow') },
+          ]}
+        />
+        <Text size="sm" c="dimmed">
+          {t('goals.summary', { count: filtered.length })}
+        </Text>
+      </DataEditorToolbar>
 
       <Paper withBorder>
         <Table striped highlightOnHover>

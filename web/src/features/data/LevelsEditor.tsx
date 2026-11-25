@@ -1,8 +1,5 @@
 import {
   ActionIcon,
-  Badge,
-  Button,
-  Group,
   Loader,
   NumberInput,
   Paper,
@@ -12,50 +9,40 @@ import {
   Text,
   TextInput,
 } from '@mantine/core'
-import { notifications } from '@mantine/notifications'
-import { IconDeviceFloppy, IconPlus, IconRefresh, IconRotate, IconSearch, IconTrash } from '@tabler/icons-react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { IconSearch, IconTrash } from '@tabler/icons-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { DataEditorToolbar } from './DataEditorToolbar'
 import { expBallsForLevel, nextLevelNumber, type LevelRow } from './dataUtils'
-import { ProblemsAlert } from './ProblemsAlert'
-import { useDataReload } from './useDataReload'
-
-type DataProblem = Schemas['DataProblemDto']
+import { useDataFileEditor } from './useDataFileEditor'
 
 export function LevelsEditor() {
   const { t } = useTranslation('data')
-  const queryClient = useQueryClient()
-  const reloadMutation = useDataReload('levels.json')
-
-  const query = useQuery({
-    queryKey: ['data', 'levels'],
-    queryFn: () => unwrap(api.GET('/api/data/levels')),
-  })
-
-  const [rows, setRows] = useState<LevelRow[]>([])
-  const [hash, setHash] = useState('')
-  const [dirty, setDirty] = useState(false)
   const [search, setSearch] = useState('')
-  const [problems, setProblems] = useState<DataProblem[]>([])
 
-  useEffect(() => {
-    if (query.data && !dirty) {
-      setRows(query.data.entries.map((e) => ({ ...e })))
-      setHash(query.data.hash)
-      setProblems(query.data.problems)
-    }
-  }, [query.data, dirty])
-
-  const saveMutation = useMutation({
-    mutationFn: () =>
+  const {
+    query,
+    rows,
+    setRows,
+    dirty,
+    setDirty,
+    problems,
+    saveMutation,
+    reloadMutation,
+    resetChanges,
+  } = useDataFileEditor({
+    queryKey: ['data', 'levels'],
+    fileName: 'levels.json',
+    queryFn: () => unwrap(api.GET('/api/data/levels')),
+    mapEntry: (e): LevelRow => ({ ...e }),
+    saveFn: (hash, currentRows) =>
       unwrap(
         api.PUT('/api/data/levels', {
           body: {
             hash,
-            entries: rows.map((r) => ({
+            entries: currentRows.map((r) => ({
               level: r.level,
               experience: r.experience,
               upLevTime: r.upLevTime,
@@ -63,37 +50,6 @@ export function LevelsEditor() {
           },
         }),
       ),
-    onSuccess: (res) => {
-      setProblems(res.problems)
-      if (!res.saved) {
-        notifications.show({
-          color: 'red',
-          title: t('status.validationFailedTitle', { file: 'levels.json' }),
-          message: t('status.validationFailedMessage'),
-        })
-        return
-      }
-      setHash(res.hash)
-      setDirty(false)
-      void queryClient.invalidateQueries({ queryKey: ['data', 'levels'] })
-      notifications.show({
-        color: 'green',
-        title: t('status.savedTitle', { file: 'levels.json' }),
-        message:
-          res.added + res.updated + res.removed > 0
-            ? t('status.savedSummary', { added: res.added, updated: res.updated, removed: res.removed })
-            : t('status.noChanges'),
-      })
-    },
-    onError: (err) => {
-      if (err instanceof ApiError && err.code === 'conflict') {
-        notifications.show({
-          color: 'orange',
-          title: t('status.conflictTitle'),
-          message: t('status.conflictMessage'),
-        })
-      }
-    },
   })
 
   const filtered = useMemo(() => {
@@ -132,68 +88,34 @@ export function LevelsEditor() {
     setDirty(true)
   }
 
-  function resetChanges() {
-    if (!query.data) return
-    setRows(query.data.entries.map((e) => ({ ...e })))
-    setHash(query.data.hash)
-    setProblems(query.data.problems)
-    setDirty(false)
-  }
-
   if (query.isLoading) return <Loader />
   if (query.error) return <ErrorAlert error={query.error} />
 
   return (
     <Stack gap="md">
-      <Group justify="space-between" align="center" wrap="wrap">
-        <Group gap="sm">
-          <TextInput
-            placeholder={t('levels.search')}
-            leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-            w={220}
-          />
-          <Text size="sm" c="dimmed">
-            {t('levels.summary', { count: rows.length, cap: levelCap })}
-          </Text>
-          {dirty && (
-            <Badge color="yellow" variant="light">
-              {t('status.unsaved')}
-            </Badge>
-          )}
-        </Group>
-
-        <Group gap="xs">
-          <Button variant="default" leftSection={<IconPlus size={16} />} onClick={addLevel}>
-            {t('levels.addLevel')}
-          </Button>
-          {dirty && (
-            <Button variant="subtle" color="gray" leftSection={<IconRotate size={16} />} onClick={resetChanges}>
-              {t('actions.reset')}
-            </Button>
-          )}
-          <Button
-            leftSection={<IconDeviceFloppy size={16} />}
-            loading={saveMutation.isPending}
-            disabled={!dirty}
-            onClick={() => saveMutation.mutate()}
-          >
-            {t('actions.save')}
-          </Button>
-          <Button
-            variant="light"
-            leftSection={<IconRefresh size={16} />}
-            loading={reloadMutation.isPending}
-            onClick={() => reloadMutation.mutate()}
-          >
-            {t('actions.reload')}
-          </Button>
-        </Group>
-      </Group>
-
-      {saveMutation.error && <ErrorAlert error={saveMutation.error} />}
-      <ProblemsAlert problems={problems} />
+      <DataEditorToolbar
+        dirty={dirty}
+        addLabel={t('levels.addLevel')}
+        onAdd={addLevel}
+        onReset={resetChanges}
+        onSave={() => saveMutation.mutate()}
+        savePending={saveMutation.isPending}
+        saveError={saveMutation.error}
+        onReload={() => reloadMutation.mutate()}
+        reloadPending={reloadMutation.isPending}
+        problems={problems}
+      >
+        <TextInput
+          placeholder={t('levels.search')}
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          w={220}
+        />
+        <Text size="sm" c="dimmed">
+          {t('levels.summary', { count: rows.length, cap: levelCap })}
+        </Text>
+      </DataEditorToolbar>
 
       <Paper withBorder>
         <ScrollArea h={560}>
