@@ -29,6 +29,21 @@ namespace Comet.Game.World
         public DateTime NextAttackAt { get; set; }
         public DateTime NextMoveAt { get; set; }
 
+        // Where it stood when it was placed; it goes back there after a chase
+        public ushort HomeX { get; set; }
+        public ushort HomeY { get; set; }
+        public bool Returning { get; set; }
+
+        // A player it has seen but not yet decided to attack, and when it will
+        public uint Noticed { get; set; }
+        public DateTime DecidesAt { get; set; }
+
+        // It doesn't act on its target before then
+        public DateTime ReactAt { get; set; }
+
+        // The target it last acted on; a new one, as when something hits it, takes a moment
+        public uint Engaged { get; set; }
+
         public Monster(uint identity, MonsterType type, Generator generator, GameMap<Monster> map)
         {
             this.Identity = identity;
@@ -56,6 +71,8 @@ namespace Comet.Game.World
                 this.alive = true;
                 this.CorpseRemoved = false;
                 this.Target = 0;
+                this.Noticed = this.Engaged = 0;
+                this.Returning = false;
                 this.poison = null;
                 this.stunned = false;
             }

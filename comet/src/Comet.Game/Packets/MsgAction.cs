@@ -37,6 +37,21 @@ namespace Comet.Game.Packets
                 Y = y
             };
 
+        // A jump from x, y to the cell in Command (x low, y high); the client sends -1 as the color
+        public static MsgAction Jump(uint identity, ushort fromX, ushort fromY, ushort toX, ushort toY, byte direction) => new MsgAction
+        {
+            Type = PacketType.MsgAction,
+            CharacterID = identity,
+            Command = (uint)(toX | (toY << 16)),
+            Arguments = new ushort[2],
+            Timestamp = (uint)Environment.TickCount,
+            Action = ActionType.MapJump,
+            Direction = direction,
+            X = fromX,
+            Y = fromY,
+            Color = uint.MaxValue
+        };
+
         public static MsgAction Turn(uint identity, byte direction) => new MsgAction
         {
             Type = PacketType.MsgAction,

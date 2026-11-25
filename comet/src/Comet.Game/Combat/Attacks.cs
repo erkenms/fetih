@@ -542,7 +542,7 @@ namespace Comet.Game.Combat
             if (character == null || client.Life.Dead || now < client.Life.ProtectedUntil || !monster.Alive ||
                 monster.IsGuard && !Pking.IsGuilty(client, now) ||
                 client.Map?.Id != monster.Map.Id ||
-                MonsterAI.Distance(monster.X, monster.Y, character.X, character.Y) > Math.Max(1, monster.Type.AttackRange) + RangeSlack)
+                MonsterAI.Distance(monster.X, monster.Y, character.X, character.Y) > MonsterAI.Reach(monster, client, now) + RangeSlack)
                 return;
 
             if (await CounterKill.TryAsync(client, monster, now))

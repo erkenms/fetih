@@ -73,6 +73,9 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   is action 510, 40 frames. Steed speed (`GetRideFrameInterval`) skips jump actions 130, 295
   and 527. Swings are 2/3 in Superman (18), Cyclone or flag 21. The move-speed field
   (`CRole::ChangeMoveSpd`) is only set by speed-change effects, unused in 5619.
+- **Others' jumps** (2026-11-25, Mac 1133 `CMsgAction::Process` case 137): a jump for the
+  hero or its pet only realigns them; any other role, a monster included, gets a jump
+  command to the cell in Command. That's how guards jump at players. Not yet seen in 5619.
 - **Booth close button** (2026-11-24): slot 1 of the XP dialog (`CDlgXp::SetBooth`), shown
   while the map type has 0x10 (BoothEnable) and the booth is open. Clicking it posts command
   60 and calls `CBoothManager::Close`, which sends MsgAction 114 (the client sends 111 to

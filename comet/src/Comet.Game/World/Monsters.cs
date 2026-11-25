@@ -254,6 +254,31 @@ namespace Comet.Game.World
             return true;
         }
 
+        public static async Task<bool> JumpAsync(Monster monster, ushort toX, ushort toY)
+        {
+            var map = monster.Map;
+            if (!map.Grid.IsWalkable(toX, toY) || map.AnyAt(toX, toY))
+                return false;
+
+            ushort fromX = monster.X, fromY = monster.Y;
+            var before = PlayersInView(monster);
+            byte direction = Movement.DirectionTo(fromX, fromY, toX, toY, monster.Direction);
+            map.Move(monster, toX, toY);
+            monster.X = toX;
+            monster.Y = toY;
+            monster.Direction = direction;
+            var after = PlayersInView(monster);
+
+            var jump = MsgAction.Jump(monster.Identity, fromX, fromY, toX, toY, direction);
+            var stillInView = new HashSet<Client>(after);
+            foreach (var player in before)
+                await player.SendAsync(stillInView.Contains(player) ? jump : MsgAction.RemoveEntity(monster.Identity));
+            var wasInView = new HashSet<Client>(before);
+            foreach (var player in after.Where(p => !wasInView.Contains(p)))
+                await player.SendAsync(new MsgPlayer(monster));
+            return true;
+        }
+
         private static bool TryPlace(Monster monster, Random random)
         {
             var generator = monster.Generator;
@@ -271,8 +296,8 @@ namespace Comet.Game.World
                     map.Move(monster, (ushort)x, (ushort)y);
                 else
                     map.Add(monster, (ushort)x, (ushort)y);
-                monster.X = (ushort)x;
-                monster.Y = (ushort)y;
+                monster.X = monster.HomeX = (ushort)x;
+                monster.Y = monster.HomeY = (ushort)y;
                 monster.Direction = (byte)random.Next(8);
                 return true;
             }

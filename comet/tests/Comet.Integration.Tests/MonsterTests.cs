@@ -116,6 +116,50 @@ namespace Comet.Integration.Tests
         }
 
         [Fact]
+        public async Task GuardsWatchABlackNameThenJumpOverAndHitHandToHand()
+        {
+            var at = ServerFixture.GuardOnPost;
+            var (first, email) = await this.PlayingAtAsync(1002, at.X + 10, at.Y);
+            string name = first.User.Name;
+            await this.LogOutAsync(first);
+            await this.Servers.ExecuteGameSqlAsync("UPDATE `character` SET KillPoints = 200 WHERE Name = @name", ("@name", name));
+            await using var player = await this.Servers.PlayAsync(email, Password);
+            var arrived = DateTime.UtcNow;
+            var guard = await MonsterAtAsync(player, at);
+            Assert.Equal("Guard1", guard?.Name);
+
+            var jump = await player.Game.WaitForActionAsync(ActionMessage.Jump, guard.Id);
+            Assert.NotNull(jump);
+            Assert.True(DateTime.UtcNow - arrived >= TimeSpan.FromMilliseconds(600), "The guard should look first");
+            Assert.Equal(1, Math.Max(Math.Abs((int)(jump.Command & 0xFFFF) - (at.X + 10)), Math.Abs((int)(jump.Command >> 16) - at.Y)));
+
+            var kill = await player.Game.WaitForInteractAsync(i => i.Sender == guard.Id && i.Target == player.User.Id);
+            Assert.NotNull(kill);
+            Assert.Null(await player.Game.WaitForEffectAsync(e => e.Caster == guard.Id, Already));
+        }
+
+        [Fact]
+        public async Task MonstersPayNoHeedToPlayersJumpingPast()
+        {
+            var at = ServerFixture.MacaqueOnWatch;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 12, at.Y)).Player;
+            var macaque = await MonsterAtAsync(player, at);
+            Assert.Equal("Macaque", macaque?.Name);
+
+            await player.Game.JumpAsync(player.User.Id, at.X + 12, at.Y, at.X + 3, at.Y);
+            await Task.Delay(700);
+            await player.Game.JumpAsync(player.User.Id, at.X + 3, at.Y, at.X + 12, at.Y);
+            Assert.Null(await player.Game.WaitForWalkAsync(macaque.Id, TimeSpan.FromSeconds(2)));
+
+            // One who stops close by is noticed, after a moment
+            await player.Game.JumpAsync(player.User.Id, at.X + 12, at.Y, at.X + 3, at.Y);
+            var landed = DateTime.UtcNow;
+            Assert.NotNull(await player.Game.WaitForWalkAsync(macaque.Id));
+            Assert.True(DateTime.UtcNow - landed >= TimeSpan.FromSeconds(1.5), "It should wait out the jump and look first");
+            Assert.NotNull(await player.Game.WaitForInteractAsync(i => i.Sender == macaque.Id && i.Target == player.User.Id));
+        }
+
+        [Fact]
         public async Task PlayersWhoHitAGuardDieAndCanReviveInTown()
         {
             var at = ServerFixture.GuardToProvoke;

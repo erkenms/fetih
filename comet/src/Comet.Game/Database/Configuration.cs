@@ -115,6 +115,21 @@ namespace Comet.Game.Database
 
             // Chance in percent that an idle monster takes a random step, ten times a second
             public int WanderChance { get; set; } = 10;
+
+            // How long a monster watches a player before going for them, and turns on what hit it
+            public int ReactionMinMilliseconds { get; set; } = 700;
+            public int ReactionMaxMilliseconds { get; set; } = 1500;
+            public int ProvokedMinMilliseconds { get; set; } = 250;
+            public int ProvokedMaxMilliseconds { get; set; } = 600;
+
+            // How long after landing a jumping player goes unnoticed
+            public int JumpGraceMilliseconds { get; set; } = 1500;
+
+            // How far from home monsters and guards chase, wander and patrol
+            public int LeashRange { get; set; } = 20;
+            public int GuardLeashRange { get; set; } = 12;
+            public int WanderRange { get; set; } = 5;
+            public int GuardPatrolRange { get; set; } = 3;
         }
 
         // How long a dead player waits before the Revive button works

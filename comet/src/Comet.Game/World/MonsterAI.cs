@@ -20,12 +20,50 @@ namespace Comet.Game.World
         // The shortest time between a monster's attacks, whatever its data says
         public static TimeSpan AttackInterval = TimeSpan.FromMilliseconds(1500);
 
-        // Chance in percent that an idle monster takes a step when it may move
+        // Chance in percent that an idle monster takes a step when it may move (a third of
+        // it for guards)
         public static int WanderChance = 10;
+
+        // How long a monster watches a player it sees before going for them
+        public static TimeSpan ReactionMin = TimeSpan.FromMilliseconds(700);
+        public static TimeSpan ReactionMax = TimeSpan.FromMilliseconds(1500);
+
+        // How long it takes to turn on what hit it, or to follow a target that jumped
+        public static TimeSpan ProvokedMin = TimeSpan.FromMilliseconds(250);
+        public static TimeSpan ProvokedMax = TimeSpan.FromMilliseconds(600);
+
+        // A player who jumped goes unnoticed until this long after landing
+        public static TimeSpan JumpGrace = TimeSpan.FromMilliseconds(1500);
+
+        // Farther than this from home a monster or guard gives up the chase and walks back
+        public static int LeashRange = 20;
+        public static int GuardLeashRange = 12;
+
+        // How far from home an idle monster wanders, and a guard patrols
+        public static int WanderRange = 5;
+        public static int GuardPatrolRange = 3;
+
+        // Guards jump at players farther than this, and wait this long after landing to swing
+        private const int GuardJumpDistance = 4;
+        private static readonly TimeSpan LandingPause = TimeSpan.FromMilliseconds(400);
 
         // How long the last tick took, and the slowest one
         public static TimeSpan LastTick { get; private set; }
         public static TimeSpan SlowestTick { get; private set; }
+
+        public static void Configure(Database.ServerConfiguration.MonstersConfiguration config)
+        {
+            static TimeSpan Ms(int ms) => TimeSpan.FromMilliseconds(Math.Max(0, ms));
+            ReactionMin = Ms(config.ReactionMinMilliseconds);
+            ReactionMax = Ms(config.ReactionMaxMilliseconds);
+            ProvokedMin = Ms(config.ProvokedMinMilliseconds);
+            ProvokedMax = Ms(config.ProvokedMaxMilliseconds);
+            JumpGrace = Ms(config.JumpGraceMilliseconds);
+            LeashRange = Math.Max(1, config.LeashRange);
+            GuardLeashRange = Math.Max(1, config.GuardLeashRange);
+            WanderRange = Math.Max(0, config.WanderRange);
+            GuardPatrolRange = Math.Max(0, config.GuardPatrolRange);
+        }
 
         public static async Task RunAsync(TimeSpan interval, CancellationToken cancellation)
         {
@@ -90,19 +128,57 @@ namespace Comet.Game.World
 
         private static async Task ThinkAsync(Monster monster, DateTime now, Random random)
         {
+            if (monster.Returning)
+            {
+                await ReturnHomeAsync(monster, now);
+                return;
+            }
+
+            uint noticed = monster.Noticed;
             var (player, victim, x, y) = FindTarget(monster, now);
             if (player == null && victim == null)
             {
-                if (!monster.IsGuard && now >= monster.NextMoveAt && random.Next(100) < WanderChance)
-                {
-                    monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
-                    await Monsters.StepAsync(monster, (byte)random.Next(8), run: false);
-                }
+                // A guard goes back to its post after every fight
+                if (monster.IsGuard && monster.Engaged != 0 &&
+                    (monster.X, monster.Y) != (monster.HomeX, monster.HomeY))
+                    monster.Returning = true;
+                monster.Engaged = 0;
+                if (monster.Noticed != 0 && monster.Noticed != noticed &&
+                    Kernel.Players.TryGet(monster.Noticed, out var seen) && seen.Character != null)
+                    await FaceAsync(monster, seen.Character.X, seen.Character.Y);
+                await IdleAsync(monster, now, random);
+                return;
+            }
+
+            if (Distance(monster.HomeX, monster.HomeY, monster.X, monster.Y) > (monster.IsGuard ? GuardLeashRange : LeashRange))
+            {
+                GiveUp(monster);
+                return;
+            }
+
+            // Something that hit it, or a monster a guard spots, takes a moment to turn on; a
+            // player it watched has already had that moment
+            if (monster.Engaged != monster.Target)
+            {
+                bool watched = player != null && monster.Target == monster.Noticed;
+                monster.Engaged = monster.Target;
+                if (!watched)
+                    monster.ReactAt = now + Between(ProvokedMin, ProvokedMax, random);
+                await FaceAsync(monster, x, y);
+            }
+            if (now < monster.ReactAt)
+                return;
+
+            // It waits for a jump to land, then a moment to see where they went
+            if (player != null && now < player.LandsAt)
+            {
+                monster.ReactAt = player.LandsAt + Between(ProvokedMin, ProvokedMax, random);
                 return;
             }
 
             int distance = Distance(monster.X, monster.Y, x, y);
-            if (monster.Type.HasMagic && Magic.Casting.ChooseMonsterSpell(monster, distance, random) is { } spell)
+            bool melee = InMelee(monster, player, now);
+            if (!melee && monster.Type.HasMagic && Magic.Casting.ChooseMonsterSpell(monster, distance, random) is { } spell)
             {
                 if (spell.Sort == Magic.MagicSort.Recruit || distance <= Magic.Casting.MonsterCastRange(spell))
                 {
@@ -116,7 +192,7 @@ namespace Comet.Game.World
                     return;
                 }
             }
-            else if (distance <= Math.Max(1, monster.Type.AttackRange))
+            else if (distance <= Reach(monster, player, now))
             {
                 if (now < monster.NextAttackAt || monster.Stunned(now))
                     return;
@@ -129,17 +205,139 @@ namespace Comet.Game.World
                 return;
             }
 
-            if (monster.IsGuard || now < monster.NextMoveAt)
+            // Guards only close in on players; monsters they shoot from where they stand
+            if (monster.IsGuard && !melee || now < monster.NextMoveAt)
                 return;
-            monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
-            byte toward = Movement.DirectionTo(monster.X, monster.Y, x, y, monster.Direction);
-            foreach (int turn in new[] { 0, 1, -1 })
-                if (await Monsters.StepAsync(monster, (byte)((toward + turn + 8) % 8), run: true))
-                    return;
+            if (monster.IsGuard && distance > GuardJumpDistance && NextTo(monster, x, y) is { } landing)
+            {
+                await JumpAsync(monster, landing.X, landing.Y, now);
+                return;
+            }
+            await ChaseStepAsync(monster, x, y, now);
         }
 
+        // Guards fight players hand to hand, unless they fly
+        private static bool InMelee(Monster monster, Client player, DateTime now) =>
+            monster.IsGuard && player != null && !Magic.Buffs.Flying(player.Effects, now);
+
+        // How close it must be to hit without a spell
+        public static int Reach(Monster monster, Client player, DateTime now) =>
+            InMelee(monster, player, now) ? 1 : Math.Max(1, monster.Type.AttackRange);
+
+        private static async Task ChaseStepAsync(Monster monster, int x, int y, DateTime now)
+        {
+            monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
+            byte toward = Movement.DirectionTo(monster.X, monster.Y, x, y, monster.Direction);
+            foreach (int turn in new[] { 0, 1, -1, 2, -2 })
+                if (await Monsters.StepAsync(monster, (byte)((toward + turn + 8) % 8), run: true))
+                {
+                    // Having just arrived, it takes a moment before it swings
+                    if (monster.NextAttackAt < monster.NextMoveAt)
+                        monster.NextAttackAt = monster.NextMoveAt;
+                    return;
+                }
+        }
+
+        private static async Task JumpAsync(Monster monster, ushort x, ushort y, DateTime now)
+        {
+            ushort fromX = monster.X, fromY = monster.Y;
+            if (!await Monsters.JumpAsync(monster, x, y))
+                return;
+            var landed = now + Movement.JumpTime(fromX, fromY, x, y, cyclone: false, oblivion: false, flying: false);
+            monster.NextMoveAt = landed + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
+            if (monster.NextAttackAt < landed + LandingPause)
+                monster.NextAttackAt = landed + LandingPause;
+        }
+
+        // A free cell next to x, y that's a jump away and within the guard's leash, the one
+        // nearest to it
+        private static (ushort X, ushort Y)? NextTo(Monster monster, int x, int y)
+        {
+            (ushort X, ushort Y)? best = null;
+            int bestDistance = int.MaxValue;
+            for (byte direction = 0; direction < 8; direction++)
+            {
+                int cx = x + Movement.DeltaX[direction], cy = y + Movement.DeltaY[direction];
+                int d = Distance(monster.X, monster.Y, cx, cy);
+                if (d > Movement.MaxJumpDistance || d >= bestDistance || cx < 0 || cy < 0 ||
+                    Distance(monster.HomeX, monster.HomeY, cx, cy) > GuardLeashRange ||
+                    !monster.Map.Grid.IsWalkable(cx, cy) || monster.Map.AnyAt((ushort)cx, (ushort)cy))
+                    continue;
+                (best, bestDistance) = (((ushort)cx, (ushort)cy), d);
+            }
+            return best;
+        }
+
+        // Too far from home: it forgets its target and goes back, ignoring everyone on the way
+        private static void GiveUp(Monster monster)
+        {
+            monster.Target = 0;
+            monster.Engaged = monster.Noticed = 0;
+            monster.Returning = true;
+        }
+
+        private static async Task ReturnHomeAsync(Monster monster, DateTime now)
+        {
+            int distance = Distance(monster.X, monster.Y, monster.HomeX, monster.HomeY);
+            if (distance == 0)
+            {
+                monster.Returning = false;
+                return;
+            }
+            if (now < monster.NextMoveAt)
+                return;
+            if (monster.IsGuard && distance > GuardJumpDistance && distance <= Movement.MaxJumpDistance)
+            {
+                await JumpAsync(monster, monster.HomeX, monster.HomeY, now);
+                if (monster.X == monster.HomeX && monster.Y == monster.HomeY)
+                    return;
+            }
+
+            monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
+            byte toward = Movement.DirectionTo(monster.X, monster.Y, monster.HomeX, monster.HomeY, monster.Direction);
+            foreach (int turn in new[] { 0, 1, -1, 2, -2 })
+                if (await Monsters.StepAsync(monster, (byte)((toward + turn + 8) % 8), run: false))
+                    return;
+            // Boxed in: this is home now
+            (monster.HomeX, monster.HomeY) = (monster.X, monster.Y);
+            monster.Returning = false;
+        }
+
+        // Monsters roam near home; guards keep to their post
+        private static async Task IdleAsync(Monster monster, DateTime now, Random random)
+        {
+            int roam = monster.IsGuard ? GuardPatrolRange : WanderRange;
+            if (Distance(monster.X, monster.Y, monster.HomeX, monster.HomeY) > roam)
+            {
+                monster.Returning = true;
+                return;
+            }
+            int chance = monster.IsGuard ? WanderChance / 3 : WanderChance;
+            if (now < monster.NextMoveAt || random.Next(100) >= chance)
+                return;
+            monster.NextMoveAt = now + TimeSpan.FromMilliseconds(monster.Type.MoveSpeed);
+            byte direction = (byte)random.Next(8);
+            if (Distance(monster.X + Movement.DeltaX[direction], monster.Y + Movement.DeltaY[direction],
+                    monster.HomeX, monster.HomeY) <= roam)
+                await Monsters.StepAsync(monster, direction, run: false);
+        }
+
+        private static async Task FaceAsync(Monster monster, int x, int y)
+        {
+            byte direction = Movement.DirectionTo(monster.X, monster.Y, x, y, monster.Direction);
+            if (direction == monster.Direction)
+                return;
+            monster.Direction = direction;
+            await Monsters.SendToViewAsync(monster, Packets.MsgAction.Turn(monster.Identity, direction));
+        }
+
+        private static TimeSpan Between(TimeSpan min, TimeSpan max, Random random) =>
+            max <= min ? min : min + TimeSpan.FromMilliseconds(random.NextDouble() * (max - min).TotalMilliseconds);
+
         // Keeps a target that's still there; otherwise guards pick the nearest monster or guilty
-        // player (flashing or black name), and aggressive monsters the nearest player they see
+        // player (flashing or black name), and aggressive monsters the nearest player they see.
+        // A player is only taken on after being watched for a reaction time, and one in the air
+        // or just landed from a jump goes unnoticed: monsters don't chase travellers.
         private static (Client Player, Monster Victim, ushort X, ushort Y) FindTarget(Monster monster, DateTime now)
         {
             uint target = monster.Target;
@@ -160,19 +358,33 @@ namespace Comet.Game.World
                     .FirstOrDefault();
 
             if ((!monster.Type.IsAggressive && !monster.IsGuard) || !Kernel.World.TryGet(monster.Map.Id, out var players))
+            {
+                monster.Noticed = 0;
                 return Chosen(monster, prey);
+            }
             Client nearest = null;
             ushort nearestX = 0, nearestY = 0;
             foreach (var player in players.InView(monster.X, monster.Y))
             {
                 if (!players.TryGetPosition(player, out var px, out var py) || !CanBeAttacked(player, now) ||
+                    now < player.LandsAt + JumpGrace ||
                     monster.IsGuard && !Pk.Pking.IsGuilty(player, now) ||
                     Distance(monster.X, monster.Y, px, py) > range ||
                     nearest != null && Distance(monster.X, monster.Y, px, py) >= Distance(monster.X, monster.Y, nearestX, nearestY))
                     continue;
                 (nearest, nearestX, nearestY) = (player, px, py);
             }
-            if (nearest == null || prey != null &&
+            if (nearest == null)
+            {
+                monster.Noticed = 0;
+                return Chosen(monster, prey);
+            }
+            if (monster.Noticed != nearest.ID)
+            {
+                monster.Noticed = nearest.ID;
+                monster.DecidesAt = now + Between(ReactionMin, ReactionMax, Random.Shared);
+            }
+            if (now < monster.DecidesAt || prey != null &&
                 Distance(monster.X, monster.Y, prey.X, prey.Y) < Distance(monster.X, monster.Y, nearestX, nearestY))
                 return Chosen(monster, prey);
             monster.Target = nearest.ID;

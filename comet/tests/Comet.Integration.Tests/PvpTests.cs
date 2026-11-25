@@ -118,6 +118,22 @@ namespace Comet.Integration.Tests
             Assert.Equal(JailMap, jailed?.Command);
             var logged = await this.Servers.WaitForEventAsync("game", "pk.jailed", "name", player.User.Name);
             Assert.Equal("killed_by_guard", logged.GetProperty("reason").GetString());
+
+            // The guard goes back to its post
+            await using var watcher = (await this.PlayingAtAsync(1002, at.X + 6, at.Y)).Player;
+            var seen = await watcher.Game.WaitForMonsterAsync(m => m.Id == guard.Id);
+            Assert.NotNull(seen);
+            var (x, y) = ((int)seen.X, (int)seen.Y);
+            while ((x, y) != (at.X, at.Y))
+            {
+                var step = await watcher.Game.WaitForWalkAsync(guard.Id);
+                Assert.NotNull(step);
+                x += DeltaX[step.Direction % 8];
+                y += DeltaY[step.Direction % 8];
+            }
         }
+
+        private static readonly int[] DeltaX = { 0, -1, -1, -1, 0, 1, 1, 1 };
+        private static readonly int[] DeltaY = { 1, 1, 0, -1, -1, -1, 0, 1 };
     }
 }
