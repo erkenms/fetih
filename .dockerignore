@@ -1,0 +1,16 @@
+# Build context for comet/Containerfile: only sources go in
+**/bin
+**/obj
+comet/src/*/logs
+**/node_modules
+_CLIENT
+client
+docs
+tools
+.git
+.github
+.claude
+comet/sql
+comet/tests
+web/assets
+web/dist

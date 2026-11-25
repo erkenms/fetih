@@ -31,3 +31,6 @@ msbuild.wrn
 sql/data
 
 logs/
+
+# Deployment settings (deploy/env.example)
+.env

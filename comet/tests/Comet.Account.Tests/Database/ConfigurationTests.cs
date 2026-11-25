@@ -18,5 +18,23 @@ namespace Comet.Account.Database.Tests
             var config = new ServerConfiguration(new[] { "--Logging:Level=warn" });
             Assert.Equal("warn", config.Logging.Level);
         }
+
+        [Fact]
+        public void EnvironmentOverridesFileButNotCommandLine()
+        {
+            System.Environment.SetEnvironmentVariable("COMET_ACCOUNT_Database__Hostname", "db");
+            System.Environment.SetEnvironmentVariable("COMET_ACCOUNT_Network__Port", "9962");
+            try
+            {
+                var config = new ServerConfiguration(new[] { "--Network:Port=9961" });
+                Assert.Equal("db", config.Database.Hostname);
+                Assert.Equal(9961, config.Network.Port);
+            }
+            finally
+            {
+                System.Environment.SetEnvironmentVariable("COMET_ACCOUNT_Database__Hostname", null);
+                System.Environment.SetEnvironmentVariable("COMET_ACCOUNT_Network__Port", null);
+            }
+        }
     }
 }

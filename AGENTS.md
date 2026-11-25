@@ -24,6 +24,11 @@ cd web && npm run dev                         # the web frontend (:5173); npm ru
 dotnet run client/build.cs                    # the client, into _CLIENT/fetih
 ```
 
+A public server runs the same compose file with `--profile deploy` (servers in containers
+behind an HTTPS proxy): [docs/deploy.md](docs/deploy.md). Settings the servers read from
+their `.config` files can be overridden by `COMET_GAME_`, `COMET_ACCOUNT_` and `COMET_WEB_`
+environment variables (`COMET_GAME_Database__Hostname=db`).
+
 ## Don't break the user's setup
 
 - The user often has `Comet.Game` and `Comet.Account` running from `comet/src`, with a

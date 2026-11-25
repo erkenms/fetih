@@ -38,6 +38,7 @@ namespace Comet.Account.Database
         {
             new ConfigurationBuilder()
                 .AddJsonFile("Comet.Account.config")
+                .AddEnvironmentVariables("COMET_ACCOUNT_")
                 .AddCommandLine(args)
                 .Build()
                 .Bind(this);

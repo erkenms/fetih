@@ -31,6 +31,11 @@ public class WebConfiguration
 
         // Per IP address
         public int LoginAttemptsPerMinute { get; set; } = 10;
+
+        // On behind a reverse proxy: the client's address and scheme come from its
+        // X-Forwarded-For and X-Forwarded-Proto headers. Any sender is trusted, so only
+        // when nothing but the proxy can reach the web.
+        public bool ForwardedHeaders { get; set; }
     }
 
     public class GameRpcSection

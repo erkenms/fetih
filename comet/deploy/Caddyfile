@@ -1,0 +1,6 @@
+# The web's only way in. With a public domain in FETIH_DOMAIN, Caddy gets and renews its
+# Let's Encrypt certificate; with "localhost" it signs one of its own.
+{$FETIH_DOMAIN:localhost} {
+	encode zstd gzip
+	reverse_proxy web:5820
+}

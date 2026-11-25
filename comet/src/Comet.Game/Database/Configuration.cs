@@ -240,6 +240,7 @@ namespace Comet.Game.Database
         {
             new ConfigurationBuilder()
                 .AddJsonFile("Comet.Game.config")
+                .AddEnvironmentVariables("COMET_GAME_")
                 .AddCommandLine(args)
                 .Build()
                 .Bind(this);

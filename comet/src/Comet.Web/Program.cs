@@ -6,6 +6,7 @@ using Comet.Web.Audit;
 using Comet.Web.Auth;
 using Comet.Web.Features;
 using Comet.Web.Game;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
@@ -62,7 +63,17 @@ builder.Services.AddWebAuth(config);
 foreach (var feature in FeatureRegistry.All)
     feature.AddServices(builder.Services, config);
 
+if (config.Web.ForwardedHeaders)
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
 var app = builder.Build();
+if (config.Web.ForwardedHeaders)
+    app.UseForwardedHeaders();
 
 app.UseExceptionHandler(error => error.Run(async context =>
 {
