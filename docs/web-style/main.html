@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<title>Fetih Online — Ana sayfa</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0e0906}
+a{color:#e8c77a;text-decoration:none}a:hover{color:#fff0c0;text-decoration:underline}
+.page{background:#0e0906 url(../../web/src/theme/textures/bgdark.jpg) repeat;font:11px/1.55 Verdana,Tahoma,Geneva,sans-serif;color:#3b2614}
+.hdr{position:relative;height:250px;background:#1a0f08 url(/assets/site/hero.png) 70% 30%/cover no-repeat;border:1px solid #000;box-shadow:0 0 0 3px #4a3019,0 0 0 4px #000,0 8px 24px rgba(0,0,0,.8)}
+.nav{display:flex;flex-wrap:wrap;background:#5a1512 url(../../web/src/theme/textures/redleather.jpg);border:1px solid #000;box-shadow:inset 0 1px 0 rgba(255,190,140,.35),inset 0 -2px 0 rgba(0,0,0,.4),0 0 0 3px #4a3019,0 0 0 4px #000}
+.nav a{flex:1 1 auto;text-align:center;padding:11px 12px 10px;font:bold 13px "Trebuchet MS",Tahoma,sans-serif;color:#f5dfa3;text-shadow:1px 1px 0 #000;border-left:1px solid rgba(255,200,150,.16);border-right:1px solid rgba(0,0,0,.55);text-decoration:none}
+.nav a:hover{background:rgba(255,200,120,.12);color:#fff;text-decoration:none}
+.nav .on{background:linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.15));color:#fff}
+.box{margin:0 0 10px;border:1px solid #000;box-shadow:0 0 0 1px #6b4a26,0 3px 8px rgba(0,0,0,.6)}
+.bt{display:flex;align-items:center;gap:6px;height:30px;padding:0 8px;background:#5a1512 url(../../web/src/theme/textures/redleather.jpg);border-bottom:1px solid #000;box-shadow:inset 0 1px 0 rgba(255,190,140,.35);font:bold 13px Georgia,"Times New Roman",serif;color:#f5dfa3;text-shadow:1px 1px 1px #000}
+.bt img{width:28px;height:28px;margin:-6px -2px -6px -4px}
+.bt .r{margin-left:auto;font:10px Verdana,sans-serif;color:#d8bd86}
+.bb{background:#e6d3a8 url(../../web/src/theme/textures/parchment.jpg);padding:8px 10px;box-shadow:inset 0 0 0 1px #f6ebcf,inset 0 0 22px rgba(110,70,20,.28)}
+.bb a{color:#7a1a12;font-weight:bold;text-decoration:none}.bb a:hover{text-decoration:underline;color:#a32418}
+.tbl{width:100%;border-collapse:collapse}
+.tbl td{padding:4px 5px;border-bottom:1px dotted #a88a5a;vertical-align:middle}
+.alt td{background:rgba(120,80,30,.12)}
+.btn{display:inline-block;padding:3px 14px 4px;font:bold 11px Verdana,sans-serif;color:#fff3d2;text-shadow:1px 1px 0 #3a0806;background:linear-gradient(#c0402f,#8f2219 50%,#76180f 51%,#922619);border:1px solid #3a0806;border-radius:3px;box-shadow:inset 0 1px 0 rgba(255,210,180,.5),0 1px 0 rgba(255,255,255,.4);cursor:pointer}
+.tabb{display:inline-block;padding:2px 7px;font:bold 10px Verdana,sans-serif;color:#5a3a1a;background:linear-gradient(#f4e6c2,#d9c08a);border:1px solid #8a6a3a;border-radius:2px;cursor:pointer}
+.tabb.on{color:#fff3d2;text-shadow:1px 1px 0 #3a0806;background:linear-gradient(#b0392b,#7a1a12);border-color:#3a0806}
+.big{display:block;text-align:center;text-decoration:none;border-radius:4px;padding:8px 6px 7px;margin:0 0 8px}
+.big b{display:block;font:bold 19px Georgia,serif}
+.big span{display:block;font:10px Verdana,sans-serif;margin-top:1px}
+.gold{background:linear-gradient(#ffe7a3,#e3b24c 47%,#c78d22 53%,#e6b54d);border:1px solid #4a2c05;box-shadow:inset 0 1px 0 #fff4cf,0 0 0 1px #000,0 3px 6px rgba(0,0,0,.6);color:#3a1e04;text-shadow:0 1px 0 rgba(255,240,200,.7)}
+.gold:hover{text-decoration:none;filter:brightness(1.08);color:#3a1e04}
+.red{background:linear-gradient(#d24a37,#a02a1e 47%,#7e1a12 53%,#9a2519);border:1px solid #2a0503;box-shadow:inset 0 1px 0 #ffb9a6,0 0 0 1px #000,0 3px 6px rgba(0,0,0,.6);color:#fff3d2;text-shadow:1px 1px 0 #3a0806}
+.red:hover{text-decoration:none;filter:brightness(1.1);color:#fff}
+.inp{width:100%;box-sizing:border-box;height:21px;border:1px solid #7a5a32;box-shadow:inset 1px 1px 2px rgba(0,0,0,.35);background:#fbf4e2;font:11px Verdana,sans-serif;padding:2px 4px;margin:2px 0 6px}
+.mh{margin:6px -10px 3px;padding:2px 10px;background:rgba(90,40,10,.16);border-top:1px solid rgba(120,80,30,.35);border-bottom:1px solid rgba(255,250,230,.5);font:bold 11px Georgia,serif;color:#5a2a10}
+.mi{display:block;padding:2px 0 2px 2px}
+.date{color:#7a5a32;font-size:10px;white-space:nowrap}
+.foot a{color:#c9ad78}
+</style>
+</helmet>
+
+<div class="page" style="min-height: 100vh; padding: 0 0 30px">
+  <div style="width: 1000px; max-width: 100%; margin: 0 auto; box-sizing: border-box; padding: 0 4px">
+
+    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 7px 2px 9px; color: #b39a70; font-size: 10px">
+      <span>Sunucu saati: <b style="color: #e8d2a0">21:42</b> &#160;|&#160; <b style="color: #7fd36a">Sunucu açık</b> · 142 oyuncu çevrimiçi</span>
+      <span><a href="#">Türkçe</a> &#160;|&#160; <a href="#">English</a></span>
+    </div>
+
+    <div class="hdr">
+      <div style="position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,6,3,.85) 0%, rgba(10,6,3,.55) 30%, rgba(10,6,3,0) 55%)"></div>
+      <a href="#" style="position: absolute; left: 34px; top: 52px; display: flex; flex-direction: column; text-decoration: none">
+        <span style="font-family: Cinzel, Georgia, serif; font-weight: 900; font-size: 72px; line-height: 1; background: linear-gradient(180deg, #fff2c2 0%, #f2cb72 40%, #9c6420 54%, #e2b358 72%, #fde6a6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 1px #000) drop-shadow(0 3px 0 #2a1205) drop-shadow(0 0 10px rgba(0,0,0,.9))">Fetih</span>
+        <span style="margin: 2px 0 0 4px; font: italic bold 20px Georgia, serif; color: #e9cf8e; text-shadow: 1px 1px 0 #000, 0 0 8px #000">Online</span>
+      </a>
+      <div style="position: absolute; left: 38px; bottom: 26px; font: italic 13px Georgia, serif; color: #e9dcc0; text-shadow: 1px 1px 2px #000">Klasik 5619 sunucusu — ücretsiz, kurulumu kolay.</div>
+    </div>
+
+    <div style="height: 8px"></div>
+    <nav class="nav" aria-label="Ana menü">
+      <a class="on" href="#">Ana Sayfa</a>
+      <a href="#">Haberler</a>
+      <a href="#">Oyun Rehberi</a>
+      <a href="rankings.html">Sıralamalar</a>
+      <a href="#">İndir</a>
+      <a href="#">Kayıt Ol</a>
+      <a href="#">Destek</a>
+    </nav>
+    <div style="height: 12px"></div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start">
+
+      <aside style="flex: 1 1 200px; max-width: 100%; min-width: 0">
+        <a class="big gold" href="#"><b>Oyunu İndir</b><span>İstemci, sürüm 5619</span></a>
+        <a class="big red" href="#"><b>Hesap Oluştur</b><span>Ücretsiz, bir dakika sürer</span></a>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/713059.png" alt="">Hesap Girişi</div>
+          <form class="bb">
+            <label for="u">Hesap adı</label>
+            <input class="inp" id="u" type="text">
+            <label for="p">Şifre</label>
+            <input class="inp" id="p" type="password">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px">
+              <button type="button" class="btn">Giriş</button>
+              <a href="#" style="font-weight: normal; font-size: 10px">Şifremi unuttum</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/711394.png" alt="">Menü</div>
+          <nav class="bb" aria-label="Site menüsü" style="padding-top: 2px">
+            <div class="mh">Haberler</div>
+            <a class="mi" href="#">» Son haberler</a>
+            <a class="mi" href="#">» Yama notları</a>
+            <a class="mi" href="#">» Haber arşivi</a>
+            <div class="mh">Oyun</div>
+            <a class="mi" href="#">» Yeni başlayanlar</a>
+            <a class="mi" href="#">» Sınıflar</a>
+            <a class="mi" href="#">» Haritalar</a>
+            <div class="mh">Topluluk</div>
+            <a class="mi" href="rankings.html">» Sıralamalar</a>
+            <a class="mi" href="#">» Loncalar</a>
+            <a class="mi" href="#">» Lonca savaşı</a>
+            <div class="mh">Destek</div>
+            <a class="mi" href="#">» Sık sorulanlar</a>
+            <a class="mi" href="#">» İletişim</a>
+          </nav>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/724426.png" alt="">Galeri</div>
+          <div class="bb" style="padding: 6px; text-align: center">
+            <img src="/assets/site/character1.png" alt="Korsan karakter çizimi" style="display: block; width: 100%; height: 230px; object-fit: cover; object-position: top; border: 1px solid #5a3a1a">
+            <a href="#" style="display: block; margin-top: 5px">Duvar kağıtları »</a>
+          </div>
+        </div>
+      </aside>
+
+      <main style="flex: 999 1 540px; min-width: 0">
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/2000247.png" alt="">Haber Bandı</div>
+          <div class="bb" style="padding: 4px 8px">
+            <table class="tbl">
+              <sc-for list="{{ticker}}" as="t" hint-placeholder-count="5">
+                <tr class="{{t.cls}}">
+                  <td class="date" style="width: 70px">{{t.date}}</td>
+                  <td><b style="color: #5a2a10">{{t.kind}}:</b> {{t.text}}</td>
+                </tr>
+              </sc-for>
+            </table>
+            <div style="text-align: right; padding: 4px 2px 0"><a href="#">Tüm haberler »</a></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/610120.png" alt="">Hafta Sonu Çift Tecrübe<span class="r">24.11.2026</span></div>
+          <div class="bb" style="padding: 12px 14px">
+            <img src="/assets/site/character2.png" alt="" style="float: right; width: 120px; height: 150px; object-fit: cover; object-position: top; margin: 0 0 6px 12px; border: 1px solid #5a3a1a">
+            <p style="margin: 0 0 8px; font-size: 12px">Değerli Fetih oyuncuları,</p>
+            <p style="margin: 0 0 8px; font-size: 12px">Bu cumartesi ve pazar günü tüm canavarlardan <b>iki kat tecrübe</b> kazanacaksınız. Etkinlik sunucu saatiyle cumartesi 00:00'da başlar, pazar 23:59'da biter.</p>
+            <ul style="margin: 0 0 8px; padding-left: 18px; font-size: 12px">
+              <li>İki kat tecrübe bütün haritalarda geçerlidir.</li>
+              <li>Lonca savaşı her zamanki saatinde, cumartesi 20:00'de.</li>
+            </ul>
+            <p style="margin: 0; font-size: 12px">İyi oyunlar dileriz!<br><i>— Fetih Ekibi</i></p>
+            <div style="clear: both; text-align: right; padding-top: 6px; border-top: 1px dotted #a88a5a; margin-top: 10px"><a href="#">Devamını oku »</a></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/410036.png" alt="">Yama 5619.3<span class="r">22.11.2026</span></div>
+          <div class="bb" style="padding: 12px 14px; font-size: 12px">
+            <p style="margin: 0 0 6px">Bu yamada değişenler:</p>
+            <ul style="margin: 0 0 6px; padding-left: 18px">
+              <li>Arena sezonu kaldığı yerden devam ediyor.</li>
+              <li>Hapishaneden çıkış süresi düzeltildi.</li>
+              <li>Market tezgâhlarında fiyat görünmeme hatası giderildi.</li>
+            </ul>
+            <div style="text-align: right; padding-top: 6px; border-top: 1px dotted #a88a5a"><a href="#">Tüm yama notları »</a></div>
+          </div>
+        </div>
+      </main>
+
+      <aside style="flex: 1 1 210px; max-width: 100%; min-width: 0">
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/724426.png" alt="">Sunucu Durumu</div>
+          <div class="bb" style="padding: 4px 8px">
+            <table class="tbl">
+              <tr><td>Durum</td><td style="text-align: right; color: #1d6a12; font-weight: bold">Açık</td></tr>
+              <tr class="alt"><td>Çevrimiçi</td><td style="text-align: right; font-weight: bold">142</td></tr>
+              <tr><td>Sunucu saati</td><td style="text-align: right; font-weight: bold">21:42</td></tr>
+              <tr class="alt"><td style="border-bottom: 0">Sürüm</td><td style="text-align: right; font-weight: bold; border-bottom: 0">5619</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/410036.png" alt="">Lonca Savaşı</div>
+          <div class="bb" style="text-align: center">
+            <div style="font-size: 10px; color: #6b4a26">Direk sahibi</div>
+            <div style="font: bold 16px Georgia, serif; color: #7a1a12; margin: 1px 0 4px">KillOrDie</div>
+            <div style="font-size: 10px">Son kazanan: <b>Ready~To~Fight</b><br>Sonraki savaş: <b>Cumartesi 20:00</b></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/200007.png" alt="">En İyiler</div>
+          <div class="bb" style="padding: 6px 8px">
+            <div style="display: flex; gap: 3px; margin-bottom: 5px">
+              <button type="button" class="tabb on">Seviye</button>
+              <button type="button" class="tabb">Asalet</button>
+              <button type="button" class="tabb">Arena</button>
+            </div>
+            <table class="tbl">
+              <sc-for list="{{players}}" as="p" hint-placeholder-count="5">
+                <tr class="{{p.cls}}">
+                  <td style="width: 14px; font-weight: bold; color: #6b4a26">{{p.rank}}.</td>
+                  <td><img src="{{p.face}}" alt="" style="width: 20px; height: 20px; vertical-align: middle; border: 1px solid #5a3a1a; margin-right: 4px"><a href="#">{{p.name}}</a></td>
+                  <td style="text-align: right">{{p.level}}</td>
+                </tr>
+              </sc-for>
+            </table>
+            <div style="text-align: right; padding-top: 4px"><a href="rankings.html">Tüm sıralama »</a></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="bt"><img src="/assets/icons/items/610120.png" alt="">Şu An Oyunda</div>
+          <div class="bb" style="padding: 5px">
+            <div style="background: #1a110b; border: 1px solid #000; box-shadow: inset 1px 1px 3px rgba(0,0,0,.8); padding: 4px 6px; height: 170px; overflow: hidden; font-size: 10px; line-height: 1.5">
+              <sc-for list="{{chat}}" as="c" hint-placeholder-count="6">
+                <div style="margin-bottom: 3px"><span style="color: #f0c860; font-weight: bold">{{c.from}}:</span> <span style="color: #e6dcc6">{{c.text}}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="foot" style="margin-top: 14px; padding: 10px 0; border-top: 1px solid #3a2616; text-align: center; color: #8a7350; font-size: 10px; line-height: 1.8">
+      <a href="#">Ana Sayfa</a> | <a href="#">Haberler</a> | <a href="rankings.html">Sıralamalar</a> | <a href="#">İndir</a> | <a href="#">Destek</a> | <a href="#">Kullanım Koşulları</a><br>
+      © 2026 Fetih Online. [TELİF METNİ]
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const f = ['/assets/faces/player/17.png', '/assets/faces/player/34.png', '/assets/faces/player/51.png', '/assets/faces/player/68.png', '/assets/faces/player/85.png', '/assets/faces/player/102.png'];
+    const ticker = [
+      ['24.11.2026', 'Etkinlik', 'Hafta sonu çift tecrübe! Cumartesi ve pazar tüm haritalarda.'],
+      ['22.11.2026', 'Yama', 'Yama 5619.3 yüklendi: arena sezonu ve hapishane düzeltmeleri.'],
+      ['18.11.2026', 'Duyuru', 'Lonca savaşı artık her cumartesi 20:00’de.'],
+      ['14.11.2026', 'Etkinlik', 'Meteor yağmuru: Kuş Ormanı’nda iki kat düşüş.'],
+      ['03.11.2026', 'Bakım', 'Planlı bakım 04.11 sabah 06:00 – 07:00 arası.']
+    ].map((t, i) => ({ date: t[0], kind: t[1], text: t[2], cls: i % 2 ? 'alt' : '' }));
+    const players = [['Kage', 130], ['VİOLET', 129], ['hattap77', 127], ['Beøfulf', 126], ['bedri', 125], ['ThuqLife', 124]]
+      .map((p, i) => ({ rank: i + 1, name: p[0], level: p[1], face: f[i], cls: i % 2 ? 'alt' : '' }));
+    return {
+      ticker,
+      players,
+      chat: [
+        { from: 'VİOLET', text: '+7 süper kral meç satılık' },
+        { from: 'hattap77', text: 'Ejderha adasına grup arıyoruz' },
+        { from: 'Kage', text: 'Lonca alımı var, 120+' },
+        { from: 'bedri', text: '+3 taş alınır' },
+        { from: 'Beøfulf', text: 'Ay tokmağı satılır' },
+        { from: 'ThuqLife', text: 'Meteor kaç para şu an?' },
+        { from: '~CopyPaste~', text: 'Market önünde tezgâh açtım, bakın' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
