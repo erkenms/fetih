@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 import { api, ApiError, unwrap, type Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { DiffViewer } from './DiffViewer'
+import { useReloadMutation } from '../data/useDataReload'
 
 type DataFileChange = Schemas['DataFileChange']
 type ValidationProblem = Schemas['ValidationProblemDto']
@@ -81,32 +82,16 @@ export default function ChangesPage() {
     enabled: !!selectedFile,
   })
 
-  const reloadMutation = useMutation({
+  const reloadMutation = useReloadMutation<string>({
     mutationFn: (file: string) =>
       unwrap(api.POST('/api/changes/{file}/reload', { params: { path: { file } } })),
-    onSuccess: (res) => {
+    successTitle: (res) => t('reload.successTitle', { file: res.file }),
+    rejectedTitle: (res) => t('reload.rejectedTitle', { file: res.file }),
+    errorTitle: t('reload.errorTitle'),
+    fallbackApplied: () => t('reload.applied'),
+    fallbackRejected: () => t('reload.rejected'),
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['changes'] })
-      if (res.applied) {
-        notifications.show({
-          color: res.warnings.length > 0 ? 'yellow' : 'green',
-          title: t('reload.successTitle', { file: res.file }),
-          message: res.summary ?? t('reload.applied'),
-        })
-      } else {
-        notifications.show({
-          color: 'red',
-          title: t('reload.rejectedTitle', { file: res.file }),
-          message: res.errors.join('; ') || t('reload.rejected'),
-        })
-      }
-    },
-    onError: (err) => {
-      const msg = err instanceof ApiError ? err.code : String(err)
-      notifications.show({
-        color: 'red',
-        title: t('reload.errorTitle'),
-        message: msg,
-      })
     },
   })
 

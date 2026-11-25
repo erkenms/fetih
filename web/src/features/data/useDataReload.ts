@@ -1,36 +1,59 @@
 import { notifications } from '@mantine/notifications'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap } from '../../api/client'
+import { api, unwrap, type Schemas } from '../../api/client'
+import { useErrorText } from '../../app/ErrorAlert'
 
-export function useDataReload(fileName: string) {
-  const { t } = useTranslation('data')
-  const { t: tCommon } = useTranslation('common')
+export type ReloadResult = Schemas['ReloadResponse'] | Schemas['MonsterReloadResponse']
+
+export interface ReloadOptions<TVariables> {
+  mutationFn: (variables: TVariables) => Promise<ReloadResult>
+  successTitle: (res: ReloadResult) => string
+  rejectedTitle: (res: ReloadResult) => string
+  errorTitle: string
+  fallbackApplied?: (res: ReloadResult) => string
+  fallbackRejected?: (res: ReloadResult) => string
+  onSuccess?: (res: ReloadResult) => void
+}
+
+export function useReloadMutation<TVariables = void>(options: ReloadOptions<TVariables>) {
+  const errorText = useErrorText()
 
   return useMutation({
-    mutationFn: () => unwrap(api.POST('/api/changes/{file}/reload', { params: { path: { file: fileName } } })),
+    mutationFn: options.mutationFn,
     onSuccess: (res) => {
+      options.onSuccess?.(res)
       if (res.applied) {
         notifications.show({
           color: res.warnings.length > 0 ? 'yellow' : 'green',
-          title: t('status.reloadSuccessTitle', { file: res.file }),
-          message: res.summary ?? res.file,
+          title: options.successTitle(res),
+          message: res.summary ?? (options.fallbackApplied ? options.fallbackApplied(res) : res.file),
         })
       } else {
         notifications.show({
           color: 'red',
-          title: t('status.reloadRejectedTitle', { file: res.file }),
-          message: res.errors.join('; ') || res.file,
+          title: options.rejectedTitle(res),
+          message: res.errors.join('; ') || (options.fallbackRejected ? options.fallbackRejected(res) : res.file),
         })
       }
     },
     onError: (err) => {
-      const code = err instanceof ApiError ? err.code : 'server_error'
       notifications.show({
         color: 'red',
-        title: t('status.reloadErrorTitle'),
-        message: tCommon(`errors.${code}`, { defaultValue: tCommon('errors.unknown', { code }) }),
+        title: options.errorTitle,
+        message: errorText(err),
       })
     },
+  })
+}
+
+export function useDataReload(fileName: string) {
+  const { t } = useTranslation('data')
+
+  return useReloadMutation<void>({
+    mutationFn: () => unwrap(api.POST('/api/changes/{file}/reload', { params: { path: { file: fileName } } })),
+    successTitle: (res) => t('status.reloadSuccessTitle', { file: res.file }),
+    rejectedTitle: (res) => t('status.reloadRejectedTitle', { file: res.file }),
+    errorTitle: t('status.reloadErrorTitle'),
   })
 }

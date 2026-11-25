@@ -24,9 +24,10 @@ import { IconCopy, IconEdit, IconPlus, IconRefresh, IconRotate } from '@tabler/i
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap, type Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { MonsterEditorDrawer } from './MonsterEditorDrawer'
+import { useReloadMutation } from '../data/useDataReload'
 import {
   ATTACK_USER_GUARD,
   createEmptyMonster,
@@ -183,30 +184,13 @@ export default function MonstersPage() {
     },
   })
 
-  const reloadMutation = useMutation({
+  const reloadMutation = useReloadMutation<void>({
     mutationFn: () => unwrap(api.POST('/api/studio/monsters/reload')),
-    onSuccess: (res) => {
-      if (res.applied) {
-        notifications.show({
-          color: res.warnings.length > 0 ? 'yellow' : 'green',
-          title: t('notification.reloadSuccessTitle'),
-          message: res.summary ?? t('notification.reloadApplied'),
-        })
-      } else {
-        notifications.show({
-          color: 'red',
-          title: t('notification.reloadRejectedTitle'),
-          message: res.errors.join('; ') || t('notification.reloadRejected'),
-        })
-      }
-    },
-    onError: (err) => {
-      notifications.show({
-        color: 'red',
-        title: t('notification.reloadErrorTitle'),
-        message: err instanceof ApiError ? err.code : String(err),
-      })
-    },
+    successTitle: () => t('notification.reloadSuccessTitle'),
+    rejectedTitle: () => t('notification.reloadRejectedTitle'),
+    errorTitle: t('notification.reloadErrorTitle'),
+    fallbackApplied: () => t('notification.reloadApplied'),
+    fallbackRejected: () => t('notification.reloadRejected'),
   })
 
   const openCreate = () => {

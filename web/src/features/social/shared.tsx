@@ -93,7 +93,7 @@ export function ConfirmAction({
   disabled?: boolean
 }) {
   const { t } = useTranslation('social')
-  const errorText = useErrorText()
+  const errorText = useErrorText('social')
   const client = useQueryClient()
   const [opened, setOpened] = useState(false)
   const mutation = useMutation({
@@ -105,7 +105,7 @@ export function ConfirmAction({
     },
     onError: (error) => {
       setOpened(false)
-      notifications.show({ color: 'red', message: t(`errors.${(error as { code?: string }).code}`, { defaultValue: errorText(error) }) })
+      notifications.show({ color: 'red', message: errorText(error) })
     },
   })
   return (

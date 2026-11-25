@@ -20,7 +20,8 @@ import { IconAlertTriangle, IconExternalLink, IconRefresh } from '@tabler/icons-
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { api, ApiError, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap, type Schemas } from '../../api/client'
+import { useErrorText } from '../../app/ErrorAlert'
 import { levelColor, rangeWindow, timeRangePresets, type TimeRangePreset } from './timeline'
 
 type Entry = Schemas['LogEntry']
@@ -64,12 +65,7 @@ export function LogTimeline({ characterId, accountId, compact = false }: LogTime
     placeholderData: keepPreviousData,
   })
 
-  const errorText = (error: unknown) => {
-    const code = error instanceof ApiError ? error.code : 'server_error'
-    return t(`errors.${code}`, {
-      defaultValue: t(`common:errors.${code}`, { defaultValue: t('common:errors.unknown', { code }) }),
-    })
-  }
+  const errorText = useErrorText('logs')
 
   return (
     <Stack gap="sm">

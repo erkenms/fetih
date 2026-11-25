@@ -16,7 +16,7 @@ import { IconTrash } from '@tabler/icons-react'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ApiError, api, unwrap, type Schemas } from '../../api/client'
+import { api, unwrap, type Schemas } from '../../api/client'
 import { useErrorText } from '../../app/ErrorAlert'
 import { ItemIcon, ItemTooltip } from '../../components/items'
 import {
@@ -87,7 +87,7 @@ export function CharacterItemsView({
   onChanged,
 }: CharacterItemsViewProps) {
   const { t } = useTranslation('characters')
-  const commonError = useErrorText()
+  const formatError = useErrorText('characters')
   const [taking, setTaking] = useState<CharacterItemEntry | null>(null)
   const [error, setError] = useState<unknown>(null)
 
@@ -107,14 +107,6 @@ export function CharacterItemsView({
     },
     onError: setError,
   })
-
-  const formatError = (err: unknown) => {
-    if (err instanceof ApiError) {
-      const translated = t(`errors.${err.code}` as never, { defaultValue: '' })
-      if (translated) return translated
-    }
-    return commonError(err)
-  }
 
   const equippedBySlot = mapEquipmentSlots(equipment)
 

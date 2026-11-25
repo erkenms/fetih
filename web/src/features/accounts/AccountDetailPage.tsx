@@ -30,7 +30,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
-import { ApiError, api, unwrap } from '../../api/client'
+import { api, unwrap } from '../../api/client'
 import { can, useMe } from '../../app/auth'
 import { ErrorAlert, useErrorText } from '../../app/ErrorAlert'
 import { AccountTimelineTab } from '../logs/AccountTimelineTab'
@@ -48,7 +48,7 @@ export default function AccountDetailPage() {
   const { id } = useParams()
   const accountId = Number(id)
   const { t, i18n } = useTranslation(['accounts', 'common'])
-  const commonError = useErrorText()
+  const formatError = useErrorText('accounts')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const me = useMe().data
@@ -65,14 +65,6 @@ export default function AccountDetailPage() {
     queryFn: () => unwrap(api.GET('/api/accounts/{id}', { params: { path: { id: accountId } } })),
     enabled: Number.isFinite(accountId) && accountId > 0,
   })
-
-  const formatError = (err: unknown) => {
-    if (err instanceof ApiError) {
-      const translated = t(`accounts:errors.${err.code}` as never, { defaultValue: '' })
-      if (translated) return translated
-    }
-    return commonError(err)
-  }
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: ['account', accountId] })

@@ -25,7 +25,7 @@ import {
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ApiError, api, unwrap } from '../../api/client'
+import { api, unwrap } from '../../api/client'
 import { useErrorText } from '../../app/ErrorAlert'
 import { ItemPicker, decodeSocket, type CatalogItem } from '../../components/items'
 import { MapPicker } from '../../components/pickers'
@@ -71,7 +71,7 @@ export function CharacterActionsBar({
   onChanged,
 }: CharacterActionsBarProps) {
   const { t } = useTranslation(['characters', 'items'])
-  const commonError = useErrorText()
+  const formatError = useErrorText('characters')
 
   const [modal, setModal] = useState<ActionKind>(null)
   const [error, setError] = useState<unknown>(null)
@@ -90,14 +90,6 @@ export function CharacterActionsBar({
   const [mapId, setMapId] = useState<number | null>(currentMapId)
   const [x, setX] = useState<number | string>(currentX)
   const [y, setY] = useState<number | string>(currentY)
-
-  const formatError = (err: unknown) => {
-    if (err instanceof ApiError) {
-      const translated = t(`characters:errors.${err.code}` as never, { defaultValue: '' })
-      if (translated) return translated
-    }
-    return commonError(err)
-  }
 
   const openModal = (kind: ActionKind) => {
     setError(null)
