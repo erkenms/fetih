@@ -980,6 +980,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/maps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listMaps"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maps/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMapDetail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maps/{id}/grid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMapGrid"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1605,6 +1653,234 @@ export interface components {
             items: components["schemas"]["MapCatalogEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        MapCellPoint: {
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+        };
+        MapDestinationEntry: {
+            name: string;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+        };
+        MapDetail: {
+            /** Format: uint32 */
+            id: number;
+            name: null | string;
+            serverName: null | string;
+            aliases: string[];
+            file: null | string;
+            minimap: null | string;
+            hasTiles: boolean;
+            hasGrid: boolean;
+            /** Format: int32 */
+            width: null | number;
+            /** Format: int32 */
+            height: null | number;
+            flags: string[];
+            portal: null | components["schemas"]["MapCellPoint"];
+            /** Format: uint32 */
+            rebornMap: null | number;
+            rebornMapName: null | string;
+            /** Format: uint32 */
+            scrollTypeId: null | number;
+            /** Format: uint8 */
+            ridePlus: number;
+            meta: null | components["schemas"]["MapTileMeta"];
+            npcs: components["schemas"]["MapNpcEntry"][];
+            spawns: components["schemas"]["MapSpawnEntry"][];
+            portals: components["schemas"]["MapPortalEntry"][];
+            teleporters: components["schemas"]["MapTeleporterEntry"][];
+            guildWar: null | components["schemas"]["MapGuildWarInfo"];
+        };
+        MapGridResponse: {
+            /** Format: uint32 */
+            mapId: number;
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            walkableBase64: string;
+            /** Format: int16 */
+            minElevation: number;
+            /** Format: int16 */
+            maxElevation: number;
+            elevationBase64: string;
+        };
+        MapGuildWarConductor: {
+            /** Format: uint32 */
+            npcId: number;
+            city: string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            toMap: number;
+            toMapName: null | string;
+            /** Format: uint16 */
+            toX: number;
+            /** Format: uint16 */
+            toY: number;
+        };
+        MapGuildWarInfo: {
+            pole: null | components["schemas"]["MapGuildWarObject"];
+            leftGate: null | components["schemas"]["MapGuildWarObject"];
+            rightGate: null | components["schemas"]["MapGuildWarObject"];
+            conductors: components["schemas"]["MapGuildWarConductor"][];
+        };
+        MapGuildWarObject: {
+            /** Format: uint32 */
+            npcId: number;
+            name: string;
+            role: string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            maxLife: number;
+            insidePoint: null | components["schemas"]["MapCellPoint"];
+        };
+        MapListPage: {
+            items: components["schemas"]["MapSummary"][];
+            /** Format: int32 */
+            total: number;
+        };
+        MapNpcEntry: {
+            /** Format: uint32 */
+            id: number;
+            name: null | string;
+            /** Format: uint16 */
+            lookface: number;
+            /** Format: uint8 */
+            direction: number;
+            /** Format: uint16 */
+            role: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            life: number;
+            isGoal: boolean;
+            facePath: null | string;
+            kind: string;
+        };
+        MapPortalEntry: {
+            /** Format: uint32 */
+            index: number;
+            /** Format: uint16 */
+            x: null | number;
+            /** Format: uint16 */
+            y: null | number;
+            /** Format: uint32 */
+            toMap: null | number;
+            toMapName: null | string;
+            /** Format: uint16 */
+            toX: null | number;
+            /** Format: uint16 */
+            toY: null | number;
+        };
+        MapPuzzleMeta: {
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: int32 */
+            gridSize: number;
+        };
+        MapSpawnEntry: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint16 */
+            spread: number;
+            /** Format: int32 */
+            amount: number;
+            /** Format: int32 */
+            respawn: number;
+            /** Format: uint32 */
+            monsterId: number;
+            monsterName: null | string;
+            /** Format: int32 */
+            monsterLevel: null | number;
+            monsterBoss: boolean;
+        };
+        MapSummary: {
+            /** Format: uint32 */
+            id: number;
+            name: null | string;
+            serverName: null | string;
+            aliases: string[];
+            file: null | string;
+            minimap: null | string;
+            hasTiles: boolean;
+            flags: string[];
+            portal: null | components["schemas"]["MapCellPoint"];
+            /** Format: uint32 */
+            rebornMap: null | number;
+            /** Format: int32 */
+            npcCount: number;
+            /** Format: int32 */
+            spawnCount: number;
+            /** Format: int32 */
+            portalCount: number;
+        };
+        MapTeleporterEntry: {
+            /** Format: uint32 */
+            npcId: number;
+            npcName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            fare: number;
+            /** Format: uint8 */
+            face: number;
+            facePath: null | string;
+            text: string[];
+            destinations: components["schemas"]["MapDestinationEntry"][];
+        };
+        MapTileMeta: {
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
+            /** Format: int32 */
+            tileSize: number;
+            /** Format: int32 */
+            maxZoom: number;
+            cell: components["schemas"]["MapTileSize"];
+            mapSize: components["schemas"]["MapTileSize"];
+            origin: components["schemas"]["MapTilePoint"];
+            background: components["schemas"]["MapTilePoint"];
+            puzzle: components["schemas"]["MapPuzzleMeta"];
+            ground: string;
+            covers: string;
+        };
+        MapTilePoint: {
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+        };
+        MapTileSize: {
+            /** Format: int32 */
+            width: number;
+            /** Format: int32 */
+            height: number;
         };
         MeResponse: {
             /** Format: uint32 */
@@ -3863,6 +4139,95 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminResult"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listMaps: {
+        parameters: {
+            query?: {
+                search?: string;
+                hasMinimap?: boolean;
+                hasTiles?: boolean;
+                hasEntities?: boolean;
+                page?: number;
+                pageSize?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapListPage"];
+                };
+            };
+        };
+    };
+    getMapDetail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapDetail"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getMapGrid: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapGridResponse"];
                 };
             };
             /** @description Not Found */

@@ -1,0 +1,108 @@
+{
+  "nav": "Haritalar",
+  "browser": {
+    "title": "Haritalar",
+    "description": "İstemci ve sunucudaki tüm haritaları inceleyin; yürünebilirlik, yükseklik, NPC, spawn, portal ve ışınlayıcıları görüntüleyin.",
+    "searchPlaceholder": "ID, ad, sunucu adı veya takma ad ile ara...",
+    "filterMinimap": "Minimap olanlar",
+    "filterTiles": "Karo renderlı",
+    "filterEntities": "İçeriği olanlar",
+    "viewGrid": "Kartlar",
+    "viewTable": "Tablo",
+    "total": "{{count}} harita",
+    "empty": "Filtreye uyan harita yok.",
+    "tilesBadge": "Karo",
+    "column": {
+      "minimap": "Harita",
+      "id": "ID",
+      "name": "Ad",
+      "aliases": "Takma Adlar",
+      "entities": "Varlıklar",
+      "flags": "Bayraklar"
+    },
+    "stats": {
+      "npcs": "{{count}} NPC",
+      "spawns": "{{count}} spawn",
+      "portals": "{{count}} portal"
+    }
+  },
+  "viewer": {
+    "backToBrowser": "Tüm haritalar",
+    "copyLink": "Bağlantıyı kopyala",
+    "linkCopied": "Bağlantı kopyalandı",
+    "gotoX": "X",
+    "gotoY": "Y",
+    "goto": "Git",
+    "fitMap": "Haritayı sığdır",
+    "rebornLink": "Doğuş: {{target}}",
+    "startPoint": "Başlangıç: ({{x}}, {{y}})",
+    "ridePlus": "Binek +{{plus}}",
+    "fallbackMinimap": "Minimap yedeği (harita karoları üretilmemiş)",
+    "fallbackWireframe": "Izgara yedeği (varlıklar üretilmemiş)",
+    "notFound": "Harita bulunamadı.",
+    "cursor": {
+      "cell": "Hücre {{x}}, {{y}}",
+      "walkable": "Yürünebilir",
+      "blocked": "Engelli",
+      "elevation": "Yükseklik {{value}}",
+      "outside": "Harita dışı"
+    },
+    "tabs": {
+      "overlays": "Katmanlar",
+      "entities": "Varlıklar"
+    },
+    "overlays": {
+      "covers": "Örtüler (binalar ve ağaçlar)",
+      "walkability": "Yürünebilirlik ızgarası",
+      "elevation": "Yükseklik haritası",
+      "portals": "Portal hücreleri",
+      "portalDestinations": "Portal okları",
+      "npcs": "NPC'ler",
+      "goals": "Eğitim hedefleri",
+      "spawns": "Spawn alanları",
+      "startAndReborn": "Başlangıç ve doğuş noktası",
+      "teleporters": "Işınlayıcılar",
+      "guildWar": "Lonca savaşı direk ve kapıları",
+      "loadingGrid": "Izgara yükleniyor...",
+      "gridUnavailable": "Izgara yok (istemci DMap bulunamadı)",
+      "elevationRange": "Yükseklik {{min}} – {{max}}"
+    },
+    "entities": {
+      "search": "Varlık ara...",
+      "npcs": "NPC'ler ({{count}})",
+      "spawns": "Spawn'lar ({{count}})",
+      "portals": "Portallar ({{count}})",
+      "teleporters": "Işınlayıcılar ({{count}})",
+      "guildWar": "Lonca Savaşı",
+      "empty": "Bu haritada yok."
+    },
+    "inspector": {
+      "title": "Seçili",
+      "id": "ID",
+      "position": "Konum",
+      "lookface": "Görünüm",
+      "direction": "Yön",
+      "role": "Rol",
+      "life": "Can",
+      "monster": "Canavar",
+      "level": "Seviye",
+      "boss": "Boss",
+      "amount": "Miktar",
+      "spread": "Yayılım",
+      "respawn": "Yeniden Doğuş",
+      "seconds": "{{count}} sn",
+      "portalIndex": "Portal #{{index}}",
+      "destination": "Hedef",
+      "unlinked": "Bağlantısız portal",
+      "jumpTo": "{{target}} konumuna git",
+      "fare": "Ücret",
+      "silver": "{{amount}} gümüş",
+      "destinations": "Hedefler",
+      "insidePoint": "İç nokta",
+      "pole": "Lonca Direği",
+      "leftGate": "Sol Kapı",
+      "rightGate": "Sağ Kapı",
+      "conductor": "Lonca Rehberi"
+    }
+  }
+}

@@ -9,6 +9,7 @@ import { myAccountRoute, registerRoute } from '../features/public/account'
 import { publicSiteRoutes } from '../features/public/site'
 import { logsRoute } from '../features/logs'
 import { socialRoute } from '../features/social'
+import { mapsRoutes } from '../features/maps'
 
 // Every feature page, one line each. Admin pages show in the sidebar by their nav group.
 export const featureRoutes: FeatureRoute[] = [
@@ -23,4 +24,5 @@ export const featureRoutes: FeatureRoute[] = [
   logsRoute,
   changesRoute,
   socialRoute,
+  ...mapsRoutes,
 ]

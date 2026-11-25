@@ -19,6 +19,9 @@ namespace Comet.Game.Npcs
         public const uint BeastGuardID = 101633;
         public const uint FlagEnvoyID = 700000;
 
+        // Where a gate's Enter sends the ruling guild's members
+        public static readonly (ushort X, ushort Y) LeftGateInside = (162, 199), RightGateInside = (209, 177);
+
         private const byte ControllerFace = 123;
         private const byte GateFace = 7;
         private const byte ConductorFace = 130;
@@ -116,9 +119,9 @@ namespace Comet.Game.Npcs
             }
         }
 
-        public static Task LeftGateAsync(NpcTalk talk) => GateAsync(talk, GuildWar.LeftGateID, 162, 199);
+        public static Task LeftGateAsync(NpcTalk talk) => GateAsync(talk, GuildWar.LeftGateID, LeftGateInside.X, LeftGateInside.Y);
 
-        public static Task RightGateAsync(NpcTalk talk) => GateAsync(talk, GuildWar.RightGateID, 209, 177);
+        public static Task RightGateAsync(NpcTalk talk) => GateAsync(talk, GuildWar.RightGateID, RightGateInside.X, RightGateInside.Y);
 
         private static async Task GateAsync(NpcTalk talk, uint gateID, ushort insideX, ushort insideY)
         {
