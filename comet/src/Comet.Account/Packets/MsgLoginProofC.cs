@@ -99,6 +99,17 @@ namespace Comet.Account.Packets
                 return;
             }
 
+            if (client.Account.AuthorityID <= 1 && await server.Rpc.CallAsync<bool>("IsMaintenance"))
+            {
+                LogEvents.For<MsgLoginProofC>(LogEvents.AccountLoginFailed).Warning(
+                    "Login failed for {Username} from {IP}: {Reason} ({Realm})",
+                    username, client.IPAddress, "maintenance", client.Realm);
+                // The client shows code 10 as "Server maintenance. Please try again later!"
+                await client.SendAsync(new MsgConnectEx(RejectionCode.ServerDown));
+                client.Disconnect(DisconnectReasons.AuthFailed);
+                return;
+            }
+
             var args = new TransferAuthArgs();
             args.AccountID = client.Account.AccountID;
             args.AuthorityID = client.Account.AuthorityID;

@@ -86,6 +86,16 @@ namespace Comet.Game.Packets
                 return;
             }
 
+            if (!Admin.ServerControl.IsAllowedDuringMaintenance(auth.AuthorityID))
+            {
+                LogEvents.For<MsgConnect>(LogEvents.GameAuthFailed).Warning(
+                    "Game login rejected for connection {ConnId} from {IP}: {Reason}",
+                    client.ConnId, client.IPAddress, "maintenance");
+                await client.SendAsync(new MsgTalk(0, TalkChannel.Login, Admin.ServerControl.EffectiveMaintenanceMessage));
+                client.Disconnect(DisconnectReasons.AuthFailed);
+                return;
+            }
+
             client.LoggedIn();
 
             // If another client has already connected using this account, take its

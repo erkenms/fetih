@@ -1796,6 +1796,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/server/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getServerControlStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/server/shutdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["startServerShutdown"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/server/shutdown/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelServerShutdown"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/server/maintenance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateServerMaintenance"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/server/motd": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateServerMotd"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3907,7 +3987,7 @@ export interface components {
          */
         PacketServer: "Game" | "Account";
         /** @enum {unknown} */
-        Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts";
+        Permission: "AdminArea" | "ViewCatalogs" | "ViewLive" | "Moderate" | "ManageCharacters" | "ViewLogs" | "ViewAudit" | "Studio" | "ManageAccounts" | "ServerControl";
         PkCharacterRef: {
             /** Format: uint32 */
             id: number;
@@ -4452,6 +4532,27 @@ export interface components {
             channel: components["schemas"]["BroadcastChannel"];
             text: string;
         };
+        ServerActionResponse: {
+            ok: boolean;
+            appliedLive: boolean;
+        };
+        ServerControlResponse: {
+            gameConnected: boolean;
+            maintenanceEnabled: boolean;
+            maintenanceMessage: string;
+            motd: string;
+            shutdownPending: boolean;
+            shutdownMode: null | components["schemas"]["ShutdownMode"];
+            /** Format: date-time */
+            shutdownAt: null | string;
+            shutdownReason: string;
+            /** Format: int32 */
+            onlinePlayers: number;
+            /** Format: int32 */
+            onlineNonGmPlayers: number;
+            /** Format: date-time */
+            updatedAt: null | string;
+        };
         ServerState: {
             /** Format: date-time */
             startedAt?: string;
@@ -4526,6 +4627,8 @@ export interface components {
             tags: string[];
             description: null | string;
         };
+        /** @enum {unknown} */
+        ShutdownMode: "Shutdown" | "Restart" | null;
         SpellCatalogEntry: {
             /** Format: uint16 */
             type: number;
@@ -4582,6 +4685,12 @@ export interface components {
             useItemCount: number;
             /** Format: uint32 */
             delayMilliseconds: number;
+        };
+        StartShutdownRequest: {
+            mode: components["schemas"]["ShutdownMode"];
+            /** Format: int32 */
+            seconds: number;
+            reason: null | string;
         };
         TakeItemRequest: {
             /** Format: uint32 */
@@ -4684,6 +4793,14 @@ export interface components {
             /** Format: date-time */
             to: string;
             truncated: boolean;
+        };
+        UpdateMaintenanceRequest: {
+            enabled: boolean;
+            message: null | string;
+            kickNonGm: boolean;
+        };
+        UpdateMotdRequest: {
+            text: null | string;
         };
         ValidationProblemDto: {
             file: string;
@@ -8366,6 +8483,118 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationDeliveryDto"][];
+                };
+            };
+        };
+    };
+    getServerControlStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerControlResponse"];
+                };
+            };
+        };
+    };
+    startServerShutdown: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartShutdownRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerActionResponse"];
+                };
+            };
+        };
+    };
+    cancelServerShutdown: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerActionResponse"];
+                };
+            };
+        };
+    };
+    updateServerMaintenance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMaintenanceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerActionResponse"];
+                };
+            };
+        };
+    };
+    updateServerMotd: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateMotdRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServerActionResponse"];
                 };
             };
         };

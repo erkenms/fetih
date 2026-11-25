@@ -1,0 +1,60 @@
+{
+  "title": "Sunucu kontrolü",
+  "description": "Düzenli yeniden başlatma veya kapatma zamanla, bakım modunu aç/kapat ve giriş mesajını düzenle.",
+  "gameOnline": "Oyun açık",
+  "gameOffline": "Oyun kapalı",
+  "onlineCount": "{{total}} çevrimiçi ({{players}} oyuncu)",
+  "shutdown": {
+    "title": "Düzenli yeniden başlatma / kapatma",
+    "offlineNote": "Oyun sunucusu kapalı. Yeniden başlatma veya kapatma zamanlamak için sunucu açık olmalı.",
+    "mode": "İşlem",
+    "modes": {
+      "Restart": "Yeniden başlat",
+      "Shutdown": "Kapat"
+    },
+    "duration": "Geri sayım (dakika)",
+    "preset": "{{minutes}} dk",
+    "reason": "Sebep (isteğe bağlı)",
+    "reasonPlaceholder": "Planlı bakım, yama güncellemesi...",
+    "milestones": "Duyuru zamanları: {{list}}",
+    "schedule": "Geri sayımı başlat",
+    "activeTitle": "Planlı {{mode}} sürüyor",
+    "activeCountdown": "Kalan süre: {{clock}}",
+    "activeAt": "Hedef zaman: {{time}}",
+    "activeReason": "Sebep: {{reason}}",
+    "cancel": "Geri sayımı iptal et",
+    "started": "Geri sayım başlatıldı.",
+    "cancelled": "Geri sayım iptal edildi.",
+    "confirm": {
+      "title": "Sunucu {{mode}} onayı",
+      "body": "Sunucu uyarı duyuruları yapacak ve {{minutes}} dakika içinde {{online}} çevrimiçi oyuncuyu kaydedip çıkararak {{mode}} işlemini gerçekleştirecek.",
+      "reason": "Sebep: {{reason}}",
+      "cancel": "Vazgeç",
+      "submit": "Geri sayımı başlat"
+    }
+  },
+  "maintenance": {
+    "title": "Bakım modu",
+    "description": "Açıkken yalnızca GM hesapları (Moderatör ve üzeri) giriş yapabilir. Giriş yapmaya çalışan oyuncular istemcinin kendi bakım uyarısını görür. Aşağıdaki mesaj, açıldığında oyundan çıkarılan oyunculara gider.",
+    "active": "Bakım AÇIK",
+    "inactive": "Bakım KAPALI",
+    "toggle": "Bakım modunu aç",
+    "message": "Bakım mesajı",
+    "messagePlaceholder": "Sunucu şu anda bakımda. Lütfen daha sonra tekrar deneyin.",
+    "kickNonGm": "Şu an çevrimiçi olan {{count}} GM olmayan oyuncuyu çıkar",
+    "save": "Bakım ayarlarını kaydet",
+    "savedLive": "Bakım ayarları canlı sunucuda güncellendi.",
+    "savedOffline": "Bakım ayarları kaydedildi; oyun sunucusu açıldığında geçerli olacak."
+  },
+  "motd": {
+    "title": "Günün mesajı (MOTD)",
+    "description": "Her karakter giriş yaptığında bildirim satırları olarak gönderilir. Kapatmak için boş bırakın.",
+    "label": "Giriş mesajı",
+    "placeholder": "Fetih Online'a hoş geldiniz!\nKomutlar için /help yazın.",
+    "preview": "Giriş önizlemesi",
+    "clear": "Temizle",
+    "save": "MOTD kaydet",
+    "savedLive": "MOTD canlı sunucuda güncellendi.",
+    "savedOffline": "MOTD kaydedildi; oyun sunucusu açıldığında geçerli olacak."
+  }
+}

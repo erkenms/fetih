@@ -21,6 +21,7 @@ import { liveRoutes } from '../features/live'
 import { looksRoute } from '../features/looks'
 import { packetsRoute } from '../features/packets'
 import { notificationsRoute } from '../features/notifications'
+import { serverRoute } from '../features/server'
 
 // Every feature page, one line each. Admin pages show in the sidebar by their nav group.
 export const featureRoutes: FeatureRoute[] = [
@@ -47,4 +48,5 @@ export const featureRoutes: FeatureRoute[] = [
   looksRoute,
   packetsRoute,
   notificationsRoute,
+  serverRoute,
 ]

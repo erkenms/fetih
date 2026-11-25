@@ -603,6 +603,18 @@ CREATE TABLE `web_notification_delivery` (
   KEY `WebhookID` (`WebhookID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Server control settings managed from the web app (maintenance mode and login MOTD).
+DROP TABLE IF EXISTS `web_server_settings`;
+CREATE TABLE `web_server_settings` (
+  `ID` tinyint(3) unsigned NOT NULL,
+  `MaintenanceEnabled` tinyint(1) NOT NULL DEFAULT '0',
+  `MaintenanceMessage` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `Motd` varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `UpdatedBy` int(10) unsigned NOT NULL DEFAULT '0',
+  `UpdatedAt` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

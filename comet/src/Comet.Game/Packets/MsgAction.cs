@@ -265,6 +265,7 @@ namespace Comet.Game.Packets
                         await Pk.Pking.SendStatusAsync(client);
                     await Pk.Detaining.LoginAsync(client);
                     await SecondPassword.LoginAsync(client);
+                    await Admin.ServerControl.SendMotdAsync(client);
                 },
 
                 // The face picked in the Beautician's window, in Command; not echoed

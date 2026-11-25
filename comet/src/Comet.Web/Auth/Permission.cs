@@ -15,6 +15,7 @@ public enum Permission
     ViewAudit,
     Studio,
     ManageAccounts,
+    ServerControl,
 }
 
 public static class Permissions
@@ -30,6 +31,7 @@ public static class Permissions
         Permission.ViewAudit => Authority.GameMaster,
         Permission.Studio => Authority.ProjectManager,
         Permission.ManageAccounts => Authority.Administrator,
+        Permission.ServerControl => Authority.Administrator,
         _ => Authority.Administrator,
     };
 

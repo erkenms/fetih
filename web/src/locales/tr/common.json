@@ -50,7 +50,8 @@
     "ViewLogs": "Kayıtlar",
     "ViewAudit": "Denetim kaydı",
     "Studio": "Stüdyo",
-    "ManageAccounts": "Hesaplar"
+    "ManageAccounts": "Hesaplar",
+    "ServerControl": "Sunucu kontrolü"
   },
   "forbidden": {
     "title": "Erişim yok",

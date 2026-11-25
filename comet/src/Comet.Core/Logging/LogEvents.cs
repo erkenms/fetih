@@ -380,6 +380,10 @@ namespace Comet.Core.Logging
         public const string GmGuildWar = "gm.guild_war";
         public const string GmDisbandGuild = "gm.disband_guild";
         public const string GmDeletePost = "gm.delete_post";
+        public const string GmShutdown = "gm.shutdown";
+        public const string GmShutdownCancel = "gm.shutdown_cancel";
+        public const string GmMaintenance = "gm.maintenance";
+        public const string GmMotd = "gm.motd";
         public const string ChatCommand = "chat.command";
 
         public const string PacketUnhandled = "packet.unhandled";

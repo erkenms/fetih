@@ -29,5 +29,6 @@ public static class FeatureRegistry
         new Looks.LooksFeature(),
         new Packets.PacketsFeature(),
         new Notifications.NotificationsFeature(),
+        new Server.ServerFeature(),
     ];
 }

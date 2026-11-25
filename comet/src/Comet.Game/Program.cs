@@ -341,6 +341,8 @@
                 await Chat.Broadcasts.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.BroadcastsLoaded).Information(
                     "Loaded {BroadcastCount} queued broadcasts", Chat.Broadcasts.Count);
+                await Admin.ServerControl.LoadAsync();
+                Admin.ServerControl.RequestShutdown = _ => shutdown.TrySetResult();
             }
             catch (Exception e)
             {

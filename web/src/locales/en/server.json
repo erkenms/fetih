@@ -1,0 +1,60 @@
+{
+  "title": "Server control",
+  "description": "Schedule a graceful restart or shutdown, toggle maintenance mode, and edit the login message of the day.",
+  "gameOnline": "Game online",
+  "gameOffline": "Game offline",
+  "onlineCount": "{{total}} online ({{players}} players)",
+  "shutdown": {
+    "title": "Graceful restart / shutdown",
+    "offlineNote": "The game server is offline. Start it before scheduling a restart or shutdown.",
+    "mode": "Action",
+    "modes": {
+      "Restart": "Restart",
+      "Shutdown": "Shutdown"
+    },
+    "duration": "Countdown (minutes)",
+    "preset": "{{minutes}}m",
+    "reason": "Reason (optional)",
+    "reasonPlaceholder": "Scheduled maintenance, patch update...",
+    "milestones": "Broadcasts at: {{list}}",
+    "schedule": "Start countdown",
+    "activeTitle": "Scheduled {{mode}} in progress",
+    "activeCountdown": "Time remaining: {{clock}}",
+    "activeAt": "Scheduled for {{time}}",
+    "activeReason": "Reason: {{reason}}",
+    "cancel": "Cancel countdown",
+    "started": "Countdown started.",
+    "cancelled": "Countdown cancelled.",
+    "confirm": {
+      "title": "Confirm server {{mode}}",
+      "body": "The server will broadcast warnings and {{mode}} in {{minutes}} minute(s), saving and disconnecting {{online}} online player(s).",
+      "reason": "Reason: {{reason}}",
+      "cancel": "Back",
+      "submit": "Start countdown"
+    }
+  },
+  "maintenance": {
+    "title": "Maintenance mode",
+    "description": "When enabled, only GM accounts (Moderator and above) can log in. Players trying to log in get the client's own \"Server maintenance. Please try again later!\". The message below goes to the players disconnected when it's switched on.",
+    "active": "Maintenance ON",
+    "inactive": "Maintenance OFF",
+    "toggle": "Enable maintenance mode",
+    "message": "Maintenance message",
+    "messagePlaceholder": "The server is currently under maintenance. Please try again later.",
+    "kickNonGm": "Disconnect {{count}} currently online non-GM player(s)",
+    "save": "Save maintenance settings",
+    "savedLive": "Maintenance settings updated on the live server.",
+    "savedOffline": "Maintenance settings saved; they will apply when the game server starts."
+  },
+  "motd": {
+    "title": "Message of the day (MOTD)",
+    "description": "Sent as notice lines to every character right after login. Leave empty to disable.",
+    "label": "Login message",
+    "placeholder": "Welcome to Fetih Online!\nType /help for commands.",
+    "preview": "Login preview",
+    "clear": "Clear",
+    "save": "Save MOTD",
+    "savedLive": "MOTD updated on the live server.",
+    "savedOffline": "MOTD saved; it will apply when the game server starts."
+  }
+}

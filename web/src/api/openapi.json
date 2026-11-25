@@ -5395,6 +5395,136 @@
           }
         }
       }
+    },
+    "/api/server/status": {
+      "get": {
+        "tags": [
+          "ServerFeature"
+        ],
+        "operationId": "getServerControlStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerControlResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/server/shutdown": {
+      "post": {
+        "tags": [
+          "ServerFeature"
+        ],
+        "operationId": "startServerShutdown",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartShutdownRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/server/shutdown/cancel": {
+      "post": {
+        "tags": [
+          "ServerFeature"
+        ],
+        "operationId": "cancelServerShutdown",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/server/maintenance": {
+      "put": {
+        "tags": [
+          "ServerFeature"
+        ],
+        "operationId": "updateServerMaintenance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/server/motd": {
+      "put": {
+        "tags": [
+          "ServerFeature"
+        ],
+        "operationId": "updateServerMotd",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMotdRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServerActionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -12547,7 +12677,8 @@
           "ViewLogs",
           "ViewAudit",
           "Studio",
-          "ManageAccounts"
+          "ManageAccounts",
+          "ServerControl"
         ]
       },
       "PkCharacterRef": {
@@ -14423,6 +14554,89 @@
           }
         }
       },
+      "ServerActionResponse": {
+        "required": [
+          "ok",
+          "appliedLive"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "appliedLive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ServerControlResponse": {
+        "required": [
+          "gameConnected",
+          "maintenanceEnabled",
+          "maintenanceMessage",
+          "motd",
+          "shutdownPending",
+          "shutdownMode",
+          "shutdownAt",
+          "shutdownReason",
+          "onlinePlayers",
+          "onlineNonGmPlayers",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "gameConnected": {
+            "type": "boolean"
+          },
+          "maintenanceEnabled": {
+            "type": "boolean"
+          },
+          "maintenanceMessage": {
+            "type": "string"
+          },
+          "motd": {
+            "type": "string"
+          },
+          "shutdownPending": {
+            "type": "boolean"
+          },
+          "shutdownMode": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ShutdownMode"
+              }
+            ]
+          },
+          "shutdownAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "shutdownReason": {
+            "type": "string"
+          },
+          "onlinePlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "onlineNonGmPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "ServerState": {
         "type": "object",
         "properties": {
@@ -14672,6 +14886,13 @@
           }
         }
       },
+      "ShutdownMode": {
+        "enum": [
+          "Shutdown",
+          "Restart",
+          null
+        ]
+      },
       "SpellCatalogEntry": {
         "required": [
           "type",
@@ -14843,6 +15064,29 @@
           "delayMilliseconds": {
             "type": "integer",
             "format": "uint32"
+          }
+        }
+      },
+      "StartShutdownRequest": {
+        "required": [
+          "mode",
+          "seconds",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ShutdownMode"
+          },
+          "seconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -15222,6 +15466,42 @@
           }
         }
       },
+      "UpdateMaintenanceRequest": {
+        "required": [
+          "enabled",
+          "message",
+          "kickNonGm"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kickNonGm": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateMotdRequest": {
+        "required": [
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "ValidationProblemDto": {
         "required": [
           "file",
@@ -15334,6 +15614,9 @@
     },
     {
       "name": "PublicSiteFeature"
+    },
+    {
+      "name": "ServerFeature"
     },
     {
       "name": "SocialFeature"

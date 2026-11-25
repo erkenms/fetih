@@ -50,7 +50,8 @@
     "ViewLogs": "Logs",
     "ViewAudit": "Audit log",
     "Studio": "Studio",
-    "ManageAccounts": "Accounts"
+    "ManageAccounts": "Accounts",
+    "ServerControl": "Server control"
   },
   "forbidden": {
     "title": "No access",
