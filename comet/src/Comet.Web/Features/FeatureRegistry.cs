@@ -10,6 +10,7 @@ public static class FeatureRegistry
         new Catalogs.CatalogsFeature(),
         new PublicAccount.PublicAccountFeature(),
         new PublicSite.PublicSiteFeature(),
+        new PublicHeatmap.PublicHeatmapFeature(),
         new Dashboard.DashboardFeature(),
         new Broadcasts.BroadcastsFeature(),
         new Logs.LogsFeature(),

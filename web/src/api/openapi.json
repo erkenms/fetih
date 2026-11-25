@@ -1455,6 +1455,26 @@
         }
       }
     },
+    "/api/public/heatmap": {
+      "get": {
+        "tags": [
+          "PublicHeatmapFeature"
+        ],
+        "operationId": "getPublicHeatmap",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicHeatmapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/broadcasts/queue": {
       "get": {
         "tags": [
@@ -9163,6 +9183,39 @@
           }
         }
       },
+      "HeatmapMapEntry": {
+        "required": [
+          "mapId",
+          "name",
+          "minimap",
+          "players",
+          "share"
+        ],
+        "type": "object",
+        "properties": {
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "minimap": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "players": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "share": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "IntegrityFileSummary": {
         "required": [
           "file",
@@ -13674,6 +13727,44 @@
           }
         }
       },
+      "PublicHeatmapResponse": {
+        "required": [
+          "gameOnline",
+          "totalOnline",
+          "minPlayers",
+          "cacheSeconds",
+          "cachedAt",
+          "maps"
+        ],
+        "type": "object",
+        "properties": {
+          "gameOnline": {
+            "type": "boolean"
+          },
+          "totalOnline": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "minPlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cacheSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "cachedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "maps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeatmapMapEntry"
+            }
+          }
+        }
+      },
       "PublicHomeResponse": {
         "required": [
           "gameOnline",
@@ -15611,6 +15702,9 @@
     },
     {
       "name": "PublicAccountFeature"
+    },
+    {
+      "name": "PublicHeatmapFeature"
     },
     {
       "name": "PublicSiteFeature"

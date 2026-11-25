@@ -1,0 +1,42 @@
+{
+  "nav": "World Map",
+  "title": "World Activity",
+  "loading": "Loading world activity...",
+  "updatedAt": "Updated {{time}}",
+  "summary": {
+    "status": "Server",
+    "online": "Online",
+    "offline": "Offline",
+    "totalOnline": "Players online",
+    "activeMaps": "Active maps shown",
+    "refreshNote": "Cached; refreshes at most once every {{seconds}}s.",
+    "privacyNote": "Maps with fewer than {{min}} players are hidden, and no character names or positions are shown."
+  },
+  "map": {
+    "title": "Online Map Heatmap",
+    "ariaLabel": "Conquer Online world map showing active player counts per region",
+    "playersTooltip": "{{count}} players ({{pct}}%)",
+    "quietTooltip": "Below threshold or empty",
+    "otherZones": "Other active zones"
+  },
+  "legend": {
+    "quiet": "Quiet / hidden",
+    "warm": "Warm",
+    "busy": "Busy",
+    "crowded": "Crowded"
+  },
+  "list": {
+    "title": "Active Maps",
+    "searchPlaceholder": "Filter maps...",
+    "sortPlayers": "Most players",
+    "sortName": "Map name",
+    "offline": "The game server is currently offline.",
+    "emptyThreshold": "No map currently has at least {{min}} players.",
+    "noMatches": "No maps match your filter.",
+    "columns": {
+      "map": "Map",
+      "players": "Players",
+      "share": "Share"
+    }
+  }
+}

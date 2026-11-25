@@ -580,6 +580,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/heatmap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPublicHeatmap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/broadcasts/queue": {
         parameters: {
             query?: never;
@@ -2990,6 +3006,16 @@ export interface components {
             /** Format: date-time */
             serverTime: string;
         };
+        HeatmapMapEntry: {
+            /** Format: uint32 */
+            mapId: number;
+            name: string;
+            minimap: null | string;
+            /** Format: int32 */
+            players: number;
+            /** Format: double */
+            share: number;
+        };
         IntegrityFileSummary: {
             file: string;
             /** Format: int32 */
@@ -4299,6 +4325,18 @@ export interface components {
             allies: components["schemas"]["PublicGuildRelation"][];
             enemies: components["schemas"]["PublicGuildRelation"][];
             members: components["schemas"]["PublicGuildMember"][];
+        };
+        PublicHeatmapResponse: {
+            gameOnline: boolean;
+            /** Format: int32 */
+            totalOnline: number;
+            /** Format: int32 */
+            minPlayers: number;
+            /** Format: int32 */
+            cacheSeconds: number;
+            /** Format: date-time */
+            cachedAt: string;
+            maps: components["schemas"]["HeatmapMapEntry"][];
         };
         PublicHomeResponse: {
             gameOnline: boolean;
@@ -5741,6 +5779,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DownloadInfoResponse"];
+                };
+            };
+        };
+    };
+    getPublicHeatmap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicHeatmapResponse"];
                 };
             };
         };

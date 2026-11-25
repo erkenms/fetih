@@ -1,0 +1,42 @@
+{
+  "nav": "Dünya Haritası",
+  "title": "Dünya Yoğunluğu",
+  "loading": "Dünya yoğunluğu yükleniyor...",
+  "updatedAt": "Güncelleme: {{time}}",
+  "summary": {
+    "status": "Sunucu",
+    "online": "Açık",
+    "offline": "Kapalı",
+    "totalOnline": "Çevrimiçi oyuncu",
+    "activeMaps": "Gösterilen harita",
+    "refreshNote": "Önbellekli; en fazla {{seconds}} saniyede bir yenilenir.",
+    "privacyNote": "{{min}} oyuncudan az bulunan haritalar gizlenir; karakter adı veya konum gösterilmez."
+  },
+  "map": {
+    "title": "Çevrimiçi Harita Yoğunluğu",
+    "ariaLabel": "Bölgelere göre çevrimiçi oyuncu sayılarını gösteren Fetih dünya haritası",
+    "playersTooltip": "{{count}} oyuncu (%{{pct}})",
+    "quietTooltip": "Eşiğin altında veya boş",
+    "otherZones": "Diğer aktif bölgeler"
+  },
+  "legend": {
+    "quiet": "Sakin / gizli",
+    "warm": "Hareketli",
+    "busy": "Yoğun",
+    "crowded": "Kalabalık"
+  },
+  "list": {
+    "title": "Aktif Haritalar",
+    "searchPlaceholder": "Harita ara...",
+    "sortPlayers": "En kalabalık",
+    "sortName": "Harita adı",
+    "offline": "Oyun sunucusu şu anda kapalı.",
+    "emptyThreshold": "Şu anda en az {{min}} oyuncunun bulunduğu bir harita yok.",
+    "noMatches": "Aramanızla eşleşen harita yok.",
+    "columns": {
+      "map": "Harita",
+      "players": "Oyuncu",
+      "share": "Oran"
+    }
+  }
+}
