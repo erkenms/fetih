@@ -4,7 +4,13 @@
     "login": "Log in",
     "logout": "Log out",
     "home": "Home",
-    "toggleColorScheme": "Switch light and dark"
+    "serverOnline": "Server online",
+    "serverOffline": "Server offline",
+    "playersOnline": "{{count}} players online",
+    "loggedInAs": "Logged in as",
+    "backToSite": "Back to the site",
+    "menu": "Menu",
+    "copyright": "© {{year}} Fetih Online"
   },
   "nav": {
     "home": "Home",

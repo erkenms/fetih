@@ -4,7 +4,11 @@ The look of the whole web app: the public site and the admin panel. This sets a 
 not a pixel spec. Improve on it freely, as long as it stays on this course.
 
 The approved sketch (home, rankings, admin dashboard) is the Design canvas
-https://claude.ai/artifact/7ryAXVaeExNZ2WGb64cNCy.
+https://claude.ai/artifact/7ryAXVaeExNZ2WGb64cNCy, copied into [web-style/](web-style/) so
+any agent can read it: `main.html`, `rankings.html` and `admin.html`. They're in the canvas's
+component format (the markup inside `<x-dc>`, sample data in the script at the end), with
+images pointing at `/assets/...` and the textures in `web/src/theme/textures/`. Read them for
+the exact borders, gradients and sizes; the React app is built from `web/src/theme/`.
 
 ## The direction
 
@@ -60,8 +64,11 @@ first attempt got wrong:
   it
 - Slide dots on an image carousel
 
-The app uses Mantine. Theme it, or override its components, until they follow the rules
-above. Don't let Mantine's defaults show through.
+The app uses Mantine, themed in `web/src/theme/` (`theme.ts`, `theme.module.css`) so its
+components follow the rules above; don't let Mantine's defaults show through. A new
+component the theme doesn't cover gets the same treatment there. `Panel` (the title bar box)
+and `BigButton` are in `web/src/theme/Panel.tsx`, and the layouts in `web/src/app/` put every
+page on parchment. The illustrations come from `tools/assets` (`/assets/site/`).
 
 ## Starting values from the sketch
 

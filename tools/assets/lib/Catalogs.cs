@@ -21,6 +21,44 @@ sealed class Catalogs(ClientFiles files, Output output, string serverData)
         Monsters();
         Faces();
         Maps();
+        Site();
+    }
+
+    // The website's illustrations, from the launcher's pictures. AutoPatch/1.bmp has the
+    // publisher's logo in its top 115 rows, cut off here. The Play/ characters stand on pure
+    // green, which becomes transparent.
+    private void Site()
+    {
+        var written = 0;
+        foreach (var (source, path, convert) in new (string, string, Func<Rgba, Rgba>)[]
+        {
+            ("AutoPatch/1.bmp", "site/hero.png", image => Crop(image, 0, 115, image.Width, image.Height - 115)),
+            ("Play/MainS.bmp", "site/character1.png", KeyOutGreen),
+            ("Play/0/0.bmp", "site/character2.png", KeyOutGreen),
+        })
+        {
+            var stamp = files.Stamp(source);
+            if (stamp != null && output.Image(path, $"{source}@{stamp}", () => convert(Images.Decode(files.Read(source)!))))
+                written++;
+        }
+        Summary.Add($"site: {written} illustrations");
+    }
+
+    private static Rgba Crop(Rgba image, int x, int y, int width, int height)
+    {
+        var pixels = new byte[width * height * 4];
+        for (var row = 0; row < height; row++)
+            image.Pixels.AsSpan(((y + row) * image.Width + x) * 4, width * 4).CopyTo(pixels.AsSpan(row * width * 4));
+        return new Rgba(width, height, pixels);
+    }
+
+    private static Rgba KeyOutGreen(Rgba image)
+    {
+        var pixels = (byte[])image.Pixels.Clone();
+        for (var i = 0; i < pixels.Length; i += 4)
+            if (pixels[i + 1] > 150 && pixels[i + 1] - Math.Max(pixels[i], pixels[i + 2]) > 80)
+                pixels[i + 3] = 0;
+        return new Rgba(image.Width, image.Height, pixels);
     }
 
     // itemtype.dat fields past the ones ItemTypeTable reads: 53 the type's name, 54 the

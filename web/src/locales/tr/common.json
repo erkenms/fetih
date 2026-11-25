@@ -4,7 +4,13 @@
     "login": "Giriş yap",
     "logout": "Çıkış yap",
     "home": "Ana sayfa",
-    "toggleColorScheme": "Açık ve koyu tema arasında geç"
+    "serverOnline": "Sunucu açık",
+    "serverOffline": "Sunucu kapalı",
+    "playersOnline": "{{count}} oyuncu çevrimiçi",
+    "loggedInAs": "Giriş yapan:",
+    "backToSite": "Siteye dön",
+    "menu": "Menü",
+    "copyright": "© {{year}} Fetih Online"
   },
   "nav": {
     "home": "Ana sayfa",

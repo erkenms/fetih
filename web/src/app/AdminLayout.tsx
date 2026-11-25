@@ -1,93 +1,101 @@
-import { Anchor, AppShell, Burger, Group, NavLink, ScrollArea, Text } from '@mantine/core'
+import { AppShell, Burger, Group, NavLink, ScrollArea } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { IconHome } from '@tabler/icons-react'
-import { Suspense } from 'react'
+import { Fragment, Suspense } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink as RouterNavLink, Outlet, useLocation } from 'react-router'
+import { Panel } from '../theme/Panel'
+import classes from './AdminLayout.module.css'
 import { can, useMe } from './auth'
-import { ColorSchemeToggle } from './ColorSchemeToggle'
 import { navGroups, visibleNav } from './feature'
 import { PageLoader } from './Guards'
-import { LanguageSwitcher } from './LanguageSwitcher'
+import { languages, setLanguage } from './i18n'
 import { featureRoutes } from './routes'
 import { UserMenu } from './UserMenu'
 
 export function AdminLayout() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [opened, { toggle, close }] = useDisclosure()
   const me = useMe().data
   const location = useLocation()
   const entries = visibleNav(featureRoutes, 'admin', (p) => can(me, p))
+  const current = i18n.resolvedLanguage ?? i18n.language
 
   return (
     <AppShell
-      header={{ height: 56 }}
-      navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="md"
+      header={{ height: 50 }}
+      navbar={{ width: 230, breakpoint: 'sm', collapsed: { mobile: !opened } }}
+      padding={14}
     >
-      <AppShell.Header>
+      <AppShell.Header className={classes.header}>
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
-          <Group wrap="nowrap">
-            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-            <Anchor component={Link} to="/admin" fw={700} fz="lg" c="inherit" underline="never">
-              fetih
-            </Anchor>
-            <Text c="dimmed" size="sm" visibleFrom="xs">
-              {t('shell.adminPanel')}
-            </Text>
+          <Group wrap="nowrap" gap="sm" align="center">
+            <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" className={classes.burger} />
+            <Link to="/admin" className={classes.logo}>
+              Fetih
+            </Link>
+            <span className={classes.subtitle}>{t('shell.adminPanel')}</span>
           </Group>
-          <Group gap="xs" wrap="nowrap">
-            <LanguageSwitcher />
-            <ColorSchemeToggle />
+          <Group gap={10} wrap="nowrap" className={classes.links}>
+            <Group gap={10} wrap="nowrap" visibleFrom="sm">
+              <Link to="/">{t('shell.backToSite')}</Link>
+              {'|'}
+              {languages.map((l, i) => (
+                <Fragment key={l}>
+                  {i > 0 && '/'}
+                  <button type="button" onClick={() => setLanguage(l)} aria-pressed={l === current} style={l === current ? { color: '#fff', fontWeight: 700 } : undefined}>
+                    {l.toUpperCase()}
+                  </button>
+                </Fragment>
+              ))}
+            </Group>
             <UserMenu />
           </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="xs">
+      <AppShell.Navbar className={classes.navbar}>
         <ScrollArea>
-          <NavLink
-            component={RouterNavLink}
-            to="/admin"
-            end
-            label={t('nav.home')}
-            leftSection={<IconHome size={18} stroke={1.5} />}
-            active={location.pathname === '/admin'}
-            onClick={close}
-          />
-          {navGroups.map((group) => {
-            const items = entries.filter((e) => (e.nav?.group ?? 'system') === group)
-            if (items.length === 0) return null
-            return (
-              <div key={group}>
-                <Text size="xs" fw={600} c="dimmed" tt="uppercase" mt="md" mb={4} px="xs">
-                  {t(`nav.${group}`)}
-                </Text>
-                {items.map((item) => {
-                  const Icon = item.nav?.icon
-                  const to = `/admin/${item.path}`
-                  return (
-                    <NavLink
-                      key={item.path}
-                      component={RouterNavLink}
-                      to={to}
-                      label={t(item.nav!.label)}
-                      leftSection={Icon ? <Icon size={18} stroke={1.5} /> : undefined}
-                      active={location.pathname.startsWith(to)}
-                      onClick={close}
-                    />
-                  )
-                })}
-              </div>
-            )
-          })}
+          <Panel title={t('shell.menu')} icon="icons/items/711394.png" p={0} py={4}>
+            <NavLink
+              component={RouterNavLink}
+              to="/admin"
+              end
+              label={`» ${t('nav.home')}`}
+              active={location.pathname === '/admin'}
+              onClick={close}
+            />
+            {navGroups.map((group) => {
+              const items = entries.filter((e) => (e.nav?.group ?? 'system') === group)
+              if (items.length === 0) return null
+              return (
+                <div key={group}>
+                  <div className={classes.group}>{t(`nav.${group}`)}</div>
+                  {items.map((item) => {
+                    const to = `/admin/${item.path}`
+                    return (
+                      <NavLink
+                        key={item.path}
+                        component={RouterNavLink}
+                        to={to}
+                        label={`» ${t(item.nav!.label)}`}
+                        active={location.pathname.startsWith(to)}
+                        onClick={close}
+                      />
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </Panel>
         </ScrollArea>
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
+        <div className={classes.content}>
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </div>
       </AppShell.Main>
     </AppShell>
   )

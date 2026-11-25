@@ -1,5 +1,7 @@
 import '@mantine/core/styles.css'
 import '@mantine/notifications/styles.css'
+import '@fontsource/cinzel/900.css'
+import './theme/global.css'
 import './app/i18n'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
