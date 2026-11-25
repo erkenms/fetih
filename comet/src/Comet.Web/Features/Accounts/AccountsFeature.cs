@@ -292,7 +292,7 @@ public sealed class AccountsFeature : IFeature
             Reason = reason,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("account.ban", "account", id.ToString(CultureInfo.InvariantCulture),
             after: new { statusId = (ushort)AccountStatus.Banned, reason },
@@ -317,7 +317,7 @@ public sealed class AccountsFeature : IFeature
             Reason = reason,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("account.unban", "account", id.ToString(CultureInfo.InvariantCulture),
             after: new { statusId = (ushort)AccountStatus.Activated, reason },
@@ -416,16 +416,5 @@ public sealed class AccountsFeature : IFeature
         if (authority == null)
             return ApiError.Result("not_found", StatusCodes.Status404NotFound);
         return user.Outranks(authority.Value) ? null : ApiError.Result("outranked", StatusCodes.Status403Forbidden);
-    }
-
-    private static JsonHttpResult<ApiError> MapAdminError(string? code)
-    {
-        int status = code switch
-        {
-            AdminErrors.NotFound => StatusCodes.Status404NotFound,
-            AdminErrors.Busy => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest,
-        };
-        return ApiError.Result(code ?? AdminErrors.Failed, status);
     }
 }

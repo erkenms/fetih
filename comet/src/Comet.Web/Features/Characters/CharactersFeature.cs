@@ -474,7 +474,7 @@ public sealed class CharactersFeature : IFeature
             Reason = reason,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.kick", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { reason },
@@ -494,7 +494,7 @@ public sealed class CharactersFeature : IFeature
             Minutes = request.Minutes,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.mute", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { minutes = request.Minutes },
@@ -513,7 +513,7 @@ public sealed class CharactersFeature : IFeature
             CharacterID = id,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.jail", "character", id.ToString(CultureInfo.InvariantCulture),
             summary: $"Jailed #{id}");
@@ -536,7 +536,7 @@ public sealed class CharactersFeature : IFeature
             Text = text,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.message", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { text },
@@ -561,7 +561,7 @@ public sealed class CharactersFeature : IFeature
             Gem2 = request.Gem2,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.give_item", "character", id.ToString(CultureInfo.InvariantCulture),
             after: request,
@@ -581,7 +581,7 @@ public sealed class CharactersFeature : IFeature
             ItemID = request.ItemId,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.take_item", "character", id.ToString(CultureInfo.InvariantCulture),
             before: new { itemId = request.ItemId },
@@ -604,7 +604,7 @@ public sealed class CharactersFeature : IFeature
             Amount = request.Amount,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.silver", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { amount = request.Amount },
@@ -627,7 +627,7 @@ public sealed class CharactersFeature : IFeature
             Amount = request.Amount,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.conquer_points", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { amount = request.Amount },
@@ -647,7 +647,7 @@ public sealed class CharactersFeature : IFeature
             Level = request.Level,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.set_level", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { level = request.Level },
@@ -669,7 +669,7 @@ public sealed class CharactersFeature : IFeature
             Y = request.Y,
         });
         if (!result.Ok)
-            return MapAdminError(result.Error);
+            return ApiError.FromAdmin(result.Error);
 
         await audit.WriteAsync("character.teleport", "character", id.ToString(CultureInfo.InvariantCulture),
             after: new { mapId = request.MapId, x = request.X, y = request.Y },
@@ -691,14 +691,4 @@ public sealed class CharactersFeature : IFeature
     private static DateTime? Utc(DateTime? dt) =>
         dt == null ? null : DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc);
 
-    private static JsonHttpResult<ApiError> MapAdminError(string? code)
-    {
-        int status = code switch
-        {
-            AdminErrors.NotFound => StatusCodes.Status404NotFound,
-            AdminErrors.Busy => StatusCodes.Status409Conflict,
-            _ => StatusCodes.Status400BadRequest,
-        };
-        return ApiError.Result(code ?? AdminErrors.Failed, status);
-    }
 }
