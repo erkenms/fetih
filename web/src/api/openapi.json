@@ -3854,6 +3854,270 @@
           }
         }
       }
+    },
+    "/api/studio/monsters": {
+      "get": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "listStudioMonsters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "createStudioMonster",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMonsterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveMonsterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterValidationError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/monsters/{id}": {
+      "get": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "getStudioMonster",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "updateStudioMonster",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMonsterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveMonsterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "deleteStudioMonster",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "hash",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteMonsterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterValidationError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/studio/monsters/reload": {
+      "post": {
+        "tags": [
+          "MonsterEditFeature"
+        ],
+        "operationId": "reloadStudioMonsters",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonsterReloadResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5848,6 +6112,22 @@
             "items": {
               "$ref": "#/components/schemas/ValidationProblemDto"
             }
+          }
+        }
+      },
+      "DeleteMonsterResponse": {
+        "required": [
+          "hash",
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -8063,6 +8343,63 @@
           }
         }
       },
+      "MonsterBossRef": {
+        "required": [
+          "id",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "spread",
+          "times",
+          "intervalSeconds",
+          "broadcast"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spread": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "times": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "intervalSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "broadcast": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "MonsterCatalogEntry": {
         "required": [
           "id",
@@ -8282,6 +8619,396 @@
           "total": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "MonsterDetailResponse": {
+        "required": [
+          "hash",
+          "monster",
+          "line",
+          "spawns",
+          "bossSpawns",
+          "drops",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "monster": {
+            "$ref": "#/components/schemas/MonsterDto"
+          },
+          "line": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spawns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterSpawnRef"
+            }
+          },
+          "bossSpawns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterBossRef"
+            }
+          },
+          "drops": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterDropRef"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterProblemDto"
+            }
+          }
+        }
+      },
+      "MonsterDropRef": {
+        "required": [
+          "itemId",
+          "chance",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "chance": {
+            "type": "number",
+            "format": "double"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MonsterDto": {
+        "required": [
+          "id",
+          "name",
+          "lookface",
+          "level",
+          "life",
+          "attackMin",
+          "attackMax",
+          "defense",
+          "dexterity",
+          "dodge",
+          "attackRange",
+          "viewRange",
+          "attackSpeed",
+          "moveSpeed",
+          "attackUser",
+          "dropMoney",
+          "dropHp",
+          "dropMp",
+          "boss",
+          "magicType",
+          "magicHitRate",
+          "spells"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "lookface": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "life": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "attackMin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "attackMax": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "defense": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dexterity": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dodge": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "attackRange": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "viewRange": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "attackSpeed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "moveSpeed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "attackUser": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "dropMoney": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "dropHp": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "dropMp": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "boss": {
+            "type": "boolean"
+          },
+          "magicType": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "magicHitRate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spells": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "uint16"
+            }
+          }
+        }
+      },
+      "MonsterListResponse": {
+        "required": [
+          "hash",
+          "gameOnline",
+          "monsters",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "gameOnline": {
+            "type": "boolean"
+          },
+          "monsters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterListRow"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterProblemDto"
+            }
+          }
+        }
+      },
+      "MonsterListRow": {
+        "required": [
+          "monster",
+          "line",
+          "spawnAreaCount",
+          "totalSpawnAmount",
+          "bossScheduleCount",
+          "hasCustomDrops"
+        ],
+        "type": "object",
+        "properties": {
+          "monster": {
+            "$ref": "#/components/schemas/MonsterDto"
+          },
+          "line": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spawnAreaCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalSpawnAmount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bossScheduleCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasCustomDrops": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MonsterProblemDto": {
+        "required": [
+          "file",
+          "entry",
+          "line",
+          "message",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "entry": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "line": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          }
+        }
+      },
+      "MonsterReloadResponse": {
+        "required": [
+          "file",
+          "applied",
+          "errors",
+          "warnings",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "MonsterSpawnRef": {
+        "required": [
+          "id",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "spread",
+          "amount",
+          "respawnSeconds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spread": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "respawnSeconds": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MonsterValidationError": {
+        "required": [
+          "error",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterProblemDto"
+            }
           }
         }
       },
@@ -9585,6 +10312,46 @@
           }
         }
       },
+      "SaveMonsterRequest": {
+        "required": [
+          "hash",
+          "monster"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "monster": {
+            "$ref": "#/components/schemas/MonsterDto"
+          }
+        }
+      },
+      "SaveMonsterResponse": {
+        "required": [
+          "hash",
+          "monster",
+          "warnings"
+        ],
+        "type": "object",
+        "properties": {
+          "hash": {
+            "type": "string"
+          },
+          "monster": {
+            "$ref": "#/components/schemas/MonsterDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterProblemDto"
+            }
+          }
+        }
+      },
       "SendBroadcastRequest": {
         "required": [
           "channel",
@@ -10192,6 +10959,9 @@
     },
     {
       "name": "MapsFeature"
+    },
+    {
+      "name": "MonsterEditFeature"
     },
     {
       "name": "PublicAccountFeature"

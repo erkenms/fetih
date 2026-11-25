@@ -1332,6 +1332,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/studio/monsters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listStudioMonsters"];
+        put?: never;
+        post: operations["createStudioMonster"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/monsters/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStudioMonster"];
+        put: operations["updateStudioMonster"];
+        post?: never;
+        delete: operations["deleteStudioMonster"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/studio/monsters/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reloadStudioMonsters"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1951,6 +1999,11 @@ export interface components {
             reloadable: boolean;
             problems: components["schemas"]["ValidationProblemDto"][];
         };
+        DeleteMonsterResponse: {
+            hash: string;
+            /** Format: uint32 */
+            id: number;
+        };
         DiscardResponse: {
             file: string;
             discarded: boolean;
@@ -2564,6 +2617,22 @@ export interface components {
         MessageCharacterRequest: {
             text: string;
         };
+        MonsterBossRef: {
+            id: string;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: int32 */
+            spread: number;
+            times: string[];
+            /** Format: int32 */
+            intervalSeconds: number;
+            broadcast: null | string;
+        };
         MonsterCatalogEntry: {
             /** Format: uint32 */
             id: number;
@@ -2619,6 +2688,122 @@ export interface components {
             items: components["schemas"]["MonsterCatalogEntry"][];
             /** Format: int32 */
             total: number;
+        };
+        MonsterDetailResponse: {
+            hash: string;
+            monster: components["schemas"]["MonsterDto"];
+            /** Format: int32 */
+            line: number;
+            spawns: components["schemas"]["MonsterSpawnRef"][];
+            bossSpawns: components["schemas"]["MonsterBossRef"][];
+            drops: components["schemas"]["MonsterDropRef"][];
+            problems: components["schemas"]["MonsterProblemDto"][];
+        };
+        MonsterDropRef: {
+            /** Format: uint32 */
+            itemId: number;
+            /** Format: double */
+            chance: number;
+            /** Format: int32 */
+            count: number;
+        };
+        MonsterDto: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+            /** Format: uint32 */
+            lookface: number;
+            /** Format: uint8 */
+            level: number;
+            /** Format: uint32 */
+            life: number;
+            /** Format: int32 */
+            attackMin: number;
+            /** Format: int32 */
+            attackMax: number;
+            /** Format: int32 */
+            defense: number;
+            /** Format: int32 */
+            dexterity: number;
+            /** Format: int32 */
+            dodge: number;
+            /** Format: int32 */
+            attackRange: number;
+            /** Format: int32 */
+            viewRange: number;
+            /** Format: int32 */
+            attackSpeed: number;
+            /** Format: int32 */
+            moveSpeed: number;
+            /** Format: uint32 */
+            attackUser: number;
+            /** Format: uint32 */
+            dropMoney: number;
+            /** Format: uint32 */
+            dropHp: number;
+            /** Format: uint32 */
+            dropMp: number;
+            boss: boolean;
+            /** Format: uint16 */
+            magicType: number;
+            /** Format: int32 */
+            magicHitRate: number;
+            spells: number[];
+        };
+        MonsterListResponse: {
+            hash: string;
+            gameOnline: boolean;
+            monsters: components["schemas"]["MonsterListRow"][];
+            problems: components["schemas"]["MonsterProblemDto"][];
+        };
+        MonsterListRow: {
+            monster: components["schemas"]["MonsterDto"];
+            /** Format: int32 */
+            line: number;
+            /** Format: int32 */
+            spawnAreaCount: number;
+            /** Format: int32 */
+            totalSpawnAmount: number;
+            /** Format: int32 */
+            bossScheduleCount: number;
+            hasCustomDrops: boolean;
+        };
+        MonsterProblemDto: {
+            file: string;
+            /** Format: int32 */
+            entry: null | number;
+            /** Format: int32 */
+            line: null | number;
+            message: string;
+            level: string;
+        };
+        MonsterReloadResponse: {
+            file: string;
+            applied: boolean;
+            errors: string[];
+            warnings: string[];
+            summary: null | string;
+        };
+        MonsterSpawnRef: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            /** Format: int32 */
+            spread: number;
+            /** Format: int32 */
+            amount: number;
+            /** Format: int32 */
+            respawnSeconds: number;
+        };
+        MonsterValidationError: {
+            error: string;
+            problems: components["schemas"]["MonsterProblemDto"][];
         };
         MuteCharacterRequest: {
             /** Format: int32 */
@@ -3004,6 +3189,15 @@ export interface components {
             startAt: null | string;
             /** Format: date-time */
             endAt: null | string;
+        };
+        SaveMonsterRequest: {
+            hash: null | string;
+            monster: components["schemas"]["MonsterDto"];
+        };
+        SaveMonsterResponse: {
+            hash: string;
+            monster: components["schemas"]["MonsterDto"];
+            warnings: components["schemas"]["MonsterProblemDto"][];
         };
         SendBroadcastRequest: {
             channel: components["schemas"]["BroadcastChannel"];
@@ -5722,6 +5916,223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listStudioMonsters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterListResponse"];
+                };
+            };
+        };
+    };
+    createStudioMonster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMonsterRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveMonsterResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterValidationError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getStudioMonster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterDetailResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    updateStudioMonster: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMonsterRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveMonsterResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterValidationError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    deleteStudioMonster: {
+        parameters: {
+            query?: {
+                hash?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteMonsterResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterValidationError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reloadStudioMonsters: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MonsterReloadResponse"];
                 };
             };
         };

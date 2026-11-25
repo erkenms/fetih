@@ -18,5 +18,6 @@ public static class FeatureRegistry
         new Maps.MapsFeature(),
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),
+        new MonsterEdit.MonsterEditFeature(),
     ];
 }

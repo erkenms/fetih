@@ -27,7 +27,7 @@ public class ChangesFeature : IFeature
     private static async Task<Ok<ChangesSummaryResponse>> GetChangesAsync(
         WebConfiguration config, GitDataService git, GameRpc gameRpc, CancellationToken ct)
     {
-        string dataDir = ResolveDataDirectory(config);
+        string dataDir = StudioData.ResolveDataDirectory(config);
         var (gitAvailable, statusByFile) = Directory.Exists(dataDir)
             ? await git.GetStatusAsync(dataDir, ct)
             : (false, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
@@ -77,7 +77,7 @@ public class ChangesFeature : IFeature
         if (kind == null)
             return TypedResults.NotFound(new ApiError("not_found"));
 
-        string dataDir = ResolveDataDirectory(config);
+        string dataDir = StudioData.ResolveDataDirectory(config);
         var (_, statusByFile) = Directory.Exists(dataDir)
             ? await git.GetStatusAsync(dataDir, ct)
             : (false, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
@@ -123,7 +123,7 @@ public class ChangesFeature : IFeature
         if (kind == null)
             return TypedResults.NotFound(new ApiError("not_found"));
 
-        string dataDir = ResolveDataDirectory(config);
+        string dataDir = StudioData.ResolveDataDirectory(config);
         var (_, statusByFile) = Directory.Exists(dataDir)
             ? await git.GetStatusAsync(dataDir, ct)
             : (false, new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase));
@@ -144,45 +144,11 @@ public class ChangesFeature : IFeature
         return TypedResults.Ok(new DiscardResponse(kind.FileName, discarded));
     }
 
-    private static string ResolveDataDirectory(WebConfiguration config)
-    {
-        string? configured = WebConfiguration.PathsSection.Resolve(config.Paths.DataDirectory);
-        if (configured != null && Directory.Exists(configured))
-            return configured;
-
-        string? dir = AppContext.BaseDirectory;
-        while (dir != null)
-        {
-            string candidate = Path.Combine(dir, "src", "Comet.Game", "Data");
-            if (Directory.Exists(candidate))
-                return candidate;
-            candidate = Path.Combine(dir, "comet", "src", "Comet.Game", "Data");
-            if (Directory.Exists(candidate))
-                return candidate;
-            dir = Path.GetDirectoryName(dir.TrimEnd(Path.DirectorySeparatorChar));
-        }
-
-        return configured ?? Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Comet.Game/Data"));
-    }
-
-    private static DataSet CreateDataSet(string dataDir, WebConfiguration config)
-    {
-        string? clientDir = WebConfiguration.PathsSection.Resolve(config.Paths.ClientDirectory);
-        if (clientDir != null
-            && File.Exists(Path.Combine(clientDir, "ini", "GameMap.dat"))
-            && File.Exists(Path.Combine(clientDir, "ini", "itemtype.dat")))
-        {
-            try { return DataSet.ForClient(dataDir, clientDir); }
-            catch { /* Fall back to schema-only checks when client data is incomplete */ }
-        }
-        return new DataSet(dataDir);
-    }
-
     private static ValidationProblemDto[] ValidateAll(string dataDir, WebConfiguration config) =>
-        CreateDataSet(dataDir, config).ValidateAll().Select(ToDto).ToArray();
+        StudioData.CreateDataSet(dataDir, config).ValidateAll().Select(ToDto).ToArray();
 
     private static ValidationProblemDto[] ValidateFile(string dataDir, WebConfiguration config, string fileName) =>
-        CreateDataSet(dataDir, config).Validate(fileName).Select(ToDto).ToArray();
+        StudioData.CreateDataSet(dataDir, config).Validate(fileName).Select(ToDto).ToArray();
 
     private static ValidationProblemDto ToDto(DataProblem p) =>
         new(p.File, p.Entry, p.Line, p.Message, p.Level == DataProblemLevel.Warning ? "warning" : "error");
