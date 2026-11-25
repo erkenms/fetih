@@ -20,9 +20,11 @@
     "warrior": "Warrior",
     "archer": "Archer",
     "ninja": "Ninja",
+    "monk": "Monk",
+    "pirate": "Pirate",
     "taoist": "Taoist",
-    "water": "Water Taoist",
-    "fire": "Fire Taoist"
+    "waterTaoist": "Water Taoist",
+    "fireTaoist": "Fire Taoist"
   },
   "rank": {
     "leader": "Leader",

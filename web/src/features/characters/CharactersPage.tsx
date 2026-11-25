@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router'
 import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
-import { professionKey } from '../../components/items'
+import { formatProfession } from '../../lib/gameMeta'
 import { MapPicker } from '../../components/pickers'
 import { pkColor } from './characterMeta'
 
@@ -61,10 +61,7 @@ export default function CharactersPage() {
   const total = characters.data?.total ?? 0
   const hasFilters = Boolean(q || minLevel !== '' || maxLevel !== '' || mapId != null || onlineOnly)
 
-  const formatClass = (cls: number) => {
-    const key = professionKey(cls)
-    return key ? t(`items:${key}` as never, { defaultValue: `#${cls}` }) : `#${cls}`
-  }
+  const formatClass = (cls: number) => formatProfession(cls, t)
 
   const clearFilters = () => {
     setQ('')

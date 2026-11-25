@@ -24,28 +24,4 @@ export function isValidPassword(password: string, minLength = 6, maxLength = 16)
   return true
 }
 
-export function classKey(classId: number): string {
-  const base = Math.floor(classId / 10) * 10
-  switch (base) {
-    case 10:
-      return 'trojan'
-    case 20:
-      return 'warrior'
-    case 40:
-      return 'archer'
-    case 50:
-      return 'ninja'
-    case 60:
-      return 'monk'
-    case 70:
-      return 'pirate'
-    case 100:
-      return 'taoist'
-    case 130:
-      return 'waterTaoist'
-    case 140:
-      return 'fireTaoist'
-    default:
-      return 'unknown'
-  }
-}
+export { classKey } from '../../../lib/gameMeta'

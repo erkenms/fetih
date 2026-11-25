@@ -1,17 +1,6 @@
-export const baseClassOptions = [10, 20, 40, 50, 60, 70, 100] as const
+export { classKey } from '../../../lib/gameMeta'
 
-export function classKey(classId: number): string {
-  if (classId >= 10 && classId <= 15) return 'trojan'
-  if (classId >= 20 && classId <= 25) return 'warrior'
-  if (classId >= 40 && classId <= 45) return 'archer'
-  if (classId >= 50 && classId <= 55) return 'ninja'
-  if (classId >= 60 && classId <= 65) return 'monk'
-  if (classId >= 70 && classId <= 75) return 'pirate'
-  if (classId >= 132 && classId <= 135) return 'waterTaoist'
-  if (classId >= 142 && classId <= 145) return 'fireTaoist'
-  if (classId >= 100 && classId <= 101) return 'taoist'
-  return 'unknown'
-}
+export const baseClassOptions = [10, 20, 40, 50, 60, 70, 100] as const
 
 export function guildRankKey(rank: number): string {
   if (rank >= 1000) return 'leader'

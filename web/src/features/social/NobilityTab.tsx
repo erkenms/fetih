@@ -3,9 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { nobilityColors } from '../../lib/gameMeta'
 import { CharacterCell, DataTable, useNumber } from './shared'
-
-const rankColors: Record<string, string> = { King: 'yellow', Prince: 'grape', Duke: 'blue', Earl: 'teal', Baron: 'green', Knight: 'gray' }
 
 export function NobilityTab() {
   const { t } = useTranslation('social')
@@ -25,7 +24,7 @@ export function NobilityTab() {
               <CharacterCell character={e.character} />
             </Table.Td>
             <Table.Td>
-              <Badge color={rankColors[e.rank] ?? 'gray'} variant="light">
+              <Badge color={nobilityColors[e.rank] ?? 'gray'} variant="light">
                 {t(`nobility.ranks.${e.rank}`, { defaultValue: e.rank })}
               </Badge>
             </Table.Td>

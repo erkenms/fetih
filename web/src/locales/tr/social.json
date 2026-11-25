@@ -20,9 +20,11 @@
     "warrior": "Savaşçı",
     "archer": "Okçu",
     "ninja": "Ninja",
+    "monk": "Monk",
+    "pirate": "Pirate",
     "taoist": "Taocu",
-    "water": "Su Taocusu",
-    "fire": "Ateş Taocusu"
+    "waterTaoist": "Su Taocusu",
+    "fireTaoist": "Ateş Taocusu"
   },
   "rank": {
     "leader": "Lider",

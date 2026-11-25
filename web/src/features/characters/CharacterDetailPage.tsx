@@ -21,7 +21,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { api, unwrap, type Schemas } from '../../api/client'
 import { can, useMe } from '../../app/auth'
 import { ErrorAlert } from '../../app/ErrorAlert'
-import { professionKey } from '../../components/items'
+import { formatProfession } from '../../lib/gameMeta'
 import { CharacterTimelineTab } from '../logs/CharacterTimelineTab'
 import { CharacterActionsBar } from './CharacterActionsBar'
 import { CharacterItemsView } from './CharacterItemsView'
@@ -127,11 +127,7 @@ export default function CharacterDetailPage() {
     void queryClient.invalidateQueries({ queryKey: ['characters'] })
   }
 
-  const formatClass = (cls: number) => {
-    if (!cls) return '—'
-    const key = professionKey(cls)
-    return key ? t(`items:${key}` as never, { defaultValue: `#${cls}` }) : `#${cls}`
-  }
+  const formatClass = (cls: number) => formatProfession(cls, t, '—')
 
   if (detail.isLoading) {
     return (

@@ -20,21 +20,13 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { api, unwrap } from '../../../api/client'
 import { ErrorAlert } from '../../../app/ErrorAlert'
+import { nobilityColors } from '../../../lib/gameMeta'
 import { baseClassOptions, classKey, formatNumber } from './format'
 import { PlayerAvatar } from './PlayerAvatar'
 
 const pageSize = 25
 const validTabs = ['level', 'nobility', 'guilds', 'arena', 'flowers', 'pk', 'families'] as const
 type RankingTab = (typeof validTabs)[number]
-
-const nobilityColors: Record<string, string> = {
-  King: 'yellow',
-  Prince: 'grape',
-  Duke: 'blue',
-  Earl: 'cyan',
-  Baron: 'teal',
-  Knight: 'gray',
-}
 
 export default function RankingsPage() {
   const { kind } = useParams<{ kind?: string }>()
