@@ -1,6 +1,7 @@
 namespace Comet.Web.Features.Logs;
 
 using Comet.Web.Auth;
+using Comet.Web.Features.Dashboard;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 public record TimelineResponse(
@@ -20,12 +21,6 @@ public class LogsFeature : IFeature
 
     public void AddServices(IServiceCollection services, WebConfiguration config)
     {
-        services.AddSingleton(sp =>
-        {
-            var options = new LogsOptions();
-            sp.GetRequiredService<IConfiguration>().GetSection("Observability").Bind(options);
-            return options;
-        });
         services.AddHttpClient<ILokiClient, LokiClient>(client =>
         {
             client.Timeout = TimeSpan.FromSeconds(10);
@@ -51,7 +46,7 @@ public class LogsFeature : IFeature
 
     private static Task<Results<Ok<TimelineResponse>, JsonHttpResult<ApiError>>> QueryTimelineAsync(
         ILokiClient loki,
-        LogsOptions options,
+        ObservabilityOptions options,
         uint? characterId,
         uint? accountId,
         string? server,
@@ -69,7 +64,7 @@ public class LogsFeature : IFeature
     private static Task<Results<Ok<TimelineResponse>, JsonHttpResult<ApiError>>> QueryCharacterAsync(
         uint characterId,
         ILokiClient loki,
-        LogsOptions options,
+        ObservabilityOptions options,
         uint? accountId,
         string? server,
         string? level,
@@ -86,7 +81,7 @@ public class LogsFeature : IFeature
     private static Task<Results<Ok<TimelineResponse>, JsonHttpResult<ApiError>>> QueryAccountAsync(
         uint accountId,
         ILokiClient loki,
-        LogsOptions options,
+        ObservabilityOptions options,
         string? server,
         string? level,
         string? eventPrefix,
@@ -101,7 +96,7 @@ public class LogsFeature : IFeature
 
     private static async Task<Results<Ok<TimelineResponse>, JsonHttpResult<ApiError>>> RunQueryAsync(
         ILokiClient loki,
-        LogsOptions options,
+        ObservabilityOptions options,
         LogQueryFilter filter,
         DateTime? from,
         DateTime? to,

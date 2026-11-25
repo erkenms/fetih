@@ -2,6 +2,7 @@ namespace Comet.Web.Features.Logs;
 
 using System.Globalization;
 using System.Text.Json;
+using Comet.Web.Features.Dashboard;
 
 public sealed class LokiUnavailableException(string message, Exception? inner = null)
     : Exception(message, inner);
@@ -23,7 +24,7 @@ public interface ILokiClient
     Task<LogEntry[]> QueryRangeAsync(string logQl, DateTime startUtc, DateTime endUtc, int limit, CancellationToken ct);
 }
 
-public sealed class LokiClient(HttpClient http, LogsOptions options) : ILokiClient
+public sealed class LokiClient(HttpClient http, ObservabilityOptions options) : ILokiClient
 {
     private static readonly HashSet<string> ReservedJsonFields = new(StringComparer.Ordinal)
     {

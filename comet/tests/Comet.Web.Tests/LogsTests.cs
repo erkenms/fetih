@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Comet.Web.Features.Logs;
+using Comet.Web.Features.Dashboard;
 using Xunit;
 
 [Collection(WebCollection.Name)]
@@ -105,7 +106,7 @@ public class LogsTests(WebFixture fixture)
         {
             Content = new StringContent("bad gateway", Encoding.UTF8, "text/plain"),
         });
-        var client = new LokiClient(new HttpClient(handler), new LogsOptions { LokiUrl = "http://127.0.0.1:3100" });
+        var client = new LokiClient(new HttpClient(handler), new ObservabilityOptions { LokiUrl = "http://127.0.0.1:3100" });
 
         await Assert.ThrowsAsync<LokiUnavailableException>(() =>
             client.QueryRangeAsync("{server=~\".+\"}", DateTime.UtcNow.AddHours(-1), DateTime.UtcNow, 50, CancellationToken.None));
