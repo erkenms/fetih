@@ -918,7 +918,8 @@ namespace Comet.Game.Magic
         public static bool InShape(MagicType spell, int x, int y, int aimX, int aimY, int tx, int ty)
         {
             int range = (int)spell.Range;
-            if (MonsterAI.Distance(x, y, tx, ty) > range || (tx == x && ty == y))
+            if (MonsterAI.Distance(x, y, tx, ty) > range ||
+                (tx == x && ty == y && spell.Sort != MagicSort.WhirlwindKick))
                 return false;
             switch (spell.Sort)
             {

@@ -145,6 +145,13 @@ namespace Comet.Game.Tests.Magic
             Assert.False(Casting.InShape(bomb, 100, 100, 0, 0, 96, 100));
             Assert.False(Casting.InShape(bomb, 100, 100, 0, 0, 100, 100));
         }
+
+        [Fact]
+        public void WhirlwindKickHitsTheCasterCell()
+        {
+            var kick = Spell(MagicSort.WhirlwindKick, 3);
+            Assert.True(Casting.InShape(kick, 100, 100, 103, 100, 100, 100));
+        }
     }
 
     public class StatusTests
