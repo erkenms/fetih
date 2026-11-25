@@ -117,13 +117,15 @@ namespace Comet.Game.Database
             public int WanderChance { get; set; } = 10;
 
             // How long a monster watches a player before going for them, and turns on what hit it
-            public int ReactionMinMilliseconds { get; set; } = 700;
-            public int ReactionMaxMilliseconds { get; set; } = 1500;
-            public int ProvokedMinMilliseconds { get; set; } = 250;
-            public int ProvokedMaxMilliseconds { get; set; } = 600;
+            public int ReactionMinMilliseconds { get; set; } = 400;
+            public int ReactionMaxMilliseconds { get; set; } = 900;
+            public int GuardReactionMinMilliseconds { get; set; } = 150;
+            public int GuardReactionMaxMilliseconds { get; set; } = 350;
+            public int ProvokedMinMilliseconds { get; set; } = 150;
+            public int ProvokedMaxMilliseconds { get; set; } = 350;
 
-            // How long after landing a jumping player goes unnoticed
-            public int JumpGraceMilliseconds { get; set; } = 1500;
+            // How long after landing a jumping player goes unnoticed by monsters
+            public int JumpGraceMilliseconds { get; set; } = 1000;
 
             // How far from home monsters and guards chase, wander and patrol
             public int LeashRange { get; set; } = 20;

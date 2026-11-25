@@ -24,16 +24,19 @@ namespace Comet.Game.World
         // it for guards)
         public static int WanderChance = 10;
 
-        // How long a monster watches a player it sees before going for them
-        public static TimeSpan ReactionMin = TimeSpan.FromMilliseconds(700);
-        public static TimeSpan ReactionMax = TimeSpan.FromMilliseconds(1500);
+        // How long a monster, and a guard, stands watching a player it sees before going for them
+        public static TimeSpan ReactionMin = TimeSpan.FromMilliseconds(400);
+        public static TimeSpan ReactionMax = TimeSpan.FromMilliseconds(900);
+        public static TimeSpan GuardReactionMin = TimeSpan.FromMilliseconds(150);
+        public static TimeSpan GuardReactionMax = TimeSpan.FromMilliseconds(350);
 
         // How long it takes to turn on what hit it, or to follow a target that jumped
-        public static TimeSpan ProvokedMin = TimeSpan.FromMilliseconds(250);
-        public static TimeSpan ProvokedMax = TimeSpan.FromMilliseconds(600);
+        public static TimeSpan ProvokedMin = TimeSpan.FromMilliseconds(150);
+        public static TimeSpan ProvokedMax = TimeSpan.FromMilliseconds(350);
 
-        // A player who jumped goes unnoticed until this long after landing
-        public static TimeSpan JumpGrace = TimeSpan.FromMilliseconds(1500);
+        // A player who jumped goes unnoticed by monsters until this long after landing; guards
+        // watch everyone
+        public static TimeSpan JumpGrace = TimeSpan.FromMilliseconds(1000);
 
         // Farther than this from home a monster or guard gives up the chase and walks back
         public static int LeashRange = 20;
@@ -44,8 +47,8 @@ namespace Comet.Game.World
         public static int GuardPatrolRange = 3;
 
         // Guards jump at players farther than this, and wait this long after landing to swing
-        private const int GuardJumpDistance = 4;
-        private static readonly TimeSpan LandingPause = TimeSpan.FromMilliseconds(400);
+        private const int GuardJumpDistance = 2;
+        private static readonly TimeSpan LandingPause = TimeSpan.FromMilliseconds(200);
 
         // How long the last tick took, and the slowest one
         public static TimeSpan LastTick { get; private set; }
@@ -56,6 +59,8 @@ namespace Comet.Game.World
             static TimeSpan Ms(int ms) => TimeSpan.FromMilliseconds(Math.Max(0, ms));
             ReactionMin = Ms(config.ReactionMinMilliseconds);
             ReactionMax = Ms(config.ReactionMaxMilliseconds);
+            GuardReactionMin = Ms(config.GuardReactionMinMilliseconds);
+            GuardReactionMax = Ms(config.GuardReactionMaxMilliseconds);
             ProvokedMin = Ms(config.ProvokedMinMilliseconds);
             ProvokedMax = Ms(config.ProvokedMaxMilliseconds);
             JumpGrace = Ms(config.JumpGraceMilliseconds);
@@ -143,9 +148,14 @@ namespace Comet.Game.World
                     (monster.X, monster.Y) != (monster.HomeX, monster.HomeY))
                     monster.Returning = true;
                 monster.Engaged = 0;
-                if (monster.Noticed != 0 && monster.Noticed != noticed &&
-                    Kernel.Players.TryGet(monster.Noticed, out var seen) && seen.Character != null)
-                    await FaceAsync(monster, seen.Character.X, seen.Character.Y);
+                // Having seen someone, it stops and makes up its mind
+                if (monster.Noticed != 0)
+                {
+                    if (monster.Noticed != noticed &&
+                        Kernel.Players.TryGet(monster.Noticed, out var seen) && seen.Character != null)
+                        await FaceAsync(monster, seen.Character.X, seen.Character.Y);
+                    return;
+                }
                 await IdleAsync(monster, now, random);
                 return;
             }
@@ -169,8 +179,9 @@ namespace Comet.Game.World
             if (now < monster.ReactAt)
                 return;
 
-            // It waits for a jump to land, then a moment to see where they went
-            if (player != null && now < player.LandsAt)
+            // A monster waits for a jump to land, then a moment to see where they went; a guard
+            // goes straight for where they'll land
+            if (player != null && !monster.IsGuard && now < player.LandsAt)
             {
                 monster.ReactAt = player.LandsAt + Between(ProvokedMin, ProvokedMax, random);
                 return;
@@ -232,8 +243,8 @@ namespace Comet.Game.World
                 if (await Monsters.StepAsync(monster, (byte)((toward + turn + 8) % 8), run: true))
                 {
                     // Having just arrived, it takes a moment before it swings
-                    if (monster.NextAttackAt < monster.NextMoveAt)
-                        monster.NextAttackAt = monster.NextMoveAt;
+                    if (monster.NextAttackAt < now + LandingPause)
+                        monster.NextAttackAt = now + LandingPause;
                     return;
                 }
         }
@@ -261,7 +272,7 @@ namespace Comet.Game.World
                 int d = Distance(monster.X, monster.Y, cx, cy);
                 if (d > Movement.MaxJumpDistance || d >= bestDistance || cx < 0 || cy < 0 ||
                     Distance(monster.HomeX, monster.HomeY, cx, cy) > GuardLeashRange ||
-                    !monster.Map.Grid.IsWalkable(cx, cy) || monster.Map.AnyAt((ushort)cx, (ushort)cy))
+                    !Monsters.IsFree(monster.Map, cx, cy))
                     continue;
                 (best, bestDistance) = (((ushort)cx, (ushort)cy), d);
             }
@@ -367,7 +378,7 @@ namespace Comet.Game.World
             foreach (var player in players.InView(monster.X, monster.Y))
             {
                 if (!players.TryGetPosition(player, out var px, out var py) || !CanBeAttacked(player, now) ||
-                    now < player.LandsAt + JumpGrace ||
+                    !monster.IsGuard && now < player.LandsAt + JumpGrace ||
                     monster.IsGuard && !Pk.Pking.IsGuilty(player, now) ||
                     Distance(monster.X, monster.Y, px, py) > range ||
                     nearest != null && Distance(monster.X, monster.Y, px, py) >= Distance(monster.X, monster.Y, nearestX, nearestY))
@@ -382,7 +393,9 @@ namespace Comet.Game.World
             if (monster.Noticed != nearest.ID)
             {
                 monster.Noticed = nearest.ID;
-                monster.DecidesAt = now + Between(ReactionMin, ReactionMax, Random.Shared);
+                monster.DecidesAt = now + (monster.IsGuard
+                    ? Between(GuardReactionMin, GuardReactionMax, Random.Shared)
+                    : Between(ReactionMin, ReactionMax, Random.Shared));
             }
             if (now < monster.DecidesAt || prey != null &&
                 Distance(monster.X, monster.Y, prey.X, prey.Y) < Distance(monster.X, monster.Y, nearestX, nearestY))

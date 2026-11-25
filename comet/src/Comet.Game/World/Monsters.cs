@@ -227,7 +227,7 @@ namespace Comet.Game.World
             int toX = monster.X + Movement.DeltaX[direction];
             int toY = monster.Y + Movement.DeltaY[direction];
             var map = monster.Map;
-            if (!map.Grid.IsWalkable(toX, toY) || map.AnyAt((ushort)toX, (ushort)toY))
+            if (!IsFree(map, toX, toY))
                 return false;
 
             var before = PlayersInView(monster);
@@ -257,7 +257,7 @@ namespace Comet.Game.World
         public static async Task<bool> JumpAsync(Monster monster, ushort toX, ushort toY)
         {
             var map = monster.Map;
-            if (!map.Grid.IsWalkable(toX, toY) || map.AnyAt(toX, toY))
+            if (!IsFree(map, toX, toY))
                 return false;
 
             ushort fromX = monster.X, fromY = monster.Y;
@@ -277,6 +277,18 @@ namespace Comet.Game.World
             foreach (var player in after.Where(p => !wasInView.Contains(p)))
                 await player.SendAsync(new MsgPlayer(monster));
             return true;
+        }
+
+        // A walkable cell with no monster, NPC or player on it
+        public static bool IsFree(GameMap<Monster> map, int x, int y)
+        {
+            if (!map.Grid.IsWalkable(x, y) || map.AnyAt((ushort)x, (ushort)y))
+                return false;
+            foreach (var npc in Kernel.Npcs.InView(map.Id, x, y))
+                if (npc.X == x && npc.Y == y)
+                    return false;
+            return Kernel.World == null || !Kernel.World.TryGet(map.Id, out var players) ||
+                !players.AnyAt((ushort)x, (ushort)y);
         }
 
         private static bool TryPlace(Monster monster, Random random)
