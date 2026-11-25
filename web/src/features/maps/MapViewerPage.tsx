@@ -23,6 +23,7 @@ import {
   IconArrowLeft,
   IconArrowRight,
   IconCheck,
+  IconEdit,
   IconFocusCentered,
   IconLink,
   IconMapPin,
@@ -33,6 +34,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { api, unwrap } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { useCan } from '../../app/auth'
 import { AssetImage } from '../../components/pickers'
 import {
   defaultOverlays,
@@ -49,7 +51,8 @@ function parseNum(value: string | null): number | undefined {
 }
 
 export default function MapViewerPage() {
-  const { t } = useTranslation('maps')
+  const { t } = useTranslation(['maps', 'mapEdit'])
+  const canEdit = useCan('Studio')
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -297,6 +300,16 @@ export default function MapViewerPage() {
           <Button size="xs" variant="default" leftSection={<IconLink size={14} />} onClick={handleCopyLink}>
             {t('viewer.copyLink')}
           </Button>
+          {canEdit && (
+            <Button
+              size="xs"
+              variant="filled"
+              leftSection={<IconEdit size={14} />}
+              onClick={() => navigate(`/admin/maps/${map.id}/edit`)}
+            >
+              {t('mapEdit:openEditor')}
+            </Button>
+          )}
         </Group>
       </Group>
 

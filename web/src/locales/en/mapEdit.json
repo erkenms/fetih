@@ -1,0 +1,123 @@
+{
+  "openEditor": "Edit map",
+  "backToViewer": "Viewer",
+  "title": "Edit {{map}}",
+  "unsavedChanges": "Unsaved changes",
+  "saved": "Saved",
+  "saveSuccess": "Map changes saved",
+  "saveNoChanges": "No changes to save",
+  "saveFailedValidation": "Fix validation errors before saving",
+  "conflictTitle": "File changed on disk",
+  "conflictBody": "Another edit modified one of the data files since you opened this map. Reload from disk to get the latest version.",
+  "reloadFromDisk": "Reload from disk",
+  "reloadInGame": "Reload in game",
+  "reloadedSuccess": "Reloaded in game: {{files}}",
+  "reloadFailed": "Reload failed for {{file}}: {{errors}}",
+  "toolbar": {
+    "select": "Select",
+    "addNpc": "Add NPC",
+    "drawSpawn": "Draw spawn",
+    "pickStart": "Set start point",
+    "undo": "Undo",
+    "redo": "Redo",
+    "save": "Save",
+    "fit": "Fit map",
+    "walkability": "Walkability"
+  },
+  "modeHints": {
+    "addNpc": "Click a walkable cell on the map to place a new NPC.",
+    "drawSpawn": "Click and drag on the map to draw a spawn area.",
+    "pickStart": "Click a walkable cell on the map to set the start point."
+  },
+  "errors": {
+    "unwalkableCell": "Cell ({{x}}, {{y}}) is not walkable.",
+    "outOfBounds": "Cell ({{x}}, {{y}}) is outside the map bounds.",
+    "duplicateNpcId": "Duplicate NPC ID: {{ids}}",
+    "duplicateSpawnId": "Duplicate Spawn ID: {{ids}}",
+    "recordDisableNeedsReborn": "RecordDisable requires a reborn map."
+  },
+  "validation": {
+    "title": "Validation",
+    "errorsCount": "{{count}} error(s)",
+    "warningsCount": "{{count}} warning(s)",
+    "line": "line {{line}}"
+  },
+  "tabs": {
+    "inspector": "Inspector",
+    "entities": "Entities",
+    "settings": "Map settings"
+  },
+  "inspector": {
+    "empty": "Select an NPC, spawn area, or portal on the map or in the Entities tab to edit it.",
+    "npcTitle": "NPC #{{id}}",
+    "spawnTitle": "Spawn #{{id}}",
+    "portalTitle": "Portal #{{index}}",
+    "id": "ID",
+    "lookface": "Lookface & direction",
+    "role": "Role",
+    "rolePresets": {
+      "1": "1 — General / Shop",
+      "2": "2 — Task / Dialog",
+      "3": "3 — Storage / Warehouse",
+      "5": "5 — Beautician",
+      "10": "10 — Guild War Pole",
+      "14": "14 — Booth / Market",
+      "19": "19 — Banker",
+      "26": "26 — City Gate"
+    },
+    "x": "X",
+    "y": "Y",
+    "life": "Life",
+    "level": "Level",
+    "walkable": "Walkable",
+    "blocked": "Blocked",
+    "deleteNpc": "Delete NPC",
+    "monster": "Monster",
+    "spread": "Spread (cells)",
+    "amount": "Amount",
+    "respawn": "Respawn (seconds)",
+    "deleteSpawn": "Delete spawn",
+    "spawnDragHint": "Drag the center handle to move or the edge handle to resize.",
+    "sourceCell": "Source cell",
+    "noSourceCell": "Not in DMap",
+    "targetMap": "Target map",
+    "targetX": "Target X",
+    "targetY": "Target Y",
+    "pickOnTargetMap": "Pick target on map",
+    "clearPortal": "Clear destination"
+  },
+  "entities": {
+    "search": "Filter entities...",
+    "npcs": "NPCs ({{count}})",
+    "spawns": "Spawns ({{count}})",
+    "portals": "Portals ({{count}})",
+    "addNpcQuick": "Add",
+    "addSpawnQuick": "Add",
+    "unlinked": "Unlinked",
+    "empty": "None"
+  },
+  "settings": {
+    "serverName": "Server name (/tp)",
+    "serverNamePlaceholder": "e.g. twin_city",
+    "aliases": "Aliases (comma-separated)",
+    "aliasesPlaceholder": "e.g. tc, twin",
+    "startPoint": "Start point (portal)",
+    "startX": "Start X",
+    "startY": "Start Y",
+    "pickStartOnMap": "Pick on map",
+    "clearStart": "Clear",
+    "rebornMap": "Reborn map",
+    "scrollTypeId": "Scroll item ID",
+    "ridePlus": "Steed ride plus",
+    "flags": "Map flags"
+  },
+  "targetPicker": {
+    "title": "Pick portal destination",
+    "selectMap": "Destination map",
+    "hint": "Click a walkable cell on the map to choose the destination.",
+    "selected": "Selected: {{map}} ({{x}}, {{y}})",
+    "noneSelected": "No cell selected yet",
+    "cancel": "Cancel",
+    "confirm": "Use destination"
+  }
+}

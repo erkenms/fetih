@@ -17,6 +17,7 @@ public static class FeatureRegistry
         new Social.SocialFeature(),
         new Pk.PkFeature(),
         new Maps.MapsFeature(),
+        new MapEdit.MapEditFeature(),
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),
         new MonsterEdit.MonsterEditFeature(),

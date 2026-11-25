@@ -390,6 +390,8 @@ public sealed class MapDataStore
             Kind: kind);
     }
 
+    public string? NpcName(Npc npc) => ResolveNpcName(npc, this.Client.NpcNames);
+
     private static string? ResolveNpcName(Npc npc, IReadOnlyDictionary<int, string> npcNames)
     {
         if (npc.NpcID == GuildWar.PoleID) return GuildWar.DefaultPoleName;

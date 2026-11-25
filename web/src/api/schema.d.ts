@@ -1124,6 +1124,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/maps/{id}/edit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMapEdit"];
+        put: operations["saveMapEdit"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/maps/{id}/edit/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reloadMapFiles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/accounts": {
         parameters: {
             query?: never;
@@ -2408,6 +2440,72 @@ export interface components {
             url: null | string;
             version: string;
         };
+        EditableMapSettings: {
+            inMapsJson: boolean;
+            name: null | string;
+            aliases: string[];
+            flags: string[];
+            portal: null | components["schemas"]["MapCellPoint"];
+            /** Format: uint32 */
+            rebornMap: null | number;
+            /** Format: uint32 */
+            scrollTypeId: null | number;
+            /** Format: uint8 */
+            ridePlus: number;
+        };
+        EditableNpc: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint16 */
+            lookface: number;
+            /** Format: uint8 */
+            role: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint32 */
+            life: number;
+            /** Format: uint8 */
+            level: number;
+            name?: null | string;
+        };
+        EditablePortal: {
+            /** Format: uint32 */
+            index: number;
+            /** Format: uint16 */
+            x: null | number;
+            /** Format: uint16 */
+            y: null | number;
+            /** Format: uint32 */
+            toMap: null | number;
+            toMapName: null | string;
+            /** Format: uint16 */
+            toX: null | number;
+            /** Format: uint16 */
+            toY: null | number;
+        };
+        EditableSpawn: {
+            /** Format: uint32 */
+            id: number;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint16 */
+            spread: number;
+            /** Format: int32 */
+            amount: number;
+            /** Format: int32 */
+            respawn: number;
+            /** Format: uint32 */
+            monsterId: number;
+            monsterName?: null | string;
+            /** Format: int32 */
+            monsterLevel?: null | number;
+            /** @default false */
+            monsterBoss: boolean;
+        };
         FaceEntry: {
             /** Format: uint32 */
             id: number;
@@ -3022,6 +3120,57 @@ export interface components {
             portals: components["schemas"]["MapPortalEntry"][];
             teleporters: components["schemas"]["MapTeleporterEntry"][];
             guildWar: null | components["schemas"]["MapGuildWarInfo"];
+        };
+        MapEditChangeCounts: {
+            mapsChanged: boolean;
+            /** Format: int32 */
+            npcsAdded: number;
+            /** Format: int32 */
+            npcsUpdated: number;
+            /** Format: int32 */
+            npcsRemoved: number;
+            /** Format: int32 */
+            spawnsAdded: number;
+            /** Format: int32 */
+            spawnsUpdated: number;
+            /** Format: int32 */
+            spawnsRemoved: number;
+            /** Format: int32 */
+            portalsAdded: number;
+            /** Format: int32 */
+            portalsUpdated: number;
+            /** Format: int32 */
+            portalsRemoved: number;
+        };
+        MapEditHashes: {
+            maps: string;
+            npcs: string;
+            spawns: string;
+            portals: string;
+        };
+        MapEditProblemDto: {
+            file: string;
+            /** Format: int32 */
+            entry: null | number;
+            /** Format: int32 */
+            line: null | number;
+            message: string;
+            level: string;
+        };
+        MapEditResponse: {
+            /** Format: uint32 */
+            mapId: number;
+            hashes: components["schemas"]["MapEditHashes"];
+            settings: components["schemas"]["EditableMapSettings"];
+            availableFlags: string[];
+            npcs: components["schemas"]["EditableNpc"][];
+            spawns: components["schemas"]["EditableSpawn"][];
+            portals: components["schemas"]["EditablePortal"][];
+            /** Format: uint32 */
+            nextNpcId: number;
+            /** Format: uint32 */
+            nextSpawnId: number;
+            problems: components["schemas"]["MapEditProblemDto"][];
         };
         MapGridResponse: {
             /** Format: uint32 */
@@ -3872,6 +4021,19 @@ export interface components {
             password: string;
             captchaToken?: null | string;
         };
+        ReloadMapFileResult: {
+            file: string;
+            applied: boolean;
+            errors: string[];
+            warnings: string[];
+            summary: null | string;
+        };
+        ReloadMapFilesRequest: {
+            files: null | string[];
+        };
+        ReloadMapFilesResponse: {
+            results: components["schemas"]["ReloadMapFileResult"][];
+        };
         ReloadResponse: {
             file: string;
             applied: boolean;
@@ -3924,6 +4086,20 @@ export interface components {
         SaveLevelsRequest: {
             hash: string;
             entries: components["schemas"]["LevelEntryInput"][];
+        };
+        SaveMapEditRequest: {
+            hashes: components["schemas"]["MapEditHashes"];
+            settings: components["schemas"]["EditableMapSettings"];
+            npcs: components["schemas"]["EditableNpc"][];
+            spawns: components["schemas"]["EditableSpawn"][];
+            portals: components["schemas"]["EditablePortal"][];
+        };
+        SaveMapEditResponse: {
+            saved: boolean;
+            hashes: components["schemas"]["MapEditHashes"];
+            changedFiles: string[];
+            problems: components["schemas"]["MapEditProblemDto"][];
+            counts: components["schemas"]["MapEditChangeCounts"];
         };
         SaveMonsterRequest: {
             hash: null | string;
@@ -6111,6 +6287,116 @@ export interface operations {
             };
             /** @description Not Found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    getMapEdit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MapEditResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    saveMapEdit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveMapEditRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SaveMapEditResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    reloadMapFiles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReloadMapFilesRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReloadMapFilesResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

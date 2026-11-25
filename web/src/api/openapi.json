@@ -2948,6 +2948,157 @@
         }
       }
     },
+    "/api/maps/{id}/edit": {
+      "get": {
+        "tags": [
+          "MapEditFeature"
+        ],
+        "operationId": "getMapEdit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapEditResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MapEditFeature"
+        ],
+        "operationId": "saveMapEdit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveMapEditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveMapEditResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/maps/{id}/edit/reload": {
+      "post": {
+        "tags": [
+          "MapEditFeature"
+        ],
+        "operationId": "reloadMapFiles",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReloadMapFilesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReloadMapFilesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/accounts": {
       "get": {
         "tags": [
@@ -7380,6 +7531,236 @@
           }
         }
       },
+      "EditableMapSettings": {
+        "required": [
+          "inMapsJson",
+          "name",
+          "aliases",
+          "flags",
+          "portal",
+          "rebornMap",
+          "scrollTypeId",
+          "ridePlus"
+        ],
+        "type": "object",
+        "properties": {
+          "inMapsJson": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "portal": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MapCellPoint"
+              }
+            ]
+          },
+          "rebornMap": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "scrollTypeId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "ridePlus": {
+            "type": "integer",
+            "format": "uint8"
+          }
+        }
+      },
+      "EditableNpc": {
+        "required": [
+          "id",
+          "lookface",
+          "role",
+          "x",
+          "y",
+          "life",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "lookface": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "role": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "life": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "level": {
+            "type": "integer",
+            "format": "uint8"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "EditablePortal": {
+        "required": [
+          "index",
+          "x",
+          "y",
+          "toMap",
+          "toMapName",
+          "toX",
+          "toY"
+        ],
+        "type": "object",
+        "properties": {
+          "index": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "x": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "y": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "toMap": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "toMapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toX": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "toY": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          }
+        }
+      },
+      "EditableSpawn": {
+        "required": [
+          "id",
+          "x",
+          "y",
+          "spread",
+          "amount",
+          "respawn",
+          "monsterId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "spread": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "amount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "respawn": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monsterId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "monsterName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "monsterLevel": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "monsterBoss": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "FaceEntry": {
         "required": [
           "id",
@@ -9532,6 +9913,185 @@
                 "$ref": "#/components/schemas/MapGuildWarInfo"
               }
             ]
+          }
+        }
+      },
+      "MapEditChangeCounts": {
+        "required": [
+          "mapsChanged",
+          "npcsAdded",
+          "npcsUpdated",
+          "npcsRemoved",
+          "spawnsAdded",
+          "spawnsUpdated",
+          "spawnsRemoved",
+          "portalsAdded",
+          "portalsUpdated",
+          "portalsRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "mapsChanged": {
+            "type": "boolean"
+          },
+          "npcsAdded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "npcsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "npcsRemoved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spawnsAdded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spawnsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "spawnsRemoved": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "portalsAdded": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "portalsUpdated": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "portalsRemoved": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MapEditHashes": {
+        "required": [
+          "maps",
+          "npcs",
+          "spawns",
+          "portals"
+        ],
+        "type": "object",
+        "properties": {
+          "maps": {
+            "type": "string"
+          },
+          "npcs": {
+            "type": "string"
+          },
+          "spawns": {
+            "type": "string"
+          },
+          "portals": {
+            "type": "string"
+          }
+        }
+      },
+      "MapEditProblemDto": {
+        "required": [
+          "file",
+          "entry",
+          "line",
+          "message",
+          "level"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "entry": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "line": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          }
+        }
+      },
+      "MapEditResponse": {
+        "required": [
+          "mapId",
+          "hashes",
+          "settings",
+          "availableFlags",
+          "npcs",
+          "spawns",
+          "portals",
+          "nextNpcId",
+          "nextSpawnId",
+          "problems"
+        ],
+        "type": "object",
+        "properties": {
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "hashes": {
+            "$ref": "#/components/schemas/MapEditHashes"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/EditableMapSettings"
+          },
+          "availableFlags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "npcs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditableNpc"
+            }
+          },
+          "spawns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditableSpawn"
+            }
+          },
+          "portals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditablePortal"
+            }
+          },
+          "nextNpcId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "nextSpawnId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapEditProblemDto"
+            }
           }
         }
       },
@@ -12418,6 +12978,73 @@
           }
         }
       },
+      "ReloadMapFileResult": {
+        "required": [
+          "file",
+          "applied",
+          "errors",
+          "warnings",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "applied": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "summary": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ReloadMapFilesRequest": {
+        "required": [
+          "files"
+        ],
+        "type": "object",
+        "properties": {
+          "files": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ReloadMapFilesResponse": {
+        "required": [
+          "results"
+        ],
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReloadMapFileResult"
+            }
+          }
+        }
+      },
       "ReloadResponse": {
         "required": [
           "file",
@@ -12617,6 +13244,75 @@
             "items": {
               "$ref": "#/components/schemas/LevelEntryInput"
             }
+          }
+        }
+      },
+      "SaveMapEditRequest": {
+        "required": [
+          "hashes",
+          "settings",
+          "npcs",
+          "spawns",
+          "portals"
+        ],
+        "type": "object",
+        "properties": {
+          "hashes": {
+            "$ref": "#/components/schemas/MapEditHashes"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/EditableMapSettings"
+          },
+          "npcs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditableNpc"
+            }
+          },
+          "spawns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditableSpawn"
+            }
+          },
+          "portals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditablePortal"
+            }
+          }
+        }
+      },
+      "SaveMapEditResponse": {
+        "required": [
+          "saved",
+          "hashes",
+          "changedFiles",
+          "problems",
+          "counts"
+        ],
+        "type": "object",
+        "properties": {
+          "saved": {
+            "type": "boolean"
+          },
+          "hashes": {
+            "$ref": "#/components/schemas/MapEditHashes"
+          },
+          "changedFiles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapEditProblemDto"
+            }
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MapEditChangeCounts"
           }
         }
       },
@@ -13588,6 +14284,9 @@
     },
     {
       "name": "LogsFeature"
+    },
+    {
+      "name": "MapEditFeature"
     },
     {
       "name": "MapsFeature"
