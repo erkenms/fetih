@@ -33,6 +33,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgSynpOffer] = () => new MsgSynpOffer(),
                 [PacketType.MsgFamily] = () => new MsgFamily(),
                 [PacketType.MsgFamilyOccupy] = () => new MsgFamilyOccupy(),
+                [PacketType.MsgWarFlag] = () => new MsgWarFlag(),
                 [PacketType.MsgPeerage] = () => new MsgPeerage(),
                 [PacketType.MsgGodExp] = () => new MsgGodExp(),
                 [PacketType.MsgPing] = () => new MsgPing(),

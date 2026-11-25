@@ -48,6 +48,7 @@ namespace Comet.Game.World
                     continue;
                 await Items.Vending.ShowNpcAsync(client, npc);
             }
+            await Social.CaptureTheFlag.ShowAsync(client, x, y, fromX, fromY);
         }
 
         public static void Leave(Client client)
@@ -87,6 +88,8 @@ namespace Comet.Game.World
                 return;
             }
 
+            if (await Social.CaptureTheFlag.QueryAsync(client, targetID))
+                return;
             var npc = Kernel.Npcs?.Find(character.MapID, targetID);
             if (npc != null && GameMap<Client>.InView(x, y, npc.X, npc.Y))
                 await Items.Vending.ShowNpcAsync(client, npc);

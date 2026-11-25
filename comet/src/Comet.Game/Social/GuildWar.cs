@@ -256,12 +256,15 @@ namespace Comet.Game.Social
 
         public static Npc FindTarget(Client client, uint npcID) =>
             client.Character != null && client.Character.MapID == MapID &&
-            Kernel.Npcs.Find(MapID, npcID) is Npc npc && npc.IsGuildWarTarget ? npc : null;
+            Kernel.Npcs.Find(MapID, npcID) is Npc npc && npc.IsGuildWarTarget ? npc :
+            CaptureTheFlag.FindBase(client, npcID);
 
         public static string Problem(Client client, Npc target)
         {
             if (target == null || !target.IsGuildWarTarget)
                 return "unknown_target";
+            if (target.IsFlagBase)
+                return CaptureTheFlag.Problem(client, target);
             lock (Sync)
             {
                 if (!IsActive)
@@ -287,6 +290,8 @@ namespace Comet.Game.Social
         public static IEnumerable<Npc> InView(Client client)
         {
             var character = client.Character;
+            foreach (var flagBase in CaptureTheFlag.BasesInView(client))
+                yield return flagBase;
             if (character == null || character.MapID != MapID)
                 yield break;
             foreach (var npc in Kernel.Npcs.InView(MapID, character.X, character.Y))
@@ -296,6 +301,8 @@ namespace Comet.Game.Social
 
         public static uint LifeOf(Npc npc)
         {
+            if (npc.IsFlagBase)
+                return CaptureTheFlag.BaseLife;
             lock (Sync)
             {
                 return npc.NpcID switch
@@ -310,6 +317,8 @@ namespace Comet.Game.Social
 
         public static MsgNpcInfoEx SpawnPacket(Npc npc)
         {
+            if (npc.IsFlagBase)
+                return CaptureTheFlag.BasePacket(npc);
             uint maxLife, life;
             ushort lookface;
             string name;
@@ -351,6 +360,11 @@ namespace Comet.Game.Social
         {
             if (damage == 0 || target == null || !target.IsGuildWarTarget)
                 return;
+            if (target.IsFlagBase)
+            {
+                await CaptureTheFlag.AfterHitAsync(client, target, damage);
+                return;
+            }
 
             if (target.Role == Npc.GateRole)
             {

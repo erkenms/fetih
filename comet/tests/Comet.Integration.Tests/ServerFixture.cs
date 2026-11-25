@@ -291,6 +291,7 @@ namespace Comet.Integration.Tests
         // Twin City and the market forbid it. Not 1005, the arena: NpcTests need it missing.
         public const uint DesertCity = 1000, PkField = 1080, TrainingGround = 1039, GuildWar = 1038;
         public const uint ClanWarField = 3024;
+        public const uint CaptureTheFlagArena = 2057;
 
         // Twin City's mine, where its mine assistant lets players in
         public const uint TwinCityMine = 1028;
@@ -502,6 +503,7 @@ namespace Comet.Integration.Tests
                     (6000, "map/map/jail.7z"), (Arena, "map/map/newarena.7z"),
                     (601, "map/map/offlinetg.7z"), (TrainingGround, "map/map/tg.7z"),
                     (TwinCityMine, "map/map/mine-four.7z"), (GuildWar, "map/map/gw.7z"), (ClanWarField, "map/map/family.7z"),
+                    (CaptureTheFlagArena, "map/map/bp-flag.7z"),
                     (ElitePkWaitingRoom, "map/map/pk.7z"),
                     (BirthVillage, "map/map/newbie.7z")));
             File.WriteAllBytes(Path.Combine(maps, "newplain.DMap"), MapFiles.DMap(972, 972,
@@ -521,6 +523,14 @@ namespace Comet.Integration.Tests
             File.WriteAllBytes(Path.Combine(maps, "gw.DMap"), MapFiles.DMap(400, 400));
             File.WriteAllBytes(Path.Combine(maps, "family.DMap"), MapFiles.DMap(170, 170));
             File.WriteAllBytes(Path.Combine(maps, "pk.DMap"), MapFiles.DMap(100, 100));
+            File.WriteAllBytes(Path.Combine(maps, "bp-flag.DMap"), MapFiles.DMap(564, 564));
+            // The client's Capture the Flag regions: the safe zone (24) and the three flag bases (25)
+            File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "region.ini"),
+                "1002 4 348 209 160 225 TwinCity TwinCity 0 0 0 0 none none\r\n" +
+                "2057 24 439 325 86 86 CTF-Arena none 0 0 0 0 none none\r\n" +
+                "2057 25 318 439 20 20 CTF-Arena none 0 0 0 0 none none\r\n" +
+                "2057 25 206 261 20 20 CTF-Arena none 0 0 0 0 none none\r\n" +
+                "2057 25 196 086 20 20 CTF-Arena none 0 0 0 0 none none\r\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemtype.dat"),
                 ItemFiles.ItemTypeDat(new[] { Blade, EliteBlade, SuperBlade, Beads, Glaive, Helmet, Bow, Katana, Shield, Rapier, Pistol, Arrows, TwinCityGate, Steed, Crop,
                     SmallPrayingStone, PrayingStone, Necklace,
@@ -547,7 +557,8 @@ namespace Comet.Integration.Tests
                 $"[{BladeRefinery.Id}]\r\nName=Critical~Strike\r\nLevel=1\r\nPower=2\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "ItemSolidify.ini"), $"{PermanentStone.Id} 10\r\n723695 100\r\n");
             File.WriteAllText(Path.Combine(this.MapDirectory, "ini", "info.ini"),
-                "[Solidify]\r\nlev1=10    // points\r\nlev2=30\r\nlev3=70\r\nlev4=150\r\nlev5=270\r\n");
+                "[Solidify]\r\nlev1=10    // points\r\nlev2=30\r\nlev3=70\r\nlev4=150\r\nlev5=270\r\n\r\n" +
+                "[WarflagReward]\r\nrank1=3000,120000000\r\nrank2=2000,100000000\r\n");
             File.WriteAllBytes(Path.Combine(this.MapDirectory, "ini", "itemadd.ini"),
                 ItemFiles.ItemAddIni((Steed.Id, 1, 0, SteedVigor), (120020, 1, NecklaceHealth, 0)));
             // Gale Bomb's throw, as the client's: 250ms, then 2ms for each world unit

@@ -105,6 +105,21 @@
 
             try
             {
+                Social.CaptureTheFlag.Layout = Social.WarFlagArena.Load(config.Maps.ResolveClientDirectory(), Social.CaptureTheFlag.MapID);
+                LogEvents.For(typeof(Program), LogEvents.CaptureTheFlagLoaded).Information(
+                    "Loaded the Capture the Flag arena: {BaseCount} flag bases, {PrizeCount} prizes",
+                    Social.CaptureTheFlag.Layout.Bases.Count, Social.CaptureTheFlag.Layout.Prizes.Count);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Can't read the Capture the Flag arena (ini/region.ini, info.ini) from {Directory}",
+                    config.Maps.ResolveClientDirectory());
+                Log.CloseAndFlush();
+                return;
+            }
+
+            try
+            {
                 Kernel.TutorTypes = Social.TutorTypes.Load(config.Maps.ResolveClientDirectory());
             }
             catch (Exception e)
@@ -429,6 +444,11 @@
             Tournaments.ElitePk.RoundBreak = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.RoundBreakSeconds));
             Tournaments.ElitePk.LeaveDelay = TimeSpan.FromSeconds(Math.Max(0, config.ElitePk.LeaveSeconds));
             Tournaments.ElitePk.Subscribe();
+            Social.CaptureTheFlag.FlagTime = TimeSpan.FromSeconds(Math.Max(1, config.CaptureTheFlag.FlagSeconds));
+            Social.CaptureTheFlag.FlagCount = Math.Max(1, config.CaptureTheFlag.Flags);
+            Social.CaptureTheFlag.DoubleInterval = TimeSpan.FromSeconds(Math.Max(1, config.CaptureTheFlag.DoubleSeconds));
+            Social.CaptureTheFlag.Subscribe();
+            _ = Social.CaptureTheFlag.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             _ = Tournaments.ElitePk.RunAsync(TimeSpan.FromSeconds(1), CancellationToken.None);
             Tournaments.TeamPk.KnockoutTime = TimeSpan.FromSeconds(Math.Max(1, config.TeamPk.KnockoutSeconds));
             Tournaments.TeamPk.FinalTime = TimeSpan.FromSeconds(Math.Max(1, config.TeamPk.FinalSeconds));

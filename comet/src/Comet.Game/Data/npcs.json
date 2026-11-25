@@ -394,6 +394,7 @@
     { "id": 101615, "lookface": 1467, "role": 2, "map": 1038, "x": 339, "y": 338 },
     { "id": 101617, "lookface": 1457, "role": 2, "map": 1038, "x": 331, "y": 338 },
     { "id": 101633, "lookface": 8150, "role": 2, "map": 1038, "x": 56, "y": 56 },
+    { "id": 700000, "lookface": 1156, "role": 2, "map": 2057, "x": 482, "y": 368 }, // Capture the Flag safe zone envoy
     { "id": 600075, "lookface": 6440, "role": 2, "map": 1039, "x": 222, "y": 220 },
     { "id": 6010, "lookface": 3010, "role": 2, "map": 601, "x": 61, "y": 51 },
     { "id": 1339, "lookface": 100, "role": 2, "map": 1351, "x": 487, "y": 371 },

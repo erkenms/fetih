@@ -661,6 +661,23 @@ namespace Comet.Client
             return packet == null ? null : FamilyMessage.Parse(packet);
         }
 
+        public Task WarFlagAsync(ushort action, uint data = 0) =>
+            this.SendAsync(WarFlagMessage.Build(action, data));
+
+        public async Task<WarFlagMessage> WaitForWarFlagAsync(Func<WarFlagMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgWarFlag && match(WarFlagMessage.Parse(p)), timeout);
+            return packet == null ? null : WarFlagMessage.Parse(packet);
+        }
+
+        public async Task<GoalSpawn> WaitForGoalAsync(Func<GoalSpawn, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgNpcInfoEx && match(GoalSpawn.Parse(p)), timeout);
+            return packet == null ? null : GoalSpawn.Parse(packet);
+        }
+
         public Task FamilyOccupyAsync(uint action, uint npcId) =>
             this.SendAsync(FamilyOccupyMessage.Build(action, npcId));
 

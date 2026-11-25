@@ -65,6 +65,7 @@ namespace Comet.Game.Chat
             new Command(new[] { "elitepk", "epk" }, Authority.GameMaster, ElitePkUsage, ElitePkAsync),
             new Command(new[] { "teampk", "tpk" }, Authority.GameMaster, TeamPkUsage, (c, a, r) => TeamPkAsync(Tournaments.TeamPk.Team, TeamPkUsage, c, a)),
             new Command(new[] { "skillteampk", "stpk" }, Authority.GameMaster, SkillTeamPkUsage, (c, a, r) => TeamPkAsync(Tournaments.TeamPk.Skill, SkillTeamPkUsage, c, a)),
+            new Command(new[] { "ctf", "captureflag" }, Authority.GameMaster, CaptureTheFlagUsage, CaptureTheFlagAsync),
             new Command(new[] { "events" }, Authority.GameMaster, "/events", EventsAsync),
             new Command(new[] { "boss" }, Authority.GameMaster, "/boss <list|spawn <id>>", BossAsync),
             new Command(new[] { "study" }, Authority.GameMaster, "/study <amount>", StudyAsync),
@@ -673,6 +674,33 @@ namespace Comet.Game.Chat
                     return true;
                 default:
                     return await UsageAsync(client, usage);
+            }
+        }
+
+        private const string CaptureTheFlagUsage = "/ctf <start|end|status>";
+
+        // Starts or ends Capture the Flag now, outside its schedule
+        private static async Task<bool> CaptureTheFlagAsync(Client client, string[] args, string rest)
+        {
+            if (args.Length != 1)
+                return await UsageAsync(client, CaptureTheFlagUsage);
+            switch (args[0].ToLowerInvariant())
+            {
+                case "start":
+                    await Talk.NoticeAsync(client, await Social.CaptureTheFlag.StartAsync(DateTime.UtcNow)
+                        ? "Capture the Flag started."
+                        : "Not started: it's running already, or its map or client regions are missing.");
+                    return true;
+                case "end":
+                    await Talk.NoticeAsync(client, await Social.CaptureTheFlag.EndAsync(DateTime.UtcNow)
+                        ? "Capture the Flag ended."
+                        : "Capture the Flag isn't running.");
+                    return true;
+                case "status":
+                    await Talk.NoticeAsync(client, Social.CaptureTheFlag.StatusText());
+                    return true;
+                default:
+                    return await UsageAsync(client, CaptureTheFlagUsage);
             }
         }
 

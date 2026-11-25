@@ -159,6 +159,16 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   server sends only 2218 and 2222 so far. Schedule and groups come from `ini/Activity.ini`; the
   waiting rooms 2075-2078 named in GameMapEx.ini aren't in GameMap.dat, so the server uses 2068
   (`pk.7z`). Prize packs 720714-720729 (group + 4 × place), per-match EXP pack 720713.
+- **Capture the Flag** (2026-11-25, Mac 1133 `CMsgWarFlag::Process`, `CWarFlagMgr`, `CHero::OnCellToBeClient`,
+  `CHero::OnIntoRegion`): MsgWarFlag 2224 is laid out in `MsgWarFlag.cs`. The client sends 6 (flag NPC at 8)
+  when the hero steps next to an NPC whose MsgNpcInfoEx role (u16 at 26) is 47, 7 on walking into a
+  `ini/region.ini` type 25 region (the flag bases of map 2057; type 24 is the safe zone) and 11 from the
+  guild window's reward button. Server actions: 0/9 show/hide the war windows (commands 0xe09/0xe0a), 1 and
+  2 the base damage and guild point ranks (1 read only inside a base), 3 the flags on the radar, 5 and 8
+  call `CDlgWarFlagTopInfo::SetOccupyInfo`/`OnTouchFlag` (meaning not traced), 6/7 the carry and plant
+  effects (7 shows STR_WARFLAG_ESCORT_SUC to the planter), 10 game over, 11 the answer to 11, 12 the X2
+  base. `CWarFlagMgr::HasFlag` is status 95, which blocks jumping. `info.ini` [WarflagReward] holds the top
+  8 prizes (CPs, silver); npc.ini NpcType868/872 are flag bases, 891 the flag. Not confirmed in Windows.
 - **Map drawing** (2026-11-24, Mac 1133): `CGameMap::SetMapSize` sets the origin to
   (32·width, 16), and `Cell2World` is (32·(x − y), 16·(x + y)) plus it. `GetBgWorldPos`
   puts the puzzle background's top left at (32·width − bgWidth/2, 16·height − bgHeight/2),

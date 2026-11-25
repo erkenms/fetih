@@ -112,7 +112,7 @@ namespace Comet.Game.States
         public UInt128 Status => this.Life.Status | Pking.Status(this) | this.Effects.Status(DateTime.UtcNow) |
             (this.Mount.Riding ? StatusFlags.Riding : 0) |
             (HeavenBlessing.IsBlessed(this.Character, DateTime.UtcNow) ? StatusFlags.HeavenBlessing : 0) |
-            Social.GuildWar.StatusOf(this) | this.Luck.Status;
+            Social.GuildWar.StatusOf(this) | Social.CaptureTheFlag.StatusOf(this) | this.Luck.Status;
 
         public uint ActiveNpc { get; set; }
         public bool DialogAnswered { get; set; }

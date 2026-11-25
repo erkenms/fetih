@@ -50,6 +50,7 @@ namespace Comet.Client
         public const ushort MsgSynMemberList = 2102;
         public const ushort MsgFamily = 1312;
         public const ushort MsgFamilyOccupy = 1313;
+        public const ushort MsgWarFlag = 2224;
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
@@ -1301,6 +1302,38 @@ namespace Comet.Client
             Packet.ReadText(p, 20, 36), Packet.ReadText(p, 56, 36), p[92] != 0, p[93] != 0, p[94] != 0,
             BitConverter.ToUInt32(p, 96), BitConverter.ToUInt32(p, 100), BitConverter.ToUInt32(p, 104),
             p[112] != 0, BitConverter.ToUInt64(p, 120), p[128] != 0, BitConverter.ToUInt32(p, 132));
+    }
+
+    // Capture the Flag: action u16 at 4, data at 8, the reader's guild at 12 with its bases' X/Y
+    // at 16-27, a count at 28 and from 32 ranks (index, score, name 16) or X/Y pairs
+    public sealed record WarFlagMessage(ushort Action, uint Data, uint GuildId, List<(uint Score, string Name)> Ranks,
+        List<(ushort X, ushort Y)> Positions)
+    {
+        public const ushort Enter = 0, BaseDamageRank = 1, ScoreRank = 2, FlagPositions = 3, PickedUp = 6, Planted = 7,
+            Countdown = 8, Leave = 9, GameOver = 10, Running = 11, DoubleScore = 12;
+
+        public static byte[] Build(ushort action, uint data)
+        {
+            var packet = Packet.Create(PacketTypes.MsgWarFlag, 56);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(8), data);
+            return packet;
+        }
+
+        public static WarFlagMessage Parse(byte[] p)
+        {
+            ushort action = BitConverter.ToUInt16(p, 4);
+            int count = BitConverter.ToUInt16(p, 28);
+            var ranks = new List<(uint, string)>();
+            var positions = new List<(ushort, ushort)>();
+            bool ranked = action == BaseDamageRank || action == ScoreRank;
+            for (int i = 0; i < count; i++)
+                if (ranked && 32 + 24 * (i + 1) <= p.Length)
+                    ranks.Add((BitConverter.ToUInt32(p, 36 + 24 * i), Packet.ReadText(p, 40 + 24 * i, 16)));
+                else if (!ranked && 32 + 4 * (i + 1) <= p.Length)
+                    positions.Add((BitConverter.ToUInt16(p, 32 + 4 * i), BitConverter.ToUInt16(p, 34 + 4 * i)));
+            return new WarFlagMessage(action, BitConverter.ToUInt32(p, 8), BitConverter.ToUInt32(p, 12), ranks, positions);
+        }
     }
 
     public static class Packet

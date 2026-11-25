@@ -51,6 +51,7 @@ namespace Comet.Game.Npcs
                 [Social.GuildWar.LeftGateID] = GuildWarNpc.LeftGateAsync,
                 [Social.GuildWar.RightGateID] = GuildWarNpc.RightGateAsync,
                 [GuildWarNpc.BeastGuardID] = GuildWarNpc.BeastGuardAsync,
+                [GuildWarNpc.FlagEnvoyID] = GuildWarNpc.FlagEnvoyAsync,
                 [ElitePkEnvoy.ID] = ElitePkEnvoy.TalkAsync,
                 [Tournaments.TeamPk.Team.ManagerID] = TeamPkManager.TalkAsync,
                 [Tournaments.TeamPk.Skill.ManagerID] = TeamPkManager.TalkAsync,

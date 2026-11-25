@@ -310,6 +310,19 @@ namespace Comet.Core.Logging
         public const string TeamPkRewardClaimed = "teampk.reward_claimed";
         public const string TeamPkRejected = "teampk.rejected";
         public const string TeamPkFailed = "teampk.failed";
+        public const string CaptureTheFlagLoaded = "ctf.loaded";
+        public const string CaptureTheFlagStarted = "ctf.started";
+        public const string CaptureTheFlagEntered = "ctf.entered";
+        public const string CaptureTheFlagPickedUp = "ctf.picked_up";
+        public const string CaptureTheFlagPlanted = "ctf.planted";
+        public const string CaptureTheFlagDropped = "ctf.dropped";
+        public const string CaptureTheFlagOccupied = "ctf.occupied";
+        public const string CaptureTheFlagKill = "ctf.kill";
+        public const string CaptureTheFlagExploit = "ctf.exploit";
+        public const string CaptureTheFlagRewarded = "ctf.rewarded";
+        public const string CaptureTheFlagEnded = "ctf.ended";
+        public const string CaptureTheFlagRejected = "ctf.rejected";
+        public const string CaptureTheFlagFailed = "ctf.failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

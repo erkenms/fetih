@@ -70,6 +70,8 @@ namespace Comet.Game.Pk
                 return fighting;
             if (Social.ClanWar.CanFight(attacker, target) is bool warring)
                 return warring;
+            if (Social.CaptureTheFlag.CanFight(attacker, target) is bool flagWar)
+                return flagWar;
             if (IsPeaceful(attacker.Character.MapID))
                 return false;
             bool ally = attacker.Friends.ContainsKey(target.ID) ||

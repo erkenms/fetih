@@ -17,13 +17,14 @@ namespace Comet.Game.Npcs
     {
         public const uint ControllerID = 380;
         public const uint BeastGuardID = 101633;
+        public const uint FlagEnvoyID = 700000;
 
         private const byte ControllerFace = 123;
         private const byte GateFace = 7;
         private const byte ConductorFace = 130;
         private const byte FlameStoneFace = 67;
 
-        private const byte EnterOption = 1, ClaimPrizeOption = 2, StatusOption = 3;
+        private const byte EnterOption = 1, ClaimPrizeOption = 2, StatusOption = 3, CaptureTheFlagOption = 4;
         private const byte GateEnterOption = 1, GateToggleOption = 2;
         private const byte ConductorTeleportOption = 1;
         private const uint ConductorFare = 1000;
@@ -58,14 +59,29 @@ namespace Comet.Game.Npcs
             switch (talk.Option)
             {
                 case 0:
-                    await talk
+                    var menu = talk
                         .Text("What can I do for you? The Guild War runs every week (" + GuildWar.ScheduleText + ").")
                         .Choice("Enter the guild area.", EnterOption)
                         .Choice("Claim the Guild War prize.", ClaimPrizeOption)
-                        .Choice("Check Guild War status.", StatusOption)
+                        .Choice("Check Guild War status.", StatusOption);
+                    if (CaptureTheFlag.Running)
+                        menu = menu.Choice("Enter the Capture the Flag arena.", CaptureTheFlagOption);
+                    await menu
                         .Choice("Just passing by.", MsgTaskDialog.NoOption)
                         .Face(ControllerFace)
                         .ShowAsync();
+                    return;
+
+                case CaptureTheFlagOption:
+                    var refusedEntry = await CaptureTheFlag.EnterAsync(client);
+                    if (refusedEntry != null)
+                        await SayAsync(talk, ControllerFace, refusedEntry switch
+                        {
+                            "not_running" => "Capture the Flag runs on Saturdays from 21:00 to 22:00.",
+                            "no_guild" => "Only guild members can enter the Capture the Flag arena.",
+                            "busy" => "You are signed up for another contest.",
+                            _ => "You can't enter the arena now.",
+                        });
                     return;
 
                 case EnterOption:
@@ -167,6 +183,22 @@ namespace Comet.Game.Npcs
                 return;
             if (!free)
                 await Progress.ChangeSilverAsync(client, -ConductorFare, "guild_conductor");
+        }
+
+        // In the Capture the Flag safe zone: sends players back where they entered from
+        public static async Task FlagEnvoyAsync(NpcTalk talk)
+        {
+            if (talk.Option == 1)
+            {
+                await CaptureTheFlag.ExitAsync(talk.Client);
+                return;
+            }
+            await talk
+                .Text("This is the Capture the Flag arena. Occupy a flag base, then carry flags into it for your guild!")
+                .Choice("Take me back to Twin City.", 1)
+                .Choice("I will stay.", MsgTaskDialog.NoOption)
+                .Face(ControllerFace)
+                .ShowAsync();
         }
 
         public static async Task BeastGuardAsync(NpcTalk talk)

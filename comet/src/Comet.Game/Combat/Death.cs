@@ -43,6 +43,8 @@ namespace Comet.Game.Combat
             life.Ghost = false;
             var diedAt = life.DiedAt = DateTime.UtcNow;
 
+            await Social.CaptureTheFlag.OnDeathAsync(client, killerID);
+
             var kill = new MsgInteract(MsgInteract.InteractionType.Kill, killerID, client.ID, character.X, character.Y, 1);
             await client.SendAsync(kill);
             await Movement.SendToViewAsync(client, kill);
@@ -86,12 +88,13 @@ namespace Comet.Game.Combat
             }
 
             await RaiseAsync(client, now);
-            if (here && HeavenBlessing.CanReviveHere(client))
+            var arena = Social.CaptureTheFlag.RevivePoint(client);
+            if (here && arena == null && HeavenBlessing.CanReviveHere(client))
             {
                 await ShowRevivalAsync(client, reason + "_here");
                 return true;
             }
-            var reborn = Kernel.MapTypes.RebornPointOf(character.MapID);
+            var reborn = arena ?? Kernel.MapTypes.RebornPointOf(character.MapID);
             if (reborn == null || !await Movement.TeleportAsync(client, reborn.MapID, reborn.X, reborn.Y))
                 await Movement.TeleportAsync(client, StartPosition.MapID, StartPosition.X, StartPosition.Y);
             await ShowRevivalAsync(client, reason);

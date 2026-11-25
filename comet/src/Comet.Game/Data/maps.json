@@ -123,6 +123,8 @@
     { "map": 2068, "flags": "ChangeMapDisable, RecordDisable, PkDisable, TeleportDisable", "reborn": 1002 }, // pk
     // The clan war battlefield (map/map/family.7z). Each war map fights in a copy of its own.
     { "map": 3024, "flags": "ChangeMapDisable, RecordDisable, TeleportDisable, Family", "reborn": 1002 }, // family
+    // The Capture the Flag arena (map/map/bp-flag.7z); its safe zone and bases are in ini/region.ini.
+    { "map": 2057, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": 1002 }, // CTF-Arena
     // The qualifier arena (GameMapEx PlayersArena). Each match fights in a copy of its own.
     { "map": 900000, "flags": "PkField, ChangeMapDisable, RecordDisable, TeleportDisable", "reborn": 1002 }, // PlayersArena
   ]

@@ -28,6 +28,7 @@ namespace Comet.Game.Database
         public ClanWarConfiguration ClanWar { get; set; } = new ClanWarConfiguration();
         public ElitePkConfiguration ElitePk { get; set; } = new ElitePkConfiguration();
         public TeamPkConfiguration TeamPk { get; set; } = new TeamPkConfiguration();
+        public CaptureTheFlagConfiguration CaptureTheFlag { get; set; } = new CaptureTheFlagConfiguration();
         public BroadcastConfiguration Broadcast { get; set; } = new BroadcastConfiguration();
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
@@ -193,6 +194,16 @@ namespace Comet.Game.Database
             public int CountdownSeconds { get; set; } = 10;
             public int RoundBreakSeconds { get; set; } = 15;
             public int LeaveSeconds { get; set; } = 3;
+        }
+
+        // Capture the Flag; its day and hours come from the client's Activity.ini. Seconds to plant
+        // a flag are the client's rule tip; the flags out at once and how often a base turns X2
+        // aren't known from the client.
+        public class CaptureTheFlagConfiguration
+        {
+            public int FlagSeconds { get; set; } = 60;
+            public int Flags { get; set; } = 10;
+            public int DoubleSeconds { get; set; } = 300;
         }
 
         public class ClanWarConfiguration

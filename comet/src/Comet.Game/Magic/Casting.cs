@@ -1146,6 +1146,7 @@ namespace Comet.Game.Magic
             await client.SendAsync(effect);
             await Movement.SendToViewAsync(client, effect);
             Kernel.Post(target, () => Death.ReviveHereAsync(target, $"magic {spell.Type} from {character.Name}"));
+            Social.CaptureTheFlag.OnHelp(client, target, Social.CaptureTheFlag.ReviveExploits, "revive");
             LogCast(client, spell, target.Character.X, target.Character.Y, 1);
         }
 
@@ -1329,6 +1330,9 @@ namespace Comet.Game.Magic
                 target.Energy.KoCount = 0;
             var (seconds, power) = status == StatusFlags.AzureShield ? AzureShieldOf(spell) : (spell.StepSeconds, spell.Power);
             target.Effects.Set(status, now + TimeSpan.FromSeconds(seconds), now, power);
+            if (status == StatusFlags.Stigma || status == StatusFlags.Accuracy || status == StatusFlags.Shield ||
+                status == StatusFlags.AzureShield)
+                Social.CaptureTheFlag.OnHelp(client, target, Social.CaptureTheFlag.HelpExploits, "buff");
 
             var character = target.Character;
             var effect = new MsgMagicEffect(client.ID, character.X, character.Y, spell.Type) { MagicLevel = spell.Level };
@@ -1510,6 +1514,7 @@ namespace Comet.Game.Magic
             if (shackled)
             {
                 target.Effects.Set(StatusFlags.SoulShackle, now + TimeSpan.FromSeconds(spell.StepSeconds), now);
+                Social.CaptureTheFlag.OnShackle(client, target);
                 await Pking.SendStatusAsync(target);
                 LogEvents.For(typeof(Casting), LogEvents.StatusStarted).Information(
                     "{Name} got status 0x{Status:X} for {Seconds}s from {Caster}'s {MagicName}",
@@ -1612,8 +1617,8 @@ namespace Comet.Game.Magic
                     target.Effects.Remove(StatusFlags.Poisoned);
                     target.Effects.Remove(StatusFlags.ToxicFog);
                     target.Poison = null;
-                    if ((flags & StatusFlags.SoulShackle) != UInt128.Zero)
-                        target.Effects.Remove(StatusFlags.SoulShackle);
+                    if ((flags & StatusFlags.SoulShackle) != UInt128.Zero && target.Effects.Remove(StatusFlags.SoulShackle))
+                        Social.CaptureTheFlag.OnHelp(client, target, Social.CaptureTheFlag.HelpExploits, "unshackle");
                     await Pking.SendStatusAsync(target);
                     LogEvents.For(typeof(Casting), LogEvents.StatusEnded).Information(
                         "{Name} lost status 0x{Status:X} to {Caster}'s {MagicName}",

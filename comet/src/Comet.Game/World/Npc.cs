@@ -31,6 +31,9 @@ namespace Comet.Game.World
             a.X == b.X && a.Y == b.Y && a.Life == b.Life && a.Level == b.Level;
 
         public bool IsGoal => this.Role is StakeRole or ScarecrowRole;
-        public bool IsGuildWarTarget => this.MapID == Social.GuildWar.MapID && this.Role is PoleRole or GateRole;
+        // Structures players attack for their guild: the Guild War's pole and gates, and the
+        // Capture the Flag bases, which the Guild War's code hands on
+        public bool IsGuildWarTarget => this.MapID == Social.GuildWar.MapID && this.Role is PoleRole or GateRole || this.IsFlagBase;
+        public bool IsFlagBase => this.MapID == Social.CaptureTheFlag.MapID && this.Role == PoleRole;
     }
 }

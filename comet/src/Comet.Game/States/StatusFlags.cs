@@ -37,6 +37,8 @@ namespace Comet.Game.States
         public const ulong Riding = 1UL << 50;
 
         public static readonly UInt128 AzureShield = UInt128.One << 93;
+        // Carrying a Capture the Flag flag: the client won't jump (CWarFlagMgr::HasFlag)
+        public static readonly UInt128 CarryingFlag = UInt128.One << 95;
         public static readonly UInt128 TyrantAura = UInt128.One << 98;
         public static readonly UInt128 FendAura = UInt128.One << 100;
         public static readonly UInt128 MetalAura = UInt128.One << 102;
