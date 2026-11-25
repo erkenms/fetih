@@ -196,7 +196,7 @@ public sealed class DataEditService
                 background = $"/assets/maps/{mapId}.png";
         }
 
-        string? name = cat?.Name ?? cat?.ServerName;
+        string? name = this.Catalogs.MapDisplayName(mapId);
         return new MapPickInfoResponse(mapId, name, width, height, cat?.Minimap, background);
     }
 

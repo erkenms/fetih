@@ -26,39 +26,12 @@ public sealed class GitNewsService(IMemoryCache cache, WebConfiguration config)
         if (repoRoot == null)
             return [];
 
-        try
-        {
-            var psi = new ProcessStartInfo("git")
-            {
-                WorkingDirectory = repoRoot,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-            psi.ArgumentList.Add("log");
-            psi.ArgumentList.Add("-n");
-            psi.ArgumentList.Add(MaxCommits.ToString(CultureInfo.InvariantCulture));
-            psi.ArgumentList.Add("--format=%H%x1f%h%x1f%aI%x1f%s%x1f%b%x1e");
-
-            using var process = Process.Start(psi);
-            if (process == null)
-                return [];
-
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            timeout.CancelAfter(TimeSpan.FromSeconds(5));
-
-            var output = await process.StandardOutput.ReadToEndAsync(timeout.Token);
-            await process.WaitForExitAsync(timeout.Token);
-            if (process.ExitCode != 0)
-                return [];
-
-            return ParseRecords(output);
-        }
-        catch
-        {
-            return [];
-        }
+        var (ok, output) = await GitProcess.RunAsync(
+            repoRoot,
+            ["log", "-n", MaxCommits.ToString(CultureInfo.InvariantCulture), "--format=%H%x1f%h%x1f%aI%x1f%s%x1f%b%x1e"],
+            timeout: TimeSpan.FromSeconds(5),
+            ct: ct);
+        return ok ? ParseRecords(output) : [];
     }
 
     private static NewsEntry[] ParseRecords(string output)

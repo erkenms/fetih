@@ -167,7 +167,6 @@ public sealed class CharactersFeature : IFeature
         {
             bool isOnline = onlineById.TryGetValue(c.CharacterID, out var live);
             uint currentMap = live?.MapID ?? c.MapID;
-            catalogs.MapsById.TryGetValue(currentMap, out var map);
             return new CharacterListItem(
                 c.CharacterID,
                 c.AccountID,
@@ -177,7 +176,7 @@ public sealed class CharactersFeature : IFeature
                 live?.Rebirths ?? c.Rebirths,
                 live?.Class ?? c.CurrentClass,
                 currentMap,
-                map?.Name ?? map?.ServerName,
+                catalogs.MapDisplayName(currentMap),
                 live?.X ?? c.X,
                 live?.Y ?? c.Y,
                 c.Silver,
@@ -399,7 +398,6 @@ public sealed class CharactersFeature : IFeature
             : null;
 
         uint mapId = live?.MapID ?? dbChar.MapID;
-        catalogs.MapsById.TryGetValue(mapId, out var mapEntry);
 
         DateTime? mutedUntil = live != null ? Utc(live.MutedUntil) : Utc(dbChar.MutedUntil);
 
@@ -435,7 +433,7 @@ public sealed class CharactersFeature : IFeature
             live?.Virtue ?? dbChar.Virtue,
             dbChar.VIPLevel,
             mapId,
-            mapEntry?.Name ?? mapEntry?.ServerName,
+            catalogs.MapDisplayName(mapId),
             live?.X ?? dbChar.X,
             live?.Y ?? dbChar.Y,
             mutedUntil,

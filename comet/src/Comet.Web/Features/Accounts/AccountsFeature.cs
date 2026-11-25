@@ -241,21 +241,17 @@ public sealed class AccountsFeature : IFeature
             .ThenBy(c => c.Name)
             .ToArrayAsync(ct);
 
-        var characters = rawChars.Select(c =>
-        {
-            catalogs.MapsById.TryGetValue(c.MapID, out var map);
-            return new AccountCharacterSummary(
-                c.CharacterID,
-                c.Name,
-                c.Level,
-                c.Rebirths,
-                c.CurrentClass,
-                c.MapID,
-                map?.Name ?? map?.ServerName,
-                c.Silver,
-                c.Jewels,
-                onlineCharIds.Contains(c.CharacterID));
-        }).ToArray();
+        var characters = rawChars.Select(c => new AccountCharacterSummary(
+            c.CharacterID,
+            c.Name,
+            c.Level,
+            c.Rebirths,
+            c.CurrentClass,
+            c.MapID,
+            catalogs.MapDisplayName(c.MapID),
+            c.Silver,
+            c.Jewels,
+            onlineCharIds.Contains(c.CharacterID))).ToArray();
 
         return TypedResults.Ok(new AccountDetailResponse(
             account.AccountID,

@@ -100,13 +100,7 @@ public class ChangesFeature : IFeature
         if (!DataReload.Files.Contains(kind.FileName, StringComparer.OrdinalIgnoreCase))
             return TypedResults.BadRequest(new ApiError("not_reloadable"));
 
-        var result = await gameRpc.CallAsync<DataReloadResult>("ReloadData", kind.FileName);
-        await audit.WriteAsync(
-            "data.reload",
-            "data_file",
-            kind.FileName,
-            after: result,
-            summary: result.Applied ? result.Summary : string.Join("; ", result.Errors));
+        var result = await StudioData.ReloadFileAsync(kind.FileName, gameRpc, audit);
 
         return TypedResults.Ok(new ReloadResponse(
             result.File ?? kind.FileName,

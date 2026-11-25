@@ -224,13 +224,7 @@ public class MonsterEditFeature : IFeature
 
     private static async Task<Ok<MonsterReloadResponse>> ReloadAsync(GameRpc gameRpc, AuditLog audit)
     {
-        var result = await gameRpc.CallAsync<DataReloadResult>("ReloadData", DataFileKinds.Monsters.FileName);
-        await audit.WriteAsync(
-            "data.reload",
-            "data_file",
-            DataFileKinds.Monsters.FileName,
-            after: result,
-            summary: result.Applied ? result.Summary : string.Join("; ", result.Errors));
+        var result = await StudioData.ReloadFileAsync(DataFileKinds.Monsters.FileName, gameRpc, audit);
 
         return TypedResults.Ok(new MonsterReloadResponse(
             result.File ?? DataFileKinds.Monsters.FileName,

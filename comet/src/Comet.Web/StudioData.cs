@@ -1,10 +1,24 @@
 namespace Comet.Web;
 
 using Comet.Game.DataEditing;
+using Comet.Shared.Models;
+using Comet.Web.Audit;
+using Comet.Web.Game;
 
 // Where the Studio pages find the game's data files, and the validation set over them
 public static class StudioData
 {
+    public static async Task<DataReloadResult> ReloadFileAsync(string fileName, GameRpc gameRpc, AuditLog audit)
+    {
+        var result = await gameRpc.CallAsync<DataReloadResult>("ReloadData", fileName);
+        await audit.WriteAsync(
+            "data.reload",
+            "data_file",
+            fileName,
+            after: result,
+            summary: result.Applied ? result.Summary : string.Join("; ", result.Errors));
+        return result;
+    }
     // The configured directory, else the checkout's comet/src/Comet.Game/Data above the binaries
     public static string ResolveDataDirectory(WebConfiguration config)
     {

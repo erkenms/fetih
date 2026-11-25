@@ -110,37 +110,7 @@ public sealed class GitDataService
         return (added, removed);
     }
 
-    private static async Task<(bool Success, string Stdout)> RunGitAsync(
-        string workingDirectory, CancellationToken ct, params string[] args)
-    {
-        if (!Directory.Exists(workingDirectory))
-            return (false, "");
-
-        var psi = new ProcessStartInfo("git")
-        {
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-        foreach (var arg in args)
-            psi.ArgumentList.Add(arg);
-
-        try
-        {
-            using var process = Process.Start(psi);
-            if (process == null)
-                return (false, "");
-
-            string stdout = await process.StandardOutput.ReadToEndAsync(ct);
-            await process.StandardError.ReadToEndAsync(ct);
-            await process.WaitForExitAsync(ct);
-            return (process.ExitCode == 0, stdout);
-        }
-        catch
-        {
-            return (false, "");
-        }
-    }
+    private static Task<(bool Success, string Stdout)> RunGitAsync(
+        string workingDirectory, CancellationToken ct, params string[] args) =>
+        GitProcess.RunAsync(workingDirectory, args, ct: ct);
 }

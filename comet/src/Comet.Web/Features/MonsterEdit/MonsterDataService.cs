@@ -82,12 +82,7 @@ public sealed class MonsterDataService(WebConfiguration config, CatalogStore cat
         }
     }
 
-    public string? MapName(uint mapId)
-    {
-        if (!catalogs.MapsById.TryGetValue(mapId, out var map))
-            return null;
-        return !string.IsNullOrWhiteSpace(map.ServerName) ? map.ServerName : map.Name;
-    }
+    public string? MapName(uint mapId) => catalogs.MapDisplayName(mapId);
 
     public MonsterProblemDto[] ValidateMonsters(
         string dataDir,

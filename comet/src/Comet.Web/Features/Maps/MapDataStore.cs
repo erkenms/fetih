@@ -399,14 +399,9 @@ public sealed class MapDataStore
         return npcNames.TryGetValue(npc.Lookface / 10, out var name) ? name : null;
     }
 
-    private string? MapDisplayName(uint mapId, DataSnapshot data)
-    {
-        if (this.Catalogs.MapsById.TryGetValue(mapId, out var c))
-            return c.Name ?? c.ServerName;
-        if (data.MapTypes.TryGetValue(mapId, out var m))
-            return m.Name;
-        return null;
-    }
+    private string? MapDisplayName(uint mapId, DataSnapshot data) =>
+        this.Catalogs.MapDisplayName(mapId)
+        ?? (data.MapTypes.TryGetValue(mapId, out var m) ? m.Name : null);
 
     private static string[] SplitFlags(MapFlags? flags)
     {

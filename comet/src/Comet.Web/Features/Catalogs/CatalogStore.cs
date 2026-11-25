@@ -48,6 +48,11 @@ public sealed class CatalogStore
     public IReadOnlyList<ShopCatalogEntry> Shops => this.Snapshot.Value.Shops;
     public IReadOnlyList<string> ShopSources => this.Snapshot.Value.ShopSources;
 
+    public string? MapDisplayName(uint mapId) =>
+        this.MapsById.TryGetValue(mapId, out var m)
+            ? (!string.IsNullOrWhiteSpace(m.Name) ? m.Name : m.ServerName)
+            : null;
+
     private CatalogSnapshot LoadAll()
     {
         var monsters = this.LoadMonsters();
