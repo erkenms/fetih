@@ -68,6 +68,8 @@ namespace Comet.Game.Database.Repositories
             await db.SyndicateTotemPoles.Where(p => p.SyndicateID == guildID).ExecuteDeleteAsync();
             await db.SyndicateMembers.Where(m => m.SyndicateID == guildID).ExecuteDeleteAsync();
             await db.SyndicateRelations.Where(r => r.SyndicateID == guildID || r.TargetID == guildID).ExecuteDeleteAsync();
+            await db.GuildRewardPools.Where(p => p.SyndicateID == guildID).ExecuteDeleteAsync();
+            await db.GuildRewardShares.Where(p => p.SyndicateID == guildID).ExecuteDeleteAsync();
             await db.Syndicates.Where(s => s.SyndicateID == guildID).ExecuteDeleteAsync();
             await transaction.CommitAsync();
         }

@@ -25,7 +25,8 @@ namespace Comet.Game.Social
     // carrier was. Killing another guild's member gives 1-3 points and exploits by battle power;
     // reviving a guild member 2 exploits, Stigma, Star of Accuracy, Magic Shield or Azure Shield
     // on one, or freeing one of Soul Shackle 1, and shackling an enemy 1. At the end the top 8
-    // guilds get info.ini's [WarflagReward] CPs and silver into their funds.
+    // guilds get info.ini's [WarflagReward] CPs and silver into their funds, and each guild's
+    // reward pool is split among its members by exploits (GuildRewards).
     public static class CaptureTheFlag
     {
         public const string EventName = "Capture the Flag";
@@ -118,6 +119,7 @@ namespace Comet.Game.Social
                 Scores.Clear();
                 DoubleBase = -1;
                 NextFlagID = FirstFlagID;
+                GuildRewards.Begin(MsgSelfSynMemAwardRank.AwardEvent.CaptureTheFlag);
                 for (int i = 0; i < Layout.Bases.Count; i++)
                 {
                     var (x, y) = Layout.Bases[i].Center;
@@ -407,6 +409,8 @@ namespace Comet.Game.Social
                     guild.Name, guild.ID, i + 1, ranking[i].Points, cps, silver);
             }
 
+            await GuildRewards.PayOutAsync(MsgSelfSynMemAwardRank.AwardEvent.CaptureTheFlag);
+
             foreach (var (id, back) in inside)
                 if (Kernel.Players.TryGet(id, out var player))
                     Kernel.Post(player, async () =>
@@ -523,8 +527,9 @@ namespace Comet.Game.Social
                 if (!IsRunning || !Entrants.TryGetValue(caster.ID, out var a) || !Entrants.TryGetValue(target.ID, out var b) ||
                     (a.GuildID == b.GuildID) != sameGuild)
                     return;
-                a.Exploits += (uint)exploits;
+                GainLocked(caster.ID, a, exploits);
             }
+            SendExploits(caster.ID);
             LogEvents.For(typeof(CaptureTheFlag), LogEvents.CaptureTheFlagExploit).Debug(
                 "{Name} gained {Exploits} exploits in Capture the Flag ({Kind})", caster.Character.Name, exploits, kind);
         }
@@ -726,8 +731,24 @@ namespace Comet.Game.Social
                 else
                     Scores[guildID] = (Guilds.Find(guildID)?.Name ?? guildID.ToString(), (uint)points);
                 if (Entrants.TryGetValue(characterID, out var e))
-                    e.Exploits += (uint)exploits;
+                    GainLocked(characterID, e, exploits);
             }
+            SendExploits(characterID);
+        }
+
+        // The guild's reward pool is split by these
+        private static void GainLocked(uint characterID, Entrant e, int exploits)
+        {
+            e.Exploits += (uint)exploits;
+            GuildRewards.AddExploits(MsgSelfSynMemAwardRank.AwardEvent.CaptureTheFlag, e.GuildID, characterID, e.Name, exploits);
+        }
+
+        // STR_WARFLAG_MERIT_SELF, "My exploits"
+        private static void SendExploits(uint characterID)
+        {
+            uint exploits = ExploitsOf(characterID);
+            if (Kernel.Players.TryGet(characterID, out var player))
+                Kernel.Post(player, () => player.SendAsync(GuildRewards.OwnExploitsPacket(exploits)));
         }
 
         private static async Task SpawnFlagsAsync()

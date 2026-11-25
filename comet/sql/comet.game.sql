@@ -348,6 +348,31 @@ CREATE TABLE `guild_pk_exploit` (
   PRIMARY KEY (`CharacterID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
+-- Guild reward pools (help "Guild Reward", "Capture Flag"): CPs and silver the leader moved
+-- out of the guild's funds, split among the members by exploits when the event next ends.
+-- Event 1 is Capture the Flag, 2 the Guild Contest and Guild PK Tournament.
+DROP TABLE IF EXISTS `guild_reward_pool`;
+CREATE TABLE `guild_reward_pool` (
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `Event` tinyint(3) unsigned NOT NULL,
+  `ConquerPoints` int(10) unsigned NOT NULL DEFAULT '0',
+  `Silver` bigint(20) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`SyndicateID`,`Event`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
+-- What each member got from the guild's last split of an event's pool.
+DROP TABLE IF EXISTS `guild_reward_share`;
+CREATE TABLE `guild_reward_share` (
+  `SyndicateID` int(10) unsigned NOT NULL,
+  `Event` tinyint(3) unsigned NOT NULL,
+  `CharacterID` int(10) unsigned NOT NULL,
+  `Name` varchar(16) NOT NULL DEFAULT '',
+  `Exploits` int(10) unsigned NOT NULL DEFAULT '0',
+  `ConquerPoints` int(10) unsigned NOT NULL DEFAULT '0',
+  `Silver` bigint(20) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`SyndicateID`,`Event`,`CharacterID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
 DROP TABLE IF EXISTS `arena`;

@@ -336,6 +336,12 @@ namespace Comet.Core.Logging
         public const string GuildPkPrizeClaimed = "guildpk.prize_claimed";
         public const string GuildPkRejected = "guildpk.rejected";
         public const string GuildPkFailed = "guildpk.failed";
+        public const string GuildRewardLoaded = "guildreward.loaded";
+        public const string GuildRewardAdded = "guildreward.added";
+        public const string GuildRewardSplit = "guildreward.split";
+        public const string GuildRewardPaid = "guildreward.paid";
+        public const string GuildRewardRejected = "guildreward.rejected";
+        public const string GuildRewardFailed = "guildreward.failed";
 
         public const string MoveWalk = "move.walk";
         public const string MoveJump = "move.jump";

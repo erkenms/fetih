@@ -179,6 +179,15 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   StrRes 10537 contest invitation pops up. Maps: 2060 bp-contest02 (GuildContest), 2071
   bp-kingfight; 2072-2074 aren't in GameMap.dat. NPC types: Contest Emissary 813, PK Emissary
   866, Awarders 878-885.
+- **Guild reward pools** (2026-11-25, Mac 1133 `CMsgSelfSynMemAwardRank`, `CDlgWarFlagReward*`,
+  `CDlgAddAward`, `CMessageBoxCmdProcess::ProcessOk`): one packet, 1063, for Capture the Flag
+  (event 1) and the Guild Contest/PK (event 2); layout in `MsgSelfSynMemAwardRank.cs`. The CTF set
+  window (`CDlgWarFlagRewardSet`) takes new totals, refuses any below the current pool or a nonzero
+  one under 100 (STR_WARFLAG_REWARD_LIMIT), checks the increase against the guild's CP and silver
+  funds (STR_WARFLAG_REWARD_NOT_ENOUGH), and sends the increase as 3 (CPs), 4 (silver) or 5 (both).
+  The Guild Contest/PK window (`CDlgAddAward`, mode at 0xc14) confirms in a message box that sends
+  2-4 or 5-7; which mode sends which wasn't traced. Pages are 8 entries, 4 in
+  `CDlgWarFlagRewardNoFight`. The Windows 5619 exe has the same dialog names; not traced there.
 - **Map drawing** (2026-11-24, Mac 1133): `CGameMap::SetMapSize` sets the origin to
   (32·width, 16), and `Cell2World` is (32·(x − y), 16·(x + y)) plus it. `GetBgWorldPos`
   puts the puzzle background's top left at (32·width − bgWidth/2, 16·height − bgHeight/2),

@@ -29,6 +29,8 @@ namespace Comet.Game.Database
         public virtual DbSet<DbGuildPkEntry> GuildPkEntries { get; set; }
         public virtual DbSet<DbGuildPkPrize> GuildPkPrizes { get; set; }
         public virtual DbSet<DbGuildPkExploit> GuildPkExploits { get; set; }
+        public virtual DbSet<DbGuildRewardPool> GuildRewardPools { get; set; }
+        public virtual DbSet<DbGuildRewardShare> GuildRewardShares { get; set; }
         public virtual DbSet<DbArena> Arena { get; set; }
         public virtual DbSet<DbArenaSeason> ArenaSeasons { get; set; }
         public virtual DbSet<DbNobility> Nobility { get; set; }
@@ -76,6 +78,8 @@ namespace Comet.Game.Database
             builder.Entity<DbGuildPkEntry>(e => e.HasKey(x => x.SyndicateID));
             builder.Entity<DbGuildPkPrize>(e => e.HasKey(x => new { x.SyndicateID, x.Kind }));
             builder.Entity<DbGuildPkExploit>(e => e.HasKey(x => x.CharacterID));
+            builder.Entity<DbGuildRewardPool>(e => e.HasKey(x => new { x.SyndicateID, x.Event }));
+            builder.Entity<DbGuildRewardShare>(e => e.HasKey(x => new { x.SyndicateID, x.Event, x.CharacterID }));
             builder.Entity<DbArena>(e => e.HasKey(x => x.CharacterID));
             builder.Entity<DbArenaSeason>(e => e.HasKey(x => new { x.Season, x.Rank }));
             builder.Entity<DbNobility>(e => e.HasKey(x => x.CharacterID));

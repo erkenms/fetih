@@ -43,6 +43,14 @@ namespace Comet.Game.Social
 
         public static int Count => ById.Count;
 
+        // Work on a guild's funds from outside this class, one change at a time like the rest
+        public static async Task<T> ChangeAsync<T>(Func<Task<T>> work)
+        {
+            await Gate.WaitAsync();
+            try { return await work(); }
+            finally { Gate.Release(); }
+        }
+
         public static Guild Find(uint guildID) =>
             ById.TryGetValue(guildID, out var guild) ? guild : null;
 
@@ -376,6 +384,7 @@ namespace Comet.Game.Social
             }
             await GuildsRepository.DeleteAsync(guild.ID);
             ById.TryRemove(guild.ID, out _);
+            GuildRewards.Forget(guild.ID);
             foreach (var other in ById.Values)
             {
                 other.Allies.Remove(guild.ID);

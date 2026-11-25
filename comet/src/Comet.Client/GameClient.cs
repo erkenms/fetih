@@ -671,6 +671,16 @@ namespace Comet.Client
             return packet == null ? null : WarFlagMessage.Parse(packet);
         }
 
+        public Task AwardAsync(ushort action, uint ev, uint page = 0, uint conquerPoints = 0, ulong silver = 0) =>
+            this.SendAsync(AwardMessage.Build(action, ev, page, conquerPoints, silver));
+
+        public async Task<AwardMessage> WaitForAwardAsync(Func<AwardMessage, bool> match, TimeSpan? timeout = null)
+        {
+            var packet = await this.TryReceiveAsync(p =>
+                BitConverter.ToUInt16(p, 2) == PacketTypes.MsgSelfSynMemAwardRank && match(AwardMessage.Parse(p)), timeout);
+            return packet == null ? null : AwardMessage.Parse(packet);
+        }
+
         public async Task<GoalSpawn> WaitForGoalAsync(Func<GoalSpawn, bool> match, TimeSpan? timeout = null)
         {
             var packet = await this.TryReceiveAsync(p =>

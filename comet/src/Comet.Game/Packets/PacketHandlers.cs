@@ -34,6 +34,7 @@ namespace Comet.Game.Packets
                 [PacketType.MsgFamily] = () => new MsgFamily(),
                 [PacketType.MsgFamilyOccupy] = () => new MsgFamilyOccupy(),
                 [PacketType.MsgWarFlag] = () => new MsgWarFlag(),
+                [PacketType.MsgSelfSynMemAwardRank] = () => new MsgSelfSynMemAwardRank(),
                 [PacketType.MsgPeerage] = () => new MsgPeerage(),
                 [PacketType.MsgGodExp] = () => new MsgGodExp(),
                 [PacketType.MsgPing] = () => new MsgPing(),

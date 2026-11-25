@@ -51,6 +51,7 @@ namespace Comet.Client
         public const ushort MsgFamily = 1312;
         public const ushort MsgFamilyOccupy = 1313;
         public const ushort MsgWarFlag = 2224;
+        public const ushort MsgSelfSynMemAwardRank = 1063;
         public const ushort MsgPackage = 1102;
         public const ushort MsgInteract = 1022;
         public const ushort MsgMagicEffect = 1105;
@@ -1333,6 +1334,49 @@ namespace Comet.Client
                 else if (!ranked && 32 + 4 * (i + 1) <= p.Length)
                     positions.Add((BitConverter.ToUInt16(p, 32 + 4 * i), BitConverter.ToUInt16(p, 34 + 4 * i)));
             return new WarFlagMessage(action, BitConverter.ToUInt32(p, 8), BitConverter.ToUInt32(p, 12), ranks, positions);
+        }
+    }
+
+    // Guild reward pools: action u16 at 4, event u32 at 6 (1 Capture the Flag, 2 Guild Contest/PK),
+    // page or total at 10, count at 14, CPs at 18, silver u64 at 22, entries from 30: shares of
+    // 60 bytes (exploits at 4, CPs at 8, silver at 12, character at 20, name at 24) or exploits of
+    // 20 (name 16, exploits)
+    public sealed record AwardMessage(ushort Action, uint Event, uint Total, uint ConquerPoints, ulong Silver,
+        List<(uint Exploits, uint ConquerPoints, ulong Silver, uint CharacterId, string Name)> Shares,
+        List<(string Name, uint Exploits)> Exploits)
+    {
+        public const ushort GuildPools = 0, MemberShares = 1, AddConquerPoints = 3, AddSilver = 4, AddBoth = 5,
+            ExploitRanking = 8, OwnExploits = 13;
+        public const uint CaptureTheFlag = 1, GuildPk = 2;
+
+        public static byte[] Build(ushort action, uint ev, uint page = 0, uint conquerPoints = 0, ulong silver = 0)
+        {
+            var packet = Packet.Create(PacketTypes.MsgSelfSynMemAwardRank, 92);
+            BitConverter.TryWriteBytes(packet.AsSpan(4), action);
+            BitConverter.TryWriteBytes(packet.AsSpan(6), ev);
+            BitConverter.TryWriteBytes(packet.AsSpan(10), page);
+            BitConverter.TryWriteBytes(packet.AsSpan(18), conquerPoints);
+            BitConverter.TryWriteBytes(packet.AsSpan(22), silver);
+            return packet;
+        }
+
+        public static AwardMessage Parse(byte[] p)
+        {
+            ushort action = BitConverter.ToUInt16(p, 4);
+            int count = (int)BitConverter.ToUInt32(p, 14);
+            var shares = new List<(uint, uint, ulong, uint, string)>();
+            var exploits = new List<(string, uint)>();
+            for (int i = 0; i < count; i++)
+                if (action == MemberShares && 30 + 60 * (i + 1) <= p.Length)
+                {
+                    int o = 30 + 60 * i;
+                    shares.Add((BitConverter.ToUInt32(p, o + 4), BitConverter.ToUInt32(p, o + 8), BitConverter.ToUInt64(p, o + 12),
+                        BitConverter.ToUInt32(p, o + 20), Packet.ReadText(p, o + 24, 36)));
+                }
+                else if (action == ExploitRanking && 30 + 20 * (i + 1) <= p.Length)
+                    exploits.Add((Packet.ReadText(p, 30 + 20 * i, 16), BitConverter.ToUInt32(p, 46 + 20 * i)));
+            return new AwardMessage(action, BitConverter.ToUInt32(p, 6), BitConverter.ToUInt32(p, 10),
+                BitConverter.ToUInt32(p, 18), BitConverter.ToUInt64(p, 22), shares, exploits);
         }
     }
 

@@ -30,6 +30,8 @@ namespace Comet.Game.Tournaments
     // Defeating an enemy or reviving a guild member is an Exploit. The guild with more points
     // when the match ends wins. Leaders and deputies claim Conquer Points from the Awarder of
     // their place: contest prizes until midnight, tournament prizes until next Saturday 20:30.
+    // When the contest or a round of matches ends, each guild's reward pool is split among its
+    // members by the exploits they earned in it (GuildRewards).
     public static class GuildPk
     {
         public const string ContestName = "Guild Contest";
@@ -178,6 +180,7 @@ namespace Comet.Game.Tournaments
                 }
                 ContestPhase = Phase.Open;
                 ContestPoints.Clear();
+                GuildRewards.Begin(MsgSelfSynMemAwardRank.AwardEvent.GuildPk);
             }
             await BroadcastAsync("The Guild Contest is about to begin! Guild members can enter it through the Guild Contest Emissary in Twin City.");
             LogEvents.For(typeof(GuildPk), LogEvents.GuildPkContestOpened).Information("The Guild Contest opened");
@@ -252,6 +255,7 @@ namespace Comet.Game.Tournaments
                 await GuildPkRepository.ReplacePrizesAsync(ContestPrize, prizes);
             }
             await SaveExploitsAsync();
+            await GuildRewards.PayOutAsync(MsgSelfSynMemAwardRank.AwardEvent.GuildPk);
             foreach (var player in Kernel.Players.Values.ToList())
                 if (player.Character?.MapID == ContestMapID)
                     Kernel.Post(player, () => SendHomeAsync(player));
@@ -312,7 +316,7 @@ namespace Comet.Game.Tournaments
                 if (ContestPhase != Phase.Running)
                     return;
                 points = ContestPoints[membership.Guild.ID] = ContestPoints.GetValueOrDefault(membership.Guild.ID) + 1;
-                exploits = AddExploit(client.ID);
+                exploits = AddExploit(client);
             }
             await client.SendAsync(MsgSynCompete.GuildPoints(points));
             await client.SendAsync(MsgSynCompete.OfExploits(exploits));
@@ -380,6 +384,7 @@ namespace Comet.Game.Tournaments
                 RoundNumber = final ? 0 : round;
                 MatchPhase = Phase.Open;
                 MatchEndsAt = now + RunTime + TimeSpan.FromMinutes(5);
+                GuildRewards.Begin(MsgSelfSynMemAwardRank.AwardEvent.GuildPk);
                 matches = Matches.ToList();
             }
             string stage = final ? "final" : $"round {round}";
@@ -470,6 +475,7 @@ namespace Comet.Game.Tournaments
             if (prizes != null)
                 await GuildPkRepository.ReplacePrizesAsync(TournamentPrize, prizes);
             await SaveExploitsAsync();
+            await GuildRewards.PayOutAsync(MsgSelfSynMemAwardRank.AwardEvent.GuildPk);
 
             foreach (var match in matches)
                 foreach (var player in match.Map.All())
@@ -755,7 +761,7 @@ namespace Comet.Game.Tournaments
             {
                 if (!Matches.Any(m => m.Map == killer.Map))
                     return false;
-                exploits = AddExploit(killer.ID);
+                exploits = AddExploit(killer);
             }
             await killer.SendAsync(StatusFor(killer, exploits));
             return true;
@@ -772,7 +778,7 @@ namespace Comet.Game.Tournaments
             {
                 if (MatchPhase != Phase.Running || !Matches.Any(m => m.Map == reviver.Map))
                     return;
-                exploits = AddExploit(reviver.ID);
+                exploits = AddExploit(reviver);
             }
             await reviver.SendAsync(StatusFor(reviver, exploits));
         }
@@ -878,10 +884,13 @@ namespace Comet.Game.Tournaments
 
         // ---- Helpers ----
 
-        private static uint AddExploit(uint characterID)
+        // The guild's reward pool is split by the exploits of this contest or match
+        private static uint AddExploit(Client client)
         {
-            uint exploits = Exploits[characterID] = Exploits.GetValueOrDefault(characterID) + 1;
-            ExploitsChanged.Add(characterID);
+            uint exploits = Exploits[client.ID] = Exploits.GetValueOrDefault(client.ID) + 1;
+            ExploitsChanged.Add(client.ID);
+            if (Guilds.Of(client.ID)?.Guild.ID is uint guildID)
+                GuildRewards.AddExploits(MsgSelfSynMemAwardRank.AwardEvent.GuildPk, guildID, client.ID, client.Character?.Name, 1);
             return exploits;
         }
 

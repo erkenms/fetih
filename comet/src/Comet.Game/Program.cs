@@ -310,6 +310,7 @@
                 await Tournaments.ElitePk.LoadAsync();
                 await Tournaments.TeamPk.LoadAllAsync();
                 await Tournaments.GuildPk.LoadAsync();
+                await Social.GuildRewards.LoadAsync();
                 await Arena.Qualifier.LoadAsync();
                 LogEvents.For(typeof(Program), LogEvents.ArenaLoaded).Information(
                     "Loaded {RecordCount} arena records", Arena.Qualifier.Count);
