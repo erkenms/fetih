@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink, Outlet } from 'react-router'
 import { api, unwrap } from '../api/client'
 import { can, useMe } from './auth'
-import { visibleNav } from './feature'
+import { useBarePage, visibleNav } from './feature'
 import { PageLoader } from './Guards'
 import { languages, setLanguage } from './i18n'
 import classes from './PublicLayout.module.css'
@@ -18,6 +18,7 @@ export function PublicLayout() {
   // The same query as the home page, so the two share one request
   const home = useQuery({ queryKey: ['public', 'home'], queryFn: () => unwrap(api.GET('/api/public/home')) }).data
   const current = i18n.resolvedLanguage ?? i18n.language
+  const bare = useBarePage()
 
   return (
     <div className={classes.page}>
@@ -66,7 +67,7 @@ export function PublicLayout() {
           ))}
         </nav>
 
-        <main className={classes.content}>
+        <main className={bare ? undefined : classes.content}>
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>

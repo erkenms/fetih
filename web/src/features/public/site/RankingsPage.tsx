@@ -10,16 +10,17 @@ import {
   Select,
   Stack,
   Table,
-  Tabs,
   Text,
-  Title,
 } from '@mantine/core'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, Navigate, useParams } from 'react-router'
 import { api, unwrap } from '../../../api/client'
 import { ErrorAlert } from '../../../app/ErrorAlert'
+import { Panel } from '../../../theme/Panel'
+import { SideMenu } from '../../../theme/SideMenu'
+import classes from './RankingsPage.module.css'
 import { nobilityColors } from '../../../lib/gameMeta'
 import { baseClassOptions, classKey, formatNumber } from './format'
 import { PlayerAvatar } from './PlayerAvatar'
@@ -30,7 +31,6 @@ type RankingTab = (typeof validTabs)[number]
 
 export default function RankingsPage() {
   const { kind } = useParams<{ kind?: string }>()
-  const navigate = useNavigate()
   const { t, i18n } = useTranslation('publicSite')
 
   const activeTab: RankingTab = validTabs.includes(kind as RankingTab) ? (kind as RankingTab) : 'level'
@@ -145,32 +145,24 @@ export default function RankingsPage() {
 
   const total = currentQuery.data?.total ?? 0
 
-  return (
-    <Stack py="md">
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('rankings.title')}</Title>
-          <Text c="dimmed" size="sm">
-            {t('rankings.subtitle')}
-          </Text>
-        </div>
-        {currentQuery.isFetching && <Loader size="sm" />}
-      </Group>
+  if (!kind) return <Navigate to="/rankings/level" replace />
 
-      <Tabs
-        value={activeTab}
-        onChange={(value) => {
-          if (value) void navigate(`/rankings/${value}`)
-        }}
-      >
-        <Tabs.List>
-          {validTabs.map((tab) => (
-            <Tabs.Tab key={tab} value={tab}>
-              {t(`rankings.tabs.${tab}`)}
-            </Tabs.Tab>
-          ))}
-        </Tabs.List>
-      </Tabs>
+  return (
+    <div className={classes.columns}>
+      <aside className={classes.side}>
+        <Panel title={t('rankings.title')} icon="icons/items/200007.png" pt={4}>
+          <SideMenu sections={[{ items: validTabs.map((tab) => ({ label: t(`rankings.tabs.${tab}`), to: `/rankings/${tab}` })) }]} />
+        </Panel>
+        <GuildWarPanel />
+      </aside>
+      <main className={classes.main}>
+        <Panel
+          title={t(`rankings.tabs.${activeTab}`)}
+          icon="icons/items/200007.png"
+          aside={currentQuery.isFetching ? <Loader size={12} color="#f5dfa3" /> : t('rankings.subtitle')}
+          p="md"
+        >
+          <Stack gap="sm">
 
       {activeTab === 'level' && (
         <Group>
@@ -585,7 +577,35 @@ export default function RankingsPage() {
         </Text>
         <Pagination total={Math.max(1, Math.ceil(total / pageSize))} value={page} onChange={setPage} />
       </Group>
-    </Stack>
+          </Stack>
+        </Panel>
+      </main>
+    </div>
+  )
+}
+
+function GuildWarPanel() {
+  const { t } = useTranslation('publicSite')
+  const war = useQuery({ queryKey: ['public', 'home'], queryFn: () => unwrap(api.GET('/api/public/home')) }).data?.guildWar
+  return (
+    <Panel title={t('home.guildWar')} icon="icons/items/410036.png">
+      <div style={{ textAlign: 'center' }}>
+        {war?.holderGuildId && war.holderGuildName ? (
+          <>
+            <Text size="xs" c="dimmed">
+              {t('home.holderLabel')}
+            </Text>
+            <Anchor component={Link} to={`/guilds/${war.holderGuildId}`} display="block" ff="Georgia, serif" fz={16}>
+              {war.holderGuildName}
+            </Anchor>
+          </>
+        ) : (
+          <Text size="sm" c="dimmed">
+            {t('home.noGuildWar')}
+          </Text>
+        )}
+      </div>
+    </Panel>
   )
 }
 

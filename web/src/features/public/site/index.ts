@@ -5,17 +5,20 @@ export const publicSiteRoutes: FeatureRoute[] = [
     area: 'public',
     path: '',
     page: () => import('./HomePage'),
+    bare: true,
   },
   {
     area: 'public',
     path: 'rankings',
     page: () => import('./RankingsPage'),
+    bare: true,
     nav: { label: 'publicSite:nav.rankings' },
   },
   {
     area: 'public',
     path: 'rankings/:kind',
     page: () => import('./RankingsPage'),
+    bare: true,
   },
   {
     area: 'public',

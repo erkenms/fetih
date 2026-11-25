@@ -1,16 +1,13 @@
 import {
   Anchor,
   Badge,
-  Card,
   Group,
   Loader,
-  Paper,
   ScrollArea,
   SimpleGrid,
   Stack,
   Table,
   Text,
-  Title,
   Tooltip,
   useComputedColorScheme,
 } from '@mantine/core'
@@ -21,6 +18,8 @@ import { useTranslation } from 'react-i18next'
 import { api, unwrap, type Schemas } from '../../api/client'
 import { useMe } from '../../app/auth'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { Panel } from '../../theme/Panel'
+import classes from './DashboardPage.module.css'
 import { byteSize, durationParts, grafanaDashboard, grafanaPanel, since } from './format'
 
 // Panels of the provisioned Overview dashboard (observability/grafana/dashboards)
@@ -42,23 +41,27 @@ export default function DashboardPage() {
   const data = dashboard.data
 
   return (
-    <Stack>
-      <Group justify="space-between">
-        <div>
-          <Title order={2}>{t('title')}</Title>
-          <Text c="dimmed">{t('welcome', { name: me?.username ?? '' })}</Text>
-        </div>
-        {dashboard.isFetching && <Loader size="sm" />}
-      </Group>
+    <Stack gap={10}>
       <ErrorAlert error={dashboard.error} />
+      <Panel
+        title={t('title')}
+        icon="icons/items/724426.png"
+        aside={dashboard.isFetching ? <Loader size={12} color="#f5dfa3" /> : t('welcome', { name: me?.username ?? '' })}
+        p={4}
+      >
+        {data ? <Headline data={data} /> : <Loader size="sm" m="sm" />}
+      </Panel>
       {data && (
         <>
-          <Headline data={data} />
-          <World game={data.game} />
-          <SimpleGrid cols={{ base: 1, lg: 2 }}>
-            <RecentLogins logs={data.logs} online={data.onlineAccounts} />
-            <RecentErrors logs={data.logs} grafana={data.grafanaUrl} />
-          </SimpleGrid>
+          <div className={classes.row}>
+            <div className={classes.wide}>
+              <RecentLogins logs={data.logs} online={data.onlineAccounts} />
+            </div>
+            <div className={classes.narrow}>
+              <World game={data.game} />
+              <RecentErrors logs={data.logs} grafana={data.grafanaUrl} />
+            </div>
+          </div>
           <Grafana base={data.grafanaUrl} />
         </>
       )}
@@ -68,19 +71,13 @@ export default function DashboardPage() {
 
 function Stat({ label, value, hint, color }: { label: string; value: ReactNode; hint?: ReactNode; color?: string }) {
   return (
-    <Card withBorder padding="md">
-      <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
-        {label}
-      </Text>
-      <Text fz={28} fw={700} c={color} lh={1.3}>
+    <div className={classes.stat}>
+      <span className={classes.statLabel}>{label}</span>
+      <span className={classes.statValue} style={color ? { color } : undefined}>
         {value}
-      </Text>
-      {hint && (
-        <Text size="sm" c="dimmed">
-          {hint}
-        </Text>
-      )}
-    </Card>
+      </span>
+      {hint && <span className={classes.statHint}>{hint}</span>}
+    </div>
   )
 }
 
@@ -100,7 +97,7 @@ function Headline({ data }: { data: Schemas['DashboardResponse'] }) {
   )
 
   return (
-    <SimpleGrid cols={{ base: 1, xs: 2, md: 3, xl: 6 }}>
+    <div className={classes.stats}>
       <Stat
         label={t('stat.online')}
         value={game ? number(game.players ?? 0) : offline}
@@ -114,7 +111,7 @@ function Headline({ data }: { data: Schemas['DashboardResponse'] }) {
       <Stat
         label={t('stat.errors')}
         value={logs ? number(logs.errors) : noLogs}
-        color={logs && logs.errors > 0 ? 'red' : undefined}
+        color={logs && logs.errors > 0 ? '#a01a10' : undefined}
         hint={logs ? t('stat.warnings', { count: logs.warnings }) : undefined}
       />
       <Stat
@@ -132,7 +129,7 @@ function Headline({ data }: { data: Schemas['DashboardResponse'] }) {
         value={number(data.counts.characters)}
         hint={t('stat.new', { count: data.counts.charactersLastDay })}
       />
-    </SimpleGrid>
+    </div>
   )
 }
 
@@ -152,21 +149,20 @@ function World({ game }: { game: Schemas['ServerState'] | null }) {
     [t('world.monsterTick'), t('world.tick', { last: ms(game.monsterTickMilliseconds), slowest: ms(game.slowestMonsterTickMilliseconds) })],
   ]
   return (
-    <Paper withBorder p="md">
-      <Text fw={600} mb="xs">
-        {t('world.title')}
-      </Text>
-      <SimpleGrid cols={{ base: 2, sm: 4, xl: 7 }} spacing="xs">
-        {rows.map(([label, value]) => (
-          <div key={label}>
-            <Text size="xs" c="dimmed">
-              {label}
-            </Text>
-            <Text fw={600}>{value}</Text>
-          </div>
-        ))}
-      </SimpleGrid>
-    </Paper>
+    <Panel title={t('world.title')} icon="icons/items/610120.png" px={8} py={4} mb={10}>
+      <Table striped>
+        <Table.Tbody>
+          {rows.map(([label, value]) => (
+            <Table.Tr key={label}>
+              <Table.Td>{label}</Table.Td>
+              <Table.Td ta="right" fw={700}>
+                {value}
+              </Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Panel>
   )
 }
 
@@ -183,23 +179,20 @@ function Ago({ time }: { time: string }) {
   )
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({ title, icon, children, aside }: { title: string; icon: string; children: ReactNode; aside?: ReactNode }) {
   return (
-    <Paper withBorder p="md">
-      <Text fw={600} mb="xs">
-        {title}
-      </Text>
+    <Panel title={title} icon={icon} aside={aside} p="sm" mb={10}>
       {children}
-    </Paper>
+    </Panel>
   )
 }
 
 function RecentLogins({ logs, online }: { logs: Schemas['LogStatsResponse'] | null; online: number[] }) {
   const { t } = useTranslation('dashboard')
   const onlineSet = new Set(online)
-  if (!logs) return <Section title={t('logins.title')}><Text c="dimmed">{t('lokiDown')}</Text></Section>
+  if (!logs) return <Section title={t('logins.title')} icon="icons/items/713059.png"><Text c="dimmed">{t('lokiDown')}</Text></Section>
   return (
-    <Section title={t('logins.title')}>
+    <Section title={t('logins.title')} icon="icons/items/713059.png">
       {logs.recentLogins.length === 0 ? (
         <Text c="dimmed">{t('logins.none')}</Text>
       ) : (
@@ -258,9 +251,9 @@ function RecentLogins({ logs, online }: { logs: Schemas['LogStatsResponse'] | nu
 
 function RecentErrors({ logs, grafana }: { logs: Schemas['LogStatsResponse'] | null; grafana: string }) {
   const { t } = useTranslation('dashboard')
-  if (!logs) return <Section title={t('errors.title')}><Text c="dimmed">{t('lokiDown')}</Text></Section>
+  if (!logs) return <Section title={t('errors.title')} icon="icons/items/2000247.png"><Text c="dimmed">{t('lokiDown')}</Text></Section>
   return (
-    <Section title={t('errors.title')}>
+    <Section title={t('errors.title')} icon="icons/items/2000247.png">
       {logs.recentErrors.length === 0 ? (
         <Text c="dimmed">{t('errors.none')}</Text>
       ) : (
@@ -296,13 +289,16 @@ function Grafana({ base }: { base: string }) {
   const { t } = useTranslation('dashboard')
   const theme = useComputedColorScheme('light')
   return (
-    <Paper withBorder p="md">
-      <Group justify="space-between" mb="xs">
-        <Text fw={600}>{t('grafana.title')}</Text>
-        <Anchor href={grafanaDashboard(base)} target="_blank" rel="noreferrer" size="sm">
-          {t('openGrafana')} <IconExternalLink size={12} />
+    <Panel
+      title={t('grafana.title')}
+      icon="icons/items/724426.png"
+      aside={
+        <Anchor href={grafanaDashboard(base)} target="_blank" rel="noreferrer" size="xs" c="#f5dfa3">
+          {t('openGrafana')} <IconExternalLink size={10} />
         </Anchor>
-      </Group>
+      }
+      p="sm"
+    >
       <Text size="xs" c="dimmed" mb="sm">
         {t('grafana.note')}
       </Text>
@@ -317,6 +313,6 @@ function Grafana({ base }: { base: string }) {
           />
         ))}
       </SimpleGrid>
-    </Paper>
+    </Panel>
   )
 }

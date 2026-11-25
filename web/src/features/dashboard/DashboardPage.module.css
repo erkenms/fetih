@@ -1,0 +1,51 @@
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.stat {
+  flex: 1 1 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 8px 6px;
+  border-right: 1px dotted #a88a5a;
+}
+
+.stat:last-child {
+  border-right: 0;
+}
+
+.statLabel {
+  font: bold 10px Verdana, sans-serif;
+  color: #6b4a26;
+}
+
+.statValue {
+  font: bold 24px Georgia, serif;
+  color: #5a1a10;
+  line-height: 1.2;
+}
+
+.statHint {
+  font-size: 10px;
+  color: #7a5a32;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.wide {
+  flex: 999 1 460px;
+  min-width: 0;
+}
+
+.narrow {
+  flex: 1 1 260px;
+  min-width: 0;
+}

@@ -6,7 +6,7 @@ import { Link, NavLink as RouterNavLink, Outlet, useLocation } from 'react-route
 import { Panel } from '../theme/Panel'
 import classes from './AdminLayout.module.css'
 import { can, useMe } from './auth'
-import { navGroups, visibleNav } from './feature'
+import { navGroups, useBarePage, visibleNav } from './feature'
 import { PageLoader } from './Guards'
 import { languages, setLanguage } from './i18n'
 import { featureRoutes } from './routes'
@@ -19,6 +19,7 @@ export function AdminLayout() {
   const location = useLocation()
   const entries = visibleNav(featureRoutes, 'admin', (p) => can(me, p))
   const current = i18n.resolvedLanguage ?? i18n.language
+  const bare = useBarePage()
 
   return (
     <AppShell
@@ -91,7 +92,7 @@ export function AdminLayout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <div className={classes.content}>
+        <div className={bare ? undefined : classes.content}>
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>

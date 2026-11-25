@@ -34,6 +34,7 @@ function toRoute(feature: FeatureRoute): RouteObject {
   if (!Page) pages.set(feature, (Page = lazy(feature.page)))
   return {
     path: feature.path,
+    handle: { bare: feature.bare },
     element: feature.permission ? (
       <RequirePermission permission={feature.permission}>
         <Page />
@@ -55,7 +56,7 @@ const router = createBrowserRouter([
       </RequirePermission>
     ),
     children: [
-      { index: true, element: <AdminHome /> },
+      { index: true, handle: { bare: true }, element: <AdminHome /> },
       ...featureRoutes.filter((r) => r.area === 'admin').map(toRoute),
       { path: '*', element: <NotFound /> },
     ],
@@ -64,7 +65,11 @@ const router = createBrowserRouter([
     path: '/',
     element: <PublicLayout />,
     children: [
-      { index: true, element: publicHomeRoute ? toRoute(publicHomeRoute).element : <PublicHome /> },
+      {
+        index: true,
+        handle: { bare: publicHomeRoute?.bare },
+        element: publicHomeRoute ? toRoute(publicHomeRoute).element : <PublicHome />,
+      },
       { path: 'login', element: <LoginPage /> },
       ...featureRoutes.filter((r) => r.area === 'public' && r.path !== '').map(toRoute),
       { path: '*', element: <NotFound /> },
