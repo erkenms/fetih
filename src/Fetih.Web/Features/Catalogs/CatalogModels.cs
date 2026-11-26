@@ -29,8 +29,6 @@ public sealed record MonsterCatalogEntry(
     bool? ClientBoss,
     int? ZoomPercent);
 
-public sealed record MonsterCatalogPage(MonsterCatalogEntry[] Items, int Total);
-
 public sealed record SpellLevelEntry(
     ushort Level,
     ushort UseMana,
@@ -62,8 +60,6 @@ public sealed record SpellCatalogEntry(
     uint AutoActive,
     SpellLevelEntry[] Levels);
 
-public sealed record SpellCatalogPage(SpellCatalogEntry[] Items, int Total, string[] Sorts);
-
 public sealed record MapCatalogEntry(
     uint Id,
     string? Name,
@@ -74,8 +70,6 @@ public sealed record MapCatalogEntry(
     string? Minimap,
     string? Flags,
     uint? RebornMap);
-
-public sealed record MapCatalogPage(MapCatalogEntry[] Items, int Total);
 
 public sealed record FaceEntry(uint Id, string Path);
 
@@ -102,5 +96,3 @@ public sealed record ShopCatalogEntry(
     ushort? Y,
     int ItemCount,
     ShopItemEntry[] Items);
-
-public sealed record ShopCatalogResponse(ShopCatalogEntry[] Shops, string[] Sources);

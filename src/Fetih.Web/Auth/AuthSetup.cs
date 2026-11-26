@@ -1,7 +1,6 @@
 namespace Fetih.Web.Auth;
 
 using System.Security.Claims;
-using System.Threading.RateLimiting;
 using Fetih.Account.Database.Models;
 using Fetih.Web.Accounts;
 using Microsoft.AspNetCore.Authentication;
@@ -10,7 +9,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 public static class AuthSetup
 {
     public const string Scheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    public const string LoginRateLimit = "login";
 
     // A banned, locked or demoted account loses its session within this time
     public static readonly TimeSpan RecheckInterval = TimeSpan.FromSeconds(60);
@@ -30,10 +28,7 @@ public static class AuthSetup
             options.ReturnUrlParameter = "donus";
             options.Events.OnRedirectToLogin = context =>
             {
-                if (context.Request.Path.StartsWithSegments("/api"))
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                else
-                    context.Response.Redirect(context.RedirectUri);
+                context.Response.Redirect(context.RedirectUri);
                 return Task.CompletedTask;
             };
             options.Events.OnRedirectToAccessDenied = context =>
@@ -50,18 +45,6 @@ public static class AuthSetup
                 options.AddPolicy(Permissions.Policy(permission),
                     policy => policy.RequireAuthenticatedUser()
                         .RequireAssertion(context => context.User.Has(permission)));
-        });
-
-        services.AddRateLimiter(options =>
-        {
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.AddPolicy(LoginRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
-                context.Connection.RemoteIpAddress?.ToString() ?? "",
-                _ => new FixedWindowRateLimiterOptions
-                {
-                    PermitLimit = config.Web.LoginAttemptsPerMinute,
-                    Window = TimeSpan.FromMinutes(1),
-                }));
         });
     }
 

@@ -39,8 +39,4 @@ public static class Permissions
         Enum.GetValues<Permission>().Where(p => authority >= Minimum(p));
 
     public static string Policy(Permission permission) => "permission:" + permission;
-
-    public static TBuilder RequirePermission<TBuilder>(this TBuilder builder, Permission permission)
-        where TBuilder : IEndpointConventionBuilder =>
-        builder.RequireAuthorization(Policy(permission));
 }

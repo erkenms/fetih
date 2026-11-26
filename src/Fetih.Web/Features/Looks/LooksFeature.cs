@@ -1,10 +1,8 @@
 namespace Fetih.Web.Features.Looks;
 
 using System.Text.Json;
-using Fetih.Web.Auth;
 using Fetih.Web.Features.Catalogs;
 using Fetih.Game.World;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 // The NPC and monster looks the asset build rendered (looks.json): where each picture is and
 // the pixel in it the role stands on
@@ -13,13 +11,6 @@ public class LooksFeature : IFeature
     public void AddServices(IServiceCollection services, WebConfiguration config)
     {
         services.AddSingleton<LookStore>();
-    }
-
-    public void Map(RouteGroupBuilder api)
-    {
-        api.MapGet("/catalogs/looks", (LookStore store) => TypedResults.Ok(store.Looks))
-            .RequirePermission(Permission.ViewCatalogs)
-            .WithName("listCatalogLooks");
     }
 }
 

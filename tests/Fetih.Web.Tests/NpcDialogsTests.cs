@@ -1,63 +1,11 @@
 #nullable enable
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Web.Features.NpcDialogs;
 using Xunit;
 
-[Collection(WebCollection.Name)]
-public class NpcDialogsTests(WebFixture fixture)
+public class NpcDialogsTests
 {
-    [Fact]
-    public async Task PlayerIsRefused()
-    {
-        var client = await fixture.LoginAsync("test", "test");
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/npc-dialogs")).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/npc-dialogs/30104")).StatusCode);
-    }
-
-    [Fact]
-    public async Task ScriptedNpcIsReadFromItsMethod()
-    {
-        var client = await fixture.LoginAsync(await fixture.CreateAccountAsync(authority: 2), "secret1");
-
-        var list = await client.GetFromJsonAsync<NpcDialogListResponse>("/api/npc-dialogs");
-        Assert.Contains(list!.Npcs, n => n.NpcId == 30104 && n.MapId == 1002 && n.Kind == "script");
-
-        var guard = await client.GetFromJsonAsync<NpcDialogDetailResponse>("/api/npc-dialogs/30104");
-        Assert.Equal("TwinCity.GuardAsync", guard!.Handler);
-        Assert.Equal(Path.Combine("Npcs", "TwinCity.cs"), guard.SourceFile);
-        var page = Assert.Single(guard.Pages);
-        Assert.Equal(["I am in charge of the security of the city. No bad guys can escape here."], page.Lines);
-        Assert.Equal(new NpcDialogOption("Wow, it is wonderful.", 255, "close"), Assert.Single(page.Options));
-        Assert.Equal(30, page.Face);
-    }
-
-    [Fact]
-    public async Task TeleporterShowsThePageTheGameBuilds()
-    {
-        var client = await fixture.LoginAsync(await fixture.CreateAccountAsync(authority: 2), "secret1");
-
-        var conductress = await client.GetFromJsonAsync<NpcDialogDetailResponse>("/api/npc-dialogs/10050");
-        Assert.Equal("teleporter", conductress!.Npc.Kind);
-        Assert.Equal(100u, conductress.Fare);
-        var page = Assert.Single(conductress.Pages);
-        Assert.Equal(["Where are you heading for? I can teleport you for a price of 100 silver."], page.Lines);
-        Assert.Equal(1, page.Face);
-        Assert.Equal(7, page.Options.Length);
-        Assert.Equal(new NpcDialogOption("Phoenix Castle", 1, "choice", 1002, page.Options[0].TargetMapName, 958, 555),
-            page.Options[0]);
-        Assert.Equal(new NpcDialogOption("Just passing by.", 255, "close"), page.Options[^1]);
-    }
-
-    [Fact]
-    public async Task UnknownNpcIsNotFound()
-    {
-        var client = await fixture.LoginAsync(await fixture.CreateAccountAsync(authority: 2), "secret1");
-        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/npc-dialogs/4000000000")).StatusCode);
-    }
-
     [Fact]
     public void SourceIsSplitIntoPagesWithConstantsResolved()
     {

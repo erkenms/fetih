@@ -1,7 +1,5 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Fetih.Web.Features.Items;
 using Xunit;
@@ -133,33 +131,5 @@ public class ItemsCatalogTests : IDisposable
 
         var batch = catalog.GetMany([1088000, 9999999, 700013]);
         Assert.Equal(2, batch.Length);
-    }
-}
-
-[Collection(WebCollection.Name)]
-public class ItemsEndpointTests(WebFixture fixture)
-{
-    [Fact]
-    public async Task PlayerIsRefusedItemCatalog()
-    {
-        var client = await fixture.LoginAsync("test", "test");
-        var response = await client.GetAsync("/api/items");
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task ModeratorCanQueryItemsAndMissingItemReturnsNotFound()
-    {
-        string email = await fixture.CreateAccountAsync(authority: 2);
-        var client = await fixture.LoginAsync(email, "secret1");
-
-        var listResponse = await client.GetAsync("/api/items?q=dragon");
-        listResponse.EnsureSuccessStatusCode();
-        var page = await listResponse.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.False(page.GetProperty("assetsAvailable").GetBoolean());
-        Assert.Equal(0, page.GetProperty("total").GetInt32());
-
-        var notFound = await client.GetAsync("/api/items/9999999");
-        Assert.Equal(HttpStatusCode.NotFound, notFound.StatusCode);
     }
 }

@@ -1,13 +1,10 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Web.Features.Catalogs;
 using Fetih.Web.Features.Looks;
 using Xunit;
 
-[Collection(WebCollection.Name)]
-public class LooksTests(WebFixture web)
+public class LooksTests
 {
     [Fact]
     public void LookStore_NamesNpcLooksByTypeAndMonsterLooksByTheMonstersUsingThem()
@@ -55,22 +52,6 @@ public class LooksTests(WebFixture web)
         var store = new LookStore("/nonexistent/assets", () => new Dictionary<int, string>(), () => []);
         Assert.Empty(store.Looks.Npc);
         Assert.Empty(store.Looks.Monster);
-    }
-
-    [Fact]
-    public async Task LooksEndpoint_NeedsCatalogPermission()
-    {
-        using var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/catalogs/looks")).StatusCode);
-
-        var playerEmail = await web.CreateAccountAsync(authority: 1);
-        using var player = await web.LoginAsync(playerEmail, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/catalogs/looks")).StatusCode);
-
-        var modEmail = await web.CreateAccountAsync(authority: 2);
-        using var mod = await web.LoginAsync(modEmail, "secret1");
-        var looks = await mod.GetFromJsonAsync<LooksCatalogResponse>("/api/catalogs/looks");
-        Assert.NotNull(looks);
     }
 
     private static MonsterCatalogEntry Monster(uint id, string name, uint lookface, int? zoom = null) => new(

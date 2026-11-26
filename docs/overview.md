@@ -6,7 +6,6 @@ Conquer Online server for the 5619 client.
 |---|---|
 | `src/` | Servers: `Fetih.Account` (login, `:9960`), `Fetih.Game` (world, `:5816`, RPC `:5817`), `Fetih.Web` (site and admin, `:5820`). Plus libraries, bots, test client. |
 | `tests/` | .NET tests |
-| `web/` | React, until the .NET rewrite replaces it |
 | `client/`, `tools/build.cs` | Build the playable client, web assets, launcher patches |
 | `sql/` | Schemas and `migrations/` (applied at startup) |
 | `deploy/`, `observability/` | Containers, Caddy; Loki, Prometheus, Grafana |
@@ -17,7 +16,6 @@ Conquer Online server for the 5619 client.
 podman compose -f deploy/compose.yaml up -d db
 dotnet test Fetih.slnx
 cd src/Fetih.Game && dotnet run              # likewise Account, Web
-cd web && npm run dev                        # :5173
 dotnet run tools/build.cs all --ip <ip>      # client, web assets, patches
 cd src/Fetih.Bots && dotnet run -- --Groups:0:Count=300
 ```

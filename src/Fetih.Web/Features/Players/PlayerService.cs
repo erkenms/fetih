@@ -50,6 +50,8 @@ public sealed class PlayerService(
 
     public bool GameConnected => rpc.Connected;
 
+    public static byte ClassLine(byte cls) => cls >= 100 ? (byte)10 : (byte)(cls / 10);
+
     public async Task<PlayerListResponse> ListAsync(
         PlayerQuery f, int page = 1, int pageSize = 50, CancellationToken ct = default)
     {
@@ -110,7 +112,7 @@ public sealed class PlayerService(
             .Where(c => f.MaxLevel == null || c.Level <= f.MaxLevel)
             .Where(c => !f.Jailed || c.MapID == Jail.MapID)
             .Where(c => f.MapId == null || c.MapID == f.MapId)
-            .Where(c => f.ClassLine == null || PlayersFeature.ClassLine(c.Class) == f.ClassLine)
+            .Where(c => f.ClassLine == null || ClassLine(c.Class) == f.ClassLine)
             .ToLookup(c => c.AccountID);
 
         bool needsCharacter = f.Online || f.Jailed || f.ClassLine != null || f.MapId != null
@@ -479,7 +481,7 @@ public sealed class PlayerService(
 
         var nob = await gameDb.Nobility.AsNoTracking().SingleOrDefaultAsync(n => n.CharacterID == id, ct);
         var nobility = nob != null ? new CharacterNobilitySummary(nob.Donation) : null;
-        var nobilityBoard = await PublicSiteFeature.GetCachedNobilityBoardAsync(cache);
+        var nobilityBoard = await PublicSiteService.GetCachedNobilityBoardAsync(cache);
         var nobilityRank = nobilityBoard.Standings.TryGetValue(id, out var standing) ? standing.Rank : NobilityRank.Commoner;
         byte level = live?.Level ?? dbChar.Level;
         byte rebirths = live?.Rebirths ?? dbChar.Rebirths;

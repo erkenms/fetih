@@ -1,97 +1,39 @@
 namespace Fetih.Web.Tests;
 
 using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
 using Fetih.Web.Audit;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 [Collection(WebCollection.Name)]
 public class AuthTests(WebFixture fixture)
 {
-    [Fact]
-    public async Task SeedAccountLogsInAsPlayer()
-    {
-        var client = await fixture.LoginAsync("test", "test");
-        var me = await client.GetFromJsonAsync<JsonElement>("/api/me");
-        Assert.Equal("test", me.GetProperty("username").GetString());
-        Assert.Equal(1, me.GetProperty("authority").GetInt32());
-        Assert.Empty(me.GetProperty("permissions").EnumerateArray());
-    }
-
-    [Fact]
-    public async Task PlayerIsRefusedTheAdminArea()
-    {
-        var client = await fixture.LoginAsync("test", "test");
-        var response = await client.GetAsync("/api/audit");
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task WrongPasswordIsRefused()
-    {
-        var client = fixture.Factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/login",
-            new { username = "test", password = "wrong1" });
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("invalid_credentials", body.GetProperty("error").GetString());
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/me")).StatusCode);
-    }
-
-    [Fact]
-    public async Task UnknownAccountIsRefusedLikeAWrongPassword()
-    {
-        var response = await fixture.Factory.CreateClient().PostAsJsonAsync("/api/auth/login",
-            new { username = "nobody@test.local", password = "secret1" });
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
+    private HttpClient Client() =>
+        fixture.Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
     public async Task UsernameIsCaseInsensitive()
     {
-        string email = await fixture.CreateAccountAsync(authority: 1);
-        await fixture.LoginAsync(email.ToUpperInvariant(), "secret1");
+        string email = await fixture.CreateAccountAsync(authority: 2);
+        var client = await fixture.SignInAsync(email.ToUpperInvariant(), "secret1");
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/admin")).StatusCode);
     }
 
     [Fact]
     public async Task BannedAccountIsRefused()
     {
         string email = await fixture.CreateAccountAsync(authority: 5, status: 5);
-        var response = await fixture.Factory.CreateClient().PostAsJsonAsync("/api/auth/login",
-            new { username = email, password = "secret1" });
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        Assert.Equal("banned", body.GetProperty("error").GetString());
+        var response = await WebFixture.PostFormAsync(this.Client(), "/giris",
+            new() { ["kullanici"] = email, ["sifre"] = "secret1" });
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("yasaklı", await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
-    public async Task LogoutEndsTheSession()
+    public async Task AuditedActionIsPersisted()
     {
-        var client = await fixture.LoginAsync("test", "test");
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/logout", null)).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/me")).StatusCode);
-    }
-
-    [Fact]
-    public async Task ModeratorGetsTheAdminAreaButNotTheStudio()
-    {
-        string email = await fixture.CreateAccountAsync(authority: 2);
-        var client = await fixture.LoginAsync(email, "secret1");
-        var me = await client.GetFromJsonAsync<JsonElement>("/api/me");
-        var permissions = me.GetProperty("permissions").EnumerateArray().Select(x => x.GetString()).ToList();
-        Assert.Contains("AdminArea", permissions);
-        Assert.DoesNotContain("Studio", permissions);
-        Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/api/audit")).StatusCode);
-    }
-
-    [Fact]
-    public async Task AuditedActionIsListed()
-    {
-        string email = await fixture.CreateAccountAsync(authority: 5);
-        var client = await fixture.LoginAsync(email, "secret1");
-
         using (var scope = fixture.Factory.Services.CreateScope())
         {
             var audit = scope.ServiceProvider.GetRequiredService<AuditLog>();
@@ -99,53 +41,31 @@ public class AuthTests(WebFixture fixture)
                 before: new { level = 1 }, after: new { level = 2 }, summary: "level 1 to 2");
         }
 
-        var page = await client.GetFromJsonAsync<JsonElement>("/api/audit?action=test.&targetId=1000001");
-        Assert.Equal(1, page.GetProperty("total").GetInt32());
-        var entry = page.GetProperty("items")[0];
-        Assert.Equal("test.action", entry.GetProperty("action").GetString());
-        Assert.Equal("{\"level\":2}", entry.GetProperty("after").GetString());
-    }
-
-    [Fact]
-    public async Task UnknownApiPathIsNotFound()
-    {
-        var response = await fixture.Factory.CreateClient().GetAsync("/api/nothing-here");
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task HealthSeesTheDatabasesAndAnOfflineGame()
-    {
-        var health = await fixture.Factory.CreateClient().GetFromJsonAsync<JsonElement>("/api/health");
-        Assert.True(health.GetProperty("gameDatabase").GetBoolean());
-        Assert.True(health.GetProperty("accountDatabase").GetBoolean());
-        Assert.False(health.GetProperty("gameServer").GetBoolean());
+        await using var db = await fixture.Factory.Services
+            .GetRequiredService<IDbContextFactory<WebDbContext>>()
+            .CreateDbContextAsync();
+        var entry = await db.Audit
+            .OrderByDescending(x => x.ID)
+            .FirstOrDefaultAsync(x => x.Action == "test.action" && x.TargetID == "1000001");
+        Assert.NotNull(entry);
+        Assert.Equal("{\"level\":2}", entry.After);
     }
 
     [Fact]
     public async Task AuthCheckGatesGrafanaToStaffWithViewLogs()
     {
-        var noRedirect = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-        };
-
-        // Signed out without X-Forwarded-Uri -> 401
-        var anon = fixture.Factory.CreateClient(noRedirect);
+        var anon = this.Client();
         Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/auth/check")).StatusCode);
 
-        // Signed out with X-Forwarded-Uri -> redirect to /giris?donus=...
         var forwarded = new HttpRequestMessage(HttpMethod.Get, "/auth/check");
         forwarded.Headers.Add("X-Forwarded-Uri", "/grafana/d/fetih-overview/overview");
         var redirect = await anon.SendAsync(forwarded);
         Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
         Assert.Equal("/giris?donus=%2Fgrafana%2Fd%2Ffetih-overview%2Foverview", redirect.Headers.Location?.ToString());
 
-        // Signed in as player -> 401
         var player = await fixture.SignInAsync("test", "test");
         Assert.Equal(HttpStatusCode.Unauthorized, (await player.GetAsync("/auth/check")).StatusCode);
 
-        // Signed in as moderator -> 200 with X-Webauth-User
         string modEmail = await fixture.CreateAccountAsync(authority: 2);
         var mod = await fixture.SignInAsync(modEmail, "secret1");
         var ok = await mod.GetAsync("/auth/check");

@@ -12,6 +12,7 @@ COPY src/Fetih.Network/Fetih.Network.csproj src/Fetih.Network/
 COPY src/Fetih.Shared/Fetih.Shared.csproj src/Fetih.Shared/
 COPY src/Fetih.Account/Fetih.Account.csproj src/Fetih.Account/
 COPY src/Fetih.Game/Fetih.Game.csproj src/Fetih.Game/
+COPY src/Fetih.TestClient/Fetih.TestClient.csproj src/Fetih.TestClient/
 COPY src/Fetih.Web/Fetih.Web.csproj src/Fetih.Web/
 RUN dotnet restore src/Fetih.Web/Fetih.Web.csproj
 COPY src/ src/
@@ -20,13 +21,6 @@ COPY sql/ sql/
 RUN dotnet publish src/Fetih.Account -c Release --no-restore -o /out/account \
  && dotnet publish src/Fetih.Game -c Release --no-restore -o /out/game \
  && dotnet publish src/Fetih.Web -c Release --no-restore -o /out/web
-
-FROM docker.io/library/node:24-alpine AS frontend
-WORKDIR /src/web
-COPY web/package.json web/package-lock.json ./
-RUN npm ci
-COPY web/ ./
-RUN npm run build
 
 FROM mcr.microsoft.com/dotnet/runtime:11.0 AS account
 WORKDIR /app
@@ -45,5 +39,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends git \
  && git config --system --add safe.directory '*'
 WORKDIR /app
 COPY --from=build /out/web .
-COPY --from=frontend /src/web/dist ./wwwroot
 ENTRYPOINT ["dotnet", "Fetih.Web.dll"]

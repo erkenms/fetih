@@ -7,16 +7,6 @@ using Fetih.Web.Game;
 // Where the Studio pages find the game's data files
 public static class StudioData
 {
-    public static TBuilder RequireStudioWritable<TBuilder>(this TBuilder builder)
-        where TBuilder : IEndpointConventionBuilder =>
-        builder.AddEndpointFilter(async (context, next) =>
-        {
-            var config = context.HttpContext.RequestServices.GetRequiredService<WebConfiguration>();
-            if (config.Web.StudioReadOnly)
-                return ApiError.Result("studio_read_only", StatusCodes.Status403Forbidden);
-            return await next(context);
-        });
-
     public static async Task<DataReloadResult> ReloadFileAsync(string fileName, GameRpc gameRpc, AuditLog audit)
     {
         var result = await gameRpc.CallAsync<DataReloadResult>("ReloadData", fileName);

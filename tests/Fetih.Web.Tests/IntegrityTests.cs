@@ -1,16 +1,12 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Game.DataEditing;
-using Fetih.Game.States;
 using Fetih.Game.World;
 using Fetih.Web.Features.Integrity;
 using Xunit;
 using Xunit.Abstractions;
 
-[Collection(WebCollection.Name)]
-public class IntegrityTests(WebFixture web, ITestOutputHelper output)
+public class IntegrityTests(ITestOutputHelper output)
 {
     // 20x20 grid with a wall at x = 10 and portal 0 at (2, 2)
     private static readonly MapGrid TestGrid = MapGrid.Parse(MapsTests.BuildDMap(
@@ -114,31 +110,6 @@ public class IntegrityTests(WebFixture web, ITestOutputHelper output)
             .ToArray();
 
         Assert.Empty(errors);
-    }
-
-    [Fact]
-    public async Task IntegrityEndpoint_RequiresStudioPermission()
-    {
-        using var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/integrity")).StatusCode);
-
-        string playerUser = await web.CreateAccountAsync((ushort)Authority.Player);
-        using var player = await web.LoginAsync(playerUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/integrity")).StatusCode);
-
-        string gmUser = await web.CreateAccountAsync((ushort)Authority.GameMaster);
-        using var gm = await web.LoginAsync(gmUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await gm.GetAsync("/api/integrity")).StatusCode);
-
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-        var response = await pm.GetAsync("/api/integrity");
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        var report = await response.Content.ReadFromJsonAsync<IntegrityReportResponse>();
-        Assert.NotNull(report);
-        Assert.Equal(0, report.ErrorCount);
-        Assert.NotEmpty(report.Files);
     }
 
     private static string? FindRealClientDir()

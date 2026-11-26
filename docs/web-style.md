@@ -34,3 +34,5 @@ carousel dots, animated GIFs, marquees.
 | Frames | `#000`, with `#4a3019`–`#6b4a26` |
 
 Textures are generated noise; better ones from the client's UI art are welcome.
+
+Implementation: `src/Fetih.Web/wwwroot/css/site.css`, `src/Fetih.Web/TagHelpers/`, and [web.md](web.md).

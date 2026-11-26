@@ -227,14 +227,17 @@ public class PlayersPageTests(WebFixture fixture)
         Assert.Equal(HttpStatusCode.OK, (await relogin.GetAsync("/admin/players")).StatusCode);
 
         // Audit entries exist and password is not leaked
-        var adminApi = await fixture.LoginAsync(adminEmail, "secret1");
-        var audit = await adminApi.GetFromJsonAsync<JsonElement>($"/api/audit?action=account.&targetId={targetId}");
-        var entries = audit.GetProperty("items").EnumerateArray().ToList();
-        var actions = entries.Select(e => e.GetProperty("action").GetString()).ToList();
+        await using var webDb = await fixture.Factory.Services
+            .GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<Fetih.Web.Audit.WebDbContext>>()
+            .CreateDbContextAsync();
+        string targetIdStr = targetId.ToString();
+        var entries = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(
+            webDb.Audit.Where(e => e.Action.StartsWith("account.") && e.TargetID == targetIdStr));
+        var actions = entries.Select(e => e.Action).ToList();
         Assert.Contains("account.set_status", actions);
         Assert.Contains("account.set_authority", actions);
         Assert.Contains("account.reset_password", actions);
-        Assert.DoesNotContain(entries, e => (e.GetProperty("summary").GetString() ?? "").Contains("newsecret9"));
+        Assert.DoesNotContain(entries, e => (e.Summary ?? "").Contains("newsecret9"));
     }
 
     [Fact]

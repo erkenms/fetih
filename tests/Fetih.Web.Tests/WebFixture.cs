@@ -44,7 +44,6 @@ public sealed class WebFixture : IAsyncLifetime
             ["PublicAccount:PasswordChangesPerMinute"] = "1000",
             // Nothing listens there, so the game server counts as offline
             ["GameRpc:Port"] = "1",
-            ["Paths:FrontendDirectory"] = "",
             ["Paths:AssetsDirectory"] = "",
             ["Logging:Directory"] = Path.Combine(Path.GetTempPath(), "fetih-web-tests-" + this.RunId),
         };
@@ -112,14 +111,6 @@ public sealed class WebFixture : IAsyncLifetime
         Assert.True(token.Success, "No anti-forgery token on " + url);
         fields["__RequestVerificationToken"] = token.Groups[1].Value;
         return await client.PostAsync(url, new FormUrlEncodedContent(fields));
-    }
-
-    public async Task<HttpClient> LoginAsync(string username, string password)
-    {
-        var client = this.Factory.CreateClient();
-        var response = await client.PostAsJsonAsync("/api/auth/login", new { username, password });
-        response.EnsureSuccessStatusCode();
-        return client;
     }
 }
 

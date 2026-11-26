@@ -1,12 +1,9 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Web.Features.Catalogs;
 using Xunit;
 
-[Collection(WebCollection.Name)]
-public class CatalogsTests(WebFixture web)
+public class CatalogsTests
 {
     [Fact]
     public void ShopParser_ParsesAllFormats()
@@ -184,34 +181,5 @@ public class CatalogsTests(WebFixture web)
         {
             Directory.Delete(root, recursive: true);
         }
-    }
-
-    [Fact]
-    public async Task CatalogEndpoints_EnforcePermissionsAndReturnOk()
-    {
-        using var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/catalogs/monsters")).StatusCode);
-
-        var playerEmail = await web.CreateAccountAsync(authority: 1);
-        using var player = await web.LoginAsync(playerEmail, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/catalogs/monsters")).StatusCode);
-
-        var modEmail = await web.CreateAccountAsync(authority: 2);
-        using var mod = await web.LoginAsync(modEmail, "secret1");
-
-        var monsters = await mod.GetFromJsonAsync<MonsterCatalogPage>("/api/catalogs/monsters");
-        Assert.NotNull(monsters);
-        var spells = await mod.GetFromJsonAsync<SpellCatalogPage>("/api/catalogs/spells");
-        Assert.NotNull(spells);
-        var maps = await mod.GetFromJsonAsync<MapCatalogPage>("/api/catalogs/maps");
-        Assert.NotNull(maps);
-        var faces = await mod.GetFromJsonAsync<FacesCatalogResponse>("/api/catalogs/faces");
-        Assert.NotNull(faces);
-        var shops = await mod.GetFromJsonAsync<ShopCatalogResponse>("/api/catalogs/shops");
-        Assert.NotNull(shops);
-
-        Assert.Equal(HttpStatusCode.NotFound, (await mod.GetAsync("/api/catalogs/monsters/9999999")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await mod.GetAsync("/api/catalogs/spells/65000")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await mod.GetAsync("/api/catalogs/maps/9999999")).StatusCode);
     }
 }

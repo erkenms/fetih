@@ -1,7 +1,7 @@
-@inject Fetih.Web.Features.Dashboard.ObservabilityOptions Observability
+@inject Fetih.Web.WebConfiguration Config
 @if (User.Has(Permission.ViewLogs))
 {
-    string env = string.IsNullOrWhiteSpace(Observability.Environment) ? "dev" : Observability.Environment;
+    string env = string.IsNullOrWhiteSpace(Config.Observability.Environment) ? "dev" : Config.Observability.Environment;
     <h3>Kayıtlar</h3>
     <a href="@Grafana.OverviewUrl(env)">» Genel bakış</a>
     <a href="@Grafana.AdminUrl(env)">» Yönetim özeti</a>

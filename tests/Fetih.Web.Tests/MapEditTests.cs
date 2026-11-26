@@ -1,12 +1,8 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Game.DataEditing;
-using Fetih.Game.States;
 using Fetih.Game.World;
 using Fetih.Web.Audit;
-using Fetih.Web.Auth;
 using Fetih.Web.Features.Catalogs;
 using Fetih.Web.Features.MapEdit;
 using Fetih.Web.Features.Maps;
@@ -53,86 +49,6 @@ public class MapEditTests(WebFixture web)
         Assert.Equal(200u, file[1].NpcID);
         Assert.Equal((ushort)405, file[1].X);
         Assert.Equal(202u, file[2].NpcID);
-    }
-
-    [Fact]
-    public async Task MapEditEndpoints_RequireStudioPermission()
-    {
-        using var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/maps/1002/edit")).StatusCode);
-
-        string playerUser = await web.CreateAccountAsync((ushort)Authority.Player);
-        using var player = await web.LoginAsync(playerUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/maps/1002/edit")).StatusCode);
-
-        string gmUser = await web.CreateAccountAsync((ushort)Authority.GameMaster);
-        using var gm = await web.LoginAsync(gmUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await gm.GetAsync("/api/maps/1002/edit")).StatusCode);
-
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-        var data = await pm.GetFromJsonAsync<MapEditResponse>("/api/maps/1002/edit");
-        Assert.NotNull(data);
-        Assert.Equal(1002u, data.MapId);
-        Assert.NotEmpty(data.AvailableFlags);
-        Assert.NotEmpty(data.Hashes.Maps);
-        Assert.NotEmpty(data.Hashes.Npcs);
-        Assert.NotEmpty(data.Hashes.Spawns);
-        Assert.NotEmpty(data.Hashes.Portals);
-    }
-
-    [Fact]
-    public async Task SaveMapEdit_RejectsInvalidDataWithoutWriting()
-    {
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-
-        var initial = await pm.GetFromJsonAsync<MapEditResponse>("/api/maps/1002/edit");
-        Assert.NotNull(initial);
-
-        // Unknown map flag + duplicate NPC ID
-        var badSettings = initial.Settings with { Flags = ["NotARealFlag"] };
-        var badNpcs = initial.Npcs.Length > 0
-            ? [initial.Npcs[0], initial.Npcs[0]]
-            : new[]
-            {
-                new EditableNpc(999991, 20, 2, 100, 100, 0, 0),
-                new EditableNpc(999991, 20, 2, 101, 101, 0, 0),
-            };
-
-        var resp = await pm.PutAsJsonAsync("/api/maps/1002/edit", new SaveMapEditRequest(
-            initial.Hashes,
-            badSettings,
-            badNpcs,
-            initial.Spawns,
-            initial.Portals));
-
-        Assert.Equal(HttpStatusCode.OK, resp.StatusCode);
-        var result = await resp.Content.ReadFromJsonAsync<SaveMapEditResponse>();
-        Assert.NotNull(result);
-        Assert.False(result.Saved);
-        Assert.Empty(result.ChangedFiles);
-        Assert.NotEmpty(result.Problems);
-    }
-
-    [Fact]
-    public async Task SaveMapEdit_ReturnsConflictOnStaleHash()
-    {
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-
-        var initial = await pm.GetFromJsonAsync<MapEditResponse>("/api/maps/1002/edit");
-        Assert.NotNull(initial);
-
-        var staleHashes = initial.Hashes with { Npcs = "stale-hash" };
-        var resp = await pm.PutAsJsonAsync("/api/maps/1002/edit", new SaveMapEditRequest(
-            staleHashes,
-            initial.Settings,
-            initial.Npcs,
-            initial.Spawns,
-            initial.Portals));
-
-        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
     }
 
     [Fact]

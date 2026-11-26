@@ -289,4 +289,58 @@ public class PublicPagesTests(WebFixture fixture)
         Assert.Equal(HttpStatusCode.Redirect, modPost.StatusCode);
         Assert.Contains("Oyun sunucusu kapalı; işlem yapılamadı.", await mod.GetStringAsync("/lonca/110"));
     }
+
+    [Fact]
+    public async Task RegistrationEnforcesCaptchaWhenEnabled()
+    {
+        var verifier = new FakeCaptchaVerifier();
+        await using var factory = fixture.Factory.WithWebHostBuilder(b =>
+        {
+            b.UseSetting("PublicAccount:CaptchaEnabled", "true");
+            b.UseSetting("PublicAccount:CaptchaProvider", "turnstile");
+            b.UseSetting("PublicAccount:CaptchaSiteKey", "test-site-key");
+            b.UseSetting("PublicAccount:CaptchaSecretKey", "test-secret-key");
+            b.ConfigureServices(s => s.AddSingleton<Fetih.Web.Features.PublicAccount.ICaptchaVerifier>(verifier));
+        });
+
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        string email = $"cap{Guid.NewGuid():N}"[..12] + "@test.local";
+
+        var missing = await WebFixture.PostFormAsync(client, "/kayit", new()
+        {
+            ["Eposta"] = email,
+            ["Sifre"] = "secret1",
+            ["SifreTekrar"] = "secret1",
+        });
+        Assert.Equal(HttpStatusCode.OK, missing.StatusCode);
+        Assert.Contains("doğrulama adımını tamamlayın", await missing.Content.ReadAsStringAsync());
+
+        verifier.Accept = false;
+        var failed = await WebFixture.PostFormAsync(client, "/kayit", new()
+        {
+            ["Eposta"] = email,
+            ["Sifre"] = "secret1",
+            ["SifreTekrar"] = "secret1",
+            ["cf-turnstile-response"] = "bad-token",
+        });
+        Assert.Equal(HttpStatusCode.OK, failed.StatusCode);
+        Assert.Contains("Doğrulama başarısız", await failed.Content.ReadAsStringAsync());
+
+        verifier.Accept = true;
+        var ok = await WebFixture.PostFormAsync(client, "/kayit", new()
+        {
+            ["Eposta"] = email,
+            ["Sifre"] = "secret1",
+            ["SifreTekrar"] = "secret1",
+            ["cf-turnstile-response"] = "good-token",
+        });
+        Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
+    }
+
+    private sealed class FakeCaptchaVerifier : Fetih.Web.Features.PublicAccount.ICaptchaVerifier
+    {
+        public bool Accept { get; set; }
+        public Task<bool> VerifyAsync(string token, string remoteIp, CancellationToken ct = default) =>
+            Task.FromResult(this.Accept);
+    }
 }

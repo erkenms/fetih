@@ -4,9 +4,6 @@
     <TargetFramework>net11.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
-    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../../web/src/api</OpenApiDocumentsDirectory>
-    <OpenApiGenerateDocumentsOptions>--file-name openapi</OpenApiGenerateDocumentsOptions>
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,11 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="11.0.0" />
-    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server" Version="11.0.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
     <PackageReference Include="Serilog.Extensions.Logging" Version="11.0.0" />
   </ItemGroup>
 

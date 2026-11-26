@@ -6,7 +6,7 @@ using Fetih.Game.States;
 using Fetih.Web.Accounts;
 using Microsoft.AspNetCore.Authentication;
 
-// Signing in and out, for /giris and /api/auth. Failed attempts count per IP address, and
+// Signing in and out, for /giris. Failed attempts count per IP address, and
 // Web:LoginAttemptsPerMinute of them lock that address out for the rest of the minute.
 public sealed class SignIn(AccountStore accounts, WebConfiguration config)
 {

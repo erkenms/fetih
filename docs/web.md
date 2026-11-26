@@ -1,8 +1,7 @@
 # Web pages
 
 Razor Pages in `src/Fetih.Web`, rendered on the server, Turkish text written in the page.
-React serves every URL without a Razor page; moving one deletes its line in
-`web/src/app/routes.tsx`. Copy Broadcasts: `Pages/Admin/Broadcasts/`.
+Copy Broadcasts: `Pages/Admin/Broadcasts/`.
 
 ## A page
 
@@ -48,7 +47,7 @@ target (rank, ownership) go in the handler. Hide buttons with `User.Has(...)`.
   (`Item`, `Monster`, `Look`, `Map`).
 - CSS: `wwwroot/css/site.css` (shared) and `admin.css`, by what a thing is, not by page. No
   `<style>` blocks. Script: `wwwroot/js/site.js`; a page that needs more gets
-  `wwwroot/js/<page>.js`. No npm.
+  `wwwroot/js/<page>.js`.
 
 ## Tests
 

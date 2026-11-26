@@ -1,7 +1,5 @@
 namespace Fetih.Web.Tests;
 
-using System.Net;
-using System.Net.Http.Json;
 using Fetih.Game.DataEditing;
 using Fetih.Game.Npcs;
 using Fetih.Game.States;
@@ -9,8 +7,7 @@ using Fetih.Web.Features.Catalogs;
 using Fetih.Web.Features.DataEdit;
 using Xunit;
 
-[Collection(WebCollection.Name)]
-public class DataEditTests(WebFixture web)
+public class DataEditTests
 {
     [Fact]
     public void ApplyEntries_UpdatesMinimalDiffAndPreservesComments()
@@ -86,100 +83,6 @@ public class DataEditTests(WebFixture web)
         Assert.Equal((0, 1, 1), (added, updated, removed));
         Assert.Equal(2, file.Count);
         Assert.Equal(250UL, file[1].Experience);
-    }
-
-    [Fact]
-    public async Task DataEndpoints_RequireStudioPermission()
-    {
-        using var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/data/levels")).StatusCode);
-
-        string playerUser = await web.CreateAccountAsync((ushort)Authority.Player);
-        using var player = await web.LoginAsync(playerUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/data/levels")).StatusCode);
-
-        string gmUser = await web.CreateAccountAsync((ushort)Authority.GameMaster);
-        using var gm = await web.LoginAsync(gmUser, "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await gm.GetAsync("/api/data/levels")).StatusCode);
-
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-
-        var levels = await pm.GetFromJsonAsync<LevelsFileResponse>("/api/data/levels");
-        Assert.NotNull(levels);
-        Assert.NotEmpty(levels.Entries);
-        Assert.NotEmpty(levels.Hash);
-
-        var goals = await pm.GetFromJsonAsync<GoalsFileResponse>("/api/data/goals");
-        Assert.NotNull(goals);
-        Assert.NotEmpty(goals.Entries);
-
-        var teleporters = await pm.GetFromJsonAsync<TeleportersFileResponse>("/api/data/teleporters");
-        Assert.NotNull(teleporters);
-        Assert.NotEmpty(teleporters.Entries);
-
-        var talkers = await pm.GetFromJsonAsync<TalkersFileResponse>("/api/data/talkers");
-        Assert.NotNull(talkers);
-        Assert.NotEmpty(talkers.Entries);
-
-        var mapInfo = await pm.GetFromJsonAsync<MapPickInfoResponse>("/api/data/maps/1002/info");
-        Assert.NotNull(mapInfo);
-        Assert.Equal(1002u, mapInfo.MapId);
-    }
-
-    [Fact]
-    public async Task SaveEndpoints_RejectInvalidDataWithoutWriting()
-    {
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-
-        var levels = await pm.GetFromJsonAsync<LevelsFileResponse>("/api/data/levels");
-        Assert.NotNull(levels);
-        var badLevels = new SaveLevelsRequest(levels.Hash, [
-            new LevelEntryInput(1, 0, 2),
-        ]);
-        var levelsResp = await pm.PutAsJsonAsync("/api/data/levels", badLevels);
-        Assert.Equal(HttpStatusCode.OK, levelsResp.StatusCode);
-        var levelsResult = await levelsResp.Content.ReadFromJsonAsync<SaveDataResponse>();
-        Assert.NotNull(levelsResult);
-        Assert.False(levelsResult.Saved);
-        Assert.NotEmpty(levelsResult.Problems);
-
-        var talkers = await pm.GetFromJsonAsync<TalkersFileResponse>("/api/data/talkers");
-        Assert.NotNull(talkers);
-        var badTalkers = new SaveTalkersRequest(talkers.Hash, [
-            new TalkerEntryInput(99999, 1, [], ""),
-        ]);
-        var talkersResp = await pm.PutAsJsonAsync("/api/data/talkers", badTalkers);
-        Assert.Equal(HttpStatusCode.OK, talkersResp.StatusCode);
-        var talkersResult = await talkersResp.Content.ReadFromJsonAsync<SaveDataResponse>();
-        Assert.NotNull(talkersResult);
-        Assert.False(talkersResult.Saved);
-        Assert.NotEmpty(talkersResult.Problems);
-
-        var teleporters = await pm.GetFromJsonAsync<TeleportersFileResponse>("/api/data/teleporters");
-        Assert.NotNull(teleporters);
-        var badTeleporters = new SaveTeleportersRequest(teleporters.Hash, [
-            new TeleporterEntryInput(99999, 100, 1, ["Hi"], [], null),
-        ]);
-        var teleResp = await pm.PutAsJsonAsync("/api/data/teleporters", badTeleporters);
-        Assert.Equal(HttpStatusCode.OK, teleResp.StatusCode);
-        var teleResult = await teleResp.Content.ReadFromJsonAsync<SaveDataResponse>();
-        Assert.NotNull(teleResult);
-        Assert.False(teleResult.Saved);
-        Assert.NotEmpty(teleResult.Problems);
-    }
-
-    [Fact]
-    public async Task SaveEndpoints_ReturnConflictOnStaleHash()
-    {
-        string pmUser = await web.CreateAccountAsync((ushort)Authority.ProjectManager);
-        using var pm = await web.LoginAsync(pmUser, "secret1");
-
-        var resp = await pm.PutAsJsonAsync("/api/data/levels", new SaveLevelsRequest("stale-hash", [
-            new LevelEntryInput(1, 59, 2),
-        ]));
-        Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
     }
 
     [Fact]

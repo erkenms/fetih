@@ -2,9 +2,7 @@ namespace Fetih.Web.Pages.Shared;
 
 using Fetih.Web.Auth;
 
-// The admin menu, one line per page, whether the page is Razor or still React. A page that
-// moves keeps its line (fix the URL if it changes); a page that's deleted deletes its line.
-// The Grafana links are in _GrafanaLinks.cshtml.
+// The admin menu, one line per page. The Grafana links are in _GrafanaLinks.cshtml.
 public static class AdminMenu
 {
     public sealed record Link(string Text, string Url, Permission Permission);

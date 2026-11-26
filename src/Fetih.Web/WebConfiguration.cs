@@ -9,6 +9,7 @@ public class WebConfiguration
     public WebSection Web { get; set; } = new();
     public GameRpcSection GameRpc { get; set; } = new();
     public PathsSection Paths { get; set; } = new();
+    public ObservabilitySection Observability { get; set; } = new();
     public LoggingConfiguration Logging { get; set; } = new();
 
     public class DatabaseConfiguration
@@ -56,10 +57,14 @@ public class WebConfiguration
         public string? DataDirectory { get; set; }
         public string? AssetsDirectory { get; set; }
         public string? ClientDirectory { get; set; }
-        public string? FrontendDirectory { get; set; }
 
         public static string? Resolve(string? path) =>
             string.IsNullOrEmpty(path) ? null : Path.GetFullPath(path, AppContext.BaseDirectory);
+    }
+
+    public sealed class ObservabilitySection
+    {
+        public string? Environment { get; set; }
     }
 
     [System.Diagnostics.CodeAnalysis.MemberNotNullWhen(true, nameof(Database), nameof(AccountDatabase))]

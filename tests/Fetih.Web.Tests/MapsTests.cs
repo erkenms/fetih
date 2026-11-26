@@ -1,18 +1,12 @@
 namespace Fetih.Web.Tests;
 
-using System.Buffers.Binary;
-using System.Net;
-using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
-using Fetih.Game.States;
 using Fetih.Game.World;
 using Fetih.Web.Features.Catalogs;
 using Fetih.Web.Features.Maps;
 using Xunit;
 
-[Collection(WebCollection.Name)]
-public class MapsTests(WebFixture web)
+public class MapsTests
 {
     [Fact]
     public void EncodeGridPacksWalkabilityAndElevation()
@@ -175,33 +169,6 @@ public class MapsTests(WebFixture web)
             if (Directory.Exists(temp))
                 Directory.Delete(temp, recursive: true);
         }
-    }
-
-    [Fact]
-    public async Task EndpointsEnforcePermissionAndReturnMaps()
-    {
-        var anon = web.Factory.CreateClient();
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/api/maps")).StatusCode);
-
-        var player = await web.LoginAsync(await web.CreateAccountAsync((ushort)Authority.Player), "secret1");
-        Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/api/maps")).StatusCode);
-
-        var mod = await web.LoginAsync(await web.CreateAccountAsync((ushort)Authority.Moderator), "secret1");
-        var listResp = await mod.GetAsync("/api/maps?search=twin");
-        listResp.EnsureSuccessStatusCode();
-        var list = await listResp.Content.ReadFromJsonAsync<MapListPage>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        Assert.NotNull(list);
-        Assert.Contains(list.Items, m => m.Id == 1002);
-
-        var detailResp = await mod.GetAsync("/api/maps/1002");
-        detailResp.EnsureSuccessStatusCode();
-        var detail = await detailResp.Content.ReadFromJsonAsync<MapDetail>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        Assert.NotNull(detail);
-        Assert.Equal(1002u, detail.Id);
-        Assert.NotEmpty(detail.Npcs);
-        Assert.NotEmpty(detail.Portals);
-
-        Assert.Equal(HttpStatusCode.NotFound, (await mod.GetAsync("/api/maps/999999")).StatusCode);
     }
 
     internal static byte[] BuildDMap(int width, int height, Func<int, int, bool> walkable, Func<int, int, short> elevation,

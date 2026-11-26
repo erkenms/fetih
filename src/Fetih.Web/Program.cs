@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using Fetih.Core.Logging;
 using Fetih.Web;
 using Fetih.Web.Accounts;
@@ -50,12 +49,6 @@ builder.WebHost.UseUrls(config.Web.Urls);
 builder.WebHost.UseStaticWebAssets();
 builder.Services.AddSingleton(config);
 builder.Services.AddHttpContextAccessor();
-builder.Services.ConfigureHttpJsonOptions(options =>
-{
-    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
-builder.Services.AddOpenApi();
 builder.Services.AddDbContextFactory<WebDbContext>(options => options.UseMySql(
     config.Database.ConnectionString, MySqlServerVersion.LatestSupportedServerVersion));
 builder.Services.AddSingleton<AccountStore>();
@@ -89,30 +82,9 @@ var app = builder.Build();
 if (config.Web.ForwardedHeaders)
     app.UseForwardedHeaders();
 
-static bool IsApi(HttpContext context) => context.Request.Path.StartsWithSegments("/api");
-
-app.UseWhen(IsApi, api => api.UseExceptionHandler(error => error.Run(async context =>
-{
-    var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
-    if (exception is GameOfflineException)
-    {
-        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-        await context.Response.WriteAsJsonAsync(new ApiError("game_offline"));
-        return;
-    }
-
-    LogEvents.For<WebConfiguration>(WebEvents.Error).Error(exception,
-        "Unhandled error on {Method} {Path}", context.Request.Method, context.Request.Path);
-    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-    await context.Response.WriteAsJsonAsync(new ApiError("server_error"));
-})));
-
 // Pages: errors and empty 403/404/503 answers render Pages/Hata
-app.UseWhen(context => !IsApi(context), pages =>
-{
-    pages.UseExceptionHandler("/hata/500");
-    pages.UseStatusCodePagesWithReExecute("/hata/{0}");
-});
+app.UseExceptionHandler("/hata/500");
+app.UseStatusCodePagesWithReExecute("/hata/{0}");
 
 // Client art, built by tools/assets into web/assets. Pages show placeholders without it.
 string? assets = WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory);
@@ -126,36 +98,16 @@ if (assets != null)
     });
 }
 
-// The built frontend (npm run build). In development Vite serves it and proxies /api here.
-string? frontend = WebConfiguration.PathsSection.Resolve(config.Paths.FrontendDirectory);
-var frontendFiles = frontend != null && File.Exists(Path.Combine(frontend, "index.html"))
-    ? new PhysicalFileProvider(frontend) : null;
-if (frontendFiles != null)
-    app.UseStaticFiles(new StaticFileOptions { FileProvider = frontendFiles });
-
 app.UseStaticFiles();
 // After the error pages, so a re-executed /hata/… request is routed again
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-app.UseRateLimiter();
 
-if (app.Environment.IsDevelopment())
-    app.MapOpenApi();
-
-var api = app.MapGroup("/api");
-api.MapAuth();
 app.MapAuthCheck();
 foreach (var feature in FeatureRegistry.All)
-{
-    feature.Map(api);
     feature.MapRoot(app);
-}
-api.MapFallback(() => Results.NotFound(new ApiError("not_found")));
 app.MapRazorPages();
-
-if (frontendFiles != null)
-    app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = frontendFiles });
 
 LogEvents.For<WebConfiguration>(WebEvents.Start).Information("Web listening on {Urls}", config.Web.Urls);
 await app.RunAsync();

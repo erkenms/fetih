@@ -5,13 +5,12 @@ using Fetih.Game.States;
 using Fetih.Web.Auth;
 using Fetih.Web.Features.Accounts;
 using Fetih.Web.Features.Characters;
-using Fetih.Web.Features.Dashboard;
 using Fetih.Web.Features.Players;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 [Requires(Permission.AdminArea)]
-public class DetailModel(PlayerService players, ObservabilityOptions observability) : PageModel
+public class DetailModel(PlayerService players, WebConfiguration config) : PageModel
 {
     [BindProperty(SupportsGet = true)] public uint Id { get; set; }
     [BindProperty(SupportsGet = true, Name = "sekme")] public string? Sekme { get; set; }
@@ -23,7 +22,7 @@ public class DetailModel(PlayerService players, ObservabilityOptions observabili
     public string? DialogError { get; private set; }
 
     public string GrafanaEnv =>
-        string.IsNullOrWhiteSpace(observability.Environment) ? "dev" : observability.Environment;
+        string.IsNullOrWhiteSpace(config.Observability.Environment) ? "dev" : config.Observability.Environment;
 
     public bool IsBanned => this.Account.StatusId == (ushort)AccountStatus.Banned;
 
