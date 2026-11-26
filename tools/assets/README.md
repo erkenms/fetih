@@ -15,7 +15,7 @@ A run takes about a minute the first time. Map tiles only come with `--maps`: al
 most of an hour and several GB the first time (Twin City alone is 50 s and 240 MB). Later runs only convert images whose source
 changed (`.build.json` in the output keeps a stamp per file), rewrite JSON only when its
 content changed, and delete outputs the client no longer has. Raise `Catalogs.Version` when
-the conversion itself changes. Map tiles aren't in `.build.json`: each map file's tile folder
+the conversion itself changes (the look pictures too). Map tiles aren't in `.build.json`: each map file's tile folder
 has a `.stamp` of its inputs instead, and `MapTiles.Version` plays the same part.
 
 ## Reading the client
@@ -55,5 +55,6 @@ so the web shows a placeholder for a missing field.
 | `maps/tiles/<map file>/covers/{z}/{x}/{y}.webp` | the DMap's cover objects | Buildings, trees and roofs, which the client draws over the roles, on a transparent layer. |
 | `site/hero.png`, `site/character1.png`, `site/character2.png` | `AutoPatch/1.bmp`, `Play/MainS.bmp`, `Play/0/0.bmp` | The website's illustrations: the launcher picture without its top 115 rows (the publisher's logo), and two character cards with their green background made transparent. |
 | `ui/*.png` | `data/main/DialogQuery*.dds`, `Query*Btn*.dds`, `DialogMpcGoods.dds`, money icons | The status window (`status.png`) with its pages (`status-stats`, `-equipment`, `-skills`) and round tab buttons (`tab-<page>.png`, `-on` when pressed), the attribute window beside it (`attributes.png`), the inventory (`inventory.png`), one of its slots (`item-slot.png`, 42×42), the silver and CP icons, and the battle power digits (`bp-<digit>.png`, from `c3/effect/CountB/`), as the client draws them. `Catalogs.Windows` lists the sources. |
+| `looks.json`, `looks/npc/<lookface>.png`, `looks/monster/<look>.png` | `ini/npc.ini`, `3DSimpleObj.ini`, `3dobj.ini`, `3dtexture.ini`, `3dmotion.ini`, the C3 models in `c3.wdf` | NPC and monster models drawn as the client draws them, in the first frame of their standing motion: `{"previewDirection": 0, "npc": {"<lookface>": {"image", "x", "y"}}, "monster": {"<look>": {...}}}`. `x`, `y` is the pixel the role stands on, at one model unit to a pixel (the client's scale; a monster's `ZoomPercent` isn't applied). NPCs come once per type in `previewDirection` and in every lookface the server's data uses; monsters once per look. `Looks/Looks.cs` explains how a lookface finds its files, `lib/C3.cs` the C3 format. |
 | `weaponSkills.json`, `icons/weapon/<type>.png` | `ini/WeaponSkillName.ini`, `[Weapon<type>]` in `ani/Control.Ani` | Each proficiency `type`: its `name` and `icon`. |
 | `.build.json` | | The build's own record of what it wrote. |

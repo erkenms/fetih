@@ -43,6 +43,12 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
 
 ## Findings
 
+- **Role camera** (2026-11-26, Mac 1133): roles are drawn in an orthographic camera one world
+  unit to a pixel (`CMyBitmap::GameCameraCreate`: eye (w/2, -1000, h/2) looking along +y, up
+  -z). `C3DRole::Draw` turns the model around z by its angle, then around x by
+  `g_nObliqueAngle` (-30). An NPC's angle is -45 * (direction + 1) (`C3DTaskNpcEx::SetPos`).
+  A skinned vertex is position * the mesh's initial matrix * its bone's matrix. The asset
+  build's look pictures (`tools/assets/Looks/`) use this.
 - **Others' level-up** (2026-11-23): in the Mac client MsgAction 92 on another player calls
   `CPlayer::DoLevelUp` (halo and sound), but the Windows client doesn't show it to others.
 - **Marriage** (2026-11-23): posted command 1067 → cursor 18 → click → MsgInteract 8.
