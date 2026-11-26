@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { indexLooks, matchesMonsterLook, matchesNpcLook, monsterLook, npcLook } from './looks'
+import { indexLooks, matchesMonsterLook, matchesNpcLook, monsterLook, monsterPicture, npcLook, npcPicture } from './looks'
 
 const catalog = {
   previewDirection: 0,
@@ -33,7 +33,10 @@ const catalog = {
       image: 'looks/monster/104.png',
       x: 60,
       y: 120,
-      monsters: [{ id: 1, name: 'Pheasant' }],
+      monsters: [
+        { id: 1, name: 'Pheasant', zoomPercent: 100 },
+        { id: 2, name: 'Big Pheasant', zoomPercent: 150 },
+      ],
     },
   ],
 }
@@ -56,6 +59,15 @@ describe('looks', () => {
   it('finds monster looks', () => {
     expect(monsterLook(index, 104)?.monsters[0].name).toBe('Pheasant')
     expect(monsterLook(index, 105)).toBeNull()
+  })
+
+  it('places a monster by its type, scaled by its ZoomPercent', () => {
+    expect(monsterPicture(index, 2)).toEqual({ image: 'looks/monster/104.png', x: 60, y: 120, zoom: 1.5 })
+    expect(monsterPicture(index, 1)?.zoom).toBe(1)
+    expect(monsterPicture(index, 99, 104)?.zoom).toBe(1)
+    expect(monsterPicture(index, 99, 105)).toBeNull()
+    expect(npcPicture(index, 16)).toEqual({ image: 'looks/npc/16.png', x: 40, y: 160, zoom: 1 })
+    expect(npcPicture(index, 55)).toBeNull()
   })
 
   it('searches by name, type number or full lookface', () => {

@@ -3437,6 +3437,8 @@ export interface components {
             /** Format: uint32 */
             id: number;
             name: string;
+            /** Format: int32 */
+            zoomPercent: number;
         };
         LooksCatalogResponse: {
             /** Format: int32 */

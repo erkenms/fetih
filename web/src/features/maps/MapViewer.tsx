@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Schemas } from '../../api/client'
+import { monsterPicture, npcPicture, useLooks } from '../../components/looks'
 import { assetUrl } from '../../components/pickers'
 import {
   cellDiamondLatLng,
@@ -18,7 +19,8 @@ import {
   type IsoMeta,
 } from '../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from './gridCanvasLayer'
-import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs, type SpriteLayer } from './scene'
+import { escapeHtml, lookIcon, lookNameHtml, trackLookScale } from './lookMarkers'
+import { coversLayer as makeCoversLayer, isTerrainRole, terrainNpcLayer, useTerrainNpcs, type SpriteLayer } from './scene'
 
 export interface MapOverlaysState {
   covers: boolean
@@ -78,25 +80,22 @@ interface MapViewerProps {
   onSelectEntity?: (entity: SelectedEntity | null) => void
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
+function makeBadgeIcon(label: string, color: string, facePath?: string | null): L.DivIcon {
+  return L.divIcon({
+    className: 'fetih-map-badge',
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+    html: badgeHtml(label, color, facePath),
+  })
 }
 
-function makeBadgeIcon(label: string, color: string, facePath?: string | null): L.DivIcon {
+function badgeHtml(label: string, color: string, facePath?: string | null): string {
   const faceUrl = facePath ? assetUrl(facePath) : null
   const avatar = faceUrl
     ? `<img src="${escapeHtml(faceUrl)}" alt="" style="width:18px;height:18px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.6);" />`
     : `<span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span>`
 
-  return L.divIcon({
-    className: 'fetih-map-badge',
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
-    html: `<div style="
+  return `<div style="
       transform: translate(-50%, -100%);
       display: inline-flex;
       align-items: center;
@@ -113,8 +112,7 @@ function makeBadgeIcon(label: string, color: string, facePath?: string | null): 
       box-shadow: 0 2px 6px rgba(0,0,0,0.45);
       pointer-events: auto;
       cursor: pointer;
-    ">${avatar}<span>${escapeHtml(label)}</span></div>`,
-  })
+    ">${avatar}<span>${escapeHtml(label)}</span></div>`
 }
 
 export function MapViewer({
@@ -269,6 +267,7 @@ export function MapViewer({
     } else {
       lmap.fitBounds(bounds, { padding: [24, 24], animate: false })
     }
+    trackLookScale(lmap, meta.maxZoom)
 
     const handleMoveEnd = () => {
       const center = lmap.getCenter()
@@ -317,6 +316,8 @@ export function MapViewer({
     // Re-initialize only when the map ID or its projection changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map.id, meta])
+
+  const looks = useLooks().index
 
   // Populate vector overlay layers whenever map data changes
   useEffect(() => {
@@ -410,8 +411,11 @@ export function MapViewer({
 
       const color = npc.kind === 'talker' ? '#60a5fa' : '#3b82f6'
       const label = npc.name ? `${npc.name}` : `#${npc.id}`
+      const picture = isTerrainRole(npc.role) ? null : npcPicture(looks, npc.lookface)
       const marker = L.marker(pos, {
-        icon: makeBadgeIcon(label, color, npc.facePath),
+        icon: picture
+          ? lookIcon(picture, badgeHtml(label, color, npc.facePath), { below: lookNameHtml(label) })
+          : makeBadgeIcon(label, color, npc.facePath),
       })
       marker.bindTooltip(`${npc.name ?? 'NPC'} #${npc.id} (${npc.x}, ${npc.y})`, { direction: 'top', offset: [0, -24] })
       marker.on('click', () => onSelectEntityRef.current?.({ type: 'npc', data: npc }))
@@ -422,8 +426,12 @@ export function MapViewer({
     for (const tp of map.teleporters) {
       const pos = cellToLatLng(tp.x, tp.y, meta)
       const label = `${tp.npcName ?? `#${tp.npcId}`} (${tp.destinations.length})`
+      const npc = map.npcs.find((n) => n.id === tp.npcId)
+      const picture = npc && !isTerrainRole(npc.role) ? npcPicture(looks, npc.lookface) : null
       const marker = L.marker(pos, {
-        icon: makeBadgeIcon(label, '#a855f7', tp.facePath),
+        icon: picture
+          ? lookIcon(picture, badgeHtml(label, '#a855f7', tp.facePath), { below: lookNameHtml(label) })
+          : makeBadgeIcon(label, '#a855f7', tp.facePath),
       })
       const destList = tp.destinations.map((d) => d.name).join(', ')
       marker.bindTooltip(`${tp.npcName ?? 'Teleporter'} #${tp.npcId}: ${destList}`, { direction: 'top', offset: [0, -24] })
@@ -444,6 +452,14 @@ export function MapViewer({
       poly.bindTooltip(`${name} ×${s.amount} (r=${s.spread}, ${s.respawn}s)`, { sticky: true })
       poly.on('click', () => onSelectEntityRef.current?.({ type: 'spawn', data: s }))
       poly.addTo(layers.spawns)
+
+      const picture = monsterPicture(looks, s.monsterId)
+      if (picture) {
+        const monster = L.marker(cellToLatLng(s.x, s.y, meta), { icon: lookIcon(picture, '') })
+        monster.bindTooltip(`${name} ×${s.amount}`, { direction: 'top' })
+        monster.on('click', () => onSelectEntityRef.current?.({ type: 'spawn', data: s }))
+        monster.addTo(layers.spawns)
+      }
     }
 
     // 5. Start / Portal point & Reborn indicator
@@ -495,7 +511,7 @@ export function MapViewer({
         marker.addTo(layers.guildWar)
       }
     }
-  }, [map, meta])
+  }, [map, meta, looks])
 
   // Scenery of the terrain NPCs (statues, gates, furniture), redrawn when the NPCs change
   const terrainCatalog = useTerrainNpcs().data

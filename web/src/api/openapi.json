@@ -10645,7 +10645,8 @@
       "LookMonster": {
         "required": [
           "id",
-          "name"
+          "name",
+          "zoomPercent"
         ],
         "type": "object",
         "properties": {
@@ -10655,6 +10656,10 @@
           },
           "name": {
             "type": "string"
+          },
+          "zoomPercent": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

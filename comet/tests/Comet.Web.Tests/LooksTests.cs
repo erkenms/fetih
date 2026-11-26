@@ -31,7 +31,7 @@ public class LooksTests(WebFixture web)
                 """);
             var store = new LookStore(assets,
                 () => new Dictionary<int, string> { [1] = "Storekeeper" },
-                () => [Monster(2, "Pheasant", 104), Monster(1, "Turkey", 104), Monster(3, "Ghost", 999)]);
+                () => [Monster(2, "Pheasant", 104, 150), Monster(1, "Turkey", 104), Monster(3, "Ghost", 999)]);
 
             var looks = store.Looks;
             Assert.Equal([10u, 9736u], looks.Npc.Select(n => n.Lookface));
@@ -40,6 +40,7 @@ public class LooksTests(WebFixture web)
             Assert.Equal((40, 160), (looks.Npc[0].X, looks.Npc[0].Y));
             Assert.Equal("looks/monster/104.png", looks.Monster[0].Image);
             Assert.Equal(["Turkey", "Pheasant"], looks.Monster[0].Monsters.Select(m => m.Name));
+            Assert.Equal([100, 150], looks.Monster[0].Monsters.Select(m => m.ZoomPercent));
             Assert.Empty(looks.Monster[1].Monsters);
         }
         finally
@@ -72,7 +73,7 @@ public class LooksTests(WebFixture web)
         Assert.NotNull(looks);
     }
 
-    private static MonsterCatalogEntry Monster(uint id, string name, uint lookface) => new(
+    private static MonsterCatalogEntry Monster(uint id, string name, uint lookface, int? zoom = null) => new(
         id, name, lookface, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-        false, null, null, InServer: true, InClient: true, null, null, null, null);
+        false, null, null, InServer: true, InClient: true, null, null, null, zoom);
 }

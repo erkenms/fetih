@@ -4,8 +4,11 @@ export {
   matchesMonsterLook,
   matchesNpcLook,
   monsterLook,
+  monsterPicture,
   npcLook,
+  npcPicture,
   type LookIndex,
+  type LookPicture,
   type MonsterLook,
   type NpcLook,
 } from './looks'

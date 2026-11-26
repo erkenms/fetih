@@ -1,0 +1,57 @@
+.fetih-look {
+  position: relative;
+}
+
+.fetih-look-img {
+  position: absolute;
+  transform: scale(calc(var(--fetih-look-scale, 1) * var(--look-zoom, 1)));
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fetih-look-fallback {
+  display: none;
+}
+
+.fetih-look-below {
+  position: absolute;
+  left: 0;
+  top: 3px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.fetih-look-name {
+  display: block;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.78);
+  color: #f8fafc;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.fetih-looks-far .fetih-look-img,
+.fetih-looks-far .fetih-look-below,
+.fetih-look-failed .fetih-look-img,
+.fetih-look-failed .fetih-look-below {
+  display: none;
+}
+
+.fetih-looks-far .fetih-look-fallback,
+.fetih-look-none .fetih-look-fallback,
+.fetih-look-failed .fetih-look-fallback {
+  display: block;
+}
+
+.fetih-look-selected .fetih-look-img {
+  filter: drop-shadow(0 0 2px #facc15) drop-shadow(0 0 2px #facc15);
+}
+
+.fetih-look-dead .fetih-look-img {
+  opacity: 0.45;
+  filter: grayscale(1);
+}

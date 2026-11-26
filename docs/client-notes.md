@@ -49,6 +49,11 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   `g_nObliqueAngle` (-30). An NPC's angle is -45 * (direction + 1) (`C3DTaskNpcEx::SetPos`).
   A skinned vertex is position * the mesh's initial matrix * its bone's matrix. The asset
   build's look pictures (`tools/assets/Looks/`) use this.
+- **Role scale** (2026-11-26, Mac 1133): `CRole::Show` draws a role at
+  ZoomPercent * `g_fRoleScale` / 100 * a mount factor, on top of the camera above.
+  `g_fRoleScale` is 0.75, `CRole::Init` sets ZoomPercent to 100 and the mount factor to 1
+  (`CRole::SetMount` changes it). Maps are one background pixel to a screen pixel, so a look
+  picture shows at 0.75 of its size next to the map.
 - **Others' level-up** (2026-11-23): in the Mac client MsgAction 92 on another player calls
   `CPlayer::DoLevelUp` (halo and sound), but the Windows client doesn't show it to others.
 - **Marriage** (2026-11-23): posted command 1067 → cursor 18 → click → MsgInteract 8.

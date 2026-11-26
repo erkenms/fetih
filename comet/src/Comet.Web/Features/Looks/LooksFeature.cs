@@ -25,7 +25,8 @@ public class LooksFeature : IFeature
 
 public sealed record NpcLook(uint Lookface, string Image, int X, int Y, string? Name);
 
-public sealed record LookMonster(uint Id, string Name);
+// ZoomPercent: how much larger than its look the client draws the monster (monster.dat)
+public sealed record LookMonster(uint Id, string Name, int ZoomPercent);
 
 public sealed record MonsterLook(uint Look, string Image, int X, int Y, LookMonster[] Monsters);
 
@@ -68,7 +69,7 @@ public sealed class LookStore
 
         var byLook = monsters.Where(m => m.Lookface != null && m.InServer)
             .GroupBy(m => m.Lookface!.Value)
-            .ToDictionary(g => g.Key, g => g.OrderBy(m => m.Id).Select(m => new LookMonster(m.Id, m.Name)).ToArray());
+            .ToDictionary(g => g.Key, g => g.OrderBy(m => m.Id).Select(m => new LookMonster(m.Id, m.Name, m.ZoomPercent ?? 100)).ToArray());
         return new LooksCatalogResponse(
             raw.PreviewDirection,
             (raw.Npc ?? []).OrderBy(e => e.Key)

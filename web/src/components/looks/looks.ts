@@ -8,6 +8,8 @@ export interface LookIndex {
   previewDirection: number
   npc: Map<number, NpcLook>
   monster: Map<number, MonsterLook>
+  // Monster type ID -> its look and ZoomPercent
+  monsterById: Map<number, { look: MonsterLook; zoomPercent: number }>
   // One entry per NPC type (lookface / 10), the one in the preview direction when rendered
   npcTypes: NpcLook[]
 }
@@ -23,9 +25,13 @@ export function indexLooks(catalog: LooksCatalog | undefined): LookIndex {
     const current = types.get(type)
     if (!current || look.lookface % 10 === previewDirection) types.set(type, look)
   }
-  for (const look of catalog?.monster ?? []) monster.set(look.look, look)
+  const monsterById = new Map<number, { look: MonsterLook; zoomPercent: number }>()
+  for (const look of catalog?.monster ?? []) {
+    monster.set(look.look, look)
+    for (const m of look.monsters) monsterById.set(m.id, { look, zoomPercent: m.zoomPercent })
+  }
   const npcTypes = [...types.values()].sort((a, b) => a.lookface - b.lookface)
-  return { previewDirection, npc, monster, npcTypes }
+  return { previewDirection, npc, monster, monsterById, npcTypes }
 }
 
 // An NPC's lookface as rendered, else the same type in another direction
@@ -44,6 +50,34 @@ export function npcLook(index: LookIndex, lookface: number | null | undefined): 
 export function monsterLook(index: LookIndex, look: number | null | undefined): MonsterLook | null {
   if (look == null) return null
   return index.monster.get(look) ?? null
+}
+
+// A look as drawn on a map: the picture, the pixel the role stands on, and its size relative to
+// the picture (1 = as rendered)
+export interface LookPicture {
+  image: string
+  x: number
+  y: number
+  zoom: number
+}
+
+export function npcPicture(index: LookIndex, lookface: number | null | undefined): LookPicture | null {
+  const look = npcLook(index, lookface)
+  return look ? { image: look.image, x: look.x, y: look.y, zoom: 1 } : null
+}
+
+// A monster type's picture, scaled by its ZoomPercent; `lookface` is used when the type isn't
+// in the catalog
+export function monsterPicture(
+  index: LookIndex,
+  monsterId: number | null | undefined,
+  lookface?: number | null,
+): LookPicture | null {
+  const known = monsterId != null ? index.monsterById.get(monsterId) : undefined
+  const look = known?.look ?? monsterLook(index, lookface)
+  if (!look) return null
+  const zoomPercent = known?.zoomPercent ?? 100
+  return { image: look.image, x: look.x, y: look.y, zoom: zoomPercent > 0 ? zoomPercent / 100 : 1 }
 }
 
 // Matches an NPC type by its name or number, or a lookface typed in full

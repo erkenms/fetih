@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Schemas } from '../../api/client'
+import { monsterPicture, npcPicture, useLooks, type LookIndex } from '../../components/looks'
 import { assetUrl } from '../../components/pickers'
 import {
   cellDiamondLatLng,
@@ -16,7 +17,8 @@ import {
   type IsoMeta,
 } from '../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from '../maps/gridCanvasLayer'
-import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs } from '../maps/scene'
+import { escapeHtml, lookIcon, trackLookScale } from '../maps/lookMarkers'
+import { coversLayer as makeCoversLayer, isTerrainRole, terrainNpcLayer, useTerrainNpcs } from '../maps/scene'
 import {
   hpPercent,
   pkNameStyle,
@@ -40,14 +42,6 @@ interface LiveMapCanvasProps {
   focusCell: { x: number; y: number; seq: number } | null
   fitSeq: number
   onSelect: (entity: SelectedLiveEntity | null) => void
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
 }
 
 function makePlayerIcon(p: LiveMapPlayer, followed: boolean, selected: boolean): L.DivIcon {
@@ -101,17 +95,24 @@ function makePlayerIcon(p: LiveMapPlayer, followed: boolean, selected: boolean):
   })
 }
 
-function makeMonsterIcon(m: LiveMapMonster, selected: boolean): L.DivIcon {
+function makeMonsterIcon(m: LiveMapMonster, selected: boolean, looks: LookIndex): L.DivIcon {
   const pct = hpPercent(m.health, m.maxHealth)
+  const showHp = m.alive && m.maxHealth > 0 && m.health < m.maxHealth
+  const hpBar = (width: number) =>
+    `<div style="width:${width}px;height:3px;background:rgba(15,23,42,0.85);border-radius:2px;overflow:hidden;">
+      <div style="width:${pct}%;height:100%;background:#ef4444;"></div>
+    </div>`
+  const classes = [selected ? 'fetih-look-selected' : '', m.alive ? '' : 'fetih-look-dead'].filter(Boolean).join(' ')
+  return lookIcon(monsterPicture(looks, m.typeID, m.lookface), monsterDotHtml(m, selected, showHp ? hpBar(26) : ''), {
+    below: showHp ? hpBar(36) : undefined,
+    className: classes,
+  })
+}
+
+function monsterDotHtml(m: LiveMapMonster, selected: boolean, hpBar: string): string {
   const color = !m.alive ? '#64748b' : m.guard ? '#38bdf8' : '#f97316'
   const ring = selected ? '0 0 0 2px #facc15' : '0 1px 3px rgba(0,0,0,0.6)'
-  const showHp = m.alive && m.maxHealth > 0 && m.health < m.maxHealth
-
-  return L.divIcon({
-    className: 'fetih-live-monster',
-    iconSize: [0, 0],
-    iconAnchor: [0, 0],
-    html: `<div style="
+  return `<div style="
       transform: translate(-50%, -50%);
       display: inline-flex;
       flex-direction: column;
@@ -121,13 +122,7 @@ function makeMonsterIcon(m: LiveMapMonster, selected: boolean): L.DivIcon {
       cursor: pointer;
       opacity: ${m.alive ? 1 : 0.45};
     ">
-      ${
-        showHp
-          ? `<div style="width:26px;height:3px;background:rgba(15,23,42,0.85);border-radius:2px;overflow:hidden;">
-              <div style="width:${pct}%;height:100%;background:#ef4444;"></div>
-            </div>`
-          : ''
-      }
+      ${hpBar}
       <div style="
         width: ${m.guard ? 10 : 8}px;
         height: ${m.guard ? 10 : 8}px;
@@ -136,9 +131,18 @@ function makeMonsterIcon(m: LiveMapMonster, selected: boolean): L.DivIcon {
         border: 1.5px solid #0f172a;
         box-shadow: ${ring};
       "></div>
-    </div>`,
-  })
+    </div>`
 }
+
+const npcDotHtml = `<div style="
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(96, 165, 250, 0.75);
+  border: 1.5px solid #3b82f6;
+  pointer-events: auto;
+"></div>`
 
 function makeGroundItemIcon(item: LiveGroundItem, selected: boolean): L.DivIcon {
   const isSilver = item.silver > 0
@@ -358,6 +362,7 @@ export function LiveMapCanvas({
     } else {
       lmap.fitBounds(bounds, { padding: [24, 24], animate: false })
     }
+    trackLookScale(lmap, meta.maxZoom)
 
     const handleMouseMove = (e: L.LeafletMouseEvent) => {
       const cell = latLngToCellInt(e.latlng.lat, e.latlng.lng, meta)
@@ -406,6 +411,8 @@ export function LiveMapCanvas({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terrainCatalog, map, meta])
 
+  const looks = useLooks().index
+
   // Static context layers (portals & NPCs)
   useEffect(() => {
     const groups = layerGroupsRef.current
@@ -431,6 +438,14 @@ export function LiveMapCanvas({
     for (const npc of map.npcs) {
       if (npc.isGoal) continue
       const pos = cellToLatLng(npc.x, npc.y, meta)
+      const tooltip = `${npc.name ?? 'NPC'} #${npc.id} (${npc.x}, ${npc.y})`
+      const picture = isTerrainRole(npc.role) ? null : npcPicture(looks, npc.lookface)
+      if (picture) {
+        L.marker(pos, { icon: lookIcon(picture, npcDotHtml) })
+          .bindTooltip(tooltip, { direction: 'top' })
+          .addTo(groups.npcs)
+        continue
+      }
       const dot = L.circleMarker(pos, {
         radius: 4,
         color: '#3b82f6',
@@ -438,10 +453,10 @@ export function LiveMapCanvas({
         fillOpacity: 0.75,
         weight: 1.5,
       })
-      dot.bindTooltip(`${npc.name ?? 'NPC'} #${npc.id} (${npc.x}, ${npc.y})`, { direction: 'top' })
+      dot.bindTooltip(tooltip, { direction: 'top' })
       dot.addTo(groups.npcs)
     }
-  }, [map, meta])
+  }, [map, meta, looks])
 
   // Walkability canvas layer
   useEffect(() => {
@@ -528,13 +543,13 @@ export function LiveMapCanvas({
       if (!m.alive && !layers.deadMonsters) continue
       activeMonsters.add(m.id)
       const isSelected = selected?.kind === 'monster' && selected.id === m.id
-      const sig = `${m.alive}|${m.health}|${m.maxHealth}|${m.guard}|${isSelected}`
+      const sig = `${m.alive}|${m.health}|${m.maxHealth}|${m.guard}|${isSelected}|${looks.monster.size}`
       const pos = cellToLatLng(m.x, m.y, meta)
       const existing = cache.monsters.get(m.id)
       if (existing) {
         existing.marker.setLatLng(pos)
         if (existing.sig !== sig) {
-          existing.marker.setIcon(makeMonsterIcon(m, isSelected))
+          existing.marker.setIcon(makeMonsterIcon(m, isSelected, looks))
           existing.marker.setTooltipContent(
             `${m.name} Lv.${m.level} (${m.health}/${m.maxHealth}) (${m.x}, ${m.y})`,
           )
@@ -542,7 +557,7 @@ export function LiveMapCanvas({
         }
       } else {
         const marker = L.marker(pos, {
-          icon: makeMonsterIcon(m, isSelected),
+          icon: makeMonsterIcon(m, isSelected, looks),
           zIndexOffset: m.guard ? 350 : 300,
         })
         marker.bindTooltip(`${m.name} Lv.${m.level} (${m.health}/${m.maxHealth}) (${m.x}, ${m.y})`, {
@@ -628,7 +643,7 @@ export function LiveMapCanvas({
         cache.booths.delete(id)
       }
     }
-  }, [live, layers.deadMonsters, followedCharacterId, selected, meta])
+  }, [live, layers.deadMonsters, followedCharacterId, selected, meta, looks])
 
   // Focus / pan to requested cell
   useEffect(() => {

@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Schemas } from '../../../api/client'
+import { npcPicture, useLooks } from '../../../components/looks'
 import { assetUrl } from '../../../components/pickers'
 import {
   cellDiamondLatLng,
@@ -18,7 +19,8 @@ import {
   type IsoMeta,
 } from '../../../lib/iso'
 import { MapGridCanvasLayer, type DecodedGrid } from '../gridCanvasLayer'
-import { coversLayer as makeCoversLayer, terrainNpcLayer, useTerrainNpcs } from '../scene'
+import { escapeHtml, lookIcon, lookNameHtml, trackLookScale } from '../lookMarkers'
+import { coversLayer as makeCoversLayer, isTerrainRole, terrainNpcLayer, useTerrainNpcs } from '../scene'
 import { cellDistance, clampSpread, type MapEditorSnapshot } from './editorState'
 
 export type EditorMode = 'select' | 'addNpc' | 'drawSpawn' | 'pickStart'
@@ -46,21 +48,18 @@ interface MapEditorCanvasProps {
   onRejectCell: (reason: 'unwalkable' | 'outOfBounds', x: number, y: number) => void
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-}
-
 function makeBadgeIcon(label: string, color: string, selected = false): L.DivIcon {
-  const ring = selected ? '0 0 0 3px rgba(250, 204, 21, 0.9), 0 2px 8px rgba(0,0,0,0.6)' : '0 2px 6px rgba(0,0,0,0.45)'
   return L.divIcon({
     className: 'fetih-map-badge',
     iconSize: [0, 0],
     iconAnchor: [0, 0],
-    html: `<div style="
+    html: badgeHtml(label, color, selected),
+  })
+}
+
+function badgeHtml(label: string, color: string, selected = false): string {
+  const ring = selected ? '0 0 0 3px rgba(250, 204, 21, 0.9), 0 2px 8px rgba(0,0,0,0.6)' : '0 2px 6px rgba(0,0,0,0.45)'
+  return `<div style="
       transform: translate(-50%, -100%);
       display: inline-flex;
       align-items: center;
@@ -77,8 +76,7 @@ function makeBadgeIcon(label: string, color: string, selected = false): L.DivIco
       box-shadow: ${ring};
       pointer-events: auto;
       cursor: grab;
-    "><span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span><span>${escapeHtml(label)}</span></div>`,
-  })
+    "><span style="width:8px;height:8px;border-radius:50%;background:${color};flex-shrink:0;"></span><span>${escapeHtml(label)}</span></div>`
 }
 
 function makeHandleIcon(color: string, label: string): L.DivIcon {
@@ -252,6 +250,7 @@ export function MapEditorCanvas({
     } else {
       lmap.fitBounds(bounds, { padding: [24, 24], animate: false })
     }
+    trackLookScale(lmap, meta.maxZoom)
 
     let drawingOrigin: { x: number; y: number } | null = null
 
@@ -387,6 +386,8 @@ export function MapEditorCanvas({
     }
   }, [decodedGrid, meta, showWalkability])
 
+  const looks = useLooks().index
+
   // Re-render editable entities & handles whenever snapshot or selection changes
   useEffect(() => {
     const layers = layersRef.current
@@ -517,8 +518,14 @@ export function MapEditorCanvas({
       const isSelected = selected?.type === 'npc' && selected.id === npc.id
       const pos = cellToLatLng(npc.x, npc.y, meta)
       const label = npc.name ? `${npc.name} (#${npc.id})` : `#${npc.id}`
+      const picture = isTerrainRole(npc.role) ? null : npcPicture(looks, npc.lookface)
       const marker = L.marker(pos, {
-        icon: makeBadgeIcon(label, '#3b82f6', isSelected),
+        icon: picture
+          ? lookIcon(picture, badgeHtml(label, '#3b82f6', isSelected), {
+              below: lookNameHtml(label),
+              className: isSelected ? 'fetih-look-selected' : undefined,
+            })
+          : makeBadgeIcon(label, '#3b82f6', isSelected),
         draggable: true,
         zIndexOffset: isSelected ? 500 : 100,
       })
@@ -571,7 +578,7 @@ export function MapEditorCanvas({
         interactive: false,
       }).addTo(layers.startPoint)
     }
-  }, [snapshot, selected, meta, map.id])
+  }, [snapshot, selected, meta, map.id, looks])
 
   // Focus cell when requested
   useEffect(() => {
