@@ -3,10 +3,11 @@
 // (event packet.in / packet.out) are their own streams, so a selector can leave them out.
 
 local.file_match "comet" {
-  // Servers run from source, then servers in containers (compose profile deploy)
+  // Servers run from source, then servers in containers (compose profile deploy).
+  // Audit files live in an audit/ subdirectory and are excluded so Loki doesn't duplicate them.
   path_targets = [
-    {"__path__" = "/comet/src/Comet.*/logs/*.jsonl"},
-    {"__path__" = "/comet/logs/*/*.jsonl"},
+    {"__path__" = "/comet/src/Comet.*/logs/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl"},
+    {"__path__" = "/comet/logs/*/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl"},
   ]
   sync_period  = "10s"
 }

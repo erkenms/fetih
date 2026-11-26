@@ -27,14 +27,36 @@ namespace Comet.Core.Logging
 
             logger.MinimumLevel.Override(PacketTraceSource, LogEventLevel.Verbose);
 
+            var consoleLevel = string.IsNullOrWhiteSpace(config.ConsoleLevel)
+                ? LevelAlias.Minimum
+                : LogLevels.Parse(config.ConsoleLevel);
+
             logger.WriteTo.Logger(console => console
                 .Filter.ByExcluding(Serilog.Filters.Matching.FromSource(PacketTraceSource))
-                .WriteTo.Console(new ConsoleLogFormatter(colors: !Console.IsOutputRedirected)));
+                .WriteTo.Console(
+                    new ConsoleLogFormatter(colors: !Console.IsOutputRedirected),
+                    restrictedToMinimumLevel: consoleLevel));
             logger.WriteTo.File(
                 new JsonLogFormatter(),
                 Path.Combine(config.Directory, server + "-.jsonl"),
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: config.RetainDays > 0 ? config.RetainDays : null);
+
+            if (config.AuditEnabled)
+            {
+                var auditDir = string.IsNullOrWhiteSpace(config.AuditDirectory)
+                    ? Path.Combine(config.Directory, "audit")
+                    : config.AuditDirectory;
+                var auditPrefix = server + "-audit-";
+                logger.WriteTo.Logger(audit => audit
+                    .Filter.ByIncludingOnly(AuditEvents.IsAudited)
+                    .WriteTo.File(
+                        new JsonLogFormatter(),
+                        Path.Combine(auditDir, auditPrefix + ".jsonl"),
+                        rollingInterval: RollingInterval.Day,
+                        retainedFileCountLimit: null,
+                        hooks: new AuditCompressHook(auditPrefix)));
+            }
 
             Log.Logger = logger.CreateLogger();
             AppDomain.CurrentDomain.ProcessExit += (s, e) =>

@@ -1,6 +1,6 @@
 import { Button, Group, Modal, PasswordInput, Select, Stack, Text, TextInput } from '@mantine/core'
 import { notifications } from '@mantine/notifications'
-import { IconBan, IconCheck, IconKey, IconShield, IconUserCog } from '@tabler/icons-react'
+import { IconActivity, IconBan, IconCheck, IconKey, IconShield, IconUserCog } from '@tabler/icons-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,7 +12,14 @@ import { AUTHORITY_IDS, NON_BAN_STATUS_IDS, isAccountBanned } from './accountMet
 type ActionModal = 'ban' | 'unban' | 'status' | 'authority' | 'password' | null
 
 interface AccountActionsProps {
-  account: { accountId: number; username: string; statusId: number; authorityId: number }
+  account: {
+    accountId: number
+    username: string
+    statusId: number
+    authorityId: number
+    gameConnected?: boolean
+    packetTraced?: boolean
+  }
 }
 
 // Ban, status, authority and password buttons of an account, with their dialogs
@@ -118,6 +125,24 @@ export function AccountActions({ account }: AccountActionsProps) {
     onError: setActionError,
   })
 
+  const packetTraceMutation = useMutation({
+    mutationFn: (enabled: boolean) =>
+      unwrap(
+        api.POST('/api/accounts/{id}/packet-trace', {
+          params: { path: { id: accountId } },
+          body: { enabled },
+        }),
+      ),
+    onSuccess: (_, enabled) => {
+      notifications.show({
+        message: t(enabled ? 'accounts:actions.packetTraceOnSuccess' : 'accounts:actions.packetTraceOffSuccess'),
+        color: 'green',
+      })
+      refresh()
+    },
+    onError: (err) => notifications.show({ message: formatError(err), color: 'red' }),
+  })
+
   const banned = isAccountBanned(account.statusId)
   const canBan = can(me, 'ManageCharacters')
   const canManage = can(me, 'ManageAccounts')
@@ -158,6 +183,17 @@ export function AccountActions({ account }: AccountActionsProps) {
             </Button>
             <Button size="xs" variant="light" color="orange" leftSection={<IconKey size={15} />} onClick={() => openModal('password')}>
               {t('accounts:actions.resetPassword')}
+            </Button>
+            <Button
+              size="xs"
+              variant="light"
+              color={account.packetTraced ? 'red' : undefined}
+              leftSection={<IconActivity size={15} />}
+              disabled={!account.gameConnected}
+              loading={packetTraceMutation.isPending}
+              onClick={() => packetTraceMutation.mutate(!account.packetTraced)}
+            >
+              {t(account.packetTraced ? 'accounts:actions.packetTraceOff' : 'accounts:actions.packetTraceOn')}
             </Button>
           </>
         )}

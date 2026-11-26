@@ -543,6 +543,22 @@ namespace Comet.Game
             return result;
         }
 
+        public Task<bool> IsPacketTraced(uint accountID) =>
+            Task.FromResult(PacketTrace.IsAccountTraced(accountID));
+
+        public Task<AdminResult> SetPacketTrace(PacketTraceArgs args)
+        {
+            if (args.AccountID == 0)
+                return Task.FromResult(AdminResult.Fail(AdminErrors.Invalid));
+
+            PacketTrace.SetAccount(args.AccountID, args.Enabled);
+            bool online = Kernel.Clients.TryGet(args.AccountID, out _);
+            LogEvents.For<Remote>(LogEvents.GmPacketTrace).Information(
+                "Admin account {ActorAccountId} {Action} packet tracing for account {AccountId}",
+                args.ActorAccountID, args.Enabled ? "enabled" : "disabled", args.AccountID);
+            return Task.FromResult(AdminResult.Done(online));
+        }
+
         // The handlers return null when done, or an AdminErrors code
         private static async Task<AdminResult> OnCharacterAsync(uint characterID,
             Func<Client, Task<string>> online, Func<DbCharacter, Task<string>> offline)

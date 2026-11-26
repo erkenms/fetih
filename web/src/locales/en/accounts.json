@@ -32,6 +32,8 @@
     "status": "Change status",
     "authority": "Change authority",
     "resetPassword": "Reset password",
+    "packetTraceOn": "Enable packet trace",
+    "packetTraceOff": "Disable packet trace",
     "reason": "Reason (optional)",
     "newStatus": "New status",
     "newAuthority": "New authority",
@@ -47,7 +49,9 @@
     "unbanSuccess": "Account unbanned.",
     "statusSuccess": "Account status updated.",
     "authoritySuccess": "Account authority updated.",
-    "resetPasswordSuccess": "Password updated."
+    "resetPasswordSuccess": "Password updated.",
+    "packetTraceOnSuccess": "Packet tracing enabled for this account.",
+    "packetTraceOffSuccess": "Packet tracing disabled for this account."
   },
   "errors": {
     "self_ban": "You cannot ban your own account.",

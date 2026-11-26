@@ -52,6 +52,11 @@ public sealed class AccountsFeature : IFeature
             .WithName("resetAccountPassword")
             .Produces<ApiError>(StatusCodes.Status400BadRequest)
             .Produces<ApiError>(StatusCodes.Status404NotFound);
+        group.MapPost("/{id:int}/packet-trace", SetPacketTraceAsync)
+            .RequirePermission(Permission.ManageAccounts)
+            .WithName("setAccountPacketTrace")
+            .Produces<ApiError>(StatusCodes.Status400BadRequest)
+            .Produces<ApiError>(StatusCodes.Status404NotFound);
     }
 
     private static async Task<Results<Ok<AccountDetailResponse>, JsonHttpResult<ApiError>>> GetAsync(
@@ -133,6 +138,7 @@ public sealed class AccountsFeature : IFeature
 
         var onlineCharIds = new HashSet<uint>();
         bool gameConnected = rpc.Connected;
+        bool packetTraced = false;
         if (gameConnected)
         {
             try
@@ -140,6 +146,7 @@ public sealed class AccountsFeature : IFeature
                 var online = await rpc.CallAsync<List<OnlinePlayer>>("OnlinePlayers");
                 foreach (var p in online)
                     onlineCharIds.Add(p.CharacterID);
+                packetTraced = await rpc.CallAsync<bool>("IsPacketTraced", id);
             }
             catch (GameOfflineException)
             {
@@ -176,6 +183,7 @@ public sealed class AccountsFeature : IFeature
             account.IPAddress,
             DateTime.SpecifyKind(account.Registered, DateTimeKind.Utc),
             gameConnected,
+            packetTraced,
             characters,
             logins,
             sameIp));
@@ -314,6 +322,34 @@ public sealed class AccountsFeature : IFeature
         await audit.WriteAsync("account.reset_password", "account", id.ToString(CultureInfo.InvariantCulture),
             summary: $"Password reset for {account.Username}");
         return TypedResults.NoContent();
+    }
+
+    private static async Task<Results<Ok<AccountActionResponse>, JsonHttpResult<ApiError>>> SetPacketTraceAsync(
+        uint id,
+        SetPacketTraceRequest request,
+        ClaimsPrincipal user,
+        GameRpc rpc,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await using var db = new AccountDbContext();
+        var account = await db.Accounts.AsNoTracking().SingleOrDefaultAsync(a => a.AccountID == id, ct);
+        if (account == null)
+            return ApiError.Result("not_found", StatusCodes.Status404NotFound);
+
+        var result = await rpc.CallAsync<AdminResult>("SetPacketTrace", new PacketTraceArgs
+        {
+            ActorAccountID = user.AccountId(),
+            AccountID = id,
+            Enabled = request.Enabled,
+        });
+        if (!result.Ok)
+            return ApiError.FromAdmin(result.Error);
+
+        await audit.WriteAsync("account.packet_trace", "account", id.ToString(CultureInfo.InvariantCulture),
+            after: new { enabled = request.Enabled },
+            summary: $"{(request.Enabled ? "Enabled" : "Disabled")} packet trace for {account.Username}");
+        return TypedResults.Ok(new AccountActionResponse(true, result.Online));
     }
 
     // 404 for no such account, 403 when it is the user's rank or above, else null

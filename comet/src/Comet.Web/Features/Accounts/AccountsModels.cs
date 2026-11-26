@@ -34,6 +34,7 @@ public record AccountDetailResponse(
     string? IpAddress,
     DateTime Registered,
     bool GameConnected,
+    bool PacketTraced,
     AccountCharacterSummary[] Characters,
     AccountLoginEntry[] Logins,
     SameIpAccountSummary[] SameIpAccounts);
@@ -45,5 +46,7 @@ public record SetAccountStatusRequest(ushort StatusId, string? Reason = null);
 public record SetAccountAuthorityRequest(ushort AuthorityId);
 
 public record ResetAccountPasswordRequest(string NewPassword);
+
+public record SetPacketTraceRequest(bool Enabled);
 
 public record AccountActionResponse(bool Ok, bool Online);

@@ -27,5 +27,7 @@ namespace Comet.Shared.Models.Admin
         Task<AdminResult> SetLevel(LevelArgs args);
         Task<AdminResult> Message(MessageArgs args);
         Task<AdminResult> Broadcast(BroadcastArgs args);
+        Task<bool> IsPacketTraced(uint accountID);
+        Task<AdminResult> SetPacketTrace(PacketTraceArgs args);
     }
 }

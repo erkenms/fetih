@@ -3,6 +3,11 @@
 # docs/deploy.md. Settings come from .env (deploy/env.example).
 name: fetih
 
+x-logging: &container-logging
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   db:
     container_name: fetih-db
@@ -100,10 +105,15 @@ services:
     container_name: fetih-account
     build: { context: ., dockerfile: Containerfile, target: account }
     restart: unless-stopped
+    logging: *container-logging
     environment:
       COMET_ACCOUNT_Database__Hostname: db
       COMET_ACCOUNT_Database__Password: ${DB_PASSWORD:-password}
       COMET_ACCOUNT_Logging__Directory: /logs/account
+      COMET_ACCOUNT_Logging__Level: info
+      COMET_ACCOUNT_Logging__ConsoleLevel: warn
+      COMET_ACCOUNT_Logging__RetainDays: "3"
+      COMET_ACCOUNT_Logging__PacketTrace__All: "false"
     ports:
       - "9960:9960"
     volumes:
@@ -118,6 +128,7 @@ services:
     stop_grace_period: 30s
     build: { context: ., dockerfile: Containerfile, target: game }
     restart: unless-stopped
+    logging: *container-logging
     environment:
       COMET_GAME_Database__Hostname: db
       COMET_GAME_Database__Password: ${DB_PASSWORD:-password}
@@ -128,6 +139,10 @@ services:
       COMET_GAME_Maps__ClientDirectory: /client
       COMET_GAME_Data__Directory: /data
       COMET_GAME_Logging__Directory: /logs/game
+      COMET_GAME_Logging__Level: info
+      COMET_GAME_Logging__ConsoleLevel: warn
+      COMET_GAME_Logging__RetainDays: "3"
+      COMET_GAME_Logging__PacketTrace__All: "false"
     ports:
       - "5816:5816"
     volumes:
@@ -144,6 +159,7 @@ services:
     container_name: fetih-web
     build: { context: ., dockerfile: Containerfile, target: web }
     restart: unless-stopped
+    logging: *container-logging
     environment:
       COMET_WEB_Database__Hostname: db
       COMET_WEB_Database__Password: ${DB_PASSWORD:-password}
@@ -160,6 +176,8 @@ services:
       COMET_WEB_Paths__AssetsDirectory: /assets
       COMET_WEB_Paths__FrontendDirectory: /app/wwwroot
       COMET_WEB_Logging__Directory: /logs/web
+      COMET_WEB_Logging__ConsoleLevel: warn
+      COMET_WEB_Logging__RetainDays: "3"
     volumes:
       - .:/repo
       - ${CLIENT_DIR:-./_CLIENT/fetih}:/client:ro

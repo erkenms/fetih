@@ -32,6 +32,8 @@
     "status": "Durumu değiştir",
     "authority": "Yetkiyi değiştir",
     "resetPassword": "Şifre sıfırla",
+    "packetTraceOn": "Paket izlemeyi aç",
+    "packetTraceOff": "Paket izlemeyi kapat",
     "reason": "Sebep (isteğe bağlı)",
     "newStatus": "Yeni durum",
     "newAuthority": "Yeni yetki",
@@ -47,7 +49,9 @@
     "unbanSuccess": "Hesabın yasağı kaldırıldı.",
     "statusSuccess": "Hesap durumu güncellendi.",
     "authoritySuccess": "Hesap yetkisi güncellendi.",
-    "resetPasswordSuccess": "Şifre güncellendi."
+    "resetPasswordSuccess": "Şifre güncellendi.",
+    "packetTraceOnSuccess": "Bu hesap için paket izleme açıldı.",
+    "packetTraceOffSuccess": "Bu hesap için paket izleme kapatıldı."
   },
   "errors": {
     "self_ban": "Kendi hesabınızı yasaklayamazsınız.",

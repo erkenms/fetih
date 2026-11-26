@@ -384,6 +384,7 @@ namespace Comet.Core.Logging
         public const string GmShutdownCancel = "gm.shutdown_cancel";
         public const string GmMaintenance = "gm.maintenance";
         public const string GmMotd = "gm.motd";
+        public const string GmPacketTrace = "gm.packet_trace";
         public const string ChatCommand = "chat.command";
 
         public const string PacketUnhandled = "packet.unhandled";

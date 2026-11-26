@@ -80,4 +80,10 @@ namespace Comet.Shared.Models.Admin
         public string Text { get; set; }
         public BroadcastChannel Channel { get; set; }
     }
+
+    public class PacketTraceArgs : AdminArgs
+    {
+        public uint AccountID { get; set; }
+        public bool Enabled { get; set; }
+    }
 }

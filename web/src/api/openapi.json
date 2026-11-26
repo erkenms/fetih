@@ -3696,6 +3696,67 @@
         }
       }
     },
+    "/api/accounts/{id}/packet-trace": {
+      "post": {
+        "tags": [
+          "AccountsFeature"
+        ],
+        "operationId": "setAccountPacketTrace",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPacketTraceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/characters/{id}": {
       "get": {
         "tags": [
@@ -5875,6 +5936,7 @@
           "ipAddress",
           "registered",
           "gameConnected",
+          "packetTraced",
           "characters",
           "logins",
           "sameIpAccounts"
@@ -5919,6 +5981,9 @@
             "format": "date-time"
           },
           "gameConnected": {
+            "type": "boolean"
+          },
+          "packetTraced": {
             "type": "boolean"
           },
           "characters": {
@@ -15826,6 +15891,17 @@
           "level": {
             "type": "integer",
             "format": "uint8"
+          }
+        }
+      },
+      "SetPacketTraceRequest": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
           }
         }
       },

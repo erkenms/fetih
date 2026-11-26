@@ -1364,6 +1364,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/accounts/{id}/packet-trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["setAccountPacketTrace"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/characters/{id}": {
         parameters: {
             query?: never;
@@ -2016,6 +2032,7 @@ export interface components {
             /** Format: date-time */
             registered: string;
             gameConnected: boolean;
+            packetTraced: boolean;
             characters: components["schemas"]["AccountCharacterSummary"][];
             logins: components["schemas"]["AccountLoginEntry"][];
             sameIpAccounts: components["schemas"]["SameIpAccountSummary"][];
@@ -4922,6 +4939,9 @@ export interface components {
             /** Format: uint8 */
             level: number;
         };
+        SetPacketTraceRequest: {
+            enabled: boolean;
+        };
         ShopCatalogEntry: {
             key: string;
             source: string;
@@ -7616,6 +7636,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    setAccountPacketTrace: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPacketTraceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountActionResponse"];
+                };
             };
             /** @description Bad Request */
             400: {

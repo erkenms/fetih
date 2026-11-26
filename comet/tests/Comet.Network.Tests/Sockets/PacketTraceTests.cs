@@ -39,5 +39,20 @@ namespace Comet.Network.Sockets.Tests
             Assert.True(PacketTrace.IsTraced("10.0.0.5", 0));
             PacketTrace.Configure(new PacketTraceConfiguration());
         }
+
+        [Fact]
+        public void RuntimeAccountToggleAddsAndRemovesAccount()
+        {
+            PacketTrace.Configure(new PacketTraceConfiguration());
+            Assert.False(PacketTrace.IsAccountTraced(7));
+
+            PacketTrace.SetAccount(7, true);
+            Assert.True(PacketTrace.IsAccountTraced(7));
+            Assert.True(PacketTrace.IsTraced("10.0.0.5", 7));
+
+            PacketTrace.SetAccount(7, false);
+            Assert.False(PacketTrace.IsAccountTraced(7));
+            Assert.False(PacketTrace.IsTraced("10.0.0.5", 7));
+        }
     }
 }

@@ -27,8 +27,24 @@ schema_config:
         period: 24h
 
 limits_config:
-  retention_period: 720h
-  # The servers keep 30 days of logs; Alloy sends all of them on its first run
+  retention_period: 2160h
+  retention_stream:
+    - selector: '{env="test"}'
+      priority: 100
+      period: 168h
+    - selector: '{event=~"trade\\..+|booth\\.sold|gm\\..+|web\\..+|character\\.deleted|session\\.cheat_report|pk\\.jailed|account\\.created"}'
+      priority: 50
+      period: 87600h
+    - selector: '{event=~"session\\..+|account\\.login.*"}'
+      priority: 40
+      period: 17520h
+    - selector: '{event=~"(move|combat|monster)\\..+"}'
+      priority: 20
+      period: 168h
+    - selector: '{event=~"packet\\..+"}'
+      priority: 10
+      period: 48h
+  # Dev servers keep 30 days of logs; Alloy sends all of them on its first run
   reject_old_samples_max_age: 720h
   # Low enough that the first run's backfill doesn't starve a small podman VM
   ingestion_rate_mb: 4
@@ -43,7 +59,10 @@ limits_config:
 
 compactor:
   working_directory: /loki/compactor
+  compaction_interval: 10m
   retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 150
   delete_request_store: filesystem
 
 analytics:

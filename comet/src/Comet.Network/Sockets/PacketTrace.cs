@@ -24,6 +24,19 @@ namespace Comet.Network.Sockets
         public static bool IsTraced(string ipAddress, uint accountID) =>
             all || addresses.Contains(ipAddress) || (accountID != 0 && accounts.Contains(accountID));
 
+        public static bool IsAccountTraced(uint accountID) =>
+            all || (accountID != 0 && accounts.Contains(accountID));
+
+        public static void SetAccount(uint accountID, bool enabled)
+        {
+            if (accountID == 0)
+                return;
+            ImmutableInterlocked.Update(
+                ref accounts,
+                (set, state) => state.enabled ? set.Add(state.accountID) : set.Remove(state.accountID),
+                (accountID, enabled));
+        }
+
         public static void In(TcpServerActor actor, ReadOnlySpan<byte> packet)
         {
             PacketMetrics.In(packet);
