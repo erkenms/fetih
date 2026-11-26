@@ -21,8 +21,7 @@ any UI work.
 ## Commands
 
 ```bash
-./dev.sh                                      # containers, the three servers and Vite in one terminal
-podman compose up -d                          # MariaDB (integration tests need it), Loki, Grafana :3000
+podman compose up -d db                       # MariaDB (integration tests need it)
 dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
 cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
