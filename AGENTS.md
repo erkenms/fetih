@@ -25,6 +25,7 @@ podman compose up -d db                       # MariaDB (integration tests need 
 dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
 cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
+FETIH_BACKEND=https://test.<domain> npm run dev   # Vite against a remote web (see web/vite.config.ts)
 dotnet run client/build.cs                    # the client, into _CLIENT/fetih
 cd comet/src/Comet.Bots && dotnet run -- --Groups:0:Count=300   # bots against the running servers
 ```
