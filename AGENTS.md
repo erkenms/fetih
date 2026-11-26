@@ -16,6 +16,8 @@ work. See [docs/overview.md](docs/overview.md) for the full project picture.
 - Never write where a rule was learned from (another emulator's name, a forum, "5808
   source") in code or commit messages. State the rule. Mentioning the 5619 client is fine.
 - Commits: one short line, no trailers. Never push.
+- Write short: issues, comments, docs, this file. A few words of direction beat full
+  sentences; people lose context faster than you do, and the code has the details.
 
 ## Commands
 
