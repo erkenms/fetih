@@ -6,6 +6,7 @@
     <Project Path="src/Comet.Core/Comet.Core.csproj" />
     <Project Path="src/Comet.Game/Comet.Game.csproj" />
     <Project Path="src/Comet.Network/Comet.Network.csproj" />
+    <Project Path="src/Comet.Patch/Comet.Patch.csproj" />
     <Project Path="src/Comet.Shared/Comet.Shared.csproj" />
     <Project Path="src/Comet.Web/Comet.Web.csproj" />
   </Folder>
@@ -15,6 +16,7 @@
     <Project Path="tests/Comet.Game.Tests/Comet.Game.Tests.csproj" />
     <Project Path="tests/Comet.Integration.Tests/Comet.Integration.Tests.csproj" />
     <Project Path="tests/Comet.Network.Tests/Comet.Network.Tests.csproj" />
+    <Project Path="tests/Comet.Patch.Tests/Comet.Patch.Tests.csproj" />
     <Project Path="tests/Comet.Web.Tests/Comet.Web.Tests.csproj" />
   </Folder>
 </Solution>

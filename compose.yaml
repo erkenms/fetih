@@ -167,6 +167,7 @@ services:
       COMET_WEB_AccountDatabase__Password: ${DB_PASSWORD:-password}
       COMET_WEB_Web__Urls: http://0.0.0.0:5820
       COMET_WEB_Web__SecureCookies: "true"
+      COMET_WEB_Web__ClientDownloadUrl: /download/fetih.zip
       COMET_WEB_Web__ForwardedHeaders: "true"
       COMET_WEB_GameRpc__Hostname: game
       COMET_WEB_Observability__LokiUrl: http://loki:3100
@@ -201,6 +202,9 @@ services:
       - "443:443/udp"
     volumes:
       - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${PATCH_PROD_DIR:-./_CLIENT/patch}:/srv/patch/prod:ro
+      - ${PATCH_TEST_DIR:-./_CLIENT/patch}:/srv/patch/test:ro
+      - ${DOWNLOAD_DIR:-./_CLIENT/patch/download}:/srv/download:ro
       - caddy-data:/data
       - caddy-config:/config
     depends_on:

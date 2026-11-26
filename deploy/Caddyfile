@@ -1,6 +1,41 @@
 # The web's only way in. With a public domain in FETIH_DOMAIN, Caddy gets and renews its
 # Let's Encrypt certificate; with "localhost" it signs one of its own.
 {$FETIH_DOMAIN:localhost} {
-	encode zstd gzip
-	reverse_proxy web:5820
+	# Objects are already compressed (or intentionally raw); skip encode on top of them
+	handle /patch/*/objects/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		root * /srv
+		file_server
+	}
+
+	handle /patch/*/manifests/* {
+		encode zstd gzip
+		header Cache-Control "public, max-age=31536000, immutable"
+		root * /srv
+		file_server
+	}
+
+	handle /patch/*/manifest.json {
+		encode zstd gzip
+		header Cache-Control "no-cache"
+		root * /srv
+		file_server
+	}
+
+	handle /download/fetih.zip {
+		header Cache-Control "no-cache"
+		root * /srv
+		file_server
+	}
+
+	handle /download/* {
+		header Cache-Control "public, max-age=31536000, immutable"
+		root * /srv
+		file_server
+	}
+
+	handle {
+		encode zstd gzip
+		reverse_proxy web:5820
+	}
 }

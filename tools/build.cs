@@ -1,25 +1,29 @@
 #!/usr/bin/env dotnet
-// Builds the Fetih client, web assets, and (in #81) launcher patches:
+// Builds the Fetih client, web assets, and launcher patches:
 //
 //   dotnet run tools/build.cs <command> [options]
 //
 // Commands:
 //   client                         Build the client from the 5619 base
 //   assets [--maps all|ids]        Build web assets from the built client
-//   patch                          Publish launcher patch files (added in #81)
-//   all [--maps all|ids]           Build client, then assets (and patch once added)
+//   patch [--zip] [--keep N]       Publish launcher patch files and optional zip
+//   all [--maps all|ids] [--zip]   Build client, assets, and patch
 //   decrypt <file>                 Decrypt an RSA-signed client .dat file to stdout
 //   extract <client> <path> [dest] Copy one client file (loose or .wdf), or convert to .png
 //
 // Paths:
 //   --env prod|test    Server layout: /srv/fetih/base/5619 -> /srv/fetih/<env>/client,
-//                      /srv/fetih/<env>/assets
+//                      /srv/fetih/<env>/assets, /srv/fetih/<env>/patch
 //   --base <dir>       Base 5619 client (default: _CLIENT/5619)
 //   --out <dir>        Built client (default: _CLIENT/fetih)
 //   --assets <dir>     Web assets output (default: web/assets)
+//   --patch <dir>      Patch output (default: _CLIENT/patch)
 //   --ip <ipv4>        Account server IPv4 for Server.dat (or FETIH_ACCOUNT_IP; required
 //                      for client and all)
 //   --maps all|ids     Render map tiles (all, or comma-separated map IDs like 1002,1036)
+//   --zip              Build download/fetih-<version>.zip and update download/fetih.zip
+//   --keep <N>         Number of manifest versions to retain during GC (default: 10)
+//   --min-launcher-version <ver>  Minimum launcher version in manifest (default: 1.0.0)
 //
 // Client build: mirrors the base client, minus client/delete.txt, plus client/files/,
 // generates Server.dat from client/servers.json with the given IP, edits ini/itemtype.dat
@@ -28,6 +32,7 @@
 // (committed in git so every build signs with the same key), and re-signs the RSA-signed .dat
 // files. Unchanged files are skipped.
 #:project ../comet/src/Comet.Game/Comet.Game.csproj
+#:project ../comet/src/Comet.Patch/Comet.Patch.csproj
 #:package StbImageSharp@2.30.15
 #:package SkiaSharp@3.119.1
 #:package SkiaSharp.NativeAssets.Linux.NoDependencies@3.119.1
@@ -35,6 +40,7 @@
 #:property Nullable=enable
 #:include ClientBuild.cs
 #:include AssetsBuild.cs
+#:include PatchBuild.cs
 #:include assets/lib/Wdf.cs
 #:include assets/lib/Dds.cs
 #:include assets/lib/ClientFiles.cs
@@ -73,8 +79,12 @@ string? env = null;
 string? baseOverride = null;
 string? outOverride = null;
 string? assetsOverride = null;
+string? patchOverride = null;
 string? ip = Environment.GetEnvironmentVariable("FETIH_ACCOUNT_IP");
 HashSet<uint>? onlyMaps = [];
+var buildZip = false;
+var keepVersions = 10;
+var minLauncherVersion = "1.0.0";
 var positionals = new List<string>();
 
 for (var i = 0; i < rest.Length; i++)
@@ -98,12 +108,24 @@ for (var i = 0; i < rest.Length; i++)
             case "--assets":
                 assetsOverride = Next("--assets");
                 break;
+            case "--patch":
+                patchOverride = Next("--patch");
+                break;
             case "--ip":
                 ip = Next("--ip");
                 break;
             case "--maps":
                 var mapsArg = Next("--maps");
                 onlyMaps = mapsArg == "all" ? null : mapsArg.Split(',').Select(uint.Parse).ToHashSet();
+                break;
+            case "--zip":
+                buildZip = true;
+                break;
+            case "--keep":
+                keepVersions = int.Parse(Next("--keep"));
+                break;
+            case "--min-launcher-version":
+                minLauncherVersion = Next("--min-launcher-version");
                 break;
             case "-h" or "--help":
                 PrintUsage();
@@ -124,6 +146,7 @@ for (var i = 0; i < rest.Length; i++)
 var baseDir = baseOverride ?? (env != null ? "/srv/fetih/base/5619" : Path.Combine(root, "_CLIENT", "5619"));
 var outDir = outOverride ?? (env != null ? $"/srv/fetih/{env}/client" : Path.Combine(root, "_CLIENT", "fetih"));
 var assetsDir = assetsOverride ?? (env != null ? $"/srv/fetih/{env}/assets" : Path.Combine(root, "web", "assets"));
+var patchDir = patchOverride ?? (env != null ? $"/srv/fetih/{env}/patch" : Path.Combine(root, "_CLIENT", "patch"));
 
 switch (command)
 {
@@ -143,7 +166,9 @@ switch (command)
         return AssetsBuild.Run(outDir, assetsDir, dataDir, onlyMaps);
 
     case "patch":
-        return Fail("The patch subcommand is not implemented yet (added in #81).");
+        if (positionals.Count != 0)
+            return Fail($"Unexpected arguments for patch: {string.Join(' ', positionals)}");
+        return PatchBuild.Run(root, outDir, patchDir, buildZip, keepVersions, minLauncherVersion);
 
     case "all":
         if (positionals.Count != 0)
@@ -151,7 +176,10 @@ switch (command)
         var clientExit = ClientBuild.Run(clientInputsDir, baseDir, outDir, ip);
         if (clientExit != 0)
             return clientExit;
-        return AssetsBuild.Run(outDir, assetsDir, dataDir, onlyMaps);
+        var assetsExit = AssetsBuild.Run(outDir, assetsDir, dataDir, onlyMaps);
+        if (assetsExit != 0)
+            return assetsExit;
+        return PatchBuild.Run(root, outDir, patchDir, buildZip, keepVersions, minLauncherVersion);
 
     default:
         return Fail($"Unknown command '{command}'. Run with --help for usage.");
@@ -165,8 +193,8 @@ static void PrintUsage()
         Commands:
           client                         Build the client from the 5619 base
           assets [--maps all|ids]        Build web assets from the built client
-          patch                          Publish launcher patch files (added in #81)
-          all [--maps all|ids]           Build client, then assets
+          patch [--zip] [--keep N]       Publish launcher patch files and optional zip
+          all [--maps all|ids] [--zip]   Build client, assets, and patch
           decrypt <file>                 Decrypt an RSA-signed client .dat file to stdout
           extract <client> <path> [dest] Copy one client file, or convert to .png
 
@@ -175,8 +203,12 @@ static void PrintUsage()
           --base <dir>                   Base 5619 client (default: _CLIENT/5619)
           --out <dir>                    Built client (default: _CLIENT/fetih)
           --assets <dir>                 Web assets output (default: web/assets)
+          --patch <dir>                  Patch output (default: _CLIENT/patch)
           --ip <ipv4>                    Account server IPv4 for Server.dat (or FETIH_ACCOUNT_IP)
           --maps all|ids                 Map tiles to render (all or comma-separated IDs)
+          --zip                          Build download/fetih-<version>.zip and update download/fetih.zip
+          --keep <N>                     Manifest versions to retain during GC (default: 10)
+          --min-launcher-version <ver>   Minimum launcher version in manifest (default: 1.0.0)
         """);
 }
 

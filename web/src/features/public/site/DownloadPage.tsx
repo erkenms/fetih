@@ -32,7 +32,14 @@ export default function DownloadPage() {
               {t('download.version', { version: download.data?.version ?? '5619' })}
             </Badge>
             {download.data?.url ? (
-              <Button component="a" href={download.data.url} target="_blank" rel="noreferrer" leftSection={<IconDownload size={16} />}>
+              <Button
+                component="a"
+                href={download.data.url}
+                {...(download.data.url.startsWith('http')
+                  ? { target: '_blank', rel: 'noreferrer' }
+                  : { download: true })}
+                leftSection={<IconDownload size={16} />}
+              >
                 {t('download.downloadButton')}
               </Button>
             ) : (
