@@ -18,7 +18,6 @@ public static class AdminMenu
             new("Duyurular", "/admin/broadcasts", Permission.Moderate),
             new("Sunucu", "/admin/server", Permission.ServerControl),
             new("İlan panosu", "/admin/board", Permission.Moderate),
-            new("Canlı dünya", "/admin/live", Permission.ViewLive),
         ]),
         new("Oyuncular",
         [
@@ -33,7 +32,6 @@ public static class AdminMenu
             new("Konuşmacılar", "/admin/studio/talkers", Permission.Studio),
             new("Canavarlar", "/admin/studio/monsters", Permission.ViewCatalogs),
             new("Haritalar", "/admin/maps", Permission.ViewCatalogs),
-            new("NPC konuşmaları", "/admin/npc-dialogs", Permission.ViewCatalogs),
         ]),
         new("Başvuru",
         [

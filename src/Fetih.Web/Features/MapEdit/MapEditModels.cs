@@ -104,3 +104,12 @@ public sealed record ReloadMapFileResult(
     string? Summary);
 
 public sealed record ReloadMapFilesResponse(ReloadMapFileResult[] Results);
+
+public sealed record SingleEditResult(
+    bool Saved,
+    string? ChangedFile,
+    MapEditProblemDto[] Problems,
+    uint? EntityId = null,
+    string? Error = null);
+
+public sealed record MapProblemCounts(int Errors, int Warnings);

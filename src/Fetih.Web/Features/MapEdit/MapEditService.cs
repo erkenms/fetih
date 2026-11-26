@@ -527,6 +527,454 @@ public sealed class MapEditService
 
     private string ResolveDataDirectory() => StudioData.ResolveDataDirectory(this.Config);
 
+    public Dictionary<uint, MapProblemCounts> GetProblemCountsByMap()
+    {
+        var dataDir = this.ResolveDataDirectory();
+        var counts = new Dictionary<uint, (int Errors, int Warnings)>();
+        if (string.IsNullOrEmpty(dataDir) || !Directory.Exists(dataDir))
+            return [];
+
+        try
+        {
+            var set = this.CreateDataSet(dataDir);
+            Tally<MapType>(set, DataFileKinds.Maps.FileName, m => m.MapID, counts);
+            Tally<Npc>(set, DataFileKinds.Npcs.FileName, n => n.MapID, counts);
+            Tally<Generator>(set, DataFileKinds.Spawns.FileName, s => s.MapID, counts);
+            Tally<Portal>(set, DataFileKinds.Portals.FileName, p => p.MapID, counts);
+        }
+        catch
+        {
+            return [];
+        }
+
+        return counts.ToDictionary(kv => kv.Key, kv => new MapProblemCounts(kv.Value.Errors, kv.Value.Warnings));
+
+        static void Tally<T>(DataSet set, string fileName, Func<T, uint> mapOf, Dictionary<uint, (int Errors, int Warnings)> acc)
+            where T : class
+        {
+            if (set.File(fileName) is not DataFile<T> file) return;
+            foreach (var p in set.Validate(fileName))
+            {
+                if (p.Entry is int idx && idx >= 0 && idx < file.Count)
+                {
+                    uint mapId = mapOf(file[idx]);
+                    var (e, w) = acc.GetValueOrDefault(mapId);
+                    acc[mapId] = p.Level == DataProblemLevel.Warning ? (e, w + 1) : (e + 1, w);
+                }
+            }
+        }
+    }
+
+    public async Task<SingleEditResult> SaveSettingsAsync(
+        uint mapId,
+        EditableMapSettings settings,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var mapsFile = DataFile<MapType>.Load(Path.Combine(dataDir, DataFileKinds.Maps.FileName), DataFileKinds.Maps.ArrayKey);
+            var preProblems = new List<MapEditProblemDto>();
+            var parsedFlags = ParseFlags(settings.Flags, preProblems);
+            ApplyMapSettings(mapsFile, mapId, settings, parsedFlags);
+
+            var result = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Maps.FileName, mapsFile, preProblems,
+                audit, mapId, $"Updated settings on map {mapId}");
+            return result;
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> MoveEntryPointAsync(
+        uint mapId,
+        ushort x,
+        ushort y,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var mapsFile = DataFile<MapType>.Load(Path.Combine(dataDir, DataFileKinds.Maps.FileName), DataFileKinds.Maps.ArrayKey);
+            int idx = FindIndex(mapsFile, m => m.MapID == mapId);
+            if (idx >= 0)
+            {
+                var cur = mapsFile[idx];
+                var next = new MapType
+                {
+                    MapID = cur.MapID, Name = cur.Name, Aliases = cur.Aliases, Flags = cur.Flags,
+                    Portal = new Cell(x, y), RebornMapID = cur.RebornMapID,
+                    ScrollTypeID = cur.ScrollTypeID, RidePlus = cur.RidePlus,
+                };
+                if (!MapTypeSame(cur, next)) mapsFile[idx] = next;
+            }
+            else
+            {
+                mapsFile.Add(new MapType { MapID = mapId, Portal = new Cell(x, y) });
+            }
+
+            return await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Maps.FileName, mapsFile, [],
+                audit, mapId, $"Moved entry point on map {mapId} to ({x}, {y})");
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> SaveNpcAsync(
+        uint mapId,
+        uint? originalId,
+        EditableNpc npc,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var npcsFile = DataFile<Npc>.Load(Path.Combine(dataDir, DataFileKinds.Npcs.FileName), DataFileKinds.Npcs.ArrayKey);
+
+            uint id = npc.Id;
+            if (originalId == null && id == 0)
+                id = NextNpcId(dataDir, npcsFile);
+
+            var next = new Npc
+            {
+                NpcID = id, Lookface = npc.Lookface, Role = npc.Role,
+                MapID = mapId, X = npc.X, Y = npc.Y, Life = npc.Life, Level = npc.Level,
+            };
+
+            if (originalId == null)
+            {
+                npcsFile.Add(next);
+            }
+            else
+            {
+                int idx = FindIndex(npcsFile, n => n.MapID == mapId && n.NpcID == originalId.Value);
+                if (idx < 0)
+                    return new SingleEditResult(false, null, [], Error: "not_found");
+                if (!Npc.Same(npcsFile[idx], next))
+                    npcsFile[idx] = next;
+            }
+
+            var res = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Npcs.FileName, npcsFile, [],
+                audit, mapId, originalId == null ? $"Added NPC {id} on map {mapId}" : $"Updated NPC {id} on map {mapId}");
+            return res with { EntityId = id };
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> MoveNpcAsync(
+        uint mapId,
+        uint npcId,
+        ushort x,
+        ushort y,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var npcsFile = DataFile<Npc>.Load(Path.Combine(dataDir, DataFileKinds.Npcs.FileName), DataFileKinds.Npcs.ArrayKey);
+            int idx = FindIndex(npcsFile, n => n.MapID == mapId && n.NpcID == npcId);
+            if (idx < 0)
+                return new SingleEditResult(false, null, [], Error: "not_found");
+
+            var cur = npcsFile[idx];
+            var next = new Npc
+            {
+                NpcID = cur.NpcID, Lookface = cur.Lookface, Role = cur.Role,
+                MapID = cur.MapID, X = x, Y = y, Life = cur.Life, Level = cur.Level,
+            };
+            if (!Npc.Same(cur, next))
+                npcsFile[idx] = next;
+
+            var res = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Npcs.FileName, npcsFile, [],
+                audit, mapId, $"Moved NPC {npcId} on map {mapId} to ({x}, {y})");
+            return res with { EntityId = npcId };
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> DeleteNpcAsync(
+        uint mapId,
+        uint npcId,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var npcsFile = DataFile<Npc>.Load(Path.Combine(dataDir, DataFileKinds.Npcs.FileName), DataFileKinds.Npcs.ArrayKey);
+            int idx = FindIndex(npcsFile, n => n.MapID == mapId && n.NpcID == npcId);
+            if (idx < 0)
+                return new SingleEditResult(false, null, [], Error: "not_found");
+
+            npcsFile.RemoveAt(idx);
+            return await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Npcs.FileName, npcsFile, [],
+                audit, mapId, $"Deleted NPC {npcId} on map {mapId}");
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> SaveSpawnAsync(
+        uint mapId,
+        uint? originalId,
+        EditableSpawn spawn,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var spawnsFile = DataFile<Generator>.Load(Path.Combine(dataDir, DataFileKinds.Spawns.FileName), DataFileKinds.Spawns.ArrayKey);
+
+            uint id = spawn.Id;
+            if (originalId == null && id == 0)
+            {
+                uint max = 0;
+                for (int i = 0; i < spawnsFile.Count; i++)
+                    if (spawnsFile[i].ID > max) max = spawnsFile[i].ID;
+                id = max + 1;
+            }
+
+            var next = new Generator
+            {
+                ID = id, MapID = mapId, X = spawn.X, Y = spawn.Y,
+                Spread = spawn.Spread, Amount = spawn.Amount,
+                RespawnSeconds = spawn.Respawn, MonsterID = spawn.MonsterId,
+            };
+
+            if (originalId == null)
+            {
+                spawnsFile.Add(next);
+            }
+            else
+            {
+                int idx = FindIndex(spawnsFile, s => s.MapID == mapId && s.ID == originalId.Value);
+                if (idx < 0)
+                    return new SingleEditResult(false, null, [], Error: "not_found");
+                if (!Generator.Same(spawnsFile[idx], next))
+                    spawnsFile[idx] = next;
+            }
+
+            var res = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Spawns.FileName, spawnsFile, [],
+                audit, mapId, originalId == null ? $"Added spawn {id} on map {mapId}" : $"Updated spawn {id} on map {mapId}");
+            return res with { EntityId = id };
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> MoveSpawnAsync(
+        uint mapId,
+        uint spawnId,
+        ushort x,
+        ushort y,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var spawnsFile = DataFile<Generator>.Load(Path.Combine(dataDir, DataFileKinds.Spawns.FileName), DataFileKinds.Spawns.ArrayKey);
+            int idx = FindIndex(spawnsFile, s => s.MapID == mapId && s.ID == spawnId);
+            if (idx < 0)
+                return new SingleEditResult(false, null, [], Error: "not_found");
+
+            var cur = spawnsFile[idx];
+            var next = new Generator
+            {
+                ID = cur.ID, MapID = cur.MapID, X = x, Y = y,
+                Spread = cur.Spread, Amount = cur.Amount,
+                RespawnSeconds = cur.RespawnSeconds, MonsterID = cur.MonsterID,
+            };
+            if (!Generator.Same(cur, next))
+                spawnsFile[idx] = next;
+
+            var res = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Spawns.FileName, spawnsFile, [],
+                audit, mapId, $"Moved spawn {spawnId} on map {mapId} to ({x}, {y})");
+            return res with { EntityId = spawnId };
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> DeleteSpawnAsync(
+        uint mapId,
+        uint spawnId,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var spawnsFile = DataFile<Generator>.Load(Path.Combine(dataDir, DataFileKinds.Spawns.FileName), DataFileKinds.Spawns.ArrayKey);
+            int idx = FindIndex(spawnsFile, s => s.MapID == mapId && s.ID == spawnId);
+            if (idx < 0)
+                return new SingleEditResult(false, null, [], Error: "not_found");
+
+            spawnsFile.RemoveAt(idx);
+            return await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Spawns.FileName, spawnsFile, [],
+                audit, mapId, $"Deleted spawn {spawnId} on map {mapId}");
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> SavePortalAsync(
+        uint mapId,
+        uint? originalIndex,
+        uint portalIndex,
+        uint targetMapId,
+        ushort targetX,
+        ushort targetY,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var portalsFile = DataFile<Portal>.Load(Path.Combine(dataDir, DataFileKinds.Portals.FileName), DataFileKinds.Portals.ArrayKey);
+
+            var next = new Portal
+            {
+                MapID = mapId, PortalIndex = portalIndex,
+                TargetMapID = targetMapId, TargetX = targetX, TargetY = targetY,
+            };
+
+            uint lookup = originalIndex ?? portalIndex;
+            int idx = FindIndex(portalsFile, p => p.MapID == mapId && p.PortalIndex == lookup);
+            if (idx >= 0)
+            {
+                if (!PortalSame(portalsFile[idx], next))
+                    portalsFile[idx] = next;
+            }
+            else
+            {
+                portalsFile.Add(next);
+            }
+
+            var res = await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Portals.FileName, portalsFile, [],
+                audit, mapId, $"Saved portal {portalIndex} on map {mapId} -> {targetMapId} ({targetX}, {targetY})");
+            return res with { EntityId = portalIndex };
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    public async Task<SingleEditResult> DeletePortalAsync(
+        uint mapId,
+        uint portalIndex,
+        AuditLog audit,
+        CancellationToken ct)
+    {
+        await this.WriteGate.WaitAsync(ct);
+        try
+        {
+            var dataDir = this.ResolveDataDirectory();
+            var portalsFile = DataFile<Portal>.Load(Path.Combine(dataDir, DataFileKinds.Portals.FileName), DataFileKinds.Portals.ArrayKey);
+            int idx = FindIndex(portalsFile, p => p.MapID == mapId && p.PortalIndex == portalIndex);
+            if (idx < 0)
+                return new SingleEditResult(false, null, [], Error: "not_found");
+
+            portalsFile.RemoveAt(idx);
+            return await this.ValidateAndSaveAsync(dataDir, DataFileKinds.Portals.FileName, portalsFile, [],
+                audit, mapId, $"Deleted portal {portalIndex} on map {mapId}");
+        }
+        finally
+        {
+            this.WriteGate.Release();
+        }
+    }
+
+    private async Task<SingleEditResult> ValidateAndSaveAsync(
+        string dataDir,
+        string fileName,
+        DataFile file,
+        List<MapEditProblemDto> preProblems,
+        AuditLog audit,
+        uint mapId,
+        string summary)
+    {
+        var set = this.CreateDataSet(dataDir);
+        set.Use(fileName, file);
+
+        var problems = new List<MapEditProblemDto>(preProblems);
+        if (file.IsChanged)
+            problems.AddRange(ToDtos(set.Validate(fileName)));
+
+        if (problems.Any(p => p.Level == "error"))
+            return new SingleEditResult(false, null, [.. problems]);
+
+        if (file.IsChanged)
+        {
+            file.Save();
+            await audit.WriteAsync("map.save", "map", mapId.ToString(),
+                after: new { mapId, file = fileName }, summary: summary);
+        }
+
+        return new SingleEditResult(true, file.IsChanged ? fileName : null, [.. problems]);
+    }
+
+    private static int FindIndex<T>(DataFile<T> file, Func<T, bool> predicate) where T : class
+    {
+        for (int i = 0; i < file.Count; i++)
+            if (predicate(file[i]))
+                return i;
+        return -1;
+    }
+
+    private static uint NextNpcId(string dataDir, DataFile<Npc> npcsFile)
+    {
+        uint max = 0;
+        for (int i = 0; i < npcsFile.Count; i++)
+            if (npcsFile[i].NpcID > max) max = npcsFile[i].NpcID;
+
+        var goalsPath = Path.Combine(dataDir, DataFileKinds.Goals.FileName);
+        if (File.Exists(goalsPath))
+        {
+            try
+            {
+                var goalsFile = DataFile<Npc>.Load(goalsPath, DataFileKinds.Goals.ArrayKey);
+                for (int i = 0; i < goalsFile.Count; i++)
+                    if (goalsFile[i].NpcID > max) max = goalsFile[i].NpcID;
+            }
+            catch { }
+        }
+        return max + 1;
+    }
+
     private DataSet CreateDataSet(string dataDir) => this.Client.CreateDataSet(dataDir);
 
     private static MapEditProblemDto ToDto(DataProblem p) =>

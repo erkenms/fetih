@@ -1,0 +1,86 @@
+@page
+@model Fetih.Web.Pages.Admin.Maps.IndexModel
+@{
+    ViewData["Title"] = "Haritalar";
+}
+
+<panel title="Haritalar (@Model.Maps.Length / @Model.TotalCount)" icon="711394">
+    <form method="get" class="form-row">
+        <div>
+            <label for="map-q">Ara</label>
+            <input id="map-q" type="search" name="q" value="@Model.Q" placeholder="Harita adı, takma ad veya numara">
+        </div>
+        <div style="flex: 0 0 auto">
+            <label class="check">
+                <input type="checkbox" name="onlyWithEntities" value="true" checked="@Model.OnlyWithEntities">
+                Sadece varlıklı
+            </label>
+        </div>
+        <div style="flex: 0 0 auto">
+            <label class="check">
+                <input type="checkbox" name="onlyProblems" value="true" checked="@Model.OnlyProblems">
+                Sadece sorunlu
+            </label>
+        </div>
+        <div style="flex: 0 0 auto">
+            <button>Filtrele</button>
+            @if (!string.IsNullOrWhiteSpace(Model.Q) || Model.OnlyProblems || Model.OnlyWithEntities)
+            {
+                <a class="button plain" href="/admin/maps">Temizle</a>
+            }
+        </div>
+    </form>
+
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Harita</th>
+                <th>NPC</th>
+                <th>Doğma</th>
+                <th>Geçit</th>
+                <th>Sorunlar</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var m in Model.Maps)
+            {
+                <tr>
+                    <td><a href="/admin/maps/@m.Id">@m.Id</a></td>
+                    <td>
+                        <a href="/admin/maps/@m.Id">@m.DisplayName</a>
+                        @if (m.ServerName != null || m.Aliases.Length > 0)
+                        {
+                            <span class="muted">
+                                @m.ServerName@(m.ServerName != null && m.Aliases.Length > 0 ? " · " : "")@string.Join(", ", m.Aliases)
+                            </span>
+                        }
+                    </td>
+                    <td>@m.NpcCount</td>
+                    <td>@m.SpawnCount</td>
+                    <td>@m.PortalCount</td>
+                    <td>
+                        @if (m.Errors > 0)
+                        {
+                            <span class="tag bad">@m.Errors hata</span>
+                        }
+                        @if (m.Warnings > 0)
+                        {
+                            <span class="tag">@m.Warnings uyarı</span>
+                        }
+                        @if (m.Errors == 0 && m.Warnings == 0)
+                        {
+                            <span class="muted">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (Model.Maps.Length == 0)
+            {
+                <tr><td colspan="6" class="empty">Eşleşen harita bulunamadı.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</panel>

@@ -1,0 +1,62 @@
+@page "/admin/maps/{id:long}"
+@model Fetih.Web.Pages.Admin.Maps.DetailModel
+@{
+    ViewData["Title"] = $"{Model.DisplayName} (#{Model.MapId})";
+}
+
+<link rel="stylesheet" href="~/lib/leaflet/leaflet.css" asp-append-version="true">
+
+<panel title="@Model.DisplayName (#@Model.MapId)" icon="711394">
+    <div class="map-toolbar">
+        <a class="button plain" href="/admin/maps">« Haritalar</a>
+        <div class="map-switcher">
+            <partial name="_Picker" model='new PickerField(PickerKind.Map, "switchMapId", Model.MapId)' />
+        </div>
+        <div class="map-layers">
+            <label class="check"><input type="checkbox" data-layer="covers" checked> Kaplamalar</label>
+            <label class="check"><input type="checkbox" data-layer="npcs" checked> NPC (@Model.Edit.Npcs.Length)</label>
+            <label class="check"><input type="checkbox" data-layer="spawns" checked> Doğma (@Model.Edit.Spawns.Length)</label>
+            <label class="check"><input type="checkbox" data-layer="portals" checked> Geçit (@Model.Edit.Portals.Length)</label>
+            @if (Model.Map.HasGrid)
+            {
+                <label class="check"><input type="checkbox" data-layer="walkability"> Yürünebilirlik</label>
+                <label class="check"><input type="checkbox" data-layer="elevation"> Yükseklik</label>
+            }
+            <button type="button" class="plain" id="map-fit">Sığdır</button>
+        </div>
+        @if (Model.CanEdit)
+        {
+            <div class="map-edit-actions">
+                <button type="button" class="plain" data-place="npc">+ NPC</button>
+                <button type="button" class="plain" data-place="spawn">+ Doğma</button>
+                <button type="button" class="plain" data-place="portal">+ Geçit</button>
+                <form method="post" asp-page-handler="Reload" asp-route-id="@Model.MapId" class="inline">
+                    <button disabled="@(!Model.GameConnected)" title="maps.json, npcs.json, spawns.json ve portals.json dosyalarını oyuna yükler">Oyuna yükle</button>
+                </form>
+            </div>
+        }
+    </div>
+
+    <div id="map-place-banner" class="alert inline" hidden>
+        <span id="map-place-text"></span>
+        <button type="button" class="plain" id="map-place-cancel">İptal</button>
+    </div>
+
+    <div class="map-workspace">
+        <div class="map-stage">
+            <div id="map-canvas" class="map-canvas"></div>
+            <div id="map-status" class="map-status muted">Hücre: —</div>
+        </div>
+        <aside id="map-panel" class="map-panel">
+            <partial name="_Panel" model="Model" />
+        </aside>
+    </div>
+</panel>
+
+<form id="map-antiforgery" method="post" hidden>
+    @Html.AntiForgeryToken()
+</form>
+
+<script id="map-data" type="application/json">@Html.Raw(Model.MapDataJson)</script>
+<script src="~/lib/leaflet/leaflet.js" asp-append-version="true" defer></script>
+<script src="~/js/map.js" asp-append-version="true" defer></script>

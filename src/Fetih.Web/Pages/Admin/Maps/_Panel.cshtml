@@ -1,0 +1,439 @@
+@model Fetih.Web.Pages.Admin.Maps.DetailModel
+@using Fetih.Web.Features.MapEdit
+
+@if (Model.SyncDataJson != null)
+{
+    <script type="application/json" data-map-sync>@Html.Raw(Model.SyncDataJson)</script>
+}
+
+@if (Model.PanelNotice != null)
+{
+    <div class="flash">@Model.PanelNotice</div>
+}
+@if (Model.PanelError != null)
+{
+    <div class="alert inline">@Model.PanelError</div>
+}
+@if (Model.PanelProblems.Length > 0)
+{
+    <ul class="map-problems">
+        @foreach (var p in Model.PanelProblems)
+        {
+            <li>
+                <span class="tag @(p.Level == "error" ? "bad" : "")">@(p.Level == "error" ? "Hata" : "Uyarı")</span>
+                <b>@p.File@(p.Line.HasValue ? $":{p.Line}" : "")</b>: @p.Message
+            </li>
+        }
+    </ul>
+}
+
+@if (Model.PanelKind == "npc" && Model.SelectedNpc is { } npc)
+{
+    <div class="map-panel-head">
+        <h3>@(Model.IsNewEntity ? "Yeni NPC" : $"{npc.Name ?? "NPC"} #{npc.Id}")</h3>
+        <button type="button" class="plain" data-select-map>« Harita</button>
+    </div>
+
+    @if (Model.CanEdit)
+    {
+        <form method="post" asp-page-handler="SaveNpc" asp-route-id="@Model.MapId"
+              hx-post="@Url.Page("Detail", "SaveNpc", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML">
+            @if (!Model.IsNewEntity)
+            {
+                <input type="hidden" name="OriginalId" value="@npc.Id">
+            }
+            <div class="form-row">
+                <div>
+                    <label for="npc-id">ID</label>
+                    <input id="npc-id" name="Id" type="number" min="1" value="@npc.Id" required>
+                </div>
+                <div>
+                    <label for="npc-role">Rol</label>
+                    <input id="npc-role" name="Role" type="number" min="0" max="255" value="@npc.Role" required>
+                </div>
+            </div>
+            <label>Görünüş</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Look, "Lookface", npc.Lookface)' />
+            <div class="form-row">
+                <div>
+                    <label for="npc-x">X</label>
+                    <input id="npc-x" name="X" type="number" min="0" max="65535" value="@npc.X" required>
+                </div>
+                <div>
+                    <label for="npc-y">Y</label>
+                    <input id="npc-y" name="Y" type="number" min="0" max="65535" value="@npc.Y" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="npc-life">Can</label>
+                    <input id="npc-life" name="Life" type="number" min="0" value="@npc.Life">
+                </div>
+                <div>
+                    <label for="npc-level">Seviye</label>
+                    <input id="npc-level" name="Level" type="number" min="0" max="255" value="@npc.Level">
+                </div>
+            </div>
+            <div class="buttons">
+                <button>Kaydet</button>
+            </div>
+        </form>
+
+        @if (!Model.IsNewEntity)
+        {
+            <form method="post" asp-page-handler="DeleteNpc" asp-route-id="@Model.MapId"
+                  hx-post="@Url.Page("Detail", "DeleteNpc", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML"
+                  hx-confirm="NPC #@npc.Id silinsin mi?">
+                <input type="hidden" name="npcId" value="@npc.Id">
+                <div class="buttons">
+                    <button class="plain">Sil</button>
+                </div>
+            </form>
+        }
+    }
+    else
+    {
+        <table class="grid">
+            <tr><th>ID</th><td>@npc.Id</td></tr>
+            <tr><th>Görünüş</th><td>@npc.Lookface</td></tr>
+            <tr><th>Rol</th><td>@npc.Role</td></tr>
+            <tr><th>Konum</th><td>@npc.X, @npc.Y</td></tr>
+            @if (npc.Life > 0 || npc.Level > 0)
+            {
+                <tr><th>Can / Seviye</th><td>@npc.Life / @npc.Level</td></tr>
+            }
+        </table>
+    }
+
+    @if (Model.SelectedNpcDialog is { } dialog)
+    {
+        <div class="map-dialog-section">
+            <h4>Konuşma <span class="tag info">@DetailModel.DialogKindText(dialog.Npc.Kind)</span></h4>
+            @if (dialog.Handler != null)
+            {
+                <div class="muted">@dialog.Handler (@dialog.SourceFile)</div>
+            }
+            @if (dialog.Fare.HasValue && dialog.Fare.Value > 0)
+            {
+                <div class="muted">Ücret: @dialog.Fare.Value altın</div>
+            }
+            @if (dialog.ShopItemCount.HasValue)
+            {
+                <div class="muted">Dükkânda @dialog.ShopItemCount.Value eşya var.</div>
+            }
+            @if (dialog.Pages.Length == 0 && dialog.ShopItemCount == null && dialog.Npc.Kind != "warehouse")
+            {
+                <div class="muted">Konuşma metni bulunamadı.</div>
+            }
+            @foreach (var pageItem in dialog.Pages)
+            {
+                <div class="npc-dialog-page">
+                    @if (pageItem.FacePath != null)
+                    {
+                        <img class="npc-dialog-face" src="/assets/@pageItem.FacePath" alt="">
+                    }
+                    <div class="npc-dialog-body">
+                        @foreach (var line in pageItem.Lines)
+                        {
+                            <p>@line</p>
+                        }
+                        @if (pageItem.Options.Length > 0)
+                        {
+                            <ul class="npc-dialog-options">
+                                @foreach (var opt in pageItem.Options)
+                                {
+                                    <li>
+                                        @if (opt.Option.HasValue)
+                                        {
+                                            <span class="tag">@opt.Option</span>
+                                        }
+                                        <span>@opt.Text</span>
+                                        @if (opt.TargetMapId.HasValue)
+                                        {
+                                            <a href="/admin/maps/@opt.TargetMapId">→ @(opt.TargetMapName ?? $"#{opt.TargetMapId}") (@opt.TargetX, @opt.TargetY)</a>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+else if (Model.PanelKind == "goal" && Model.SelectedGoal is { } goal)
+{
+    <div class="map-panel-head">
+        <h3>Eğitim hedefi #@goal.Id</h3>
+        <button type="button" class="plain" data-select-map>« Harita</button>
+    </div>
+    <table class="grid">
+        <tr><th>ID</th><td>@goal.Id</td></tr>
+        <tr><th>Görünüş</th><td>@goal.Lookface</td></tr>
+        <tr><th>Konum</th><td>@goal.X, @goal.Y</td></tr>
+        <tr><th>Can</th><td>@goal.Life</td></tr>
+    </table>
+    <p class="muted">Eğitim hedefleri <code>goals.json</code> dosyasından gelir.</p>
+}
+else if (Model.PanelKind == "spawn" && Model.SelectedSpawn is { } spawn)
+{
+    <div class="map-panel-head">
+        <h3>@(Model.IsNewEntity ? "Yeni doğma noktası" : $"{spawn.MonsterName ?? "Doğma"} #{spawn.Id}")</h3>
+        <button type="button" class="plain" data-select-map>« Harita</button>
+    </div>
+
+    @if (spawn.Spread == 0 && spawn.Amount == 1)
+    {
+        <p class="muted">Tek figür (yayılım 0, adet 1): canavarın görünüşüyle çizilir.</p>
+    }
+
+    @if (Model.CanEdit)
+    {
+        <form method="post" asp-page-handler="SaveSpawn" asp-route-id="@Model.MapId"
+              hx-post="@Url.Page("Detail", "SaveSpawn", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML">
+            @if (!Model.IsNewEntity)
+            {
+                <input type="hidden" name="OriginalId" value="@spawn.Id">
+            }
+            <div class="form-row">
+                <div>
+                    <label for="spawn-id">ID</label>
+                    <input id="spawn-id" name="Id" type="number" min="1" value="@spawn.Id" required>
+                </div>
+                <div>
+                    <label for="spawn-respawn">Yeniden doğma (sn)</label>
+                    <input id="spawn-respawn" name="Respawn" type="number" min="1" value="@spawn.Respawn" required>
+                </div>
+            </div>
+            <label>Canavar</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Monster, "MonsterId", spawn.MonsterId == 0 ? null : spawn.MonsterId)' />
+            <div class="form-row">
+                <div>
+                    <label for="spawn-x">X</label>
+                    <input id="spawn-x" name="X" type="number" min="0" max="65535" value="@spawn.X" required>
+                </div>
+                <div>
+                    <label for="spawn-y">Y</label>
+                    <input id="spawn-y" name="Y" type="number" min="0" max="65535" value="@spawn.Y" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="spawn-spread">Yayılım</label>
+                    <input id="spawn-spread" name="Spread" type="number" min="0" max="65535" value="@spawn.Spread" required>
+                </div>
+                <div>
+                    <label for="spawn-amount">Adet</label>
+                    <input id="spawn-amount" name="Amount" type="number" min="1" value="@spawn.Amount" required>
+                </div>
+            </div>
+            <div class="buttons">
+                <button>Kaydet</button>
+            </div>
+        </form>
+
+        @if (!Model.IsNewEntity)
+        {
+            <form method="post" asp-page-handler="DeleteSpawn" asp-route-id="@Model.MapId"
+                  hx-post="@Url.Page("Detail", "DeleteSpawn", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML"
+                  hx-confirm="Doğma noktası #@spawn.Id silinsin mi?">
+                <input type="hidden" name="spawnId" value="@spawn.Id">
+                <div class="buttons">
+                    <button class="plain">Sil</button>
+                </div>
+            </form>
+        }
+    }
+    else
+    {
+        <table class="grid">
+            <tr><th>ID</th><td>@spawn.Id</td></tr>
+            <tr><th>Canavar</th><td>@(spawn.MonsterName ?? $"#{spawn.MonsterId}") (#@spawn.MonsterId)</td></tr>
+            <tr><th>Konum</th><td>@spawn.X, @spawn.Y</td></tr>
+            <tr><th>Yayılım / Adet</th><td>@spawn.Spread / @spawn.Amount</td></tr>
+            <tr><th>Yeniden doğma</th><td>@spawn.Respawn sn</td></tr>
+        </table>
+    }
+}
+else if (Model.PanelKind == "portal" && Model.SelectedPortal is { } portal)
+{
+    <div class="map-panel-head">
+        <h3>@(Model.IsNewEntity ? "Yeni geçit" : $"Geçit #{portal.Index}")</h3>
+        <button type="button" class="plain" data-select-map>« Harita</button>
+    </div>
+
+    @if (portal.X.HasValue && portal.Y.HasValue)
+    {
+        <p class="muted">DMap konumu: @portal.X, @portal.Y</p>
+    }
+
+    @if (portal.ToMap.HasValue)
+    {
+        <p>
+            Hedef: <a href="/admin/maps/@portal.ToMap">@(portal.ToMapName ?? $"Harita #{portal.ToMap}") (#@portal.ToMap)</a>
+            @if (portal.ToX.HasValue && portal.ToY.HasValue)
+            {
+                <span class="muted">(@portal.ToX, @portal.ToY)</span>
+            }
+        </p>
+    }
+
+    @if (Model.CanEdit)
+    {
+        <form method="post" asp-page-handler="SavePortal" asp-route-id="@Model.MapId"
+              hx-post="@Url.Page("Detail", "SavePortal", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML">
+            @if (!Model.IsNewEntity)
+            {
+                <input type="hidden" name="OriginalIndex" value="@portal.Index">
+            }
+            <label for="portal-index">Geçit indeksi (DMap)</label>
+            <input id="portal-index" name="PortalIndex" type="number" min="0" value="@portal.Index" required>
+            <label>Hedef harita</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Map, "ToMap", portal.ToMap)' />
+            <div class="form-row">
+                <div>
+                    <label for="portal-tox">Hedef X</label>
+                    <input id="portal-tox" name="ToX" type="number" min="0" max="65535" value="@(portal.ToX ?? 0)" required>
+                </div>
+                <div>
+                    <label for="portal-toy">Hedef Y</label>
+                    <input id="portal-toy" name="ToY" type="number" min="0" max="65535" value="@(portal.ToY ?? 0)" required>
+                </div>
+            </div>
+            <div class="buttons">
+                <button>Kaydet</button>
+            </div>
+        </form>
+
+        @if (!Model.IsNewEntity && portal.ToMap.HasValue)
+        {
+            <form method="post" asp-page-handler="DeletePortal" asp-route-id="@Model.MapId"
+                  hx-post="@Url.Page("Detail", "DeletePortal", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML"
+                  hx-confirm="Geçit #@portal.Index hedefi silinsin mi?">
+                <input type="hidden" name="portalIndex" value="@portal.Index">
+                <div class="buttons">
+                    <button class="plain">Sil</button>
+                </div>
+            </form>
+        }
+    }
+    else if (!portal.ToMap.HasValue)
+    {
+        <p class="muted">Bu geçit için hedef tanımlanmamış.</p>
+    }
+}
+else
+{
+    var s = Model.Edit.Settings;
+    <div class="map-panel-head">
+        <h3>Harita ayarları</h3>
+        <span class="muted">#@Model.MapId</span>
+    </div>
+
+    @if (Model.CanEdit)
+    {
+        <form method="post" asp-page-handler="SaveSettings" asp-route-id="@Model.MapId"
+              hx-post="@Url.Page("Detail", "SaveSettings", new { id = Model.MapId })" hx-target="#map-panel" hx-swap="innerHTML">
+            <label for="map-name">Sunucu adı</label>
+            <input id="map-name" name="Name" type="text" value="@s.Name" style="width: 100%">
+
+            <label for="map-aliases">Takma adlar (virgülle)</label>
+            <input id="map-aliases" name="Aliases" type="text" value="@string.Join(", ", s.Aliases)" style="width: 100%">
+
+            <div class="form-row">
+                <div>
+                    <label for="map-portal-x">Giriş X</label>
+                    <input id="map-portal-x" name="PortalX" type="number" min="0" max="65535" value="@s.Portal?.X">
+                </div>
+                <div>
+                    <label for="map-portal-y">Giriş Y</label>
+                    <input id="map-portal-y" name="PortalY" type="number" min="0" max="65535" value="@s.Portal?.Y">
+                </div>
+            </div>
+
+            <label>Doğma haritası</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Map, "RebornMap", s.RebornMap)' />
+
+            <label>Parşömen eşyası</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Item, "ScrollTypeId", s.ScrollTypeId)' />
+
+            <label for="map-ride">Binek bonusu</label>
+            <input id="map-ride" name="RidePlus" type="number" min="0" max="255" value="@s.RidePlus">
+
+            <label>Bayraklar</label>
+            <div class="map-flags">
+                @foreach (var flag in Model.Edit.AvailableFlags)
+                {
+                    <label class="check">
+                        <input type="checkbox" name="Flags" value="@flag" checked="@s.Flags.Contains(flag)">
+                        @flag
+                    </label>
+                }
+            </div>
+
+            <div class="buttons">
+                <button>Kaydet</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <table class="grid">
+            <tr><th>Ad</th><td>@(s.Name ?? "—")</td></tr>
+            <tr><th>Takma adlar</th><td>@(s.Aliases.Length > 0 ? string.Join(", ", s.Aliases) : "—")</td></tr>
+            <tr><th>Giriş noktası</th><td>@(s.Portal != null ? $"{s.Portal.X}, {s.Portal.Y}" : "—")</td></tr>
+            <tr>
+                <th>Doğma haritası</th>
+                <td>
+                    @if (s.RebornMap.HasValue)
+                    {
+                        <a href="/admin/maps/@s.RebornMap">@(Model.Map.RebornMapName ?? $"#{s.RebornMap}")</a>
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </td>
+            </tr>
+            <tr><th>Parşömen</th><td>@(s.ScrollTypeId?.ToString() ?? "—")</td></tr>
+            <tr><th>Binek bonusu</th><td>@s.RidePlus</td></tr>
+            <tr>
+                <th>Bayraklar</th>
+                <td>
+                    @if (s.Flags.Length > 0)
+                    {
+                        foreach (var f in s.Flags)
+                        {
+                            <span class="tag">@f</span>
+                        }
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </td>
+            </tr>
+        </table>
+    }
+
+    <div class="map-problems-section">
+        <h4>Veri sorunları (@Model.Edit.Problems.Length)</h4>
+        @if (Model.Edit.Problems.Length == 0)
+        {
+            <p class="muted">Bu haritada sorun yok.</p>
+        }
+        else
+        {
+            <ul class="map-problems">
+                @foreach (var p in Model.Edit.Problems)
+                {
+                    <li>
+                        <span class="tag @(p.Level == "error" ? "bad" : "")">@(p.Level == "error" ? "Hata" : "Uyarı")</span>
+                        <b>@p.File@(p.Line.HasValue ? $":{p.Line}" : "")</b>: @p.Message
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+}
