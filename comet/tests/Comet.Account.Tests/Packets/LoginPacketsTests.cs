@@ -34,13 +34,13 @@ namespace Comet.Account.Tests.Packets
             BitConverter.TryWriteBytes(bytes.AsSpan(0), (ushort)240);
             BitConverter.TryWriteBytes(bytes.AsSpan(2), (ushort)1124);
             Encoding.ASCII.GetBytes("tester").CopyTo(bytes, 8);
-            Encoding.ASCII.GetBytes("Storm").CopyTo(bytes, 136);
+            Encoding.ASCII.GetBytes("Altay").CopyTo(bytes, 136);
 
             var msg = new MsgAccountSRP6();
             msg.Decode(bytes);
             Assert.Equal("tester", msg.Username);
             Assert.Equal(Encoding.ASCII.GetBytes("tester"), msg.UsernameBytes);
-            Assert.Equal("Storm", msg.Realm);
+            Assert.Equal("Altay", msg.Realm);
         }
 
         [Fact]

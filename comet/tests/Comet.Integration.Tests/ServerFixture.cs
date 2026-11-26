@@ -18,7 +18,7 @@ namespace Comet.Integration.Tests
 
     public sealed class ServerFixture : IAsyncLifetime
     {
-        public const string Realm = "Storm";
+        public const string Realm = "Altay";
         public const string StaffRealm = "Staff";
         public const string Host = "127.0.0.1";
 

@@ -27,8 +27,8 @@ Grafana). `--profile deploy` adds the three servers and an HTTPS proxy in front 
 ## Building the client and web assets
 
 `tools/build.cs` builds the client and web assets from the original 5619 base client.
-`Server.dat` is generated from `client/servers.json` (which lists both realms, `Storm`, production, and
-`Test`, staff only) using `--ip` or `FETIH_ACCOUNT_IP` (an IPv4 address; `ServerIP` holds at most 15
+`Server.dat` is generated from `client/servers.json` (which lists both realms, `Altay`, production, and
+`Mihenk`, test, staff only) using `--ip` or `FETIH_ACCOUNT_IP` (an IPv4 address; `ServerIP` holds at most 15
 characters).
 
 On a machine with the .NET 11 SDK:

@@ -5,15 +5,15 @@
   },
   "realms": [
     {
-      "name": "Storm",
+      "name": "Altay",
       "port": 9960,
-      "flashName": "Storm",
+      "flashName": "Altay",
       "flashIcon": "Group2/server3.swf"
     },
     {
-      "name": "Test",
+      "name": "Mihenk",
       "port": 9960,
-      "flashName": "Test",
+      "flashName": "Mihenk",
       "flashIcon": "Group2/server4.swf"
     }
   ]
