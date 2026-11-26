@@ -43,6 +43,11 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
 
 ## Findings
 
+- **Files the client writes** (2026-11-26, Windows 5619 strings and a run's file times):
+  `ini/GameSetUp.ini`, `Log/<account>/Setup.ini`, `debug/<date>.log` and `.dmp`,
+  `ScreenShot/%u.jpg`, `ChatLog.log`, `debug.log`, `leavewordsystem.log`, root `p2p*.log`.
+  `GraphicData.dll` also rewrites `ini/c3.wdb` (a cache built from the ini files, through
+  `c3.wdb.tmp`). The patch manifest flags these player-owned (`PlayerOwnedFiles`).
 - **Role camera** (2026-11-26, Mac 1133): roles are drawn in an orthographic camera one world
   unit to a pixel (`CMyBitmap::GameCameraCreate`: eye (w/2, -1000, h/2) looking along +y, up
   -z). `C3DRole::Draw` turns the model around z by its angle, then around x by
