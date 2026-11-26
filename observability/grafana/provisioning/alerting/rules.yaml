@@ -1,0 +1,399 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: fetih-production
+    folder: Fetih
+    interval: 1m
+    rules:
+      - uid: fetih-game-down
+        title: Game server down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'max by (env) (up{job="game", env="prod"})'
+              instant: true
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Game server is down
+          description: Prometheus cannot scrape the production game server metrics endpoint for 2 minutes.
+        labels:
+          severity: critical
+          category: infra
+
+      - uid: fetih-account-down
+        title: Account server down
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'max(up{job="account", env="shared"})'
+              instant: true
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 1
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: Alerting
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: Account server is down
+          description: Prometheus cannot scrape the account server metrics endpoint for 2 minutes.
+        labels:
+          severity: critical
+          category: infra
+
+      - uid: fetih-disk-high
+        title: Disk usage over 85%
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: '100 * (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse\\.lxcfs|squashfs|vfat|overlay", mountpoint!~"^/(boot|dev|proc|run|sys)(/.*)?$"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse\\.lxcfs|squashfs|vfat|overlay", mountpoint!~"^/(boot|dev|proc|run|sys)(/.*)?$"}))'
+              instant: true
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 85
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Disk usage over 85%
+          description: Filesystem {{ $labels.mountpoint }} is {{ printf "%.1f" $values.A.Value }}% full.
+        labels:
+          severity: warning
+          category: infra
+
+      - uid: fetih-memory-high
+        title: Memory usage high
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: '100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))'
+              instant: true
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 90
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: Host memory usage over 90%
+          description: Available memory is low ({{ printf "%.1f" $values.A.Value }}% used).
+        labels:
+          severity: warning
+          category: infra
+
+      - uid: fetih-error-spike
+        title: Error log rate spike
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'sum by (server) (count_over_time({env=~"prod|shared", level=~"error|fatal"}[5m]))'
+              queryType: instant
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 10
+                    type: gte
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Error log spike on {{ $labels.server }}
+          description: "{{ $values.A.Value }} error/fatal log lines in the last 5 minutes on {{ $labels.server }}."
+        labels:
+          severity: warning
+          category: logs
+
+      - uid: fetih-ban
+        title: Player banned
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'sum by (accountId, detail) (count_over_time({env="prod", event="gm.ban"} | json accountId, detail, result | result=~"online|offline" [2m])) or sum by (name, arguments) (count_over_time({env="prod", event="gm.command"} | json name, command, arguments, result | command="ban" | result="ok" [2m]))'
+              queryType: instant
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Player banned on production game server
+          description: "{{ if $labels.accountId }}Account {{ $labels.accountId }} banned from the web: {{ $labels.detail }}{{ else }}{{ $labels.name }} ran /ban {{ $labels.arguments }}{{ end }}"
+        labels:
+          severity: info
+          category: event
+
+      - uid: fetih-cheat-report
+        title: Cheat report
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              expr: 'sum by (name, code) (count_over_time({env="prod", event="session.cheat_report"} | json name, code [2m]))'
+              queryType: instant
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 0
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: Cheat report on production game server
+          description: "{{ $labels.name }}'s client reported cheat code {{ $labels.code }}"
+        labels:
+          severity: warning
+          category: event
+
+      - uid: fetih-backup-stale
+        title: No successful backup in 26 hours
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: 'time() - fetih_backup_last_success_timestamp_seconds'
+              instant: true
+              refId: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params:
+                      - 93600
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params:
+                      - C
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: No successful backup in 26 hours
+          description: Last successful backup was over 26 hours ago.
+        labels:
+          severity: warning
+          category: infra

@@ -54,6 +54,21 @@ services:
     depends_on:
       - loki
 
+  # Host metrics for the disk and memory alerts, and the backup job's textfile metrics
+  node-exporter:
+    profiles: [deploy]
+    container_name: fetih-node-exporter
+    mem_limit: 64m
+    image: docker.io/prom/node-exporter:v1.9.1
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+      - --collector.textfile.directory=/textfile
+    volumes:
+      - /:/host:ro,rslave
+      - ${BACKUP_METRICS_DIR:-./observability/node-exporter/textfile}:/textfile:ro
+
   prometheus:
     container_name: fetih-prometheus
     mem_limit: 192m
@@ -87,6 +102,7 @@ services:
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/overview.json
+      GRAFANA_DISCORD_WEBHOOK: ${GRAFANA_DISCORD_WEBHOOK:-http://127.0.0.1:9/unconfigured}
     ports:
       - "127.0.0.1:3000:3000"
     volumes:
@@ -111,6 +127,7 @@ services:
     environment:
       COMET_ACCOUNT_Database__Hostname: db
       COMET_ACCOUNT_Database__Password: ${DB_PASSWORD:-password}
+      COMET_ACCOUNT_Metrics__IPAddress: 0.0.0.0
       COMET_ACCOUNT_Logging__Directory: /logs/shared/account
       COMET_ACCOUNT_Logging__Level: info
       COMET_ACCOUNT_Logging__ConsoleLevel: warn

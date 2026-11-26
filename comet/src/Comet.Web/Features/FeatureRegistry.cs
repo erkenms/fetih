@@ -32,7 +32,6 @@ public static class FeatureRegistry
         new Live.LiveFeature(),
         new Looks.LooksFeature(),
         new Packets.PacketsFeature(),
-        new Notifications.NotificationsFeature(),
         new Server.ServerFeature(),
     ];
 }

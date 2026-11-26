@@ -1844,70 +1844,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/notifications/webhooks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listNotificationWebhooks"];
-        put?: never;
-        post: operations["createNotificationWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/notifications/webhooks/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["updateNotificationWebhook"];
-        post?: never;
-        delete: operations["deleteNotificationWebhook"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/notifications/webhooks/{id}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["testNotificationWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/notifications/deliveries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["listNotificationDeliveries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/server/status": {
         parameters: {
             query?: never;
@@ -4158,43 +4094,6 @@ export interface components {
             /** Format: uint64 */
             donation: number;
         };
-        NotificationDeliveryDto: {
-            /** Format: uint64 */
-            id: number;
-            /** Format: uint32 */
-            webhookId: number;
-            webhookName: string;
-            category: string;
-            title: string;
-            summary: string;
-            success: boolean;
-            /** Format: int32 */
-            statusCode: null | number;
-            error: null | string;
-            /** Format: date-time */
-            sentAt: string;
-        };
-        NotificationWebhookDto: {
-            /** Format: uint32 */
-            id: number;
-            name: string;
-            maskedUrl: string;
-            enabled: boolean;
-            notifyBans: boolean;
-            notifyErrors: boolean;
-            notifyCheatReports: boolean;
-            /** Format: uint32 */
-            minIntervalSeconds: number;
-            /** Format: date-time */
-            lastSentAt: null | string;
-            lastError: null | string;
-            /** Format: uint32 */
-            createdBy: number;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
         NpcDialogDetailResponse: {
             npc: components["schemas"]["NpcDialogSummary"];
             /** Format: uint16 */
@@ -4860,16 +4759,6 @@ export interface components {
             hash: string;
             entries: components["schemas"]["TeleporterEntryInput"][];
         };
-        SaveWebhookRequest: {
-            name: string;
-            webhookUrl: null | string;
-            enabled: boolean;
-            notifyBans: boolean;
-            notifyErrors: boolean;
-            notifyCheatReports: boolean;
-            /** Format: uint32 */
-            minIntervalSeconds: number;
-        };
         SendBroadcastRequest: {
             channel: components["schemas"]["BroadcastChannel"];
             text: string;
@@ -5126,12 +5015,6 @@ export interface components {
             hash: string;
             entries: components["schemas"]["TeleporterEntryDto"][];
             problems: components["schemas"]["DataProblemDto"][];
-        };
-        TestWebhookResponse: {
-            ok: boolean;
-            /** Format: int32 */
-            statusCode: null | number;
-            error: null | string;
         };
         TimelineResponse: {
             entries: components["schemas"]["LogEntry"][];
@@ -8935,138 +8818,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ApiError"];
-                };
-            };
-        };
-    };
-    listNotificationWebhooks: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationWebhookDto"][];
-                };
-            };
-        };
-    };
-    createNotificationWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveWebhookRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationWebhookDto"];
-                };
-            };
-        };
-    };
-    updateNotificationWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveWebhookRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationWebhookDto"];
-                };
-            };
-        };
-    };
-    deleteNotificationWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    testNotificationWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TestWebhookResponse"];
-                };
-            };
-        };
-    };
-    listNotificationDeliveries: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationDeliveryDto"][];
                 };
             };
         };

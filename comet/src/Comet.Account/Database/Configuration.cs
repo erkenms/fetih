@@ -8,6 +8,7 @@ namespace Comet.Account.Database
         public DatabaseConfiguration Database { get; set; }
         public NetworkConfiguration Network { get; set; }
         public LoggingConfiguration Logging { get; set; }
+        public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
 
         public class DatabaseConfiguration
         {

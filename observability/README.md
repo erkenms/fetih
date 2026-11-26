@@ -4,10 +4,11 @@
 
 | Service | Port | What |
 |---|---|---|
-| Grafana | 3000 | Dashboards; viewers need no login, `admin`/`admin` to edit |
-| Loki | 3100 | Logs from `comet/src/Comet.*/logs/*.jsonl` (dev) and `/logs/*/*.jsonl` (containers), per-event retention |
-| Prometheus | 9090 | Scrapes the game's `/metrics` (`Metrics` in `Comet.Game.config`, port 9818), 30 days |
+| Grafana | 3000 | Dashboards and alerts; viewers need no login, `admin`/`admin` to edit |
+| Loki | 3100 | Logs from `comet/src/Comet.*/logs/*.jsonl` (dev, `env=dev`) and `/logs/<env>/<server>/*.jsonl` (containers: `prod`, `test`, `shared`), per-event retention |
+| Prometheus | 9090 | Scrapes `game` (`:9818`), `account` (`:9819`), and `node-exporter` (`:9100`), 30 days |
 | Alloy | — | Tails the main log files into Loki (audit files are excluded) |
+| Node Exporter | — | Host CPU/memory/disk metrics and backup textfile metrics (`observability/node-exporter/textfile`) |
 
 ## Retention and outputs
 
@@ -57,3 +58,13 @@ Links the web can build:
 
 The dashboards are provisioned from `grafana/dashboards/*.json`. Edit them in Grafana, then
 export the JSON over the file.
+
+## Alerting
+
+Alert rules, notification policies, and the Discord contact point are provisioned from
+`grafana/provisioning/alerting/` (production only: `env="prod"`, and `env="shared"` for the account server, so the test environment never pages).
+Set `GRAFANA_DISCORD_WEBHOOK` in `.env` to route alerts to Discord.
+
+Nightly backups expose `fetih_backup_last_success_timestamp_seconds` (Unix timestamp in
+seconds) as a `.prom` file under `BACKUP_METRICS_DIR` (default
+`observability/node-exporter/textfile`), which `node-exporter` serves to Prometheus.

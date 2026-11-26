@@ -16,3 +16,18 @@ scrape_configs:
         labels:
           server: game
           env: dev
+
+  - job_name: account
+    static_configs:
+      - targets: ["account:9819"]
+        labels:
+          server: account
+          env: shared
+      - targets: ["host.containers.internal:9819"]
+        labels:
+          server: account
+          env: dev
+
+  - job_name: node
+    static_configs:
+      - targets: ["node-exporter:9100"]

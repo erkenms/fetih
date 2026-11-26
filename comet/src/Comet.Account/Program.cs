@@ -73,6 +73,7 @@
             Log.Information("Launching server listener...");
             var server = new Server(config);
             var serverTask = server.StartAsync(config.Network.Port, config.Network.IPAddress);
+            AccountMetrics.Start(config.Metrics);
 
             LogEvents.For(typeof(Program), LogEvents.ServerStart).Information(
                 "Listening for new connections on {IPAddress}:{Port}",
