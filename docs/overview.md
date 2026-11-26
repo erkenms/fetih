@@ -1,43 +1,50 @@
 # Overview
 
-fetih is a Conquer Online server for the 5619 client:
+Conquer Online server for the 5619 client.
 
-- **Servers** (`src/`): `Fetih.Account` (login and realm list, `:9960`), `Fetih.Game` (game world, `:5816`, RPC `:5817`), and `Fetih.Web` (public site and admin studio, `:5820`, talking to `Fetih.Game` over RPC). `Fetih.Network`, `Fetih.Core`, `Fetih.Shared`, and `Fetih.Patch` are shared libraries; `Fetih.Bots` and `Fetih.TestClient` are bots and the headless test client.
-- **Database** (`sql/`): MariaDB with `fetih_account` and `fetih_game` (or `fetih_game_test` in the test environment). Servers apply `sql/fetih_*.sql` and `sql/migrations/` automatically on startup.
-- **Logs and metrics** (`observability/`): servers write JSONL logs and expose Prometheus metrics (`:9818` game, `:9819` account). Alloy tails logs to Loki, Prometheus scrapes metrics, and Grafana (`:3000`) serves dashboards and alerts.
-- **Client build** (`tools/build.cs`, `client/`): transforms the base 5619 client into the playable fetih client, renders map/look assets for the web, and publishes launcher patch manifests.
-
-## Layout
-
-| Folder | Contents |
+| Where | What |
 |---|---|
-| `src/` | .NET 11 servers, libraries, bots (`Fetih.Bots`), and test client (`Fetih.TestClient`) |
-| `tests/` | .NET unit and integration test projects |
-| `web/` | React + Vite frontend served by `Fetih.Web` |
-| `client/` | Client build inputs (`delete.txt`, `files/`, `patches.json`, `servers.json`, `flash/`, `rsa.pem`) |
-| `tools/` | `build.cs` and asset/client/patch build helpers |
-| `sql/` | Baseline schemas (`fetih_account.sql`, `fetih_game.sql`) and `migrations/` |
-| `deploy/` | `Containerfile`, `compose.yaml`, `compose.env.yaml`, `Caddyfile`, and env examples |
-| `observability/` | Loki, Alloy, Prometheus, and Grafana configs, dashboards, and alert rules |
-| `docs/` | Architecture, deployment, UI style, and client notes |
+| `src/` | Servers: `Fetih.Account` (login, `:9960`), `Fetih.Game` (world, `:5816`, RPC `:5817`), `Fetih.Web` (site and admin, `:5820`). Plus libraries, bots, test client. |
+| `tests/` | .NET tests |
+| `web/` | React, until the .NET rewrite replaces it |
+| `client/`, `tools/build.cs` | Build the playable client, web assets, launcher patches |
+| `sql/` | Schemas and `migrations/` (applied at startup) |
+| `deploy/`, `observability/` | Containers, Caddy; Loki, Prometheus, Grafana |
 
-## Pipeline
-
-```mermaid
-flowchart LR
-  S["src/, web/, sql/"] -->|"podman build (deploy/Containerfile)"| IMG["account, game, web images"]
-  BASE["5619 base client"] -->|"tools/build.cs client + client/"| CLI["built client (_CLIENT/fetih)"]
-  CLI -->|"tools/build.cs assets"| ASSETS["web/assets (maps, looks)"]
-  CLI -->|"tools/build.cs patch"| PATCH["launcher manifest, objects, zip"]
-```
-
-## Commands
+## Run
 
 ```bash
-podman compose -f deploy/compose.yaml up -d db              # start MariaDB (required for integration tests)
-podman compose -f deploy/compose.yaml up -d                 # start db, Loki, Alloy, Prometheus, Grafana
-dotnet test Fetih.slnx                                      # run all .NET unit and integration tests
-cd src/Fetih.Game && dotnet run                             # run game server (likewise Fetih.Account, Fetih.Web)
-cd web && npm run dev                                       # run Vite dev server (:5173) against Fetih.Web (:5820)
-dotnet run tools/build.cs all --ip <ip>                     # build client, web assets, and patch files
+podman compose -f deploy/compose.yaml up -d db
+dotnet test Fetih.slnx
+cd src/Fetih.Game && dotnet run              # likewise Account, Web
+cd web && npm run dev                        # :5173
+dotnet run tools/build.cs all --ip <ip>      # client, web assets, patches
+cd src/Fetih.Bots && dotnet run -- --Groups:0:Count=300
 ```
+
+Settings: `.config` files, or env like `FETIH_GAME_Database__Hostname=db`.
+
+## Database
+
+- Schema change → new `sql/migrations/<game|account>/NNNN-name.sql`. Never edit an applied one
+  or the baselines.
+- Never pipe `.sql` into the DB by hand (it wiped every account once). Compare schemas with
+  `SHOW CREATE TABLE`.
+
+## How the game behaves
+
+Strongest first:
+
+1. Help pages: `~/Developer/co_help_files/` (`INDEX.md`). Not in this repo.
+2. Strings: `iconv -f GBK -t UTF-8 _CLIENT/5619/ini/Cn_Res.ini | grep -i <word>`
+3. Data files: `_CLIENT/5619/ini/`. If one holds the numbers, read it (like `Shop.dat`).
+4. Binaries: [client-notes.md](client-notes.md)
+5. Other emulators, ideas only: `~/Developer/Albetros1.1`, `~/Developer/worldconqueronline`
+
+5619 does most item and NPC features through NPC dialogs, not later-patch windows.
+
+## More
+
+- [deploy.md](deploy.md): public server
+- [web-style.md](web-style.md): the site's look
+- [npc-features.md](npc-features.md), [quests-proposal.md](quests-proposal.md): feature notes
