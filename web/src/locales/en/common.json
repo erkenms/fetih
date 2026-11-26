@@ -69,8 +69,14 @@
     "not_found": "Not found.",
     "too_many_requests": "Too many attempts. Wait a minute and try again.",
     "game_offline": "The game server isn't running.",
+    "staff_only": "This site is for staff only.",
+    "studio_read_only": "Studio is read-only on production. Make edits on the test site instead.",
     "network": "Can't reach the web server.",
     "server_error": "Something went wrong on the server.",
     "unknown": "Error: {{code}}"
+  },
+  "studio": {
+    "readOnlyTitle": "Studio is read-only",
+    "readOnlyBody": "Edits on production would be uncommitted changes in the checkout that deploys overwrite. Make changes on the test site and promote a release instead."
   }
 }

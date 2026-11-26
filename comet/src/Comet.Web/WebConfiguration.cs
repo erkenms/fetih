@@ -36,6 +36,12 @@ public class WebConfiguration
         // X-Forwarded-For and X-Forwarded-Proto headers. Any sender is trusted, so only
         // when nothing but the proxy can reach the web.
         public bool ForwardedHeaders { get; set; }
+
+        // Only Moderator (Authority >= 2) and above may sign in or register
+        public bool StaffOnly { get; set; }
+
+        // Disables Studio writes and reloads (used on production, where deploys own the checkout)
+        public bool StudioReadOnly { get; set; }
     }
 
     public class GameRpcSection

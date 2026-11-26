@@ -18,6 +18,36 @@
   "templating": {
     "list": [
       {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "prod",
+          "value": "prod"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "prod",
+            "value": "prod"
+          },
+          {
+            "selected": false,
+            "text": "test",
+            "value": "test"
+          },
+          {
+            "selected": false,
+            "text": "dev",
+            "value": "dev"
+          }
+        ],
+        "hide": 0
+      },
+      {
         "type": "query",
         "name": "server",
         "label": "Server",
@@ -116,7 +146,7 @@
       ],
       "asDropdown": false,
       "title": "Comet",
-      "includeVars": false,
+      "includeVars": true,
       "keepTime": true
     }
   ],
@@ -141,7 +171,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_received_total[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "A",
           "legendFormat": "in",
           "instant": false,
@@ -152,7 +182,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_sent_total[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "B",
           "legendFormat": "out",
           "instant": false,
@@ -205,7 +235,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, sum by (type) (rate(comet_packets_received_total[$__rate_interval])))",
+          "expr": "topk(15, sum by (type) (rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])))",
           "refId": "A",
           "legendFormat": "{{type}}",
           "instant": false,
@@ -261,7 +291,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, sum by (type) (rate(comet_packets_sent_total[$__rate_interval])))",
+          "expr": "topk(15, sum by (type) (rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])))",
           "refId": "A",
           "legendFormat": "{{type}}",
           "instant": false,
@@ -317,7 +347,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (server, packetType) (count_over_time({event=\"packet.unhandled\"} | json packetType [$__range]))",
+          "expr": "sum by (server, packetType) (count_over_time({env=~\"$env|shared\", event=\"packet.unhandled\"} | json packetType [$__range]))",
           "refId": "A",
           "queryType": "instant",
           "format": "table"
@@ -377,7 +407,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{event=\"packet.unhandled\"}",
+          "expr": "{env=~\"$env|shared\", event=\"packet.unhandled\"}",
           "refId": "A",
           "queryType": "range"
         }
@@ -413,7 +443,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{server=~\"$server\", event=~\"$direction\"} | json packetName, accountId, characterId | packetName=~\"$packetName\" | accountId=~\"$accountId\"",
+          "expr": "{env=~\"$env|shared\", server=~\"$server\", event=~\"$direction\"} | json packetName, accountId, characterId | packetName=~\"$packetName\" | accountId=~\"$accountId\"",
           "refId": "A",
           "queryType": "range"
         }

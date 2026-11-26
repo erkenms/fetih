@@ -19,8 +19,8 @@ public sealed class MapEditFeature : IFeature
         var group = api.MapGroup("/maps/{id:long}/edit").RequirePermission(Permission.Studio);
 
         group.MapGet("/", GetMapEdit).WithName("getMapEdit");
-        group.MapPut("/", SaveMapEditAsync).WithName("saveMapEdit");
-        group.MapPost("/reload", ReloadMapFilesAsync).WithName("reloadMapFiles");
+        group.MapPut("/", SaveMapEditAsync).WithName("saveMapEdit").RequireStudioWritable();
+        group.MapPost("/reload", ReloadMapFilesAsync).WithName("reloadMapFiles").RequireStudioWritable();
     }
 
     private static Results<Ok<MapEditResponse>, NotFound<ApiError>> GetMapEdit(MapEditService svc, long id) =>

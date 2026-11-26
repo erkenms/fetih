@@ -1,13 +1,14 @@
-// Tails the servers' JSON logs into Loki. Only server, level and event become labels;
+// Tails the servers' JSON logs into Loki. Only env, server, level and event become labels;
 // characterId, accountId and the rest stay in the line for `| json`. Packet trace lines
 // (event packet.in / packet.out) are their own streams, so a selector can leave them out.
 
 local.file_match "comet" {
-  // Servers run from source, then servers in containers (compose profile deploy).
-  // Audit files live in an audit/ subdirectory and are excluded so Loki doesn't duplicate them.
+  // Servers run from source (env=dev), then servers in containers under /comet/logs/<env>/<server>/
+  // (prod, test, shared). Audit files live in an audit/ subdirectory and are excluded so Loki
+  // doesn't duplicate them.
   path_targets = [
-    {"__path__" = "/comet/src/Comet.*/logs/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl"},
-    {"__path__" = "/comet/logs/*/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl"},
+    {"__path__" = "/comet/src/Comet.*/logs/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl", "env" = "dev"},
+    {"__path__" = "/comet/logs/*/*/*.jsonl", "__path_exclude__" = "**/*-audit-*.jsonl"},
   ]
   sync_period  = "10s"
 }
@@ -27,8 +28,15 @@ loki.process "comet" {
     }
   }
 
+  // Container logs live at /comet/logs/<env>/<server>/...; dev targets already carry env="dev"
+  stage.regex {
+    source     = "filename"
+    expression = "^/comet/logs/(?P<env>[^/]+)/"
+  }
+
   stage.labels {
     values = {
+      env    = "",
       server = "",
       level  = "",
       event  = "",

@@ -88,5 +88,17 @@ namespace Comet.Integration.Tests
             Assert.Contains("INSERT INTO missing_table", e.Message);
             Assert.Equal(1L, await this.Query("SELECT COUNT(*) FROM schema_migrations"));
         }
+
+        [Fact]
+        public async Task AccountMigrationsIncludeAltayAndMihenkRealms()
+        {
+            var migrations = SchemaMigrator.Load(typeof(Comet.Account.Kernel).Assembly);
+            await SchemaMigrator.ApplyAsync(Host, this.Schema, User, Password, migrations);
+
+            Assert.Equal(1, Convert.ToInt32(await this.Query("SELECT AuthorityID FROM realm WHERE Name = 'Altay'")));
+            Assert.Equal(5816, Convert.ToInt32(await this.Query("SELECT GamePort FROM realm WHERE Name = 'Altay'")));
+            Assert.Equal(2, Convert.ToInt32(await this.Query("SELECT AuthorityID FROM realm WHERE Name = 'Mihenk'")));
+            Assert.Equal(5826, Convert.ToInt32(await this.Query("SELECT GamePort FROM realm WHERE Name = 'Mihenk'")));
+        }
     }
 }

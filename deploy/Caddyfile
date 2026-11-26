@@ -1,6 +1,8 @@
-# The web's only way in. With a public domain in FETIH_DOMAIN, Caddy gets and renews its
-# Let's Encrypt certificate; with "localhost" it signs one of its own.
-{$FETIH_DOMAIN:localhost} {
+# The web's only way in. With public domains in FETIH_DOMAIN and FETIH_TEST_DOMAIN,
+# Caddy gets and renews their Let's Encrypt certificates; with "localhost" it signs its own.
+# Both sites serve the patches of both channels (/patch/prod/, /patch/test/) and the client
+# download.
+(patches) {
 	# Objects are already compressed (or intentionally raw); skip encode on top of them
 	handle /patch/*/objects/* {
 		header Cache-Control "public, max-age=31536000, immutable"
@@ -33,9 +35,22 @@
 		root * /srv
 		file_server
 	}
+}
+
+{$FETIH_DOMAIN:localhost} {
+	import patches
 
 	handle {
 		encode zstd gzip
-		reverse_proxy web:5820
+		reverse_proxy fetih-prod-web:5820
+	}
+}
+
+{$FETIH_TEST_DOMAIN:test.localhost} {
+	import patches
+
+	handle {
+		encode zstd gzip
+		reverse_proxy fetih-test-web:5820
 	}
 }

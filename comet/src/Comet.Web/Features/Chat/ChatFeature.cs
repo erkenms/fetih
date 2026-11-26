@@ -51,7 +51,7 @@ public sealed class ChatFeature : IFeature
 
         var filter = new ChatQueryFilter(channel, characterId, characterName, accountIds, words);
         string query = ChatLogQl.BuildChatQuery(filter);
-        string exploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, query, startUtc, endUtc);
+        string exploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, options.ScopeLogs(query), startUtc, endUtc);
 
         if (noAccountMatch)
             return TypedResults.Ok(new ChatMessagesResponse([], query, exploreUrl, startUtc, endUtc, false));
@@ -92,7 +92,7 @@ public sealed class ChatFeature : IFeature
 
         var filter = new GmCommandQueryFilter(characterId, characterName, accountIds, command, words);
         string query = ChatLogQl.BuildGmCommandQuery(filter);
-        string exploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, query, startUtc, endUtc);
+        string exploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, options.ScopeLogs(query), startUtc, endUtc);
 
         ChatLogEntry[] commands = [];
         bool lokiAvailable = true;

@@ -20,8 +20,8 @@ public class ChangesFeature : IFeature
         var group = api.MapGroup("/changes").RequirePermission(Permission.Studio);
         group.MapGet("/", GetChangesAsync).WithName("getChanges");
         group.MapGet("/{file}/diff", GetDiffAsync).WithName("getChangeDiff");
-        group.MapPost("/{file}/reload", ReloadAsync).WithName("reloadDataFile");
-        group.MapPost("/{file}/discard", DiscardAsync).WithName("discardDataFile");
+        group.MapPost("/{file}/reload", ReloadAsync).WithName("reloadDataFile").RequireStudioWritable();
+        group.MapPost("/{file}/discard", DiscardAsync).WithName("discardDataFile").RequireStudioWritable();
     }
 
     private static async Task<Ok<ChangesSummaryResponse>> GetChangesAsync(

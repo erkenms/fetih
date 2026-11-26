@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { useStudioReadOnly } from '../../components/StudioReadOnlyBanner'
 import { ProblemsAlert } from './ProblemsAlert'
 
 type DataProblem = Schemas['DataProblemDto']
@@ -36,6 +37,7 @@ export function DataEditorToolbar({
   problems,
 }: DataEditorToolbarProps) {
   const { t } = useTranslation('data')
+  const studioReadOnly = useStudioReadOnly()
 
   return (
     <>
@@ -50,7 +52,7 @@ export function DataEditorToolbar({
         </Group>
 
         <Group gap="xs">
-          <Button variant="default" leftSection={<IconPlus size={16} />} onClick={onAdd}>
+          <Button variant="default" leftSection={<IconPlus size={16} />} disabled={studioReadOnly} onClick={onAdd}>
             {addLabel}
           </Button>
           {dirty && (
@@ -61,7 +63,7 @@ export function DataEditorToolbar({
           <Button
             leftSection={<IconDeviceFloppy size={16} />}
             loading={savePending}
-            disabled={!dirty}
+            disabled={studioReadOnly || !dirty}
             onClick={onSave}
           >
             {t('actions.save')}
@@ -70,6 +72,7 @@ export function DataEditorToolbar({
             variant="light"
             leftSection={<IconRefresh size={16} />}
             loading={reloadPending}
+            disabled={studioReadOnly}
             onClick={onReload}
           >
             {t('actions.reload')}

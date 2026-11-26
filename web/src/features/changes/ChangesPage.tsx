@@ -20,6 +20,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, ApiError, unwrap, type Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { StudioReadOnlyBanner, useStudioReadOnly } from '../../components/StudioReadOnlyBanner'
 import { DiffViewer } from './DiffViewer'
 import { useReloadMutation } from '../data/useDataReload'
 
@@ -48,6 +49,7 @@ function problemCounts(problems: ValidationProblem[]) {
 export default function ChangesPage() {
   const { t } = useTranslation('changes')
   const queryClient = useQueryClient()
+  const studioReadOnly = useStudioReadOnly()
   const [filter, setFilter] = useState<'changed' | 'all'>('changed')
   const [selectedFile, setSelectedFile] = useState<string | null>(null)
   const [discardTarget, setDiscardTarget] = useState<string | null>(null)
@@ -177,6 +179,7 @@ export default function ChangesPage() {
       )}
 
       <ErrorAlert error={summary.error} />
+      <StudioReadOnlyBanner />
 
       <Group justify="space-between">
         <SegmentedControl
@@ -264,7 +267,7 @@ export default function ChangesPage() {
                             size="xs"
                             variant="light"
                             leftSection={<IconRotate size={14} />}
-                            disabled={!summary.data?.gameConnected || reloadMutation.isPending}
+                            disabled={studioReadOnly || !summary.data?.gameConnected || reloadMutation.isPending}
                             loading={reloadMutation.isPending && reloadMutation.variables === entry.file}
                             onClick={() => handleReloadClick(entry)}
                           >
@@ -281,7 +284,7 @@ export default function ChangesPage() {
                             color="red"
                             variant="subtle"
                             leftSection={<IconTrash size={14} />}
-                            disabled={discardMutation.isPending}
+                            disabled={studioReadOnly || discardMutation.isPending}
                             onClick={() => setDiscardTarget(entry.file)}
                           >
                             {t('action.discard')}

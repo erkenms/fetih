@@ -42,6 +42,7 @@ type MonsterProblem = Schemas['MonsterProblemDto']
 export interface MonsterEditorDrawerProps {
   opened: boolean
   mode: 'create' | 'edit'
+  readOnly?: boolean
   initialDraft: MonsterDraft | null
   originalId: number | null
   existingIds: Set<number>
@@ -63,6 +64,7 @@ function num(v: string | number, fallback = 0): number {
 export function MonsterEditorDrawer({
   opened,
   mode,
+  readOnly = false,
   initialDraft,
   originalId,
   existingIds,
@@ -609,6 +611,7 @@ export function MonsterEditorDrawer({
                     variant="light"
                     leftSection={<IconTrash size={16} />}
                     loading={deleting}
+                    disabled={readOnly}
                     onClick={() => setDeleteConfirmOpen(true)}
                   >
                     {t('action.delete')}
@@ -616,6 +619,7 @@ export function MonsterEditorDrawer({
                   <Button
                     variant="default"
                     leftSection={<IconCopy size={16} />}
+                    disabled={readOnly}
                     onClick={() => onDuplicate(draft)}
                   >
                     {t('action.duplicate')}
@@ -629,7 +633,7 @@ export function MonsterEditorDrawer({
               </Button>
               <Button
                 loading={saving}
-                disabled={clientErrors.length > 0}
+                disabled={readOnly || clientErrors.length > 0}
                 onClick={() => onSave(draft)}
               >
                 {mode === 'create' ? t('action.create') : t('action.save')}

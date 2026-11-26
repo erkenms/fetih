@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
 import { api, ApiError, unwrap, type Schemas } from '../../../api/client'
 import { ErrorAlert } from '../../../app/ErrorAlert'
+import { StudioReadOnlyBanner, useStudioReadOnly } from '../../../components/StudioReadOnlyBanner'
 import { decodeBase64Bytes } from '../../../lib/iso'
 import type { DecodedGrid } from '../gridCanvasLayer'
 import { MapEditorCanvas, type EditorMode, type EditorSelection } from './MapEditorCanvas'
@@ -106,6 +107,7 @@ export default function MapEditorPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const studioReadOnly = useStudioReadOnly()
   const mapId = Number(id)
 
   const [history, setHistory] = useState<EditorHistory<MapEditorSnapshot> | null>(null)
@@ -521,7 +523,8 @@ export default function MapEditorPage() {
         <Group gap="xs" wrap="wrap">
           <SegmentedControl
             size="xs"
-            value={mode}
+            value={studioReadOnly ? 'select' : mode}
+            disabled={studioReadOnly}
             onChange={(val) => setMode(val as EditorMode)}
             data={[
               { value: 'select', label: t('toolbar.select') },
@@ -559,7 +562,7 @@ export default function MapEditorPage() {
             size="xs"
             leftSection={<IconDeviceFloppy size={14} />}
             loading={saveMutation.isPending}
-            disabled={!dirty}
+            disabled={studioReadOnly || !dirty}
             onClick={() => saveMutation.mutate()}
           >
             {t('toolbar.save')}
@@ -572,6 +575,7 @@ export default function MapEditorPage() {
               variant="light"
               leftSection={<IconRefresh size={14} />}
               loading={reloadMutation.isPending}
+              disabled={studioReadOnly}
               onClick={() => reloadMutation.mutate(changedFilesToReload)}
             >
               {t('reloadInGame')}
@@ -579,6 +583,8 @@ export default function MapEditorPage() {
           )}
         </Group>
       </Group>
+
+      <StudioReadOnlyBanner />
 
       {/* Mode hint bar */}
       {mode !== 'select' && (

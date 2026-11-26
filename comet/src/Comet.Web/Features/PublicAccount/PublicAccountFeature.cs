@@ -123,11 +123,15 @@ public sealed class PublicAccountFeature : IFeature
     private static async Task<Results<Created<MeResponse>, JsonHttpResult<ApiError>>> RegisterAsync(
         RegisterRequest request,
         HttpContext http,
+        WebConfiguration config,
         IOptions<PublicAccountOptions> options,
         ICaptchaVerifier captcha,
         AuditLog audit,
         CancellationToken ct)
     {
+        if (config.Web.StaffOnly)
+            return ApiError.Result("staff_only", StatusCodes.Status403Forbidden);
+
         if (options.Value.CaptchaEnabled)
         {
             if (string.IsNullOrWhiteSpace(request.CaptchaToken))
@@ -154,7 +158,8 @@ public sealed class PublicAccountFeature : IFeature
             user.AccountId(),
             user.Username(),
             (int)user.Authority(),
-            Permissions.Granted(user.Authority()).ToArray());
+            Permissions.Granted(user.Authority()).ToArray(),
+            config.Web.StudioReadOnly);
         return TypedResults.Created("/api/public/account/profile", me);
     }
 

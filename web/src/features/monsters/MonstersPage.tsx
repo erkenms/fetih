@@ -26,6 +26,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, unwrap, type Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { StudioReadOnlyBanner, useStudioReadOnly } from '../../components/StudioReadOnlyBanner'
 import { MonsterEditorDrawer } from './MonsterEditorDrawer'
 import { useReloadMutation } from '../data/useDataReload'
 import {
@@ -44,6 +45,7 @@ type MonsterProblem = Schemas['MonsterProblemDto']
 export default function MonstersPage() {
   const { t } = useTranslation('monsters')
   const queryClient = useQueryClient()
+  const studioReadOnly = useStudioReadOnly()
 
   const [search, setSearch] = useState('')
   const [role, setRole] = useState<MonsterFilterRole>('all')
@@ -238,14 +240,14 @@ export default function MonstersPage() {
         </Stack>
 
         <Group gap="xs">
-          <Button leftSection={<IconPlus size={16} />} onClick={openCreate}>
+          <Button leftSection={<IconPlus size={16} />} disabled={studioReadOnly} onClick={openCreate}>
             {t('newMonster')}
           </Button>
           <Button
             variant="light"
             leftSection={<IconRotate size={16} />}
             loading={reloadMutation.isPending}
-            disabled={!listQuery.data?.gameOnline}
+            disabled={studioReadOnly || !listQuery.data?.gameOnline}
             onClick={() => reloadMutation.mutate()}
           >
             {t('reload')}
@@ -259,6 +261,8 @@ export default function MonstersPage() {
           </Button>
         </Group>
       </Group>
+
+      <StudioReadOnlyBanner />
 
       <Group gap="xs">
         <Badge color={listQuery.data?.gameOnline ? 'green' : 'gray'} variant="light">
@@ -450,6 +454,7 @@ export default function MonstersPage() {
       <MonsterEditorDrawer
         opened={drawerOpen}
         mode={drawerMode}
+        readOnly={studioReadOnly}
         initialDraft={editingDraft}
         originalId={originalId}
         existingIds={existingIds}

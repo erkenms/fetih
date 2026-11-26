@@ -69,8 +69,14 @@
     "not_found": "Bulunamadı.",
     "too_many_requests": "Çok fazla deneme. Bir dakika bekleyip yeniden dene.",
     "game_offline": "Oyun sunucusu çalışmıyor.",
+    "staff_only": "Bu site yalnızca yetkili hesaplar içindir.",
+    "studio_read_only": "Stüdyo canlı sunucuda salt okunurdur. Değişiklikleri test sitesinde yapın.",
     "network": "Web sunucusuna ulaşılamıyor.",
     "server_error": "Sunucuda bir şeyler ters gitti.",
     "unknown": "Hata: {{code}}"
+  },
+  "studio": {
+    "readOnlyTitle": "Stüdyo salt okunur",
+    "readOnlyBody": "Canlı sunucuda yapılan düzenlemeler dağıtımda üzerine yazılacak yerel değişiklikler olur. Değişiklikleri test sitesinde yapıp sürüm olarak yayınlayın."
   }
 }

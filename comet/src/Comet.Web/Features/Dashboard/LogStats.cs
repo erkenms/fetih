@@ -2,6 +2,7 @@ namespace Comet.Web.Features.Dashboard;
 
 using System.Globalization;
 using System.Text.Json;
+using Comet.Web.Features.Logs;
 
 // The "Observability" config section, shared with the log timelines
 public sealed class ObservabilityOptions
@@ -9,6 +10,15 @@ public sealed class ObservabilityOptions
     public string LokiUrl { get; set; } = "http://127.0.0.1:3100";
     public string GrafanaUrl { get; set; } = "http://localhost:3000";
     public string PrometheusUrl { get; set; } = "http://127.0.0.1:9090";
+
+    // prod or test: this web reads only its own environment's logs and metrics, plus the shared
+    // account server's logs (env "shared"). Unset (development) reads everything.
+    public string? Environment { get; set; }
+
+    public string ScopeLogs(string logQl) => LogQl.Scope(logQl, this.Environment);
+
+    public string ScopeMetric(string metric) =>
+        string.IsNullOrWhiteSpace(this.Environment) ? metric : $"{metric}{{env=\"{this.Environment}\"}}";
 }
 
 public record LogLine(DateTime Timestamp, string Server, string Level, string Event, string Message);
@@ -65,10 +75,10 @@ public sealed class LogStats(HttpClient http, ObservabilityOptions options)
     }
 
     private Task<JsonDocument> InstantAsync(string query, DateTime at, CancellationToken ct) =>
-        this.GetJsonAsync($"/loki/api/v1/query?query={Uri.EscapeDataString(query)}&time={Nanoseconds(at)}", ct);
+        this.GetJsonAsync($"/loki/api/v1/query?query={Uri.EscapeDataString(options.ScopeLogs(query))}&time={Nanoseconds(at)}", ct);
 
     private Task<JsonDocument> RangeAsync(string query, DateTime from, DateTime to, int limit, CancellationToken ct) =>
-        this.GetJsonAsync($"/loki/api/v1/query_range?query={Uri.EscapeDataString(query)}" +
+        this.GetJsonAsync($"/loki/api/v1/query_range?query={Uri.EscapeDataString(options.ScopeLogs(query))}" +
             $"&start={Nanoseconds(from)}&end={Nanoseconds(to)}&limit={limit}&direction=backward", ct);
 
     private async Task<JsonDocument> GetJsonAsync(string path, CancellationToken ct)

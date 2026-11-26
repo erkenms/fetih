@@ -1,5 +1,6 @@
 namespace Comet.Web.Features.Economy;
 
+using Comet.Web.Features.Dashboard;
 using Comet.Web.Features.Logs;
 
 using Comet.Game.Database;
@@ -25,6 +26,7 @@ public class EconomyFeature : IFeature
 
     private static async Task<Ok<EconomyResponse>> GetEconomyAsync(
         IMetricRanges metrics,
+        ObservabilityOptions options,
         string range = "24h",
         int top = DefaultTop,
         CancellationToken ct = default)
@@ -34,7 +36,7 @@ public class EconomyFeature : IFeature
         DateTime now = DateTime.UtcNow;
         DateTime startUtc = now - window;
 
-        var trendsTask = QueryTrendsAsync(metrics, startUtc, now, step, ct);
+        var trendsTask = QueryTrendsAsync(metrics, options, startUtc, now, step, ct);
         var flowTask = QueryFlowAsync(metrics, startUtc, now, step, ct);
         var (totals, topSilver, topCp) = await QueryDatabaseAsync(topCount, ct);
 
@@ -95,12 +97,12 @@ public class EconomyFeature : IFeature
     }
 
     private static async Task<EconomyTrends> QueryTrendsAsync(
-        IMetricRanges metrics, DateTime startUtc, DateTime endUtc, TimeSpan step, CancellationToken ct)
+        IMetricRanges metrics, ObservabilityOptions options, DateTime startUtc, DateTime endUtc, TimeSpan step, CancellationToken ct)
     {
         try
         {
-            var silver = metrics.PrometheusAsync("comet_economy_silver_total", "", startUtc, endUtc, step, ct);
-            var cp = metrics.PrometheusAsync("comet_economy_cp_total", "", startUtc, endUtc, step, ct);
+            var silver = metrics.PrometheusAsync(options.ScopeMetric("comet_economy_silver_total"), "", startUtc, endUtc, step, ct);
+            var cp = metrics.PrometheusAsync(options.ScopeMetric("comet_economy_cp_total"), "", startUtc, endUtc, step, ct);
             return new EconomyTrends(true, (await silver).GetValueOrDefault("") ?? [], (await cp).GetValueOrDefault("") ?? []);
         }
         catch (MetricsUnavailableException)

@@ -19,22 +19,22 @@ public sealed class DataEditFeature : IFeature
         group.MapGet("/levels", (DataEditService svc) => TypedResults.Ok(svc.ReadLevels()))
             .WithName("getLevelsData");
         group.MapPut("/levels", SaveLevelsAsync)
-            .WithName("saveLevelsData");
+            .WithName("saveLevelsData").RequireStudioWritable();
 
         group.MapGet("/goals", (DataEditService svc) => TypedResults.Ok(svc.ReadGoals()))
             .WithName("getGoalsData");
         group.MapPut("/goals", SaveGoalsAsync)
-            .WithName("saveGoalsData");
+            .WithName("saveGoalsData").RequireStudioWritable();
 
         group.MapGet("/teleporters", (DataEditService svc) => TypedResults.Ok(svc.ReadTeleporters()))
             .WithName("getTeleportersData");
         group.MapPut("/teleporters", SaveTeleportersAsync)
-            .WithName("saveTeleportersData");
+            .WithName("saveTeleportersData").RequireStudioWritable();
 
         group.MapGet("/talkers", (DataEditService svc) => TypedResults.Ok(svc.ReadTalkers()))
             .WithName("getTalkersData");
         group.MapPut("/talkers", SaveTalkersAsync)
-            .WithName("saveTalkersData");
+            .WithName("saveTalkersData").RequireStudioWritable();
 
         group.MapGet("/maps/{mapId}/info", (uint mapId, DataEditService svc) => TypedResults.Ok(svc.GetMapPickInfo(mapId)))
             .WithName("getDataMapInfo");

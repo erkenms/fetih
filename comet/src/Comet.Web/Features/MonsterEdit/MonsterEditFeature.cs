@@ -19,10 +19,10 @@ public class MonsterEditFeature : IFeature
         var group = api.MapGroup("/studio/monsters").RequirePermission(Permission.Studio);
         group.MapGet("/", ListAsync).WithName("listStudioMonsters");
         group.MapGet("/{id:int}", GetAsync).WithName("getStudioMonster");
-        group.MapPost("/", CreateAsync).WithName("createStudioMonster");
-        group.MapPut("/{id:int}", UpdateAsync).WithName("updateStudioMonster");
-        group.MapDelete("/{id:int}", DeleteAsync).WithName("deleteStudioMonster");
-        group.MapPost("/reload", ReloadAsync).WithName("reloadStudioMonsters");
+        group.MapPost("/", CreateAsync).WithName("createStudioMonster").RequireStudioWritable();
+        group.MapPut("/{id:int}", UpdateAsync).WithName("updateStudioMonster").RequireStudioWritable();
+        group.MapDelete("/{id:int}", DeleteAsync).WithName("deleteStudioMonster").RequireStudioWritable();
+        group.MapPost("/reload", ReloadAsync).WithName("reloadStudioMonsters").RequireStudioWritable();
     }
 
     private static Task<Ok<MonsterListResponse>> ListAsync(

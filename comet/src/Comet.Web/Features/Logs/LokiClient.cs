@@ -36,7 +36,7 @@ public sealed class LokiClient(HttpClient http, ObservabilityOptions options) : 
         long startNs = ToUnixNanoseconds(startUtc);
         long endNs = ToUnixNanoseconds(endUtc);
         string baseUrl = options.LokiUrl.TrimEnd('/');
-        string url = $"{baseUrl}/loki/api/v1/query_range?query={Uri.EscapeDataString(logQl)}&start={startNs}&end={endNs}&limit={limit}&direction=backward";
+        string url = $"{baseUrl}/loki/api/v1/query_range?query={Uri.EscapeDataString(options.ScopeLogs(logQl))}&start={startNs}&end={endNs}&limit={limit}&direction=backward";
 
         HttpResponseMessage response;
         try

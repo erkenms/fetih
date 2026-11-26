@@ -2,10 +2,17 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  # The game serves /metrics on the host's loopback (Metrics in Comet.Game.config), or as
-  # the game container. Only one of the two is up.
   - job_name: game
     static_configs:
-      - targets: ["host.containers.internal:9818", "game:9818"]
+      - targets: ["fetih-prod-game:9818"]
         labels:
           server: game
+          env: prod
+      - targets: ["fetih-test-game:9818"]
+        labels:
+          server: game
+          env: test
+      - targets: ["host.containers.internal:9818"]
+        labels:
+          server: game
+          env: dev

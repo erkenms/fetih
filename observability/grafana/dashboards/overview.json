@@ -18,6 +18,36 @@
   "templating": {
     "list": [
       {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "prod",
+          "value": "prod"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "prod",
+            "value": "prod"
+          },
+          {
+            "selected": false,
+            "text": "test",
+            "value": "test"
+          },
+          {
+            "selected": false,
+            "text": "dev",
+            "value": "dev"
+          }
+        ],
+        "hide": 0
+      },
+      {
         "type": "query",
         "name": "server",
         "label": "Server",
@@ -60,7 +90,7 @@
       ],
       "asDropdown": false,
       "title": "Comet",
-      "includeVars": false,
+      "includeVars": true,
       "keepTime": true
     }
   ],
@@ -85,7 +115,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_online_players)",
+          "expr": "sum(comet_online_players{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -142,7 +172,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "time() - max(process_start_time_seconds{job=\"game\"})",
+          "expr": "time() - max(process_start_time_seconds{job=\"game\", env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -199,7 +229,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({event=\"session.login\"}[$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", event=\"session.login\"}[$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -256,7 +286,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({level=~\"error|fatal\"}[$__range]))",
+          "expr": "sum(count_over_time({env=~\"$env|shared\", level=~\"error|fatal\"}[$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -317,7 +347,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_monsters_alive)",
+          "expr": "sum(comet_monsters_alive{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -374,7 +404,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_maps_loaded)",
+          "expr": "sum(comet_maps_loaded{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -432,7 +462,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_online_players)",
+          "expr": "sum(comet_online_players{env=\"$env\"})",
           "refId": "A",
           "legendFormat": "online",
           "instant": false,
@@ -484,7 +514,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_received_total[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "A",
           "legendFormat": "in",
           "instant": false,
@@ -495,7 +525,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_sent_total[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "B",
           "legendFormat": "out",
           "instant": false,
@@ -547,7 +577,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (event) (count_over_time({event=~\"session.login|session.logout|account.login_failed\"}[$__interval]))",
+          "expr": "sum by (event) (count_over_time({env=~\"$env|shared\", event=~\"session.login|session.logout|account.login_failed\"}[$__interval]))",
           "refId": "A",
           "legendFormat": "{{event}}",
           "queryType": "range"
@@ -602,7 +632,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (level) (count_over_time({level=~\"warn|error|fatal\"}[$__interval]))",
+          "expr": "sum by (level) (count_over_time({env=~\"$env|shared\", level=~\"warn|error|fatal\"}[$__interval]))",
           "refId": "A",
           "legendFormat": "{{level}}",
           "queryType": "range"
@@ -657,7 +687,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_save_round_seconds_sum[$__rate_interval])) / sum(rate(comet_save_round_seconds_count[$__rate_interval]))",
+          "expr": "sum(rate(comet_save_round_seconds_sum{env=\"$env\"}[$__rate_interval])) / sum(rate(comet_save_round_seconds_count{env=\"$env\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "average",
           "instant": false,
@@ -668,7 +698,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(comet_save_round_seconds_bucket[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(comet_save_round_seconds_bucket{env=\"$env\"}[$__rate_interval])))",
           "refId": "B",
           "legendFormat": "p95",
           "instant": false,
@@ -721,7 +751,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_monsters_alive)",
+          "expr": "sum(comet_monsters_alive{env=\"$env\"})",
           "refId": "A",
           "legendFormat": "monsters alive",
           "instant": false,
@@ -732,7 +762,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_ground_items)",
+          "expr": "sum(comet_ground_items{env=\"$env\"})",
           "refId": "B",
           "legendFormat": "ground items",
           "instant": false,
@@ -743,7 +773,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_maps_loaded)",
+          "expr": "sum(comet_maps_loaded{env=\"$env\"})",
           "refId": "C",
           "legendFormat": "maps loaded",
           "instant": false,
@@ -795,7 +825,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{event=~\"session.login|session.logout|account.login|account.login_failed\"}",
+          "expr": "{env=~\"$env|shared\", event=~\"session.login|session.logout|account.login|account.login_failed\"}",
           "refId": "A",
           "queryType": "range"
         }
@@ -831,7 +861,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{level=~\"warn|error|fatal\", event!=\"packet.unhandled\"}",
+          "expr": "{env=~\"$env|shared\", level=~\"warn|error|fatal\", event!=\"packet.unhandled\"}",
           "refId": "A",
           "queryType": "range"
         }
@@ -868,7 +898,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{server=~\"$server\", event!~\"packet\\\\.(in|out)\", level!=\"trace\"}",
+          "expr": "{env=~\"$env|shared\", server=~\"$server\", event!~\"packet\\\\.(in|out)\", level!=\"trace\"}",
           "refId": "A",
           "queryType": "range"
         }

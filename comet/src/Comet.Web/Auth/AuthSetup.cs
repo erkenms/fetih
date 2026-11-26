@@ -70,8 +70,10 @@ public static class AuthSetup
             return;
 
         var accounts = context.HttpContext.RequestServices.GetRequiredService<AccountStore>();
+        var config = context.HttpContext.RequestServices.GetRequiredService<WebConfiguration>();
         DbAccount? account = await accounts.FindAsync(principal.AccountId());
-        if (account == null || AccountStore.LoginRefusal(account) != null)
+        if (account == null || AccountStore.LoginRefusal(account) != null ||
+            (config.Web.StaffOnly && (Comet.Game.States.Authority)account.AuthorityID < Comet.Game.States.Authority.Moderator))
         {
             context.RejectPrincipal();
             await context.HttpContext.SignOutAsync(Scheme);

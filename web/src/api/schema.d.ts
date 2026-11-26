@@ -3851,6 +3851,8 @@ export interface components {
             /** Format: int32 */
             authority: number;
             permissions: components["schemas"]["Permission"][];
+            /** @default false */
+            studioReadOnly: boolean;
         };
         MessageCharacterRequest: {
             text: string;

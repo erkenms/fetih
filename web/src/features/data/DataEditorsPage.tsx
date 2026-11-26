@@ -2,6 +2,7 @@ import { Stack, Tabs, Text, Title } from '@mantine/core'
 import { IconCompass, IconMessage, IconTarget, IconTrendingUp } from '@tabler/icons-react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router'
+import { StudioReadOnlyBanner } from '../../components/StudioReadOnlyBanner'
 import { GoalsEditor } from './GoalsEditor'
 import { LevelsEditor } from './LevelsEditor'
 import { TalkersEditor } from './TalkersEditor'
@@ -29,6 +30,8 @@ export default function DataEditorsPage() {
           {t('subtitle')}
         </Text>
       </div>
+
+      <StudioReadOnlyBanner />
 
       <Tabs value={activeTab} onChange={handleTabChange} keepMounted={false}>
         <Tabs.List mb="md">

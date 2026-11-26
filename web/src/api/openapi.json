@@ -12150,6 +12150,10 @@
             "items": {
               "$ref": "#/components/schemas/Permission"
             }
+          },
+          "studioReadOnly": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

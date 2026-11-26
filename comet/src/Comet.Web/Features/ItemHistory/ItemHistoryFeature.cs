@@ -50,7 +50,7 @@ public class ItemHistoryFeature : IFeature
 
         int clampedLimit = Math.Clamp(limit, 1, MaxLimit);
         string query = ItemHistoryParser.BuildItemLogQl(itemId);
-        string grafanaExploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, query, startUtc, endUtc);
+        string grafanaExploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, options.ScopeLogs(query), startUtc, endUtc);
 
         await using var db = new ServerDbContext();
 

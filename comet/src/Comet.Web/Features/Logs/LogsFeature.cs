@@ -110,8 +110,8 @@ public class LogsFeature : IFeature
 
         int clampedLimit = Math.Clamp(limit, 1, MaxLimit);
         string query = LogQl.BuildQuery(filter);
-        string grafanaUrl = LogQl.BuildGrafanaUrl(options.GrafanaUrl, filter, startUtc, endUtc);
-        string grafanaExploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, query, startUtc, endUtc);
+        string grafanaUrl = LogQl.BuildGrafanaUrl(options.GrafanaUrl, filter, startUtc, endUtc, options.Environment);
+        string grafanaExploreUrl = LogQl.BuildGrafanaExploreUrl(options.GrafanaUrl, options.ScopeLogs(query), startUtc, endUtc);
 
         try
         {

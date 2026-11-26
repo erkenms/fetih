@@ -28,7 +28,7 @@ public sealed class MetricRanges(HttpClient http, ObservabilityOptions options) 
 
     public Task<Dictionary<string, TrendPoint[]>> LokiAsync(string query, string label, DateTime start,
         DateTime end, TimeSpan step, CancellationToken ct) =>
-        this.RangeAsync(options.LokiUrl, "/loki/api/v1/query_range", query, label, start, end, step, ct);
+        this.RangeAsync(options.LokiUrl, "/loki/api/v1/query_range", options.ScopeLogs(query), label, start, end, step, ct);
 
     private async Task<Dictionary<string, TrendPoint[]>> RangeAsync(string baseUrl, string path, string query,
         string label, DateTime start, DateTime end, TimeSpan step, CancellationToken ct)

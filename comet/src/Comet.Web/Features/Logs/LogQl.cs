@@ -64,7 +64,8 @@ public static class LogQl
         return sb.ToString();
     }
 
-    public static string BuildGrafanaUrl(string grafanaBaseUrl, LogQueryFilter filter, DateTime fromUtc, DateTime toUtc)
+    public static string BuildGrafanaUrl(string grafanaBaseUrl, LogQueryFilter filter, DateTime fromUtc, DateTime toUtc,
+        string? env = null)
     {
         string baseUrl = grafanaBaseUrl.TrimEnd('/');
         long fromMs = new DateTimeOffset(DateTime.SpecifyKind(fromUtc, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
@@ -74,10 +75,24 @@ public static class LogQl
         {
             string charVar = filter.CharacterId?.ToString(CultureInfo.InvariantCulture) ?? ".*";
             string accVar = filter.AccountId?.ToString(CultureInfo.InvariantCulture) ?? ".*";
-            return $"{baseUrl}/d/comet-player/player?var-characterId={Uri.EscapeDataString(charVar)}&var-accountId={Uri.EscapeDataString(accVar)}&from={fromMs}&to={toMs}";
+            return $"{baseUrl}/d/comet-player/player?var-characterId={Uri.EscapeDataString(charVar)}&var-accountId={Uri.EscapeDataString(accVar)}&from={fromMs}&to={toMs}{EnvVar(env)}";
         }
 
-        return $"{baseUrl}/d/comet-overview/overview?from={fromMs}&to={toMs}";
+        return $"{baseUrl}/d/comet-overview/overview?from={fromMs}&to={toMs}{EnvVar(env)}";
+    }
+
+    private static string EnvVar(string? env) =>
+        string.IsNullOrWhiteSpace(env) ? "" : $"&var-env={Uri.EscapeDataString(env)}";
+
+    // Narrows a query's stream selector (its first '{') to one environment and the shared
+    // account server
+    public static string Scope(string logQl, string? env)
+    {
+        int brace = logQl.IndexOf('{');
+        if (string.IsNullOrWhiteSpace(env) || brace < 0)
+            return logQl;
+        string matcher = $"env=~\"{env}|shared\"";
+        return logQl.Insert(brace + 1, logQl[brace + 1] == '}' ? matcher : matcher + ", ");
     }
 
     public static string BuildGrafanaExploreUrl(string grafanaBaseUrl, string logQl, DateTime fromUtc, DateTime toUtc)

@@ -18,6 +18,36 @@
   "templating": {
     "list": [
       {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "text": "prod",
+          "value": "prod"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "prod",
+            "value": "prod"
+          },
+          {
+            "selected": false,
+            "text": "test",
+            "value": "test"
+          },
+          {
+            "selected": false,
+            "text": "dev",
+            "value": "dev"
+          }
+        ],
+        "hide": 0
+      },
+      {
         "type": "textbox",
         "name": "characterId",
         "label": "Character ID",
@@ -68,7 +98,7 @@
       ],
       "asDropdown": false,
       "title": "Comet",
-      "includeVars": false,
+      "includeVars": true,
       "keepTime": true
     }
   ],
@@ -93,7 +123,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=~\"$env|shared\", server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -149,7 +179,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({event=\"session.login\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", event=\"session.login\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -205,7 +235,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({event=\"monster.killed\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", event=\"monster.killed\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -261,7 +291,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({level=~\"warn|error|fatal\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=~\"$env|shared\", level=~\"warn|error|fatal\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -321,7 +351,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({event=\"character.saved\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", event=\"character.saved\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -377,7 +407,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({event=\"gm.command\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum(count_over_time({env=\"$env\", event=\"gm.command\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant"
         }
@@ -433,7 +463,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (event) (count_over_time({server=~\".+\", event!~\"packet\\\\.(in|out)\", level!=\"trace\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__interval]))",
+          "expr": "sum by (event) (count_over_time({env=~\"$env|shared\", server=~\".+\", event!~\"packet\\\\.(in|out)\", level!=\"trace\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__interval]))",
           "refId": "A",
           "legendFormat": "{{event}}",
           "queryType": "range"
@@ -488,7 +518,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (event) (count_over_time({server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
+          "expr": "sum by (event) (count_over_time({env=~\"$env|shared\", server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__range]))",
           "refId": "A",
           "queryType": "instant",
           "format": "table"
@@ -547,7 +577,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{event=~\"session\\\\..+|account\\\\..+|net\\\\..+\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
+          "expr": "{env=~\"$env|shared\", event=~\"session\\\\..+|account\\\\..+|net\\\\..+\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
           "refId": "A",
           "queryType": "range"
         }
@@ -583,7 +613,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
+          "expr": "{env=~\"$env|shared\", server=~\".+\", event!~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
           "refId": "A",
           "queryType": "range"
         }
@@ -631,7 +661,7 @@
                 "type": "loki",
                 "uid": "loki"
               },
-              "expr": "{event=~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
+              "expr": "{env=~\"$env|shared\", event=~\"packet\\\\.(in|out)\"} | json characterId, accountId | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
               "refId": "A",
               "queryType": "range"
             }

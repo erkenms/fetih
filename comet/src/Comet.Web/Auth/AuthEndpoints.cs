@@ -1,13 +1,15 @@
 namespace Comet.Web.Auth;
 
 using Comet.Core.Logging;
+using Comet.Game.States;
 using Comet.Web.Accounts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 public record LoginRequest(string Username, string Password);
 
-public record MeResponse(uint AccountId, string Username, int Authority, Permission[] Permissions);
+public record MeResponse(uint AccountId, string Username, int Authority, Permission[] Permissions,
+    bool StudioReadOnly = false);
 
 public static class AuthEndpoints
 {
@@ -22,7 +24,7 @@ public static class AuthEndpoints
     }
 
     private static async Task<Results<Ok<MeResponse>, JsonHttpResult<ApiError>>> LoginAsync(
-        LoginRequest request, HttpContext http, AccountStore accounts)
+        LoginRequest request, HttpContext http, AccountStore accounts, WebConfiguration config)
     {
         string? ip = http.Connection.RemoteIpAddress?.ToString();
         var account = await accounts.FindAsync(request.Username);
@@ -41,11 +43,19 @@ public static class AuthEndpoints
             return ApiError.Result(refusal, StatusCodes.Status403Forbidden);
         }
 
+        if (config.Web.StaffOnly && (Authority)account.AuthorityID < Authority.Moderator)
+        {
+            LogEvents.For(typeof(AuthEndpoints), WebEvents.LoginFailed).Warning(
+                "Web login refused for account {AccountId} from {IPAddress}: {Reason}",
+                account.AccountID, ip, "staff_only");
+            return ApiError.Result("staff_only", StatusCodes.Status403Forbidden);
+        }
+
         var user = WebUser.Create(account);
         await http.SignInAsync(AuthSetup.Scheme, user);
         LogEvents.For(typeof(AuthEndpoints), WebEvents.Login).Information(
             "Web login by account {AccountId} from {IPAddress}", account.AccountID, ip);
-        return TypedResults.Ok(ToMe(user));
+        return TypedResults.Ok(ToMe(user, config.Web.StudioReadOnly));
     }
 
     private static async Task<NoContent> LogoutAsync(HttpContext http)
@@ -57,9 +67,10 @@ public static class AuthEndpoints
         return TypedResults.NoContent();
     }
 
-    private static Ok<MeResponse> Me(HttpContext http) => TypedResults.Ok(ToMe(http.User));
+    private static Ok<MeResponse> Me(HttpContext http, WebConfiguration config) =>
+        TypedResults.Ok(ToMe(http.User, config.Web.StudioReadOnly));
 
-    private static MeResponse ToMe(System.Security.Claims.ClaimsPrincipal user) => new(
+    private static MeResponse ToMe(System.Security.Claims.ClaimsPrincipal user, bool studioReadOnly) => new(
         user.AccountId(), user.Username(), (int)user.Authority(),
-        Permissions.Granted(user.Authority()).ToArray());
+        Permissions.Granted(user.Authority()).ToArray(), studioReadOnly);
 }
