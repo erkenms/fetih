@@ -22,7 +22,8 @@ public sealed class PlayersFeature : IFeature
 {
     private const int MaxBulk = 2000;
 
-    public void AddServices(IServiceCollection services, WebConfiguration config) { }
+    public void AddServices(IServiceCollection services, WebConfiguration config) =>
+        services.AddSingleton<PlayerService>();
 
     public void Map(RouteGroupBuilder api)
     {

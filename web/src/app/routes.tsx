@@ -10,11 +10,9 @@ import { logsRoute } from '../features/logs'
 import { itemHistoryRoutes } from '../features/itemhistory'
 import { chatRoute } from '../features/chat'
 import { socialRoute } from '../features/social'
-import { pkRoute } from '../features/pk'
 import { mapsRoutes } from '../features/maps'
 import { npcDialogsRoutes } from '../features/npcdialogs'
 import { mapEditRoute } from '../features/maps/edit'
-import { playersRoutes } from '../features/players'
 import { monstersRoute } from '../features/monsters'
 import { integrityRoute } from '../features/integrity'
 import { liveRoutes } from '../features/live'
@@ -33,11 +31,9 @@ export const featureRoutes: FeatureRoute[] = [
   chatRoute,
   changesRoute,
   socialRoute,
-  pkRoute,
   ...mapsRoutes,
   ...npcDialogsRoutes,
   mapEditRoute,
-  ...playersRoutes,
   monstersRoute,
   dataRoute,
   integrityRoute,

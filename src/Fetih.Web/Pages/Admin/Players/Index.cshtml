@@ -1,0 +1,106 @@
+@page
+@model Fetih.Web.Pages.Admin.Players.IndexModel
+@{
+    ViewData["Title"] = "Oyuncular";
+}
+
+<panel title="Oyuncular" icon="722107">
+    <form method="get" id="players-filter" action="/admin/players">
+        <div class="form-row">
+            <div style="flex: 2 1 220px">
+                <label for="f-q">Ara</label>
+                <input id="f-q" name="q" type="search" value="@Model.Q"
+                       placeholder="Karakter, hesap, e-posta, IP veya ID..."
+                       hx-get="@Url.Page("Index", "List")"
+                       hx-trigger="input changed delay:250ms, search"
+                       hx-include="#players-filter"
+                       hx-target="#players-list">
+            </div>
+            <div>
+                <label for="f-ip">IP adresi</label>
+                <input id="f-ip" name="ip" type="search" value="@Model.Ip" placeholder="ör. 203.0.113.42"
+                       hx-get="@Url.Page("Index", "List")"
+                       hx-trigger="input changed delay:250ms, search"
+                       hx-include="#players-filter"
+                       hx-target="#players-list">
+            </div>
+            <div>
+                <label for="f-class">Sınıf</label>
+                <select id="f-class" name="classLine">
+                    <option value="">Tümü</option>
+                    @foreach (var (line, name) in PlayerText.ClassLines)
+                    {
+                        <option value="@line" selected="@(Model.ClassLine == line)">@name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label>Harita</label>
+                <partial name="_Picker" model='new PickerField(PickerKind.Map, "mapId", Model.MapId)' />
+            </div>
+            <div style="flex: 0 1 85px">
+                <label for="f-min">En az sv.</label>
+                <input id="f-min" name="minLevel" type="number" min="1" max="140" value="@Model.MinLevel">
+            </div>
+            <div style="flex: 0 1 85px">
+                <label for="f-max">En çok sv.</label>
+                <input id="f-max" name="maxLevel" type="number" min="1" max="140" value="@Model.MaxLevel">
+            </div>
+        </div>
+        <div class="form-row">
+            <div>
+                <label for="f-status">Hesap durumu</label>
+                <select id="f-status" name="status">
+                    <option value="">Tümü</option>
+                    @foreach (var (id, name) in PlayerText.Statuses)
+                    {
+                        <option value="@id" selected="@(Model.Status == id)">@name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="f-authority">Yetki</label>
+                <select id="f-authority" name="authority">
+                    <option value="">Tümü</option>
+                    @foreach (var (id, name) in PlayerText.Authorities)
+                    {
+                        <option value="@id" selected="@(Model.Authority == id)">@name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="f-sort">Sıralama</label>
+                <select id="f-sort" name="sort">
+                    <option value="">Varsayılan</option>
+                    @foreach (var (key, name) in PlayerText.Sorts)
+                    {
+                        <option value="@key" selected="@(Model.Sort == key)">@name</option>
+                    }
+                </select>
+            </div>
+            <div style="flex: 0 1 auto">
+                <label class="check">
+                    <input type="checkbox" name="online" value="true" checked="@Model.Online">
+                    Sadece çevrimiçi
+                </label>
+            </div>
+            <div style="flex: 0 1 auto">
+                <label class="check">
+                    <input type="checkbox" name="jailed" value="true" checked="@Model.Jailed">
+                    Hapishanede
+                </label>
+            </div>
+            <div style="flex: 0 1 auto">
+                <button type="submit">Süz</button>
+                @if (Model.HasFilters)
+                {
+                    <a class="button plain" href="/admin/players">Temizle</a>
+                }
+            </div>
+        </div>
+    </form>
+
+    <div id="players-list">
+        <partial name="_List" model="Model" />
+    </div>
+</panel>

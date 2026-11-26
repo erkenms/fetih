@@ -1,0 +1,134 @@
+@model Fetih.Web.Pages.Admin.Players.IndexModel
+@using Fetih.Game.Pk
+@{
+    bool canModerate = User.Has(Permission.Moderate);
+    bool canManage = User.Has(Permission.ManageCharacters);
+}
+
+@if (!Model.Result.GameConnected)
+{
+    <div class="alert inline">Oyun sunucusu kapalı, bu yüzden kimse çevrimiçi görünmüyor.</div>
+}
+
+<form method="post" id="bulk-form" data-confirm="Seçili oyunculara bu işlem uygulansın mı?">
+    @if (!string.IsNullOrWhiteSpace(Model.Q)) { <input type="hidden" name="Q" value="@Model.Q"> }
+    @if (!string.IsNullOrWhiteSpace(Model.Ip)) { <input type="hidden" name="Ip" value="@Model.Ip"> }
+    @if (Model.Status.HasValue) { <input type="hidden" name="Status" value="@Model.Status"> }
+    @if (Model.Authority.HasValue) { <input type="hidden" name="Authority" value="@Model.Authority"> }
+    @if (Model.Online) { <input type="hidden" name="Online" value="true"> }
+    @if (Model.Jailed) { <input type="hidden" name="Jailed" value="true"> }
+    @if (Model.ClassLine.HasValue) { <input type="hidden" name="ClassLine" value="@Model.ClassLine"> }
+    @if (Model.MapId.HasValue) { <input type="hidden" name="MapId" value="@Model.MapId"> }
+    @if (Model.MinLevel.HasValue) { <input type="hidden" name="MinLevel" value="@Model.MinLevel"> }
+    @if (Model.MaxLevel.HasValue) { <input type="hidden" name="MaxLevel" value="@Model.MaxLevel"> }
+    @if (!string.IsNullOrWhiteSpace(Model.Sort)) { <input type="hidden" name="Sort" value="@Model.Sort"> }
+    @if (Model.Sayfa > 1) { <input type="hidden" name="sayfa" value="@Model.Sayfa"> }
+
+    <div class="buttons" style="justify-content: space-between; margin: 6px 0">
+        <span class="muted">Toplam <b>@PlayerText.Number(Model.Result.Total)</b> oyuncu</span>
+        @if (canModerate && Model.Result.Items.Length > 0)
+        {
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+                <input type="text" name="reason" placeholder="Toplu işlem sebebi (isteğe bağlı)" style="width: 210px">
+                <button type="submit" asp-page-handler="BulkKick" class="plain">Seçilileri at</button>
+                @if (canManage)
+                {
+                    <button type="submit" asp-page-handler="BulkBan">Seçilileri yasakla</button>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr>
+                @if (canModerate) { <th style="width: 22px"></th> }
+                <th>Karakter</th>
+                <th>Hesap</th>
+                <th>Seviye</th>
+                <th>Sınıf</th>
+                <th>Konum</th>
+                <th>Gümüş</th>
+                <th>CP</th>
+                <th>PK</th>
+                <th>Durum</th>
+                <th>Son giriş</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var p in Model.Result.Items)
+            {
+                bool hasChar = p.CharacterId != null;
+                <tr>
+                    @if (canModerate)
+                    {
+                        <td><input type="checkbox" name="accountIds" value="@p.AccountId" aria-label="@(p.Name ?? p.Username)"></td>
+                    }
+                    <td>
+                        @if (hasChar)
+                        {
+                            <a href="/admin/players/@p.AccountId">@p.Name</a>
+                            <span class="muted">#@p.CharacterId</span>
+                        }
+                        else
+                        {
+                            <a href="/admin/players/@p.AccountId" class="muted">Karakteri yok</a>
+                        }
+                    </td>
+                    <td>
+                        <a href="/admin/players/@p.AccountId">@p.Username</a>
+                        @if (p.StatusId != 2)
+                        {
+                            <span class="tag @PlayerText.StatusTag(p.StatusId)">@PlayerText.Status(p.StatusId)</span>
+                        }
+                        @if (p.AuthorityId > 1)
+                        {
+                            <span class="tag @PlayerText.AuthorityTag(p.AuthorityId)">@PlayerText.Authority(p.AuthorityId)</span>
+                        }
+                    </td>
+                    <td>
+                        @if (hasChar)
+                        {
+                            @p.Level@(p.Rebirths > 0 ? $" (RB {p.Rebirths})" : "")
+                        }
+                    </td>
+                    <td>@(hasChar ? PlayerText.Profession(p.CurrentClass) : "")</td>
+                    <td>
+                        @if (hasChar)
+                        {
+                            @(p.MapName ?? $"#{p.MapId}")
+                            <span class="muted">(@p.X, @p.Y)</span>
+                            @if (p.MapId == Jail.MapID)
+                            {
+                                <span class="tag bad">Hapiste</span>
+                            }
+                        }
+                    </td>
+                    <td>@(hasChar ? PlayerText.Number(p.Silver) : "")</td>
+                    <td>@(hasChar ? PlayerText.Number(p.ConquerPoints) : "")</td>
+                    <td>
+                        @if (hasChar)
+                        {
+                            <span class="tag @PlayerText.PkTag(p.KillPoints)">@p.KillPoints</span>
+                        }
+                    </td>
+                    <td>
+                        @if (hasChar)
+                        {
+                            <span class="tag @(p.Online ? "good" : "")">@(p.Online ? "Çevrimiçi" : "Çevrimdışı")</span>
+                        }
+                    </td>
+                    <td>@WebTime.Format(p.LastLogin)</td>
+                </tr>
+            }
+            @if (Model.Result.Items.Length == 0)
+            {
+                <tr><td colspan="@(canModerate ? 11 : 10)" class="empty">Süzgeçlere uyan oyuncu yok.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</form>
+
+<pager page="Model.Result.Page" pages="Model.Pages" />

@@ -24,7 +24,6 @@ public static class AdminMenu
         new("Oyuncular",
         [
             new("Oyuncular", "/admin/players", Permission.AdminArea),
-            new("PK ve hapishane", "/admin/pk", Permission.AdminArea),
         ]),
         new("Stüdyo",
         [

@@ -1,0 +1,847 @@
+@page "/admin/players/{id:int}"
+@model Fetih.Web.Pages.Admin.Players.DetailModel
+@using Fetih.Game.Pk
+@{
+    var acc = Model.Account;
+    var ch = Model.Character;
+    ViewData["Title"] = ch?.Name ?? acc.Username;
+
+    bool canModerate = User.Has(Permission.Moderate);
+    bool canManageChar = User.Has(Permission.ManageCharacters);
+    bool canManageAcc = User.Has(Permission.ManageAccounts);
+    bool canViewLogs = User.Has(Permission.ViewLogs);
+    bool canViewAudit = User.Has(Permission.ViewAudit);
+    bool inJail = ch != null && ch.MapId == Jail.MapID;
+    string env = Model.GrafanaEnv;
+    string TabUrl(string tab) => $"/admin/players/{acc.AccountId}?sekme={tab}";
+    int itemCount = ch == null ? 0 : ch.Equipment.Length + ch.Inventory.Length + ch.Warehouses.Sum(w => w.Items.Length) + ch.Detained.Length;
+}
+
+<div class="buttons" style="justify-content: space-between; margin: 0 0 8px">
+    <a class="button plain" href="/admin/players">« Oyunculara dön</a>
+    <div style="display: flex; flex-wrap: wrap; gap: 6px">
+        @if (ch != null)
+        {
+            <a class="button plain" href="/admin/maps/@ch.MapId?x=@ch.X&y=@ch.Y">Haritada gör</a>
+        }
+        @if (canViewLogs)
+        {
+            <a class="button plain" href="@Grafana.PlayerUrl(ch?.CharacterId, acc.AccountId, env)">Oyuncu kayıtları (Grafana)</a>
+            <a class="button plain" href="@Grafana.ChatUrl(ch?.CharacterId, acc.AccountId, ch?.Name, env)">Sohbet</a>
+            <a class="button plain" href="@Grafana.PacketsUrl(acc.AccountId, env: env)">Paketler</a>
+        }
+        @if (canViewAudit)
+        {
+            <a class="button plain" href="@Grafana.AuditUrl(targetType: "account", targetId: acc.AccountId.ToString())">Denetim kaydı</a>
+        }
+    </div>
+</div>
+
+<panel title="@(ch?.Name ?? acc.Username)" icon="722107">
+    <p>
+        <b>Hesap:</b> @acc.Username <span class="muted">#@acc.AccountId</span>
+        @if (ch != null)
+        {
+            <span> · <b>Karakter:</b> @ch.Name <span class="muted">#@ch.CharacterId</span></span>
+            <span> · Lv.@ch.Level · @PlayerText.Profession(ch.CurrentClass)</span>
+            @if (ch.Rebirths > 0) { <span> · RB @ch.Rebirths</span> }
+            <span> · @(ch.MapName ?? $"#{ch.MapId}") (@ch.X, @ch.Y)</span>
+        }
+    </p>
+    <p>
+        @if (ch != null)
+        {
+            <span class="tag @(ch.Online ? "good" : "")">@(ch.Online ? "Çevrimiçi" : "Çevrimdışı")</span>
+            @if (ch.Dead) { <span class="tag bad">Ölü</span> }
+            @if (inJail) { <span class="tag bad">Hapiste</span> }
+            @if (Model.IsMuted) { <span class="tag bad">Susturuldu: @WebTime.Format(ch.MutedUntil)</span> }
+        }
+        <span class="tag @PlayerText.StatusTag(acc.StatusId)">@PlayerText.Status(acc.StatusId)</span>
+        <span class="tag @PlayerText.AuthorityTag(acc.AuthorityId)">@PlayerText.Authority(acc.AuthorityId)</span>
+        @if (acc.PacketTraced)
+        {
+            <span class="tag info">Paket izleme açık</span>
+        }
+    </p>
+
+    @if (!acc.GameConnected)
+    {
+        <div class="alert inline">Oyun sunucusu kapalı. Veritabanı görüntüsü gösteriliyor; değişiklikler için oyun sunucusu gerekir.</div>
+    }
+    @if (ch == null)
+    {
+        <div class="alert inline">Bu hesabın henüz karakteri yok.</div>
+    }
+
+    @if (canManageChar || canManageAcc)
+    {
+        <div class="buttons" style="justify-content: flex-start; margin: 6px 0">
+            <span class="muted">Hesap:</span>
+            @if (canManageChar)
+            {
+                @if (!Model.IsBanned)
+                {
+                    <button type="button" data-dialog="dlg-ban">Yasakla</button>
+                }
+                else
+                {
+                    <button type="button" class="plain" data-dialog="dlg-unban">Yasağı kaldır</button>
+                }
+            }
+            @if (canManageAcc)
+            {
+                <button type="button" class="plain" data-dialog="dlg-status">Durum</button>
+                <button type="button" class="plain" data-dialog="dlg-authority">Yetki</button>
+                <button type="button" class="plain" data-dialog="dlg-password">Şifre sıfırla</button>
+                <form method="post" asp-page-handler="PacketTrace" class="inline">
+                    <input type="hidden" name="sekme" value="@Model.ActiveTab">
+                    <input type="hidden" name="enabled" value="@(acc.PacketTraced ? "false" : "true")">
+                    <button class="plain" disabled="@(!acc.GameConnected)">@(acc.PacketTraced ? "Paket izlemeyi kapat" : "Paket izlemeyi aç")</button>
+                </form>
+            }
+        </div>
+    }
+
+    @if (ch != null && (canModerate || canManageChar))
+    {
+        <div class="buttons" style="justify-content: flex-start; margin: 4px 0 8px">
+            <span class="muted">Karakter:</span>
+            @if (canModerate)
+            {
+                <button type="button" class="plain" data-dialog="dlg-kick" disabled="@(!ch.Online)">Oyundan at</button>
+                <button type="button" class="plain" data-dialog="dlg-mute">@(Model.IsMuted ? "Susturmayı kaldır" : "Sustur")</button>
+                @if (!inJail)
+                {
+                    <form method="post" asp-page-handler="Jail" class="inline"
+                          data-confirm="“@ch.Name” hapse gönderilsin mi?">
+                        <input type="hidden" name="characterId" value="@ch.CharacterId">
+                        <input type="hidden" name="sekme" value="@Model.ActiveTab">
+                        <button class="plain">Hapse at</button>
+                    </form>
+                }
+                else
+                {
+                    <form method="post" asp-page-handler="Release" class="inline"
+                          data-confirm="“@ch.Name” hapishaneden tahliye edilsin mi?">
+                        <input type="hidden" name="characterId" value="@ch.CharacterId">
+                        <input type="hidden" name="sekme" value="@Model.ActiveTab">
+                        <button>Hapishaneden tahliye et</button>
+                    </form>
+                }
+                <button type="button" class="plain" data-dialog="dlg-message" disabled="@(!ch.Online)">Özel mesaj</button>
+            }
+            @if (canManageChar)
+            {
+                <button type="button" class="plain" data-dialog="dlg-give-item">Eşya ver</button>
+                <button type="button" class="plain" data-dialog="dlg-silver">Gümüş</button>
+                <button type="button" class="plain" data-dialog="dlg-cp">CP</button>
+                <button type="button" class="plain" data-dialog="dlg-level">Seviye</button>
+                <button type="button" class="plain" data-dialog="dlg-teleport">Işınla</button>
+            }
+        </div>
+    }
+
+    <nav class="tabs">
+        @if (ch != null)
+        {
+            <a class="@(Model.ActiveTab == "profile" ? "on" : null)" href="@TabUrl("profile")">Profil</a>
+            <a class="@(Model.ActiveTab == "items" ? "on" : null)" href="@TabUrl("items")">Eşyalar (@itemCount)</a>
+            <a class="@(Model.ActiveTab == "skills" ? "on" : null)" href="@TabUrl("skills")">Yetenekler (@(ch.Magics.Length + ch.Proficiencies.Length))</a>
+            <a class="@(Model.ActiveTab == "relations" ? "on" : null)" href="@TabUrl("relations")">İlişkiler (@(ch.Friends.Length + ch.Enemies.Length + ch.TradePartners.Length))</a>
+        }
+        <a class="@(Model.ActiveTab == "account" ? "on" : null)" href="@TabUrl("account")">Hesap</a>
+        <a class="@(Model.ActiveTab == "logins" ? "on" : null)" href="@TabUrl("logins")">Girişler (@acc.Logins.Length)</a>
+    </nav>
+
+    @if (Model.ActiveTab == "profile" && ch != null)
+    {
+        <div class="sections">
+            <div style="flex: 1 1 280px">
+                <h3>İstatistikler ve Nitelikler</h3>
+                <table class="grid">
+                    <tbody>
+                    <tr><td>Savaş gücü</td><td><b>@ch.BattlePower</b></td></tr>
+                    <tr><td>Can</td><td>@(ch.MaxHealth != null ? $"{PlayerText.Number(ch.Health)} / {PlayerText.Number(ch.MaxHealth.Value)}" : PlayerText.Number(ch.Health))</td></tr>
+                    <tr><td>Mana</td><td>@(ch.MaxMana != null ? $"{PlayerText.Number(ch.Mana)} / {PlayerText.Number(ch.MaxMana.Value)}" : PlayerText.Number(ch.Mana))</td></tr>
+                    <tr><td>Güç / Çeviklik</td><td>@ch.Strength / @ch.Agility</td></tr>
+                    <tr><td>Dayanıklılık / Ruh</td><td>@ch.Vitality / @ch.Spirit</td></tr>
+                    <tr><td>Nitelik puanı</td><td>@ch.AttributePoints</td></tr>
+                    @if (ch.Stats != null)
+                    {
+                        <tr><td>Saldırı</td><td>@ch.Stats.MinAttack – @ch.Stats.MaxAttack</td></tr>
+                        <tr><td>Büyü saldırısı</td><td>@ch.Stats.MagicAttack</td></tr>
+                        <tr><td>Savunma / B-Savunma</td><td>@ch.Stats.Defense / @ch.Stats.MagicDefense</td></tr>
+                        <tr><td>Kaçınma / Kutsama</td><td>@ch.Stats.Dodge / -@ch.Stats.BlessPercent%</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 280px">
+                <h3>Varlık ve Puanlar</h3>
+                <table class="grid">
+                    <tbody>
+                    <tr><td>Gümüş</td><td>@PlayerText.Number(ch.Silver)</td></tr>
+                    <tr><td>Depodaki gümüş</td><td>@PlayerText.Number(ch.StoredSilver)</td></tr>
+                    <tr><td>Conquer Puanı</td><td>@PlayerText.Number(ch.ConquerPoints)</td></tr>
+                    <tr><td>PK puanı</td><td><span class="tag @PlayerText.PkTag(ch.KillPoints)">@ch.KillPoints</span></td></tr>
+                    <tr><td>Erdem</td><td>@PlayerText.Number(ch.Virtue)</td></tr>
+                    <tr><td>VIP seviyesi</td><td>@ch.VipLevel</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 280px">
+                <h3>Sınıf ve Konum</h3>
+                <table class="grid">
+                    <tbody>
+                    <tr><td>Mevcut sınıf</td><td>@PlayerText.Profession(ch.CurrentClass)</td></tr>
+                    <tr><td>Önceki sınıf</td><td>@PlayerText.Profession(ch.PreviousClass)</td></tr>
+                    <tr><td>İlk sınıf</td><td>@PlayerText.Profession(ch.AncestorClass)</td></tr>
+                    <tr><td>Yeniden doğuş</td><td>@ch.Rebirths</td></tr>
+                    <tr><td>Tecrübe</td><td>@PlayerText.Number(ch.Experience)</td></tr>
+                    <tr><td>Eş</td><td>@(string.IsNullOrEmpty(ch.Spouse) || ch.Spouse == "None" ? "Yok" : ch.Spouse)</td></tr>
+                    <tr><td>Konum</td><td>@(ch.MapName ?? $"#{ch.MapId}") (#@ch.MapId) (@ch.X, @ch.Y)</td></tr>
+                    <tr><td>Kayıt</td><td>@WebTime.Format(ch.Registered)</td></tr>
+                    @if (!string.IsNullOrEmpty(ch.IpAddress))
+                    {
+                        <tr><td>IP adresi</td><td><a href="/admin/players?ip=@Uri.EscapeDataString(ch.IpAddress)">@ch.IpAddress</a></td></tr>
+                    }
+                    @if (ch.LoggedInAt != null)
+                    {
+                        <tr><td>Giriş zamanı</td><td>@WebTime.Format(ch.LoggedInAt)</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 280px">
+                <h3>Sosyal</h3>
+                <table class="grid">
+                    <tbody>
+                    <tr>
+                        <td>Lonca</td>
+                        <td>
+                            @if (ch.Guild != null)
+                            {
+                                <b>@ch.Guild.Name</b> <span class="muted">#@ch.Guild.SyndicateId · Rütbe @ch.Guild.Rank · Bağış @PlayerText.Number(ch.Guild.SilverDonation) / @PlayerText.Number(ch.Guild.ConquerPointsDonation) CP</span>
+                            }
+                            else { <span class="muted">Yok</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Aile</td>
+                        <td>
+                            @if (ch.Family != null)
+                            {
+                                <b>@ch.Family.Name</b> <span class="muted">#@ch.Family.FamilyId · Rütbe @ch.Family.Rank · Bağış @PlayerText.Number(ch.Family.Donation)</span>
+                            }
+                            else { <span class="muted">Yok</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Asalet</td>
+                        <td>@(ch.Nobility != null ? PlayerText.Number(ch.Nobility.Donation) + " gümüş" : "Yok")</td>
+                    </tr>
+                    <tr>
+                        <td>Çiçekler</td>
+                        <td>
+                            @if (ch.Flowers != null)
+                            {
+                                <span>Gül @ch.Flowers.RedRoses (+@ch.Flowers.RedRosesToday) · Zambak @ch.Flowers.Lilies (+@ch.Flowers.LiliesToday) · Orkide @ch.Flowers.Orchids (+@ch.Flowers.OrchidsToday) · Lale @ch.Flowers.Tulips (+@ch.Flowers.TulipsToday)</span>
+                            }
+                            else { <span class="muted">Yok</span> }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Arena</td>
+                        <td>
+                            @if (ch.Arena != null)
+                            {
+                                <span>@ch.Arena.Points puan · Bugün @ch.Arena.WinsToday G / @ch.Arena.LossesToday M · Toplam @ch.Arena.WinsTotal G / @ch.Arena.LossesTotal M · Onur @ch.Arena.HonorPoints (@ch.Arena.HonorTotal)</span>
+                            }
+                            else { <span class="muted">Yok</span> }
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.ActiveTab == "items" && ch != null)
+    {
+        <h3>Ekipman (@ch.Equipment.Length)</h3>
+        <div class="scroll" style="margin-bottom: 10px">
+            <table class="grid">
+                <thead>
+                <tr><th>Yuva</th><th></th><th>Eşya</th><th>Geliştirme</th><th>Soketler</th><th>Dayanıklılık</th><th>Durum</th>@if (canViewLogs) { <th></th> }</tr>
+                </thead>
+                <tbody>
+                @foreach (var item in ch.Equipment)
+                {
+                    <tr>
+                        <td>@PlayerText.Slot(item.Position)</td>
+                        <td><item-icon item="@item.TypeId" /></td>
+                        <td><b>@(item.Catalog?.Name ?? $"#{item.TypeId}")</b> <span class="muted">#@item.ItemId (tür @item.TypeId)</span></td>
+                        <td>@(item.Plus > 0 ? $"+{item.Plus} " : "")@(item.Bless > 0 ? $"-{item.Bless}% " : "")@(item.Enchant > 0 ? $"Büyü +{item.Enchant}" : "")</td>
+                        <td>@(item.Gem1 == 0 && item.Gem2 == 0 ? "—" : $"{PlayerText.Socket(item.Gem1)} / {PlayerText.Socket(item.Gem2)}")</td>
+                        <td>@item.Amount / @item.AmountLimit</td>
+                        <td>@(item.Locked ? "Kilitli" : "")</td>
+                        @if (canViewLogs)
+                        {
+                            <td class="actions"><a href="@Grafana.ItemsUrl(item.ItemId, env)">Geçmiş</a></td>
+                        }
+                    </tr>
+                }
+                @if (ch.Equipment.Length == 0)
+                {
+                    <tr><td colspan="@(canViewLogs ? 8 : 7)" class="empty">Kuşanılmış eşya yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Envanter (@ch.Inventory.Length / 40)</h3>
+        <div class="scroll" style="margin-bottom: 10px">
+            <table class="grid">
+                <thead>
+                <tr><th></th><th>Eşya</th><th>Adet</th><th>Geliştirme</th><th>Soketler</th><th>Dayanıklılık</th><th>Durum</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var item in ch.Inventory)
+                {
+                    string itemName = item.Catalog?.Name ?? $"#{item.TypeId}";
+                    <tr>
+                        <td><item-icon item="@item.TypeId" /></td>
+                        <td><b>@itemName</b> <span class="muted">#@item.ItemId (tür @item.TypeId)</span></td>
+                        <td>@item.StackAmount</td>
+                        <td>@(item.Plus > 0 ? $"+{item.Plus} " : "")@(item.Bless > 0 ? $"-{item.Bless}% " : "")@(item.Enchant > 0 ? $"Büyü +{item.Enchant}" : "")</td>
+                        <td>@(item.Gem1 == 0 && item.Gem2 == 0 ? "—" : $"{PlayerText.Socket(item.Gem1)} / {PlayerText.Socket(item.Gem2)}")</td>
+                        <td>@item.Amount / @item.AmountLimit</td>
+                        <td>@(item.Locked ? "Kilitli" : "")</td>
+                        <td class="actions">
+                            @if (canViewLogs)
+                            {
+                                <a href="@Grafana.ItemsUrl(item.ItemId, env)">Geçmiş</a>
+                            }
+                            @if (canManageChar)
+                            {
+                                <form method="post" asp-page-handler="TakeItem" class="inline"
+                                      data-confirm="“@itemName” (#@item.ItemId) @ch.Name envanterinden silinsin mi?">
+                                    <input type="hidden" name="characterId" value="@ch.CharacterId">
+                                    <input type="hidden" name="itemId" value="@item.ItemId">
+                                    <button class="plain">Al</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (ch.Inventory.Length == 0)
+                {
+                    <tr><td colspan="8" class="empty">Envanter boş.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Depolar <span class="muted">(Depodaki gümüş: @PlayerText.Number(ch.StoredSilver))</span></h3>
+        @if (ch.Warehouses.Length == 0)
+        {
+            <p class="muted">Depolarda eşya yok.</p>
+        }
+        else
+        {
+            @foreach (var wh in ch.Warehouses)
+            {
+                <p><b>Depo NPC #@wh.PackageId</b> <span class="muted">(@wh.Items.Length eşya)</span></p>
+                <div class="scroll" style="margin-bottom: 8px">
+                    <table class="grid">
+                        <thead>
+                        <tr><th></th><th>Eşya</th><th>Adet</th><th>Geliştirme</th><th>Soketler</th><th>Dayanıklılık</th>@if (canViewLogs) { <th></th> }</tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in wh.Items)
+                        {
+                            <tr>
+                                <td><item-icon item="@item.TypeId" /></td>
+                                <td><b>@(item.Catalog?.Name ?? $"#{item.TypeId}")</b> <span class="muted">#@item.ItemId</span></td>
+                                <td>@item.StackAmount</td>
+                                <td>@(item.Plus > 0 ? $"+{item.Plus} " : "")@(item.Bless > 0 ? $"-{item.Bless}% " : "")@(item.Enchant > 0 ? $"Büyü +{item.Enchant}" : "")</td>
+                                <td>@(item.Gem1 == 0 && item.Gem2 == 0 ? "—" : $"{PlayerText.Socket(item.Gem1)} / {PlayerText.Socket(item.Gem2)}")</td>
+                                <td>@item.Amount / @item.AmountLimit</td>
+                                @if (canViewLogs)
+                                {
+                                    <td class="actions"><a href="@Grafana.ItemsUrl(item.ItemId, env)">Geçmiş</a></td>
+                                }
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+
+        @if (ch.Detained.Length > 0)
+        {
+            <h3>Alıkonulan eşyalar (@ch.Detained.Length)</h3>
+            <div class="scroll">
+                <table class="grid">
+                    <thead>
+                    <tr><th></th><th>Eşya</th><th>Geliştirme</th><th>Soketler</th>@if (canViewLogs) { <th></th> }</tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var item in ch.Detained)
+                    {
+                        <tr>
+                            <td><item-icon item="@item.TypeId" /></td>
+                            <td><b>@(item.Catalog?.Name ?? $"#{item.TypeId}")</b> <span class="muted">#@item.ItemId</span></td>
+                            <td>@(item.Plus > 0 ? $"+{item.Plus} " : "")@(item.Bless > 0 ? $"-{item.Bless}% " : "")</td>
+                            <td>@(item.Gem1 == 0 && item.Gem2 == 0 ? "—" : $"{PlayerText.Socket(item.Gem1)} / {PlayerText.Socket(item.Gem2)}")</td>
+                            @if (canViewLogs)
+                            {
+                                <td class="actions"><a href="@Grafana.ItemsUrl(item.ItemId, env)">Geçmiş</a></td>
+                            }
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+    else if (Model.ActiveTab == "skills" && ch != null)
+    {
+        <div class="sections">
+            <div style="flex: 1 1 320px">
+                <h3>Yetenekler (@ch.Magics.Length)</h3>
+                <table class="grid">
+                    <thead><tr><th>Yetenek</th><th>Tür</th><th>Seviye</th><th>Tecrübe</th></tr></thead>
+                    <tbody>
+                    @foreach (var m in ch.Magics)
+                    {
+                        <tr>
+                            <td>@(m.Name ?? $"#{m.Type}")</td>
+                            <td>@m.Type</td>
+                            <td>@m.Level</td>
+                            <td>@PlayerText.Number(m.Experience)</td>
+                        </tr>
+                    }
+                    @if (ch.Magics.Length == 0)
+                    {
+                        <tr><td colspan="4" class="empty">Öğrenilmiş yetenek yok.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 260px">
+                <h3>Silah Ustalıkları (@ch.Proficiencies.Length)</h3>
+                <table class="grid">
+                    <thead><tr><th>Tür</th><th>Seviye</th><th>Tecrübe</th></tr></thead>
+                    <tbody>
+                    @foreach (var p in ch.Proficiencies)
+                    {
+                        <tr>
+                            <td>@p.Type</td>
+                            <td>@p.Level</td>
+                            <td>@PlayerText.Number(p.Experience)</td>
+                        </tr>
+                    }
+                    @if (ch.Proficiencies.Length == 0)
+                    {
+                        <tr><td colspan="3" class="empty">Silah ustalığı yok.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.ActiveTab == "relations" && ch != null)
+    {
+        <div class="sections">
+            <div style="flex: 1 1 260px">
+                <h3>Arkadaşlar (@ch.Friends.Length)</h3>
+                <table class="grid">
+                    <thead><tr><th>Karakter</th><th>Sv.</th><th>Sınıf</th></tr></thead>
+                    <tbody>
+                    @foreach (var r in ch.Friends)
+                    {
+                        <tr>
+                            <td><a href="/admin/characters/@r.CharacterId">@r.Name</a></td>
+                            <td>@r.Level</td>
+                            <td>@PlayerText.Profession(r.CurrentClass)</td>
+                        </tr>
+                    }
+                    @if (ch.Friends.Length == 0)
+                    {
+                        <tr><td colspan="3" class="empty">Yok.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 280px">
+                <h3>Düşmanlar (@ch.Enemies.Length)</h3>
+                <table class="grid">
+                    <thead><tr><th>Karakter</th><th>Sv.</th><th>Sınıf</th><th>Tarih</th></tr></thead>
+                    <tbody>
+                    @foreach (var r in ch.Enemies)
+                    {
+                        <tr>
+                            <td><a href="/admin/characters/@r.CharacterId">@r.Name</a></td>
+                            <td>@r.Level</td>
+                            <td>@PlayerText.Profession(r.CurrentClass)</td>
+                            <td>@WebTime.Format(r.Since)</td>
+                        </tr>
+                    }
+                    @if (ch.Enemies.Length == 0)
+                    {
+                        <tr><td colspan="4" class="empty">Yok.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 1 280px">
+                <h3>Ticaret Ortakları (@ch.TradePartners.Length)</h3>
+                <table class="grid">
+                    <thead><tr><th>Karakter</th><th>Sv.</th><th>Sınıf</th><th>Tarih</th></tr></thead>
+                    <tbody>
+                    @foreach (var r in ch.TradePartners)
+                    {
+                        <tr>
+                            <td><a href="/admin/characters/@r.CharacterId">@r.Name</a></td>
+                            <td>@r.Level</td>
+                            <td>@PlayerText.Profession(r.CurrentClass)</td>
+                            <td>@WebTime.Format(r.Since)</td>
+                        </tr>
+                    }
+                    @if (ch.TradePartners.Length == 0)
+                    {
+                        <tr><td colspan="4" class="empty">Yok.</td></tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.ActiveTab == "account")
+    {
+        <table class="grid" style="margin-bottom: 10px">
+            <tbody>
+            <tr><td style="width: 160px">E-posta</td><td>@(acc.Email ?? "—")</td></tr>
+            <tr><td>İsim</td><td>@(acc.Name ?? "—")</td></tr>
+            <tr>
+                <td>Son IP</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(acc.IpAddress))
+                    {
+                        <a href="/admin/players?ip=@Uri.EscapeDataString(acc.IpAddress)">@acc.IpAddress</a>
+                    }
+                    else { <span>—</span> }
+                </td>
+            </tr>
+            <tr><td>Kayıt tarihi</td><td>@WebTime.Format(acc.Registered)</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Aynı IP üzerindeki diğer hesaplar (@acc.SameIpAccounts.Length)</h3>
+        <div class="scroll">
+            <table class="grid">
+                <thead><tr><th>ID</th><th>Hesap</th><th>Durum</th><th>Ortak IP'ler</th><th>Kayıt</th></tr></thead>
+                <tbody>
+                @foreach (var other in acc.SameIpAccounts)
+                {
+                    <tr>
+                        <td>#@other.AccountId</td>
+                        <td><a href="/admin/players/@other.AccountId">@other.Username</a></td>
+                        <td><span class="tag @PlayerText.StatusTag(other.StatusId)">@PlayerText.Status(other.StatusId)</span></td>
+                        <td>@string.Join(", ", other.SharedIps)</td>
+                        <td>@WebTime.Format(other.Registered)</td>
+                    </tr>
+                }
+                @if (acc.SameIpAccounts.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Bu hesapla ortak IP kullanan başka hesap yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else if (Model.ActiveTab == "logins")
+    {
+        <div class="scroll">
+            <table class="grid">
+                <thead><tr><th>Zaman</th><th>IP adresi</th></tr></thead>
+                <tbody>
+                @foreach (var entry in acc.Logins)
+                {
+                    <tr>
+                        <td>@WebTime.Format(entry.Timestamp)</td>
+                        <td><a href="/admin/players?ip=@Uri.EscapeDataString(entry.IpAddress)">@entry.IpAddress</a></td>
+                    </tr>
+                }
+                @if (acc.Logins.Length == 0)
+                {
+                    <tr><td colspan="2" class="empty">Kayıtlı giriş geçmişi yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</panel>
+
+@* Account dialogs *@
+
+@if (canManageChar)
+{
+    <dialog id="dlg-ban" class="@(Model.OpenDialog == "dlg-ban" ? "open" : null)">
+        <h2>@acc.Username hesabını yasakla</h2>
+        <form method="post" asp-page-handler="Ban" data-confirm="“@acc.Username” hesabı yasaklansın mı?">
+            @if (Model.OpenDialog == "dlg-ban") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="ban-reason">Sebep (isteğe bağlı)</label>
+            <input id="ban-reason" name="reason" type="text" style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Yasakla</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-unban" class="@(Model.OpenDialog == "dlg-unban" ? "open" : null)">
+        <h2>@acc.Username hesabının yasağını kaldır</h2>
+        <form method="post" asp-page-handler="Unban">
+            @if (Model.OpenDialog == "dlg-unban") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="unban-reason">Sebep (isteğe bağlı)</label>
+            <input id="unban-reason" name="reason" type="text" style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Yasağı kaldır</button>
+            </div>
+        </form>
+    </dialog>
+}
+
+@if (canManageAcc)
+{
+    <dialog id="dlg-status" class="@(Model.OpenDialog == "dlg-status" ? "open" : null)">
+        <h2>@acc.Username için durum değiştir</h2>
+        <form method="post" asp-page-handler="Status">
+            @if (Model.OpenDialog == "dlg-status") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="acc-status">Yeni durum</label>
+            <select id="acc-status" name="statusId" style="width: 100%">
+                @foreach (var (sid, name) in PlayerText.NonBanStatuses)
+                {
+                    <option value="@sid" selected="@(sid == (Model.IsBanned ? (ushort)2 : acc.StatusId))">@name</option>
+                }
+            </select>
+            <label for="status-reason">Sebep (isteğe bağlı)</label>
+            <input id="status-reason" name="reason" type="text" style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-authority" class="@(Model.OpenDialog == "dlg-authority" ? "open" : null)">
+        <h2>@acc.Username için yetki değiştir</h2>
+        <form method="post" asp-page-handler="Authority" data-confirm="“@acc.Username” yetkisi değiştirilsin mi?">
+            @if (Model.OpenDialog == "dlg-authority") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="acc-auth">Yeni yetki</label>
+            <select id="acc-auth" name="authorityId" style="width: 100%">
+                @foreach (var (aid, name) in PlayerText.Authorities)
+                {
+                    <option value="@aid" selected="@(aid == acc.AuthorityId)">@name</option>
+                }
+            </select>
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-password" class="@(Model.OpenDialog == "dlg-password" ? "open" : null)">
+        <h2>@acc.Username şifresini sıfırla</h2>
+        <form method="post" asp-page-handler="ResetPassword" data-confirm="“@acc.Username” şifresi değiştirilsin mi?">
+            @if (Model.OpenDialog == "dlg-password") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="new-password">Yeni şifre</label>
+            <input id="new-password" name="newPassword" type="password" required style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Şifreyi değiştir</button>
+            </div>
+        </form>
+    </dialog>
+}
+
+@* Character dialogs *@
+
+@if (ch != null && canModerate)
+{
+    <dialog id="dlg-kick" class="@(Model.OpenDialog == "dlg-kick" ? "open" : null)">
+        <h2>@ch.Name oyundan at</h2>
+        <form method="post" asp-page-handler="Kick">
+            @if (Model.OpenDialog == "dlg-kick") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="kick-reason">Sebep (isteğe bağlı)</label>
+            <input id="kick-reason" name="reason" type="text" style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Oyundan at</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-mute" class="@(Model.OpenDialog == "dlg-mute" ? "open" : null)">
+        <h2>@ch.Name sustur</h2>
+        <form method="post" asp-page-handler="Mute">
+            @if (Model.OpenDialog == "dlg-mute") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="mute-min">Süre (dakika, 0 susturmayı kaldırır)</label>
+            <input id="mute-min" name="minutes" type="number" min="0" max="43200" value="@(Model.IsMuted ? 0 : 30)" required style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-message" class="@(Model.OpenDialog == "dlg-message" ? "open" : null)">
+        <h2>@ch.Name özel mesaj</h2>
+        <form method="post" asp-page-handler="Message">
+            @if (Model.OpenDialog == "dlg-message") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="msg-text">Mesaj</label>
+            <textarea id="msg-text" name="text" maxlength="512" required></textarea>
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Gönder</button>
+            </div>
+        </form>
+    </dialog>
+}
+
+@if (ch != null && canManageChar)
+{
+    <dialog id="dlg-give-item" class="@(Model.OpenDialog == "dlg-give-item" ? "open" : null)">
+        <h2>@ch.Name eşya ver</h2>
+        <form method="post" asp-page-handler="GiveItem">
+            @if (Model.OpenDialog == "dlg-give-item") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label>Eşya</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Item, "typeId", null)' />
+            <div class="form-row">
+                <div>
+                    <label for="gi-count">Adet</label>
+                    <input id="gi-count" name="count" type="number" min="1" max="40" value="1" required>
+                </div>
+                <div>
+                    <label for="gi-plus">Artı (+)</label>
+                    <input id="gi-plus" name="plus" type="number" min="0" max="12" value="0" required>
+                </div>
+                <div>
+                    <label for="gi-bless">Kutsama (-%)</label>
+                    <input id="gi-bless" name="bless" type="number" min="0" max="7" value="0" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="gi-gem1">Soket 1</label>
+                    <select id="gi-gem1" name="gem1">
+                        @foreach (var (val, name) in PlayerText.GemOptions)
+                        {
+                            <option value="@val">@name</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="gi-gem2">Soket 2</label>
+                    <select id="gi-gem2" name="gem2">
+                        @foreach (var (val, name) in PlayerText.GemOptions)
+                        {
+                            <option value="@val">@name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Ver</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-silver" class="@(Model.OpenDialog == "dlg-silver" ? "open" : null)">
+        <h2>@ch.Name gümüş</h2>
+        <form method="post" asp-page-handler="Silver">
+            @if (Model.OpenDialog == "dlg-silver") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="silver-amount">Miktar (eklemek için artı, almak için eksi)</label>
+            <input id="silver-amount" name="amount" type="number" required style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-cp" class="@(Model.OpenDialog == "dlg-cp" ? "open" : null)">
+        <h2>@ch.Name Conquer Puanı</h2>
+        <form method="post" asp-page-handler="ConquerPoints">
+            @if (Model.OpenDialog == "dlg-cp") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="cp-amount">Miktar (eklemek için artı, almak için eksi)</label>
+            <input id="cp-amount" name="amount" type="number" required style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-level" class="@(Model.OpenDialog == "dlg-level" ? "open" : null)">
+        <h2>@ch.Name seviye ayarla</h2>
+        <form method="post" asp-page-handler="Level">
+            @if (Model.OpenDialog == "dlg-level") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label for="char-level">Yeni seviye (1–140)</label>
+            <input id="char-level" name="level" type="number" min="1" max="140" value="@ch.Level" required style="width: 100%">
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="dlg-teleport" class="@(Model.OpenDialog == "dlg-teleport" ? "open" : null)">
+        <h2>@ch.Name ışınla</h2>
+        <form method="post" asp-page-handler="Teleport">
+            @if (Model.OpenDialog == "dlg-teleport") { <div class="alert inline">@Model.DialogError</div> }
+            <input type="hidden" name="characterId" value="@ch.CharacterId">
+            <input type="hidden" name="sekme" value="@Model.ActiveTab">
+            <label>Hedef harita</label>
+            <partial name="_Picker" model='new PickerField(PickerKind.Map, "mapId", ch.MapId)' />
+            <div class="form-row">
+                <div>
+                    <label for="tp-x">X</label>
+                    <input id="tp-x" name="x" type="number" min="0" max="65535" value="@ch.X" required>
+                </div>
+                <div>
+                    <label for="tp-y">Y</label>
+                    <input id="tp-y" name="y" type="number" min="0" max="65535" value="@ch.Y" required>
+                </div>
+            </div>
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Işınla</button>
+            </div>
+        </form>
+    </dialog>
+}
