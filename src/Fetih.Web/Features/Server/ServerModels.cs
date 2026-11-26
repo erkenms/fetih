@@ -22,3 +22,12 @@ public record UpdateMaintenanceRequest(bool Enabled, string? Message, bool KickN
 public record UpdateMotdRequest(string? Text);
 
 public record ServerActionResponse(bool Ok, bool AppliedLive);
+
+public record NamedGuild(uint Id, string Name);
+
+public record GuildWarInfo(
+    GuildWarState? Live,
+    NamedGuild? Winner,
+    NamedGuild? Holder,
+    bool RewardClaimed,
+    DateTime? WonAt);

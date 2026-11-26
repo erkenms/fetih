@@ -17,9 +17,8 @@ public static class AdminMenu
         [
             new("Duyurular", "/admin/broadcasts", Permission.Moderate),
             new("Sunucu", "/admin/server", Permission.ServerControl),
+            new("İlan panosu", "/admin/board", Permission.Moderate),
             new("Canlı dünya", "/admin/live", Permission.ViewLive),
-            new("Sosyal", "/admin/social", Permission.AdminArea),
-            new("Sağlık", "/admin/health", Permission.AdminArea),
         ]),
         new("Oyuncular",
         [

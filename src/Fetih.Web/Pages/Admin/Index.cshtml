@@ -1,9 +1,16 @@
 @page
+@model Fetih.Web.Pages.Admin.IndexModel
 @{
     ViewData["Title"] = "Yönetim paneli";
 }
-<panel title="Yönetim Paneli" icon="724426">
-    <p>Hoş geldin, <b>@User.Username()</b>. Sayfalar aşağıda ve soldaki menüde.</p>
+<panel title="Sunucu Durumu" icon="724426">
+    <div hx-get="@Url.Page("Index", "Status")" hx-trigger="every 5s">
+        <partial name="/Pages/Admin/Server/_Status.cshtml" model="Model.Status" />
+    </div>
+    @if (User.Has(Permission.ServerControl))
+    {
+        <p style="margin: 6px 0 0"><a href="/admin/server">Sunucu kontrolüne git »</a></p>
+    }
 </panel>
 <div class="sections">
     @foreach (var group in AdminMenu.For(User))

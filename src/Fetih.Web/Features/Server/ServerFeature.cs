@@ -1,12 +1,7 @@
 namespace Fetih.Web.Features.Server;
 
 using System.Security.Claims;
-using Fetih.Game.Admin;
-using Fetih.Game.Database.Models;
-using Fetih.Shared.Models.Admin;
-using Fetih.Web.Audit;
 using Fetih.Web.Auth;
-using Fetih.Web.Game;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,228 +11,52 @@ public class ServerFeature : IFeature
     {
         services.AddDbContextFactory<ServerControlDbContext>(options => options.UseMySql(
             config.Database!.ConnectionString, MySqlServerVersion.LatestSupportedServerVersion));
+        services.AddSingleton<ServerControlService>();
+        services.AddSingleton<Board.BoardService>();
     }
 
     public void Map(RouteGroupBuilder api)
     {
         var group = api.MapGroup("/server").RequirePermission(Permission.ServerControl);
-        group.MapGet("/status", GetStatusAsync).WithName("getServerControlStatus");
+        group.MapGet("/status", async (ServerControlService service) => TypedResults.Ok(await service.StatusAsync()))
+            .WithName("getServerControlStatus");
         group.MapPost("/shutdown", StartShutdownAsync).WithName("startServerShutdown");
         group.MapPost("/shutdown/cancel", CancelShutdownAsync).WithName("cancelServerShutdown");
         group.MapPut("/maintenance", UpdateMaintenanceAsync).WithName("updateServerMaintenance");
         group.MapPut("/motd", UpdateMotdAsync).WithName("updateServerMotd");
     }
 
-    private static async Task<Ok<ServerControlResponse>> GetStatusAsync(
-        IDbContextFactory<ServerControlDbContext> factory, GameRpc rpc)
-    {
-        await using var db = await factory.CreateDbContextAsync();
-        var row = await db.Settings.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.ID == DbServerSettings.SingletonId);
-
-        DateTime? updatedAt = row == null ? null : DateTime.SpecifyKind(row.UpdatedAt, DateTimeKind.Utc);
-        if (rpc.Connected)
-        {
-            try
-            {
-                var live = await rpc.CallAsync<ServerControlState>("ServerControlStatus");
-                return TypedResults.Ok(new ServerControlResponse(
-                    GameConnected: true,
-                    MaintenanceEnabled: live.MaintenanceEnabled,
-                    MaintenanceMessage: live.MaintenanceMessage ?? "",
-                    Motd: live.Motd ?? "",
-                    ShutdownPending: live.ShutdownPending,
-                    ShutdownMode: live.ShutdownMode,
-                    ShutdownAt: live.ShutdownAt == null
-                        ? null
-                        : DateTime.SpecifyKind(live.ShutdownAt.Value, DateTimeKind.Utc),
-                    ShutdownReason: live.ShutdownReason ?? "",
-                    OnlinePlayers: live.OnlinePlayers,
-                    OnlineNonGmPlayers: live.OnlineNonGmPlayers,
-                    UpdatedAt: updatedAt));
-            }
-            catch (GameOfflineException) { }
-        }
-
-        return TypedResults.Ok(new ServerControlResponse(
-            GameConnected: false,
-            MaintenanceEnabled: row?.MaintenanceEnabled ?? false,
-            MaintenanceMessage: row?.MaintenanceMessage ?? "",
-            Motd: row?.Motd ?? "",
-            ShutdownPending: false,
-            ShutdownMode: null,
-            ShutdownAt: null,
-            ShutdownReason: "",
-            OnlinePlayers: 0,
-            OnlineNonGmPlayers: 0,
-            UpdatedAt: updatedAt));
-    }
-
     private static async Task<Results<Ok<ServerActionResponse>, JsonHttpResult<ApiError>>> StartShutdownAsync(
-        StartShutdownRequest request, ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
+        StartShutdownRequest request, ClaimsPrincipal user, ServerControlService service)
     {
-        if (request.Seconds < ServerControl.MinCountdownSeconds ||
-            request.Seconds > ServerControl.MaxCountdownSeconds)
-            return ApiError.Result("invalid_countdown", StatusCodes.Status400BadRequest);
-
-        string reason = (request.Reason ?? "").Trim();
-        if (reason.Length > ServerControl.MaxReasonLength)
-            return ApiError.Result("invalid_reason", StatusCodes.Status400BadRequest);
-
-        var result = await rpc.CallAsync<AdminResult>("StartShutdown", new ShutdownArgs
-        {
-            ActorAccountID = user.AccountId(),
-            Mode = request.Mode,
-            Seconds = request.Seconds,
-            Reason = reason,
-        });
-
-        if (!result.Ok)
-        {
-            int status = result.Error == AdminErrors.Busy
-                ? StatusCodes.Status409Conflict
-                : StatusCodes.Status400BadRequest;
-            string code = result.Error == AdminErrors.Busy
-                ? "shutdown_pending"
-                : result.Error ?? "shutdown_failed";
-            return ApiError.Result(code, status);
-        }
-
-        string action = request.Mode == ShutdownMode.Restart ? "server.restart" : "server.shutdown";
-        string summary = string.IsNullOrEmpty(reason)
-            ? $"Scheduled {request.Mode.ToString().ToLowerInvariant()} in {request.Seconds}s"
-            : $"Scheduled {request.Mode.ToString().ToLowerInvariant()} in {request.Seconds}s ({reason})";
-        await audit.WriteAsync(action, "server", "game",
-            after: new { mode = request.Mode.ToString(), seconds = request.Seconds, reason },
-            summary: summary);
-
+        if (await service.StartShutdownAsync(user, request.Mode, request.Seconds, request.Reason) is { } error)
+            return ApiError.Result(error, error == "shutdown_pending" ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest);
         return TypedResults.Ok(new ServerActionResponse(true, true));
     }
 
     private static async Task<Results<Ok<ServerActionResponse>, JsonHttpResult<ApiError>>> CancelShutdownAsync(
-        ClaimsPrincipal user, GameRpc rpc, AuditLog audit)
+        ClaimsPrincipal user, ServerControlService service)
     {
-        var result = await rpc.CallAsync<AdminResult>("CancelShutdown", new AdminArgs
-        {
-            ActorAccountID = user.AccountId(),
-        });
-
-        if (!result.Ok)
-        {
-            int status = result.Error == AdminErrors.NotFound
-                ? StatusCodes.Status404NotFound
-                : StatusCodes.Status400BadRequest;
-            string code = result.Error == AdminErrors.NotFound
-                ? "no_shutdown_pending"
-                : result.Error ?? "cancel_failed";
-            return ApiError.Result(code, status);
-        }
-
-        await audit.WriteAsync("server.shutdown_cancel", "server", "game",
-            summary: "Cancelled scheduled shutdown/restart");
-
+        if (await service.CancelShutdownAsync(user) is { } error)
+            return ApiError.Result(error, error == "no_shutdown_pending" ? StatusCodes.Status404NotFound : StatusCodes.Status400BadRequest);
         return TypedResults.Ok(new ServerActionResponse(true, true));
     }
 
     private static async Task<Results<Ok<ServerActionResponse>, JsonHttpResult<ApiError>>> UpdateMaintenanceAsync(
-        UpdateMaintenanceRequest request, ClaimsPrincipal user,
-        IDbContextFactory<ServerControlDbContext> factory, GameRpc rpc, AuditLog audit)
+        UpdateMaintenanceRequest request, ClaimsPrincipal user, ServerControlService service)
     {
-        string message = (request.Message ?? "").Trim();
-        if (message.Length > ServerControl.MaxMaintenanceMessageLength)
-            return ApiError.Result("invalid_message", StatusCodes.Status400BadRequest);
-
-        await using var db = await factory.CreateDbContextAsync();
-        var row = await db.Settings.FirstOrDefaultAsync(x => x.ID == DbServerSettings.SingletonId);
-        var before = new
-        {
-            enabled = row?.MaintenanceEnabled ?? false,
-            message = row?.MaintenanceMessage ?? "",
-        };
-
-        if (row == null)
-        {
-            row = new DbServerSettings { ID = DbServerSettings.SingletonId };
-            db.Settings.Add(row);
-        }
-        row.MaintenanceEnabled = request.Enabled;
-        row.MaintenanceMessage = message;
-        row.UpdatedBy = user.AccountId();
-        row.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        bool appliedLive = false;
-        if (rpc.Connected)
-        {
-            try
-            {
-                var result = await rpc.CallAsync<AdminResult>("SetMaintenance", new MaintenanceArgs
-                {
-                    ActorAccountID = user.AccountId(),
-                    Enabled = request.Enabled,
-                    Message = message,
-                    KickNonGm = request.KickNonGm,
-                });
-                appliedLive = result.Ok;
-            }
-            catch (GameOfflineException) { }
-        }
-
-        var after = new
-        {
-            enabled = request.Enabled,
-            message,
-            kickNonGm = request.KickNonGm,
-            appliedLive,
-        };
-        await audit.WriteAsync("server.maintenance", "server", "game",
-            before: before, after: after,
-            summary: request.Enabled ? "Enabled maintenance mode" : "Disabled maintenance mode");
-
+        var (appliedLive, error) = await service.UpdateMaintenanceAsync(user, request.Enabled, request.Message, request.KickNonGm);
+        if (error != null)
+            return ApiError.Result(error, StatusCodes.Status400BadRequest);
         return TypedResults.Ok(new ServerActionResponse(true, appliedLive));
     }
 
     private static async Task<Results<Ok<ServerActionResponse>, JsonHttpResult<ApiError>>> UpdateMotdAsync(
-        UpdateMotdRequest request, ClaimsPrincipal user,
-        IDbContextFactory<ServerControlDbContext> factory, GameRpc rpc, AuditLog audit)
+        UpdateMotdRequest request, ClaimsPrincipal user, ServerControlService service)
     {
-        string text = (request.Text ?? "").Trim();
-        if (text.Length > ServerControl.MaxMotdLength)
-            return ApiError.Result("invalid_motd", StatusCodes.Status400BadRequest);
-
-        await using var db = await factory.CreateDbContextAsync();
-        var row = await db.Settings.FirstOrDefaultAsync(x => x.ID == DbServerSettings.SingletonId);
-        var before = new { motd = row?.Motd ?? "" };
-
-        if (row == null)
-        {
-            row = new DbServerSettings { ID = DbServerSettings.SingletonId };
-            db.Settings.Add(row);
-        }
-        row.Motd = text;
-        row.UpdatedBy = user.AccountId();
-        row.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        bool appliedLive = false;
-        if (rpc.Connected)
-        {
-            try
-            {
-                var result = await rpc.CallAsync<AdminResult>("SetMotd", new MotdArgs
-                {
-                    ActorAccountID = user.AccountId(),
-                    Text = text,
-                });
-                appliedLive = result.Ok;
-            }
-            catch (GameOfflineException) { }
-        }
-
-        await audit.WriteAsync("server.motd", "server", "game",
-            before: before, after: new { motd = text, appliedLive },
-            summary: text.Length == 0 ? "Cleared MOTD" : $"Updated MOTD ({text.Length} chars)");
-
+        var (appliedLive, error) = await service.UpdateMotdAsync(user, request.Text);
+        if (error != null)
+            return ApiError.Result(error, StatusCodes.Status400BadRequest);
         return TypedResults.Ok(new ServerActionResponse(true, appliedLive));
     }
 }

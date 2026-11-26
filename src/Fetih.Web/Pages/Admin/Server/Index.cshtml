@@ -1,0 +1,208 @@
+@page
+@model Fetih.Web.Pages.Admin.Server.IndexModel
+@using Fetih.Game.Admin
+@using Fetih.Shared.Models.Admin
+@{
+    ViewData["Title"] = "Sunucu kontrolü";
+    var liveWar = Model.GuildWar.Live;
+}
+
+<panel title="Sunucu Durumu" icon="724426">
+    <div hx-get="@Url.Page("Index", "Status")" hx-trigger="every 5s">
+        <partial name="_Status" model="Model.Status" />
+    </div>
+</panel>
+
+<panel title="Düzenli Yeniden Başlatma / Kapatma" icon="721080">
+    @if (!Model.Status.GameConnected)
+    {
+        <div class="alert inline">Oyun sunucusu kapalı. Yeniden başlatma veya kapatma zamanlamak için sunucu açık olmalı.</div>
+    }
+    @if (Model.ShutdownError != null)
+    {
+        <div class="alert inline">@Model.ShutdownError</div>
+    }
+    @if (Model.Status.ShutdownPending)
+    {
+        <p>
+            Aktif geri sayımı durdurmak için iptal edebilirsin.
+        </p>
+        <form method="post" asp-page-handler="CancelShutdown">
+            <div class="buttons">
+                <button>Geri sayımı iptal et</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <form method="post" asp-page-handler="StartShutdown"
+              data-confirm="Sunucu geri sayımı başlatılsın mı? Süre dolunca çevrimiçi oyuncular kaydedilip çıkarılacak.">
+            <div class="form-row">
+                <div>
+                    <label for="shutdown-mode">İşlem</label>
+                    <select id="shutdown-mode" name="mode">
+                        <option value="@ShutdownMode.Restart" selected="@(Model.ShutdownMode == ShutdownMode.Restart)">Yeniden başlat</option>
+                        <option value="@ShutdownMode.Shutdown" selected="@(Model.ShutdownMode == ShutdownMode.Shutdown)">Kapat</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="shutdown-minutes">Geri sayım (dakika)</label>
+                    <input id="shutdown-minutes" name="minutes" type="number"
+                           min="1" max="@IndexModel.MaxCountdownMinutes" value="@Model.ShutdownMinutes" required>
+                </div>
+            </div>
+            <label for="shutdown-reason">Sebep (isteğe bağlı)</label>
+            <input id="shutdown-reason" name="reason" type="text" value="@Model.ShutdownReason"
+                   maxlength="@ServerControl.MaxReasonLength" placeholder="Planlı bakım, yama güncellemesi..." style="width: 100%">
+            <div class="buttons">
+                <button disabled="@(!Model.Status.GameConnected)">Geri sayımı başlat</button>
+            </div>
+        </form>
+    }
+</panel>
+
+<panel title="Bakım Modu" icon="720027">
+    <p class="muted">
+        Açıkken yalnızca GM hesapları (Moderatör ve üzeri) giriş yapabilir. Giriş yapmaya çalışan oyuncular
+        istemcinin kendi bakım uyarısını görür. Aşağıdaki mesaj, açıldığında oyundan çıkarılan oyunculara gider.
+    </p>
+    @if (Model.MaintenanceError != null)
+    {
+        <div class="alert inline">@Model.MaintenanceError</div>
+    }
+    <form method="post" asp-page-handler="Maintenance">
+        <label class="check">
+            <input type="checkbox" name="enabled" value="true" checked="@Model.MaintenanceEnabled">
+            <input type="hidden" name="enabled" value="false">
+            Bakım modunu aç
+        </label>
+        <label for="maint-message">Bakım mesajı</label>
+        <input id="maint-message" name="message" type="text" value="@Model.MaintenanceMessage"
+               maxlength="@ServerControl.MaxMaintenanceMessageLength"
+               placeholder="Sunucu şu anda bakımda. Lütfen daha sonra tekrar deneyin." style="width: 100%">
+        @if (Model.Status.GameConnected && Model.Status.OnlineNonGmPlayers > 0)
+        {
+            <label class="check" style="margin-top: 6px">
+                <input type="checkbox" name="kickNonGm" value="true" checked="@Model.KickNonGm">
+                <input type="hidden" name="kickNonGm" value="false">
+                Şu an çevrimiçi olan @Model.Status.OnlineNonGmPlayers GM olmayan oyuncuyu çıkar
+            </label>
+        }
+        <div class="buttons">
+            <button>Bakım ayarlarını kaydet</button>
+        </div>
+    </form>
+</panel>
+
+<panel title="Günün Mesajı (MOTD)" icon="2000247">
+    <p class="muted">Her karakter giriş yaptığında bildirim satırları olarak gönderilir. Kapatmak için boş bırakın.</p>
+    @if (Model.MotdError != null)
+    {
+        <div class="alert inline">@Model.MotdError</div>
+    }
+    <form method="post" asp-page-handler="Motd">
+        <label for="motd-text">Giriş mesajı</label>
+        <textarea id="motd-text" name="text" rows="4" maxlength="@ServerControl.MaxMotdLength"
+                  placeholder="Fetih Online'a hoş geldiniz!&#10;Komutlar için /help yazın.">@Model.MotdText</textarea>
+        <div class="buttons">
+            <button type="submit" name="clear" value="true" class="plain"
+                    disabled="@string.IsNullOrWhiteSpace(Model.MotdText)">Temizle</button>
+            <button>MOTD kaydet</button>
+        </div>
+    </form>
+</panel>
+
+<panel title="Lonca Savaşı" icon="723727">
+    <div class="buttons" style="justify-content: space-between; margin: 0 0 8px">
+        <div>
+            @if (liveWar == null)
+            {
+                <span class="tag">Oyun kapalı</span>
+            }
+            else if (liveWar.Active)
+            {
+                <span class="tag bad">Sürüyor</span>
+            }
+            else
+            {
+                <span class="tag good">Çalışmıyor</span>
+            }
+        </div>
+        <div>
+            <form method="post" asp-page-handler="StartGuildWar" class="inline"
+                  data-confirm="Lonca savaşı şimdi başlasın mı? Biri bitirene kadar sürer.">
+                <button disabled="@(liveWar == null || liveWar.Active)">Başlat</button>
+            </form>
+            <form method="post" asp-page-handler="EndGuildWar" class="inline"
+                  data-confirm="Lonca savaşı şimdi bitsin mi? Direği tutan lonca kazanır.">
+                <button class="plain" disabled="@(liveWar == null || !liveWar.Active)">Bitir</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr><th>Galip</th><th>Direği tutan</th><th>Kazanıldı</th><th>Ödül</th><th>Program</th></tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>@(Model.GuildWar.Winner?.Name ?? "—")</td>
+                <td>@(Model.GuildWar.Holder?.Name ?? "—")</td>
+                <td>@WebTime.Format(Model.GuildWar.WonAt)</td>
+                <td>@(Model.GuildWar.Winner == null ? "—" : Model.GuildWar.RewardClaimed ? "Alındı" : "Alınmadı")</td>
+                <td>@(liveWar?.Schedule ?? "—")</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    @if (liveWar != null)
+    {
+        <h3 style="margin-top: 10px">Direk ve kapılar</h3>
+        <div class="scroll">
+            <table class="grid">
+                <thead><tr><th>Yapı</th><th>Durum</th><th>Can</th></tr></thead>
+                <tbody>
+                <tr>
+                    <td>Direk</td>
+                    <td>—</td>
+                    <td>@liveWar.PoleLife.ToString("N0") / @liveWar.PoleMaxLife.ToString("N0")</td>
+                </tr>
+                <tr>
+                    <td>Sol kapı</td>
+                    <td><span class="tag @(liveWar.LeftGateOpen ? "good" : null)">@(liveWar.LeftGateOpen ? "Açık" : "Kapalı")</span></td>
+                    <td>@liveWar.LeftGateLife.ToString("N0") / @liveWar.GateMaxLife.ToString("N0")</td>
+                </tr>
+                <tr>
+                    <td>Sağ kapı</td>
+                    <td><span class="tag @(liveWar.RightGateOpen ? "good" : null)">@(liveWar.RightGateOpen ? "Açık" : "Kapalı")</span></td>
+                    <td>@liveWar.RightGateLife.ToString("N0") / @liveWar.GateMaxLife.ToString("N0")</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin-top: 10px">Direğe verilen hasar</h3>
+        <div class="scroll">
+            <table class="grid">
+                <thead><tr><th>#</th><th>Lonca</th><th>Hasar</th></tr></thead>
+                <tbody>
+                @for (int i = 0; i < liveWar.Scores.Count; i++)
+                {
+                    var score = liveWar.Scores[i];
+                    <tr>
+                        <td>@(i + 1)</td>
+                        <td>@score.Name</td>
+                        <td>@score.Score.ToString("N0")</td>
+                    </tr>
+                }
+                @if (liveWar.Scores.Count == 0)
+                {
+                    <tr><td colspan="3" class="empty">Henüz hiçbir lonca direğe vurmadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</panel>

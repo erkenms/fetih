@@ -1,0 +1,66 @@
+@page
+@model Fetih.Web.Pages.Admin.Board.IndexModel
+@using Fetih.Web.Features.Board
+@{
+    ViewData["Title"] = "İlan panosu";
+}
+
+<panel title="İlan Panosu" icon="711394">
+    @if (!Model.GameConnected)
+    {
+        <div class="alert inline">Oyun sunucusu kapalı. İleti silmek için oyun sunucusunu başlat.</div>
+    }
+    <nav class="tabs" aria-label="Pano kanalları">
+        <a class="@(Model.Channel == null ? "on" : null)" href="/admin/board">Tümü</a>
+        @foreach (var (id, _, text) in BoardService.Channels)
+        {
+            <a class="@(Model.Channel == id ? "on" : null)" href="/admin/board?channel=@id">@text</a>
+        }
+    </nav>
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr><th>Tarih</th><th>Pano</th><th>Yazan</th><th>İleti</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var post in Model.Posts)
+            {
+                <tr>
+                    <td style="white-space: nowrap">@WebTime.Format(post.PostedAt)</td>
+                    <td>
+                        <span class="tag">@post.ChannelText</span>
+                        @if (post.GuildName != null)
+                        {
+                            <br><span class="muted">@post.GuildName</span>
+                        }
+                    </td>
+                    <td>
+                        @post.AuthorName
+                        @if (post.AuthorLevel != null)
+                        {
+                            <br><span class="muted">sv. @post.AuthorLevel</span>
+                        }
+                    </td>
+                    <td>@post.Message</td>
+                    <td class="actions">
+                        <form method="post" asp-page-handler="Delete" class="inline"
+                              data-confirm="“@post.AuthorName” adlı oyuncunun iletisi silinsin mi? Oyuncuya bildirilmez.">
+                            <input type="hidden" name="channel" value="@post.ChannelId">
+                            <input type="hidden" name="characterId" value="@post.CharacterId">
+                            @if (Model.Channel != null)
+                            {
+                                <input type="hidden" name="currentChannel" value="@Model.Channel">
+                            }
+                            <button class="plain" disabled="@(!Model.GameConnected)">Sil</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (Model.Posts.Length == 0)
+            {
+                <tr><td colspan="5" class="empty">İleti yok.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</panel>

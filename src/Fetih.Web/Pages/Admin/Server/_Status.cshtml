@@ -1,0 +1,45 @@
+@model Fetih.Web.Features.Server.ServerControlResponse
+@using Fetih.Shared.Models.Admin
+<div class="buttons" style="justify-content: flex-start; margin-top: 0">
+    @if (Model.GameConnected)
+    {
+        <span class="tag good">Oyun açık</span>
+        <span><b>@Model.OnlinePlayers</b> çevrimiçi <span class="muted">(@Model.OnlineNonGmPlayers oyuncu)</span></span>
+    }
+    else
+    {
+        <span class="tag bad">Oyun kapalı</span>
+    }
+    @if (Model.MaintenanceEnabled)
+    {
+        <span class="tag bad">Bakım AÇIK</span>
+    }
+    else
+    {
+        <span class="tag">Bakım kapalı</span>
+    }
+    @if (!Model.ShutdownPending)
+    {
+        <span class="muted">Planlı kapatma yok.</span>
+    }
+</div>
+@if (Model.ShutdownPending)
+{
+    var modeText = Model.ShutdownMode == ShutdownMode.Restart ? "yeniden başlatma" : "kapatma";
+    <div class="alert inline" style="margin: 6px 0 0">
+        Planlı @modeText sürüyor
+        @if (Model.ShutdownAt is DateTime at)
+        {
+            var left = at - DateTime.UtcNow;
+            if (left < TimeSpan.Zero) left = TimeSpan.Zero;
+            var clock = left.TotalHours >= 1
+                ? $"{(int)left.TotalHours}:{left.Minutes:D2}:{left.Seconds:D2}"
+                : $"{left.Minutes:D2}:{left.Seconds:D2}";
+            <span>— kalan süre: <b>@clock</b> (hedef: @WebTime.Format(at))</span>
+        }
+        @if (!string.IsNullOrEmpty(Model.ShutdownReason))
+        {
+            <br><span>Sebep: @Model.ShutdownReason</span>
+        }
+    </div>
+}
