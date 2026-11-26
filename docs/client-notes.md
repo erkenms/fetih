@@ -1,31 +1,20 @@
 # Client notes
 
-Facts traced in the client binaries that the server relies on. Add a finding here when you
-traced it yourself in a client (say which one and the date), and keep each to a few lines.
-If a code comment already explains it, don't repeat it here.
+Facts traced in the client binaries. One finding = a few lines, with the client and date.
+Already in a code comment → not here.
 
 ## Reading the Mac client
 
-`_CLIENT/MACcon1068.dmg` (Dec 2011) and `_CLIENT/MACcon1133.dmg` (Sep 2012) are TQ's official
-Mac clients. 1133 is closer to our 5619 Windows client (127/159 shared ini files identical, vs
-86/142 for 1068). It's a separate port of the same game code, so check findings against the
-Windows 5619 client, which is the one that counts. It can't run on a modern Mac (i386 only).
+`_CLIENT/MACcon1133.dmg` (2012) is closest to 5619 (`MACcon1068.dmg` is older). A separate
+port: confirm in the Windows client, which wins. i386 only, doesn't run.
 
-- Mounting: the DMGs carry a TQ EULA, so `hdiutil attach` cancels unless fed `yes |`. Use
-  `-readonly -nobrowse -mountpoint <scratch dir>`.
-- Binary: `Conquer.app/Contents/ConquerGameExe.app/Contents/MacOS/ConquerGameExe`, a native
-  i386 Mach-O (OpenGL, OpenAL, Carbon/Cocoa, Qt 4.7). `Play.exe` in Resources is a leftover.
-- Not stripped: ~180k symbols, C++ names demangle with `c++filt`, stabs give function
-  boundaries and source file names. 221 `CMsg*::Process(void*)` handlers, `CHero::*` has
-  820 methods. Quick look:
-  `otool -tV -arch i386 -p __ZN10CMsgAction7ProcessEPv <bin> | c++filt`. Ghidra loads it
-  with names.
-- Switches compile to PIC jump tables (`calll x; popl %reg` gives the base, then
-  `movl off(%reg,%idx,4)` and `addl %reg`). `__TEXT` is at vmaddr 0x1000, fileoff 0, so the
-  entry for case n is the int32 at file offset `base + off + 4*(n - low) - 0x1000`, and the
-  target is `base` plus that int32.
-- Its login is native (`CDlgLoginFlash` with `CMyEditEx` fields, `CDlgLoginServerList` with
-  `servericon*.jpg`), which makes it the reference for a native login screen.
+- Mount: `yes | hdiutil attach -readonly -nobrowse -mountpoint <dir>` (EULA prompt).
+- Binary: `Conquer.app/Contents/ConquerGameExe.app/Contents/MacOS/ConquerGameExe`.
+- Not stripped (~180k symbols): `otool -tV -arch i386 -p __ZN10CMsgAction7ProcessEPv <bin> | c++filt`,
+  or Ghidra.
+- Switch jump tables: `calll x; popl %reg` is the base; case n's int32 is at file offset
+  `base + off + 4*(n - low) - 0x1000`, target = base + it.
+- Login is native there (`CDlgLoginFlash`, `CDlgLoginServerList`): reference for a native login.
 
 ## Windows client login
 
@@ -38,8 +27,7 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   `CMD_BODYSIZE`).
 - `tqwea.dll` is a weather widget, `TQAnp.dll` a small crypto helper. `Conquer.exe`
   inline-hooks wininet's `InternetOpenUrlA`. The client's own log is `debug/<date>.log` (GBK).
-- Wine can't run it: the 2007 Flash.ocx faults under WoW64 right after loading (tried and
-  dropped 2026-11-23). Don't suggest Wine again unless the user brings it up.
+- Wine can't run it (Flash.ocx faults under WoW64, 2026-11-23).
 
 ## Findings
 
@@ -143,7 +131,7 @@ Windows 5619 client, which is the one that counts. It can't run on a modern Mac 
   runs from `ini/Questinfo.ini`; status 0 accepted, 1 done, 2 not accepted (the default), 5
   failed. Abandon is MsgTaskDialog 102 with TaskID 20000000 + quest ID; Today's activities'
   Attend is MsgAction 166 with the `Activity.ini` id. `DailyActivity.ini` isn't loaded. Details
-  in `docs/quests-proposal.md`.
+  in #106.
 - **Refinery** (2026-11-24, Mac client `CMsgItemStatus`, `CDlgSolidify`, `CQuenchStatusMgr`):
   using an item from `ini/ItemQuench.ini` turns the cursor into a picker (command 0x28); clicking
   gear asks to confirm, then MsgQuench 2076 (mode u16 at 4, gear at 8, refinery item at 12). The

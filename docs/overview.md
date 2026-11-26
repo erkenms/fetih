@@ -47,4 +47,4 @@ Strongest first:
 
 - [deploy.md](deploy.md): public server
 - [web-style.md](web-style.md): the site's look
-- [npc-features.md](npc-features.md), [quests-proposal.md](quests-proposal.md): feature notes
+- Feature backlog: issues ([NPCs](https://github.com/erkenms/fetih/issues/105), [quests](https://github.com/erkenms/fetih/issues/106))
