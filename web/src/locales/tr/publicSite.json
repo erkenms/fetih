@@ -160,7 +160,7 @@
     "subtitle": "fetih'e katılmak için 5619 oyun istemcisini indir.",
     "version": "İstemci sürümü: {{version}}",
     "downloadButton": "İstemciyi indir",
-    "unavailable": "Doğrudan indirme bağlantısı henüz yapılandırılmadı. Yerelde dotnet run client/build.cs ile derleyebilirsiniz.",
+    "unavailable": "Doğrudan indirme bağlantısı henüz yapılandırılmadı. Yerelde dotnet run tools/build.cs client --ip <ip> ile derleyebilirsiniz.",
     "stepsTitle": "Başlangıç",
     "steps": {
       "register": "Siteden bir hesap oluştur.",

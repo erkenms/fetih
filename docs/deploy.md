@@ -24,16 +24,30 @@ Grafana). `--profile deploy` adds the three servers and an HTTPS proxy in front 
 - A domain whose A record points at the machine, for the certificate.
 - The firewall open for 80, 443 (TCP and UDP), 5816 and 9960, and nothing else.
 
-## Files that don't come with the clone
+## Building the client and web assets
 
-Build these on a machine that has the original 5619 client in `_CLIENT/5619`, then copy them
-to the same paths in the server's checkout.
+`tools/build.cs` builds the client and web assets from the original 5619 base client.
+`Server.dat` is generated from `client/servers.json` (which lists both realms, `Storm`, production, and
+`Test`, staff only) using `--ip` or `FETIH_ACCOUNT_IP` (an IPv4 address; `ServerIP` holds at most 15
+characters).
 
-1. **The client**, into `_CLIENT/fetih`. Players need it too, and it must point at the
-   server: set `ServerIP` in `client/files/Server.dat` to the machine's public IP (an IP
-   address; the field holds 15 characters), then `dotnet run client/build.cs`.
-2. **The web's client art**, into `web/assets`: `dotnet run tools/assets/build.cs --maps all`
-   (most of an hour the first time). The pages show placeholders without it.
+On a machine with the .NET 11 SDK:
+
+```bash
+dotnet run tools/build.cs all --ip <public IP>              # local: _CLIENT/5619 -> _CLIENT/fetih, web/assets
+dotnet run tools/build.cs all --env prod --ip <public IP> --maps all   # server layout under /srv/fetih
+```
+
+On a server without the .NET SDK (with the base 5619 client at `/srv/fetih/base/5619`), run
+the build inside `mcr.microsoft.com/dotnet/sdk:11.0` with `/srv/fetih` mounted, or use the
+`tools/build.sh` wrapper:
+
+```bash
+FETIH_ACCOUNT_IP=<public IP> ./tools/build.sh all --env prod --maps all
+```
+
+`--maps all` renders every map's tiles (most of an hour the first time; later runs skip
+unchanged files). Without web assets, the site shows placeholders.
 
 ## First start
 

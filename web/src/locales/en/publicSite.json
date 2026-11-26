@@ -160,7 +160,7 @@
     "subtitle": "Get the 5619 game client to join fetih.",
     "version": "Client version: {{version}}",
     "downloadButton": "Download client",
-    "unavailable": "Direct download link is not configured yet. Build locally with dotnet run client/build.cs.",
+    "unavailable": "Direct download link is not configured yet. Build locally with dotnet run tools/build.cs client --ip <ip>.",
     "stepsTitle": "Getting started",
     "steps": {
       "register": "Create an account on the site.",

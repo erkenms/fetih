@@ -1,15 +1,19 @@
 # Web assets
 
 ```bash
-dotnet run tools/assets/build.cs [client] [output]   # defaults: _CLIENT/fetih, web/assets
-dotnet run tools/assets/build.cs [client] [output] --maps all          # also the map tiles
-dotnet run tools/assets/build.cs [client] [output] --maps 1002,1036    # only these maps' tiles
-dotnet run tools/assets/build.cs extract <client> <path> [file]   # one client file; .png converts it
+dotnet run tools/build.cs assets                                        # defaults: _CLIENT/fetih -> web/assets
+dotnet run tools/build.cs assets --maps all                             # also the map tiles
+dotnet run tools/build.cs assets --maps 1002,1036                       # only these maps' tiles
+dotnet run tools/build.cs assets --env test                             # /srv/fetih/test/client -> /srv/fetih/test/assets
+dotnet run tools/build.cs assets --out <client> --assets <output>       # explicit paths
+dotnet run tools/build.cs extract <client> <path> [file]                # one client file; .png converts it
 ```
 
-Reads the client and writes what the web app needs into `web/assets/`, which the web serves
-as `/assets`. The output is TQ's art and data: it's gitignored and never committed. Build the
-client first (`dotnet run client/build.cs`), or point the tool at any 5619 client folder.
+Reads the client and writes what the web app needs into `web/assets/` (or
+`/srv/fetih/<env>/assets/` with `--env`), which the web serves as `/assets`. The output is
+TQ's art and data: it's gitignored and never committed. Build the client first
+(`dotnet run tools/build.cs client --ip <ip>`, or `all` for both), or point `--out` at any
+5619 client folder.
 
 A run takes about a minute the first time. Map tiles only come with `--maps`: all of them take
 most of an hour and several GB the first time (Twin City alone is 50 s and 240 MB). Later runs only convert images whose source

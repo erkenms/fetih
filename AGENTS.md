@@ -4,7 +4,7 @@ A Conquer Online server for the 5619 client, built on the Comet emulator:
 `comet/src/Comet.Account` (login), `Comet.Game` (world), `Comet.Network` (sockets, ciphers,
 RPC), `Comet.Core` (logging), `Comet.Shared` (RPC types), `Comet.Client` (headless client for
 tests). `client/` builds the patched client. The web app (issue #37, its plan and rules) is
-`Comet.Web` plus `web/` (React), with client art built by `tools/assets/build.cs`.
+`Comet.Web` plus `web/` (React), with client art built by `tools/build.cs`.
 `Comet.Bots` runs bots that log in and play (hunt, wander, jump, idle) for trying features
 with others around and for load tests. Its look,
 public site and admin alike, follows [docs/web-style.md](docs/web-style.md): read it before
@@ -26,7 +26,7 @@ dotnet test comet/Comet.slnx
 cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
 cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
 FETIH_BACKEND=https://test.<domain> npm run dev   # Vite against a remote web (see web/vite.config.ts)
-dotnet run client/build.cs                    # the client, into _CLIENT/fetih
+dotnet run tools/build.cs client --ip <ip>    # the client, into _CLIENT/fetih (or `all`)
 cd comet/src/Comet.Bots && dotnet run -- --Groups:0:Count=300   # bots against the running servers
 ```
 
