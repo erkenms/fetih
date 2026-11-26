@@ -3,7 +3,6 @@
 An MMORPG site from 2010–2015 that kept its style. Well made, not a parody.
 References: İstanbul Kıyamet Vakti, Tibia's site, the old
 [Fetih Online](https://web.archive.org/web/20131029002255/http://fetih.91.com/index/).
-The approved sketch is in [web-style/](web-style/) (`main.html`, `rankings.html`, `admin.html`).
 
 ## Do
 
