@@ -40,6 +40,8 @@ public sealed class WebFixture : IAsyncLifetime
             ["AccountDatabase:Hostname"] = DbHost, ["AccountDatabase:Schema"] = this.AccountSchema,
             ["AccountDatabase:Username"] = DbUser, ["AccountDatabase:Password"] = DbPassword,
             ["Web:LoginAttemptsPerMinute"] = "1000",
+            ["PublicAccount:RegisterAttemptsPerMinute"] = "1000",
+            ["PublicAccount:PasswordChangesPerMinute"] = "1000",
             // Nothing listens there, so the game server counts as offline
             ["GameRpc:Port"] = "1",
             ["Paths:FrontendDirectory"] = "",

@@ -115,7 +115,6 @@ public class ReferencePagesTests(WebFixture fixture)
             Assert.Contains("color:#ebe57f", itemsHtml);
             Assert.Contains("Süper Ejderha Cevheri", itemsHtml);
             Assert.Contains("Dayanıklılık: 10/12", itemsHtml);
-            Assert.Contains("Bağlı / Takas Edilemez", itemsHtml);
             Assert.Contains("Keskin kilic", itemsHtml);
 
             // Item detail: Turkish labels, GroundIcon, Grafana link

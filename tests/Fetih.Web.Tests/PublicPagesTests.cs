@@ -186,6 +186,29 @@ public class PublicPagesTests(WebFixture fixture)
     }
 
     [Fact]
+    public async Task RegistrationIsRateLimitedPerIp()
+    {
+        await using var limited = fixture.Factory.WithWebHostBuilder(b =>
+            b.UseSetting("PublicAccount:RegisterAttemptsPerMinute", "1"));
+        string prefix = $"krl{Guid.NewGuid():N}"[..10];
+        HttpResponseMessage[] responses = new HttpResponseMessage[2];
+        for (int i = 0; i < 2; i++)
+        {
+            var client = limited.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+            responses[i] = await WebFixture.PostFormAsync(client, "/kayit", new()
+            {
+                ["Eposta"] = $"{prefix}{i}@test.local",
+                ["Sifre"] = "secret1",
+                ["SifreTekrar"] = "secret1",
+            });
+        }
+
+        Assert.Equal(HttpStatusCode.Redirect, responses[0].StatusCode);
+        Assert.Equal(HttpStatusCode.OK, responses[1].StatusCode);
+        Assert.Contains("Çok fazla deneme", await responses[1].Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task ChangingPasswordRequiresTheOldOne()
     {
         string email = await fixture.CreateAccountAsync(authority: 1);
