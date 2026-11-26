@@ -77,6 +77,9 @@ namespace Comet.Game.Npcs
 
         public static bool Has(uint npcID) => Scripts.ContainsKey(npcID);
 
+        // The method each scripted NPC runs, for the web's dialog viewer
+        public static IReadOnlyDictionary<uint, Func<NpcTalk, Task>> Scripted => Scripts;
+
         public static Task StartAsync(Client client, uint npcID)
         {
             client.ActiveNpc = 0;
@@ -140,7 +143,7 @@ namespace Comet.Game.Npcs
                 await DefaultAsync(talk);
         }
 
-        private static Task DefaultAsync(NpcTalk talk) => talk
+        public static Task DefaultAsync(NpcTalk talk) => talk
             .Text("I have nothing to say to you yet.")
             .Choice("I see.", MsgTaskDialog.NoOption)
             .ShowAsync();

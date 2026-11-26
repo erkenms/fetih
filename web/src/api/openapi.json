@@ -3141,6 +3141,85 @@
         }
       }
     },
+    "/api/npc-dialogs": {
+      "get": {
+        "tags": [
+          "NpcDialogsFeature"
+        ],
+        "operationId": "listNpcDialogs",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "7d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NpcDialogListResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/npc-dialogs/{npcId}": {
+      "get": {
+        "tags": [
+          "NpcDialogsFeature"
+        ],
+        "operationId": "getNpcDialog",
+        "parameters": [
+          {
+            "name": "npcId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "uint32"
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "7d"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NpcDialogDetailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/maps/{id}/edit": {
       "get": {
         "tags": [
@@ -13164,6 +13243,232 @@
           }
         }
       },
+      "NpcDialogDetailResponse": {
+        "required": [
+          "npc",
+          "role",
+          "handler",
+          "sourceFile",
+          "fare",
+          "shopItemCount",
+          "pages",
+          "stats"
+        ],
+        "type": "object",
+        "properties": {
+          "npc": {
+            "$ref": "#/components/schemas/NpcDialogSummary"
+          },
+          "role": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "handler": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sourceFile": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fare": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "shopItemCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcDialogPage"
+            }
+          },
+          "stats": {
+            "$ref": "#/components/schemas/NpcTalkStats"
+          }
+        }
+      },
+      "NpcDialogListResponse": {
+        "required": [
+          "npcs",
+          "lokiAvailable",
+          "range"
+        ],
+        "type": "object",
+        "properties": {
+          "npcs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcDialogSummary"
+            }
+          },
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "range": {
+            "type": "string"
+          }
+        }
+      },
+      "NpcDialogOption": {
+        "required": [
+          "text",
+          "option",
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "option": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint8"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "targetMapId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          },
+          "targetMapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetX": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          },
+          "targetY": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint16"
+          }
+        }
+      },
+      "NpcDialogPage": {
+        "required": [
+          "lines",
+          "options",
+          "face"
+        ],
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcDialogOption"
+            }
+          },
+          "face": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "facePath": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "NpcDialogSummary": {
+        "required": [
+          "npcId",
+          "name",
+          "mapId",
+          "mapName",
+          "x",
+          "y",
+          "lookface",
+          "facePath",
+          "kind",
+          "talkCount"
+        ],
+        "type": "object",
+        "properties": {
+          "npcId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "mapId": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "mapName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "x": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "y": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "lookface": {
+            "type": "integer",
+            "format": "uint16"
+          },
+          "facePath": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "type": "string"
+          },
+          "talkCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "NpcLook": {
         "required": [
           "lookface",
@@ -13194,6 +13499,43 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "NpcTalkStats": {
+        "required": [
+          "lokiAvailable",
+          "totalTalks",
+          "uniquePlayers",
+          "lastTalkAt",
+          "byOption"
+        ],
+        "type": "object",
+        "properties": {
+          "lokiAvailable": {
+            "type": "boolean"
+          },
+          "totalTalks": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "uniquePlayers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastTalkAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "byOption": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         }
       },
@@ -16419,6 +16761,9 @@
     },
     {
       "name": "NotificationsFeature"
+    },
+    {
+      "name": "NpcDialogsFeature"
     },
     {
       "name": "PacketsFeature"

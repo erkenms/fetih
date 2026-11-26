@@ -16,6 +16,7 @@ import { chatRoute } from '../features/chat'
 import { socialRoute } from '../features/social'
 import { pkRoute } from '../features/pk'
 import { mapsRoutes } from '../features/maps'
+import { npcDialogsRoutes } from '../features/npcdialogs'
 import { mapEditRoute } from '../features/maps/edit'
 import { playersRoutes } from '../features/players'
 import { monstersRoute } from '../features/monsters'
@@ -45,6 +46,7 @@ export const featureRoutes: FeatureRoute[] = [
   socialRoute,
   pkRoute,
   ...mapsRoutes,
+  ...npcDialogsRoutes,
   mapEditRoute,
   ...playersRoutes,
   monstersRoute,

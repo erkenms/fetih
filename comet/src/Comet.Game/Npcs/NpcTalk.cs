@@ -18,6 +18,7 @@ namespace Comet.Game.Npcs
 
         private readonly List<MsgTaskDialog> Page = new List<MsgTaskDialog>();
         private byte FaceID;
+        private readonly List<NpcPage> Recorded;
 
         public NpcTalk(Client client, Npc npc, byte option, string input = null)
         {
@@ -26,6 +27,18 @@ namespace Comet.Game.Npcs
             this.Option = option;
             this.Input = input;
         }
+
+        // A conversation with no player: its pages are kept instead of sent, for the web's dialog
+        // viewer. Only for dialogs that build their first page from data alone (teleporters,
+        // talkers, the default answer).
+        public static NpcTalk Preview() => new NpcTalk(null, null, 0, recorded: new List<NpcPage>());
+
+        private NpcTalk(Client client, Npc npc, byte option, List<NpcPage> recorded) : this(client, npc, option)
+        {
+            this.Recorded = recorded;
+        }
+
+        public IReadOnlyList<NpcPage> Shown => this.Recorded;
 
         public NpcTalk Text(string text)
         {
@@ -54,6 +67,12 @@ namespace Comet.Game.Npcs
 
         public async Task ShowAsync()
         {
+            if (this.Recorded != null)
+            {
+                this.Recorded.Add(new NpcPage(new List<MsgTaskDialog>(this.Page), this.FaceID));
+                this.Page.Clear();
+                return;
+            }
             foreach (var part in this.Page)
                 await this.Client.SendAsync(part);
             await this.Client.SendAsync(new MsgTaskDialog(DialogAction.Face, this.FaceID));
@@ -76,4 +95,7 @@ namespace Comet.Game.Npcs
             return this.Client.SendAsync(MsgAction.OpenWindow(this.Client.ID, window, character.X, character.Y));
         }
     }
+
+    // One page the server showed: its lines, options and text boxes in order, and the face
+    public sealed record NpcPage(IReadOnlyList<MsgTaskDialog> Parts, byte Face);
 }

@@ -367,10 +367,10 @@ public sealed class MapDataStore
             kind = "teleporter";
             face = tp.Face;
         }
-        else if (data.TalkerFacesByNpc.TryGetValue(npc.NpcID, out var talkerFace))
+        else if (data.TalkersByNpc.TryGetValue(npc.NpcID, out var talker) && talker.Face > 0)
         {
             kind = "talker";
-            face = talkerFace;
+            face = talker.Face;
         }
         else
             kind = "npc";
@@ -391,6 +391,20 @@ public sealed class MapDataStore
     }
 
     public string? NpcName(Npc npc) => ResolveNpcName(npc, this.Client.NpcNames);
+
+    // Every NPC on every map (not the goals), as the map viewer shows it, with the teleporter or
+    // talker data its dialog is built from
+    public IEnumerable<MapNpcData> AllNpcs()
+    {
+        var data = this.ReadDataFiles();
+        var facesById = this.Catalogs.Faces.Npc.ToDictionary(f => f.Id, f => f.Path);
+        var npcNames = this.Client.NpcNames;
+        foreach (var (mapId, npcs) in data.NpcsByMap)
+            foreach (var npc in npcs)
+                yield return new MapNpcData(mapId, this.MapDisplayName(mapId, data),
+                    BuildNpcEntry(npc, isGoal: false, data, npcNames, facesById),
+                    data.TeleportersByNpc.GetValueOrDefault(npc.NpcID), data.TalkersByNpc.GetValueOrDefault(npc.NpcID));
+    }
 
     private static string? ResolveNpcName(Npc npc, IReadOnlyDictionary<int, string> npcNames)
     {
@@ -442,10 +456,10 @@ public sealed class MapDataStore
         var spawnsByMap = new Dictionary<uint, List<Generator>>();
         var portalsByMap = new Dictionary<uint, List<Portal>>();
         var teleportersByNpc = new Dictionary<uint, Teleporter>();
-        var talkerFacesByNpc = new Dictionary<uint, byte>();
+        var talkersByNpc = new Dictionary<uint, Talker>();
 
         if (string.IsNullOrEmpty(this.DataDir) || !Directory.Exists(this.DataDir))
-            return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkerFacesByNpc);
+            return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkersByNpc);
 
         foreach (var m in ReadEntries<MapType>(DataFileKinds.Maps))
             mapTypes.TryAdd(m.MapID, m);
@@ -466,10 +480,9 @@ public sealed class MapDataStore
             teleportersByNpc.TryAdd(t.NpcID, t);
 
         foreach (var t in ReadEntries<Talker>(DataFileKinds.Talkers))
-            if (t.Face > 0)
-                talkerFacesByNpc.TryAdd(t.NpcID, t.Face);
+            talkersByNpc.TryAdd(t.NpcID, t);
 
-        return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkerFacesByNpc);
+        return new DataSnapshot(mapTypes, npcsByMap, goalsByMap, spawnsByMap, portalsByMap, teleportersByNpc, talkersByNpc);
 
         IReadOnlyList<T> ReadEntries<T>(DataFileKind kind) where T : class
         {
@@ -501,5 +514,5 @@ public sealed class MapDataStore
         Dictionary<uint, List<Generator>> SpawnsByMap,
         Dictionary<uint, List<Portal>> PortalsByMap,
         Dictionary<uint, Teleporter> TeleportersByNpc,
-        Dictionary<uint, byte> TalkerFacesByNpc);
+        Dictionary<uint, Talker> TalkersByNpc);
 }

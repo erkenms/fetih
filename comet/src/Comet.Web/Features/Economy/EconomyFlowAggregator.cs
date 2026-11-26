@@ -1,5 +1,7 @@
 namespace Comet.Web.Features.Economy;
 
+using Comet.Web.Features.Logs;
+
 // Silver moving between players and the game: spent at NPC shops (item.bought), earned selling
 // to them (item.sold) and picked up off the ground (item.picked_up, monster drops and silver
 // players dropped), summed per bucket by Loki from the log lines' price and silver fields

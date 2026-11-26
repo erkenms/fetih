@@ -1,3 +1,5 @@
+using Comet.Web.Features.Logs;
+
 namespace Comet.Web.Features.Economy;
 
 public sealed record EconomyTotals(
@@ -19,8 +21,6 @@ public sealed record TopHolderEntry(
     ulong StoredSilver,
     ulong TotalSilver,
     uint ConquerPoints);
-
-public sealed record TrendPoint(DateTime Timestamp, double Value);
 
 public sealed record EconomyTrends(
     bool PrometheusAvailable,

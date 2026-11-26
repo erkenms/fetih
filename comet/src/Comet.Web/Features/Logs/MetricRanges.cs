@@ -1,8 +1,10 @@
-namespace Comet.Web.Features.Economy;
+namespace Comet.Web.Features.Logs;
 
 using System.Globalization;
 using System.Text.Json;
 using Comet.Web.Features.Dashboard;
+
+public sealed record TrendPoint(DateTime Timestamp, double Value);
 
 public sealed class MetricsUnavailableException(string message, Exception? inner = null)
     : Exception(message, inner);

@@ -20,6 +20,7 @@ public static class FeatureRegistry
         new Social.SocialFeature(),
         new Pk.PkFeature(),
         new Maps.MapsFeature(),
+        new NpcDialogs.NpcDialogsFeature(),
         new MapEdit.MapEditFeature(),
         new Accounts.AccountsFeature(),
         new Characters.CharactersFeature(),

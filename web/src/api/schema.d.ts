@@ -1204,6 +1204,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/npc-dialogs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listNpcDialogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/npc-dialogs/{npcId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getNpcDialog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/maps/{id}/edit": {
         parameters: {
             query?: never;
@@ -4142,6 +4174,62 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
+        NpcDialogDetailResponse: {
+            npc: components["schemas"]["NpcDialogSummary"];
+            /** Format: uint16 */
+            role: number;
+            handler: null | string;
+            sourceFile: null | string;
+            /** Format: uint32 */
+            fare: null | number;
+            /** Format: int32 */
+            shopItemCount: null | number;
+            pages: components["schemas"]["NpcDialogPage"][];
+            stats: components["schemas"]["NpcTalkStats"];
+        };
+        NpcDialogListResponse: {
+            npcs: components["schemas"]["NpcDialogSummary"][];
+            lokiAvailable: boolean;
+            range: string;
+        };
+        NpcDialogOption: {
+            text: string;
+            /** Format: uint8 */
+            option: null | number;
+            kind: string;
+            /** Format: uint32 */
+            targetMapId?: null | number;
+            targetMapName?: null | string;
+            /** Format: uint16 */
+            targetX?: null | number;
+            /** Format: uint16 */
+            targetY?: null | number;
+        };
+        NpcDialogPage: {
+            lines: string[];
+            options: components["schemas"]["NpcDialogOption"][];
+            /** Format: int32 */
+            face: number;
+            facePath?: null | string;
+        };
+        NpcDialogSummary: {
+            /** Format: uint32 */
+            npcId: number;
+            name: null | string;
+            /** Format: uint32 */
+            mapId: number;
+            mapName: null | string;
+            /** Format: uint16 */
+            x: number;
+            /** Format: uint16 */
+            y: number;
+            /** Format: uint16 */
+            lookface: number;
+            facePath: null | string;
+            kind: string;
+            /** Format: int32 */
+            talkCount: null | number;
+        };
         NpcLook: {
             /** Format: uint32 */
             lookface: number;
@@ -4151,6 +4239,18 @@ export interface components {
             /** Format: int32 */
             y: number;
             name: null | string;
+        };
+        NpcTalkStats: {
+            lokiAvailable: boolean;
+            /** Format: int32 */
+            totalTalks: number;
+            /** Format: int32 */
+            uniquePlayers: number;
+            /** Format: date-time */
+            lastTalkAt: null | string;
+            byOption: {
+                [key: string]: number;
+            };
         };
         OnlinePlayersResponse: {
             gameOnline: boolean;
@@ -7112,6 +7212,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MapGridResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiError"];
+                };
+            };
+        };
+    };
+    listNpcDialogs: {
+        parameters: {
+            query?: {
+                range?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NpcDialogListResponse"];
+                };
+            };
+        };
+    };
+    getNpcDialog: {
+        parameters: {
+            query?: {
+                range?: string;
+            };
+            header?: never;
+            path: {
+                npcId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NpcDialogDetailResponse"];
                 };
             };
             /** @description Not Found */

@@ -1,5 +1,7 @@
 namespace Comet.Web.Features.Economy;
 
+using Comet.Web.Features.Logs;
+
 using Comet.Game.Database;
 using Comet.Web.Auth;
 using Microsoft.AspNetCore.Http.HttpResults;

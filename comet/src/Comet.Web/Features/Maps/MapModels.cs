@@ -1,5 +1,7 @@
 namespace Comet.Web.Features.Maps;
 
+using Comet.Game.Npcs;
+
 public sealed record MapCellPoint(ushort X, ushort Y);
 
 public sealed record MapSummary(
@@ -55,6 +57,8 @@ public sealed record MapNpcEntry(
     bool IsGoal,
     string? FacePath,
     string Kind);
+
+public sealed record MapNpcData(uint MapId, string? MapName, MapNpcEntry Npc, Teleporter? Teleporter, Talker? Talker);
 
 public sealed record MapSpawnEntry(
     uint Id,

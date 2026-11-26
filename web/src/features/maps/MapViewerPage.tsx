@@ -52,7 +52,7 @@ function parseNum(value: string | null): number | undefined {
 }
 
 export default function MapViewerPage() {
-  const { t } = useTranslation(['maps', 'mapEdit'])
+  const { t } = useTranslation(['maps', 'mapEdit', 'npcDialogs'])
   const canEdit = useCan('Studio')
   const { id } = useParams()
   const navigate = useNavigate()
@@ -633,6 +633,13 @@ export default function MapViewerPage() {
                     <Text size="xs">
                       {t('viewer.inspector.lookface')}: <Code>{selected.data.lookface}</Code> ({t('viewer.inspector.direction')}: {selected.data.direction})
                     </Text>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      onClick={() => void navigate(`/admin/npc-dialogs/${selected.data.id}`)}
+                    >
+                      {t('npcDialogs:viewDialog')}
+                    </Button>
                   </Stack>
                 )}
 
