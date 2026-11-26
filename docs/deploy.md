@@ -48,6 +48,7 @@ sudo podman exec -i fetih-db mariadb -uroot -p<pw> fetih_account -e "
 sudo podman restart fetih-account
 sudo podman exec fetih-account dotnet Fetih.Account.dll create-account <email> <password>
 sudo podman exec -i fetih-db mariadb -uroot -p<pw> fetih_account -e "UPDATE account SET AuthorityID=5 WHERE Username='<email>'"
+./deploy/grafana-db.sh
 ```
 
 ## Update
@@ -56,8 +57,9 @@ sudo podman exec -i fetih-db mariadb -uroot -p<pw> fetih_account -e "UPDATE acco
 
 ## Grafana and logs
 
-Loopback only: `ssh -L 3000:127.0.0.1:3000 <server>`. Logs in the `fetih-logs` volume
-(`/logs/<env>/<server>/`) and in Loki with an `env` label.
+Grafana is served under `/grafana/` behind the web sign-in (moderators and above); port 3000 is
+not published. Logs in the `fetih-logs` volume (`/logs/<env>/<server>/`) and in Loki with an
+`env` label.
 
 ## Backup
 

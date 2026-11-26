@@ -26,19 +26,6 @@ export function since(time: Date, now: Date): { value: number; unit: Intl.Relati
   return { value: Math.round(seconds / 86400), unit: 'day' }
 }
 
-// An embeddable Grafana panel of the provisioned Overview dashboard
-export function grafanaPanel(base: string, panelId: number, theme: 'light' | 'dark', range = '6h') {
-  const query = new URLSearchParams({
-    orgId: '1',
-    panelId: String(panelId),
-    from: `now-${range}`,
-    to: 'now',
-    theme,
-    refresh: '1m',
-  })
-  return `${base}/d-solo/fetih-overview/overview?${query}`
-}
-
 export function grafanaDashboard(base: string) {
   return `${base}/d/fetih-overview/overview`
 }

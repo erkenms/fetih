@@ -31,7 +31,6 @@ public static class FeatureRegistry
         new Chat.ChatFeature(),
         new Live.LiveFeature(),
         new Looks.LooksFeature(),
-        new Packets.PacketsFeature(),
         new Server.ServerFeature(),
     ];
 }

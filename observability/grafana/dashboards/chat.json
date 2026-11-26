@@ -1,0 +1,166 @@
+{
+  "uid": "fetih-chat",
+  "title": "Chat",
+  "description": "Chat messages by channel, character, account and words, plus GM commands",
+  "tags": ["fetih"],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": { "text": "prod", "value": "prod" },
+        "options": [
+          { "selected": true, "text": "prod", "value": "prod" },
+          { "selected": false, "text": "test", "value": "test" },
+          { "selected": false, "text": "dev", "value": "dev" }
+        ],
+        "hide": 0
+      },
+      {
+        "type": "custom",
+        "name": "channel",
+        "label": "Channel",
+        "query": "Talk,Whisper,Team,Guild,Clan,Friend,World,Ghost,Vendor",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": { "text": ["All"], "value": ["$__all"] },
+        "options": [],
+        "hide": 0
+      },
+      {
+        "type": "textbox",
+        "name": "character",
+        "label": "Character name",
+        "query": ".*",
+        "current": { "text": ".*", "value": ".*" },
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "hide": 0
+      },
+      {
+        "type": "textbox",
+        "name": "characterId",
+        "label": "Character ID",
+        "query": ".*",
+        "current": { "text": ".*", "value": ".*" },
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "hide": 0
+      },
+      {
+        "type": "textbox",
+        "name": "accountId",
+        "label": "Account ID",
+        "query": ".*",
+        "current": { "text": ".*", "value": ".*" },
+        "options": [{ "selected": true, "text": ".*", "value": ".*" }],
+        "hide": 0
+      },
+      {
+        "type": "textbox",
+        "name": "words",
+        "label": "Words",
+        "query": "",
+        "current": { "text": "", "value": "" },
+        "options": [{ "selected": true, "text": "", "value": "" }],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": ["fetih"],
+      "asDropdown": false,
+      "title": "Fetih",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Chat by channel",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (channel) (count_over_time({env=\"$env\", server=\"game\", event=\"chat.message\"} | json channel, name, characterId, accountId | channel=~\"$channel\" | name=~\"$character\" | characterId=~\"$characterId\" | accountId=~\"$accountId\" [$__interval]))",
+          "legendFormat": "{{channel}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "drawStyle": "bars", "fillOpacity": 60, "showPoints": "never", "stacking": { "mode": "normal", "group": "A" } }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Chat messages",
+      "id": 2,
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 14 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{env=\"$env\", server=\"game\", event=\"chat.message\"} |= \"$words\" | json channel, name, characterId, accountId | channel=~\"$channel\" | name=~\"$character\" | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "dedupStrategy": "none",
+        "showLabels": false,
+        "showCommonLabels": false
+      }
+    },
+    {
+      "type": "logs",
+      "title": "GM commands",
+      "id": 3,
+      "gridPos": { "x": 0, "y": 20, "w": 24, "h": 12 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "{env=\"$env\", server=\"game\", event=\"gm.command\"} |= \"$words\" | json name, characterId, accountId | name=~\"$character\" | characterId=~\"$characterId\" | accountId=~\"$accountId\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "dedupStrategy": "none",
+        "showLabels": false,
+        "showCommonLabels": false
+      }
+    }
+  ]
+}

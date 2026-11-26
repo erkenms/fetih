@@ -121,4 +121,35 @@ public class AuthTests(WebFixture fixture)
         Assert.True(health.GetProperty("accountDatabase").GetBoolean());
         Assert.False(health.GetProperty("gameServer").GetBoolean());
     }
+
+    [Fact]
+    public async Task AuthCheckGatesGrafanaToStaffWithViewLogs()
+    {
+        var noRedirect = new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+        };
+
+        // Signed out without X-Forwarded-Uri -> 401
+        var anon = fixture.Factory.CreateClient(noRedirect);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anon.GetAsync("/auth/check")).StatusCode);
+
+        // Signed out with X-Forwarded-Uri -> redirect to /giris?donus=...
+        var forwarded = new HttpRequestMessage(HttpMethod.Get, "/auth/check");
+        forwarded.Headers.Add("X-Forwarded-Uri", "/grafana/d/fetih-overview/overview");
+        var redirect = await anon.SendAsync(forwarded);
+        Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
+        Assert.Equal("/giris?donus=%2Fgrafana%2Fd%2Ffetih-overview%2Foverview", redirect.Headers.Location?.ToString());
+
+        // Signed in as player -> 401
+        var player = await fixture.SignInAsync("test", "test");
+        Assert.Equal(HttpStatusCode.Unauthorized, (await player.GetAsync("/auth/check")).StatusCode);
+
+        // Signed in as moderator -> 200 with X-Webauth-User
+        string modEmail = await fixture.CreateAccountAsync(authority: 2);
+        var mod = await fixture.SignInAsync(modEmail, "secret1");
+        var ok = await mod.GetAsync("/auth/check");
+        Assert.Equal(HttpStatusCode.OK, ok.StatusCode);
+        Assert.Equal(modEmail, Assert.Single(ok.Headers.GetValues("X-Webauth-User")));
+    }
 }

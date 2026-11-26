@@ -10,8 +10,12 @@ namespace Fetih.Network.Sockets
     public static class PacketTrace
     {
         private static volatile bool all;
+        private static volatile PacketDecoder decoder;
         private static ImmutableHashSet<uint> accounts = ImmutableHashSet<uint>.Empty;
         private static ImmutableHashSet<string> addresses = ImmutableHashSet<string>.Empty;
+        private static readonly HashSet<string> HeaderProperties = new HashSet<string>(StringComparer.Ordinal) { "Length", "Type" };
+
+        public static void SetDecoder(PacketDecoder value) => decoder = value;
 
         public static void Configure(PacketTraceConfiguration config)
         {
@@ -43,13 +47,13 @@ namespace Fetih.Network.Sockets
             Write(actor, LogEvents.PacketIn, packet);
         }
 
-        public static void Out(TcpServerActor actor, ReadOnlySpan<byte> packet)
+        public static void Out(TcpServerActor actor, ReadOnlySpan<byte> packet, IPacket source = null)
         {
             PacketMetrics.Out(packet);
-            Write(actor, LogEvents.PacketOut, packet);
+            Write(actor, LogEvents.PacketOut, packet, source);
         }
 
-        private static void Write(TcpServerActor actor, string eventName, ReadOnlySpan<byte> packet)
+        private static void Write(TcpServerActor actor, string eventName, ReadOnlySpan<byte> packet, IPacket source = null)
         {
             if (!IsTraced(actor.IPAddress, actor.AccountID))
                 return;
@@ -66,6 +70,20 @@ namespace Fetih.Network.Sockets
                 logger = logger.ForContext("Action", BitConverter.ToUInt16(packet[20..]));
             else if (type == (ushort)PacketType.MsgItem && packet.Length >= 16)
                 logger = logger.ForContext("Action", BitConverter.ToUInt32(packet[12..]));
+
+            try
+            {
+                object decoded = source ?? decoder?.Decode(packet);
+                if (decoded != null)
+                {
+                    var fields = PacketFields.ToLogObject(decoded, HeaderProperties);
+                    if (fields.Count > 0)
+                        logger = logger.ForContext("Fields", fields, destructureObjects: true);
+                }
+            }
+            catch
+            {
+            }
 
             logger.Verbose(
                 "{PacketName} ({PacketType}, {Length} bytes) on connection {ConnId}: {Hex}",

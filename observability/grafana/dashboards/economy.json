@@ -1,0 +1,263 @@
+{
+  "uid": "fetih-economy",
+  "title": "Economy",
+  "description": "Silver and CP totals, flows and top holders",
+  "tags": ["fetih"],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": { "text": "prod", "value": "prod" },
+        "options": [
+          { "selected": true, "text": "prod", "value": "prod" },
+          { "selected": false, "text": "test", "value": "test" },
+          { "selected": false, "text": "dev", "value": "dev" }
+        ],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": ["fetih"],
+      "asDropdown": false,
+      "title": "Fetih",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total silver",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(Silver AS UNSIGNED) + CAST(StoredSilver AS UNSIGNED)), 0) AS total_silver FROM fetih_game.`character`",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Pocket silver",
+      "id": 2,
+      "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(Silver AS UNSIGNED)), 0) AS pocket_silver FROM fetih_game.`character`",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Warehouse silver",
+      "id": 3,
+      "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(StoredSilver AS UNSIGNED)), 0) AS stored_silver FROM fetih_game.`character`",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Total CPs",
+      "id": 4,
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(Jewels AS UNSIGNED)), 0) AS total_cps FROM fetih_game.`character`",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Guild silver",
+      "id": 5,
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(Fund AS UNSIGNED)), 0) AS guild_silver FROM fetih_game.syndicate",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Guild CPs",
+      "id": 6,
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COALESCE(SUM(CAST(ConquerPointsFund AS UNSIGNED)), 0) AS guild_cps FROM fetih_game.syndicate",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "timeseries",
+      "title": "Silver and CP totals",
+      "id": 7,
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "fetih_economy_silver_total{env=\"$env\"}",
+          "legendFormat": "silver",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "fetih_economy_cp_total{env=\"$env\"}",
+          "legendFormat": "CPs",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "line", "fillOpacity": 10, "showPoints": "never" } },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Silver flows",
+      "id": 8,
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (event) (sum_over_time({env=\"$env\", server=\"game\", event=~\"item\\\\.bought|item\\\\.sold\"} | json price | unwrap price [$__interval]))",
+          "legendFormat": "{{event}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum(sum_over_time({env=\"$env\", server=\"game\", event=\"item.picked_up\"} | json silver | unwrap silver [$__interval]))",
+          "legendFormat": "picked_up",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 60, "showPoints": "never" } },
+        "overrides": []
+      }
+    },
+    {
+      "type": "table",
+      "title": "Top silver holders",
+      "id": 9,
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 11 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT CharacterID, AccountID, Name, Level, Rebirths, Silver, StoredSilver, (CAST(Silver AS UNSIGNED) + CAST(StoredSilver AS UNSIGNED)) AS TotalSilver, Jewels AS CPs FROM fetih_game.`character` ORDER BY TotalSilver DESC, CharacterID ASC LIMIT 25",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Name" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open player", "url": "/admin/players/${__data.fields.AccountID}" }] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "AccountID" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open player", "url": "/admin/players/${__data.fields.AccountID}" }] }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "Top CP holders",
+      "id": 10,
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 11 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT CharacterID, AccountID, Name, Level, Rebirths, Jewels AS CPs, (CAST(Silver AS UNSIGNED) + CAST(StoredSilver AS UNSIGNED)) AS TotalSilver FROM fetih_game.`character` WHERE Jewels > 0 ORDER BY Jewels DESC, CharacterID ASC LIMIT 25",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Name" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open player", "url": "/admin/players/${__data.fields.AccountID}" }] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "AccountID" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open player", "url": "/admin/players/${__data.fields.AccountID}" }] }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true }
+    }
+  ]
+}

@@ -8,7 +8,7 @@ using Fetih.Web.Features.Logs;
 public sealed class ObservabilityOptions
 {
     public string LokiUrl { get; set; } = "http://127.0.0.1:3100";
-    public string GrafanaUrl { get; set; } = "http://localhost:3000";
+    public string GrafanaUrl { get; set; } = "/grafana";
     public string PrometheusUrl { get; set; } = "http://127.0.0.1:9090";
 
     // prod or test: this web reads only its own environment's logs and metrics, plus the shared

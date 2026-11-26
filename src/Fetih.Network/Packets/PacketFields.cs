@@ -1,7 +1,12 @@
-namespace Fetih.Web.Features.Packets;
+#nullable enable
+namespace Fetih.Network.Packets;
 
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -25,8 +30,28 @@ public static class PacketFields
     private const int MaxDepth = 6;
     private const int MaxItems = 256;
 
-    public static PacketField[] Describe(object packet, IReadOnlySet<string> skip) =>
+    public static PacketField[] Describe(object packet, IReadOnlySet<string>? skip = null) =>
         Members(packet, 0, new HashSet<object>(ReferenceEqualityComparer.Instance), skip);
+
+    public static Dictionary<string, object?> ToLogObject(object packet, IReadOnlySet<string>? skip = null)
+    {
+        var fields = Describe(packet, skip);
+        var result = new Dictionary<string, object?>(fields.Length, StringComparer.Ordinal);
+        foreach (var field in fields)
+            result[field.Name] = ToLogValue(field);
+        return result;
+    }
+
+    private static object? ToLogValue(PacketField field) => field.Kind switch
+    {
+        PacketFieldKind.Null => null,
+        PacketFieldKind.Bool => field.Value == "true",
+        PacketFieldKind.List => field.Children?.Select(ToLogValue).ToList(),
+        PacketFieldKind.Object => field.Children == null
+            ? field.Value
+            : field.Children.ToDictionary(c => c.Name, ToLogValue, StringComparer.Ordinal),
+        _ => field.Value,
+    };
 
     private static PacketField[] Members(object obj, int depth, HashSet<object> seen, IReadOnlySet<string>? skip)
     {
@@ -64,9 +89,9 @@ public static class PacketFields
         switch (value)
         {
             case Enum e:
-                object raw = Convert.ChangeType(e, Enum.GetUnderlyingType(type));
+                object raw = Convert.ChangeType(e, Enum.GetUnderlyingType(type), CultureInfo.InvariantCulture);
                 string text = e.ToString();
-                string number = PacketDecoder.Invariant(raw);
+                string number = Invariant(raw);
                 return new PacketField(name, PacketFieldKind.Enum, text == number ? number : $"{text} ({number})", typeName, null);
             case string s:
                 return new PacketField(name, PacketFieldKind.Text, s, typeName, null);
@@ -83,7 +108,7 @@ public static class PacketFields
         }
 
         if (type.IsPrimitive || value is decimal)
-            return new PacketField(name, PacketFieldKind.Number, PacketDecoder.Invariant(value), typeName, null);
+            return new PacketField(name, PacketFieldKind.Number, Invariant(value), typeName, null);
 
         if (depth >= MaxDepth || (!type.IsValueType && !seen.Add(value)))
             return new PacketField(name, PacketFieldKind.Object, "…", typeName, []);
@@ -96,10 +121,10 @@ public static class PacketFields
                 if (children.Count >= MaxItems)
                     break;
                 string key = entry.Key is Enum or string or IFormattable
-                    ? PacketDecoder.Invariant(entry.Key) : entry.Key.ToString() ?? "";
+                    ? Invariant(entry.Key) : entry.Key.ToString() ?? "";
                 children.Add(Describe(key, entry.Value, typeof(object), depth + 1, seen));
             }
-            return new PacketField(name, PacketFieldKind.List, PacketDecoder.Invariant(dictionary.Count), typeName, children.ToArray());
+            return new PacketField(name, PacketFieldKind.List, Invariant(dictionary.Count), typeName, children.ToArray());
         }
 
         if (value is IEnumerable list)
@@ -112,7 +137,7 @@ public static class PacketFields
                     children.Add(Describe($"[{count}]", item, typeof(object), depth + 1, seen));
                 count++;
             }
-            return new PacketField(name, PacketFieldKind.List, PacketDecoder.Invariant(count), typeName, children.ToArray());
+            return new PacketField(name, PacketFieldKind.List, Invariant(count), typeName, children.ToArray());
         }
 
         if (value is ITuple tuple)
@@ -137,4 +162,7 @@ public static class PacketFields
         string baseName = type.Name[..type.Name.IndexOf('`')];
         return $"{baseName}<{string.Join(", ", type.GetGenericArguments().Select(TypeName))}>";
     }
+
+    private static string Invariant(object value) =>
+        Convert.ToString(value, CultureInfo.InvariantCulture) ?? "";
 }

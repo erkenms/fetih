@@ -34,6 +34,7 @@
             var config = new ServerConfiguration(command != null ? args[3..] : args);
             LogSetup.Configure("account", config.Logging);
             PacketTrace.Configure(config.Logging?.PacketTrace);
+            PacketTrace.SetDecoder(Network.Packets.PacketDecoder.For<States.Client>(Packets.PacketHandlers.Create));
             if (!config.Valid) 
             {
                 Log.Error("Invalid server configuration file");

@@ -1,0 +1,174 @@
+{
+  "uid": "fetih-admin",
+  "title": "Admin",
+  "description": "Account and character counts, PK detained items and NPC talk counts",
+  "tags": ["fetih"],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "time": { "from": "now-7d", "to": "now" },
+  "templating": {
+    "list": [
+      {
+        "type": "custom",
+        "name": "env",
+        "label": "Environment",
+        "query": "prod,test,dev",
+        "multi": false,
+        "includeAll": false,
+        "current": { "text": "prod", "value": "prod" },
+        "options": [
+          { "selected": true, "text": "prod", "value": "prod" },
+          { "selected": false, "text": "test", "value": "test" },
+          { "selected": false, "text": "dev", "value": "dev" }
+        ],
+        "hide": 0
+      }
+    ]
+  },
+  "annotations": { "list": [] },
+  "links": [
+    {
+      "type": "dashboards",
+      "tags": ["fetih"],
+      "asDropdown": false,
+      "title": "Fetih",
+      "includeVars": true,
+      "keepTime": true
+    }
+  ],
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Accounts",
+      "id": 1,
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COUNT(*) AS accounts FROM fetih_account.grafana_account",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Accounts (24h)",
+      "id": 2,
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COUNT(*) AS new_accounts FROM fetih_account.grafana_account WHERE Registered >= UTC_TIMESTAMP() - INTERVAL 1 DAY",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Characters",
+      "id": 3,
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COUNT(*) AS characters FROM fetih_game.`character`",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "stat",
+      "title": "Characters (24h)",
+      "id": 4,
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT COUNT(*) AS new_characters FROM fetih_game.`character` WHERE Registered >= UTC_TIMESTAMP() - INTERVAL 1 DAY",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"], "values": false }, "colorMode": "value", "graphMode": "none" }
+    },
+    {
+      "type": "table",
+      "title": "PK detained items",
+      "id": 5,
+      "gridPos": { "x": 0, "y": 4, "w": 15, "h": 14 },
+      "datasource": { "type": "mysql", "uid": "mysql" },
+      "targets": [
+        {
+          "datasource": { "type": "mysql", "uid": "mysql" },
+          "rawSql": "SELECT d.DetainID, d.ItemID, i.TypeID, d.TargetName AS Owner, oc.AccountID AS OwnerAccountID, d.HunterName AS Hunter, hc.AccountID AS HunterAccountID, d.Cost, d.DetainedAt, CASE WHEN d.Redeemed = 1 THEN 'redeemed' WHEN UTC_TIMESTAMP() >= d.DetainedAt + INTERVAL 7 DAY THEN 'expired' ELSE 'redeemable' END AS Status FROM fetih_game.detained_item d LEFT JOIN fetih_game.item i ON i.ItemID = d.ItemID LEFT JOIN fetih_game.`character` oc ON oc.CharacterID = d.TargetID LEFT JOIN fetih_game.`character` hc ON hc.CharacterID = d.HunterID ORDER BY d.DetainedAt DESC LIMIT 200",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Owner" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open owner", "url": "/admin/players/${__data.fields.OwnerAccountID}" }] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Hunter" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Open hunter", "url": "/admin/players/${__data.fields.HunterAccountID}" }] }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "ItemID" },
+            "properties": [
+              { "id": "links", "value": [{ "title": "Item history", "url": "/grafana/d/fetih-items/items?var-itemId=${__data.fields.ItemID}" }] }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true }
+    },
+    {
+      "type": "table",
+      "title": "NPC talk counts",
+      "id": 6,
+      "gridPos": { "x": 15, "y": 4, "w": 9, "h": 14 },
+      "datasource": { "type": "loki", "uid": "loki" },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "loki" },
+          "expr": "sum by (npcId) (count_over_time({env=\"$env\", server=\"game\", event=\"npc.talk\"} | json npcId [$__range]))",
+          "queryType": "instant",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "renameByName": { "Value #A": "Talks", "Value": "Talks" } } },
+        { "id": "sortBy", "options": { "sort": [{ "field": "Talks", "desc": true }] } }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "options": { "showHeader": true }
+    }
+  ]
+}

@@ -41,7 +41,22 @@ public class PagesTests(WebFixture fixture)
         string html = await client.GetStringAsync("/admin");
         Assert.Contains("href=\"/admin/broadcasts\"", html);
         Assert.Contains("href=\"/admin/players\"", html);
+        Assert.Contains("href=\"/grafana/d/fetih-economy/economy", html);
+        Assert.Contains("href=\"/grafana/d/fetih-audit/audit\"", html);
         Assert.DoesNotContain("href=\"/admin/server\"", html);
+    }
+
+    [Fact]
+    public void GrafanaHelperBuildsUrlsWithVariables()
+    {
+        Assert.Equal("/grafana/d/fetih-player/player?var-characterId=1000001&var-accountId=5",
+            Fetih.Web.Pages.Shared.Grafana.PlayerUrl(1000001, 5));
+        Assert.Equal("/grafana/d/fetih-items/items?var-env=prod&var-itemId=42",
+            Fetih.Web.Pages.Shared.Grafana.ItemsUrl(42, "prod"));
+        Assert.Equal("/grafana/d/fetih-audit/audit?var-targetType=character&var-targetId=99",
+            Fetih.Web.Pages.Shared.Grafana.AuditUrl(targetType: "character", targetId: "99"));
+        Assert.Equal("/grafana/d/fetih-packets/packets?var-accountId=7&var-packetName=MsgItem",
+            Fetih.Web.Pages.Shared.Grafana.PacketsUrl(7, "MsgItem"));
     }
 
     [Fact]

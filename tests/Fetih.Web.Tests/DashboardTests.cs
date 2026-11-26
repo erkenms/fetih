@@ -25,7 +25,7 @@ public class DashboardTests(WebFixture fixture)
         Assert.Empty(body.GetProperty("onlineAccounts").EnumerateArray());
         Assert.True(body.GetProperty("counts").GetProperty("accounts").GetInt32() >= 2);
         Assert.True(body.GetProperty("counts").GetProperty("accountsLastDay").GetInt32() >= 1);
-        Assert.StartsWith("http", body.GetProperty("grafanaUrl").GetString());
+        Assert.Equal("/grafana", body.GetProperty("grafanaUrl").GetString());
     }
 
     [Fact]

@@ -75,6 +75,21 @@ namespace Fetih.Integration.Tests
                 foreach (var step in new[] { 74, 75, 76, 77, 78, 97 })
                     Assert.True(steps.IndexOf($"in MsgAction {step}") < steps.IndexOf($"out MsgAction {step}"),
                         $"Step {step} echoed before it was asked for: {string.Join(", ", steps)}");
+
+                var loginSpawn = this.Servers.Events("game").First(e =>
+                    e.TryGetProperty("connId", out var c) && c.GetInt64() == connId &&
+                    e.TryGetProperty("event", out var ev) && ev.GetString() == "packet.in" &&
+                    e.TryGetProperty("action", out var a) && a.GetInt32() == 74);
+                Assert.True(loginSpawn.TryGetProperty("fields", out var inFields));
+                Assert.Equal(JsonValueKind.Object, inFields.ValueKind);
+                Assert.True(inFields.TryGetProperty("Action", out _));
+
+                var userInfo = this.Servers.Events("game").First(e =>
+                    e.TryGetProperty("connId", out var c) && c.GetInt64() == connId &&
+                    e.TryGetProperty("event", out var ev) && ev.GetString() == "packet.out" &&
+                    e.TryGetProperty("packetName", out var n) && n.GetString() == "MsgUserInfo");
+                Assert.True(userInfo.TryGetProperty("fields", out var outFields));
+                Assert.Equal(player.User.Name, outFields.GetProperty("CharacterName").GetString());
             }
         }
 
@@ -101,6 +116,8 @@ namespace Fetih.Integration.Tests
                 "out MsgEncryptCode", "in MsgAccountSRP6", "out MsgLoginChallengeS",
                 "in MsgLoginProofC", "out MsgConnectEx"
             }, trace);
+            Assert.True(request.TryGetProperty("fields", out var reqFields));
+            Assert.Equal(email, reqFields.GetProperty("Username").GetString());
         }
     }
 }

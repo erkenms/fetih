@@ -61,14 +61,16 @@ namespace Fetih.Network.Sockets
         public void SetDisconnectReason(string reason) =>
             Interlocked.CompareExchange(ref this.disconnectReason, reason, null);
 
-        public virtual Task SendAsync(byte[] packet)
+        public virtual Task SendAsync(byte[] packet) => this.SendAsync(packet, null);
+
+        private Task SendAsync(byte[] packet, IPacket source)
         {
             var encrypted = new byte[packet.Length + this.PacketFooter.Length];
             packet.CopyTo(encrypted, 0);
 
             BitConverter.TryWriteBytes(encrypted, (ushort)packet.Length);
             Array.Copy(this.PacketFooter, 0, encrypted, packet.Length, this.PacketFooter.Length);
-            PacketTrace.Out(this, encrypted.AsSpan(0, packet.Length));
+            PacketTrace.Out(this, encrypted.AsSpan(0, packet.Length), source);
 
             lock (SendLock)
             {
@@ -107,7 +109,7 @@ namespace Fetih.Network.Sockets
 
         public virtual async Task SendAsync(IPacket packet)
         {
-            await this.SendAsync(packet.Encode());
+            await this.SendAsync(packet.Encode(), packet);
         }
 
         public virtual void Disconnect(string reason = DisconnectReasons.Server)

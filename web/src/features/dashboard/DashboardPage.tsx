@@ -4,12 +4,10 @@ import {
   Group,
   Loader,
   ScrollArea,
-  SimpleGrid,
   Stack,
   Table,
   Text,
   Tooltip,
-  useComputedColorScheme,
 } from '@mantine/core'
 import { IconExternalLink } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
@@ -20,15 +18,7 @@ import { useMe } from '../../app/auth'
 import { ErrorAlert } from '../../app/ErrorAlert'
 import { Panel } from '../../theme/Panel'
 import classes from './DashboardPage.module.css'
-import { byteSize, durationParts, grafanaDashboard, grafanaPanel, since } from './format'
-
-// Panels of the provisioned Overview dashboard (observability/grafana/dashboards)
-const panels = [
-  { id: 7, key: 'online' },
-  { id: 8, key: 'packets' },
-  { id: 10, key: 'errors' },
-  { id: 9, key: 'logins' },
-] as const
+import { byteSize, durationParts, grafanaDashboard, since } from './format'
 
 export default function DashboardPage() {
   const { t } = useTranslation('dashboard')
@@ -62,7 +52,6 @@ export default function DashboardPage() {
               <RecentErrors logs={data.logs} grafana={data.grafanaUrl} />
             </div>
           </div>
-          <Grafana base={data.grafanaUrl} />
         </>
       )}
     </Stack>
@@ -282,37 +271,5 @@ function RecentErrors({ logs, grafana }: { logs: Schemas['LogStatsResponse'] | n
         {t('openGrafana')} <IconExternalLink size={12} />
       </Anchor>
     </Section>
-  )
-}
-
-function Grafana({ base }: { base: string }) {
-  const { t } = useTranslation('dashboard')
-  const theme = useComputedColorScheme('light')
-  return (
-    <Panel
-      title={t('grafana.title')}
-      icon="icons/items/724426.png"
-      aside={
-        <Anchor href={grafanaDashboard(base)} target="_blank" rel="noreferrer" size="xs" c="#f5dfa3">
-          {t('openGrafana')} <IconExternalLink size={10} />
-        </Anchor>
-      }
-      p="sm"
-    >
-      <Text size="xs" c="dimmed" mb="sm">
-        {t('grafana.note')}
-      </Text>
-      <SimpleGrid cols={{ base: 1, lg: 2 }}>
-        {panels.map((panel) => (
-          <iframe
-            key={panel.id}
-            title={t(`grafana.${panel.key}`)}
-            src={grafanaPanel(base, panel.id, theme)}
-            style={{ width: '100%', height: 260, border: 0, borderRadius: 4 }}
-            loading="lazy"
-          />
-        ))}
-      </SimpleGrid>
-    </Panel>
   )
 }

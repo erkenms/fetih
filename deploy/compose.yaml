@@ -25,7 +25,7 @@ services:
       interval: 5s
       retries: 20
 
-  # Logs and metrics. Everything binds to loopback; Grafana is http://localhost:3000
+  # Logs and metrics. Everything binds to loopback; Grafana is behind the proxy at /grafana/.
   loki:
     container_name: fetih-loki
     mem_limit: 384m
@@ -94,24 +94,44 @@ services:
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
-      # Viewers need no login: Grafana is only reachable from this machine, and the web
-      # links and embeds its panels
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
-      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_SECURITY_ALLOW_EMBEDDING: "false"
+      GF_AUTH_PROXY_ENABLED: "true"
+      GF_AUTH_PROXY_HEADER_NAME: X-Webauth-User
+      GF_AUTH_PROXY_HEADER_PROPERTY: username
+      GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_USERS_AUTO_ASSIGN_ORG: "true"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: Viewer
+      GF_AUTH_PROXY_SYNC_TTL: "60"
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/overview.json
       GRAFANA_DISCORD_WEBHOOK: ${GRAFANA_DISCORD_WEBHOOK:-http://127.0.0.1:9/unconfigured}
-    ports:
-      - "127.0.0.1:3000:3000"
+      GRAFANA_DB_PASSWORD: ${GRAFANA_DB_PASSWORD:-grafana}
     volumes:
       - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
       - ../observability/grafana/dashboards:/etc/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
-      - loki
-      - prometheus
+      db: { condition: service_healthy }
+      loki: { condition: service_started }
+      prometheus: { condition: service_started }
+
+  # Dev proxy so /grafana/ goes through Fetih.Web's /auth/check on the host
+  dev-proxy:
+    container_name: fetih-dev-proxy
+    image: docker.io/library/caddy:2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+    depends_on:
+      - grafana
 
   # Deployment. Only the game, the account server and the proxy take outside connections;
   # the web, the game's RPC and metrics, and everything above stay on this network or on

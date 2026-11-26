@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { byteSize, durationParts, grafanaPanel, since } from './format'
+import { byteSize, durationParts, since } from './format'
 
 describe('durationParts', () => {
   it('splits seconds into days, hours and minutes', () => {
@@ -25,15 +25,5 @@ describe('since', () => {
     expect(since(new Date('2026-11-24T11:15:00Z'), now)).toEqual({ value: -45, unit: 'minute' })
     expect(since(new Date('2026-11-24T07:00:00Z'), now)).toEqual({ value: -5, unit: 'hour' })
     expect(since(new Date('2026-11-21T12:00:00Z'), now)).toEqual({ value: -3, unit: 'day' })
-  })
-})
-
-describe('grafanaPanel', () => {
-  it('builds a solo panel URL of the overview dashboard', () => {
-    const url = new URL(grafanaPanel('http://localhost:3000', 7, 'dark'))
-    expect(url.pathname).toBe('/d-solo/fetih-overview/overview')
-    expect(url.searchParams.get('panelId')).toBe('7')
-    expect(url.searchParams.get('theme')).toBe('dark')
-    expect(url.searchParams.get('from')).toBe('now-6h')
   })
 })

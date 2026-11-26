@@ -37,8 +37,20 @@
 	}
 }
 
+(grafana) {
+	redir /grafana /grafana/ permanent
+	handle /grafana/* {
+		forward_auth {args[0]} {
+			uri /auth/check
+			copy_headers X-Webauth-User
+		}
+		reverse_proxy grafana:3000
+	}
+}
+
 {$FETIH_DOMAIN:localhost} {
 	import patches
+	import grafana fetih-prod-web:5820
 
 	handle {
 		encode zstd gzip
@@ -48,6 +60,7 @@
 
 {$FETIH_TEST_DOMAIN:test.localhost} {
 	import patches
+	import grafana fetih-test-web:5820
 
 	handle {
 		encode zstd gzip

@@ -9,6 +9,16 @@ datasources:
     isDefault: true
     jsonData:
       maxLines: 5000
+      derivedFields:
+        - name: Player (by account)
+          matcherRegex: '"accountId":(\d+)'
+          url: '/admin/players/$${__value.raw}'
+        - name: Player (by character)
+          matcherRegex: '"characterId":(\d+)'
+          url: '/admin/characters/$${__value.raw}'
+        - name: Item history
+          matcherRegex: '"itemId":(\d+)'
+          url: '/grafana/d/fetih-items/items?var-itemId=$${__value.raw}'
   - name: Prometheus
     uid: prometheus
     type: prometheus
@@ -16,3 +26,16 @@ datasources:
     url: http://prometheus:9090
     jsonData:
       timeInterval: 15s
+  - name: MariaDB
+    uid: mysql
+    type: mysql
+    access: proxy
+    url: db:3306
+    user: grafana
+    jsonData:
+      database: fetih_game
+      maxOpenConns: 10
+      maxIdleConns: 2
+      connMaxLifetime: 14400
+    secureJsonData:
+      password: ${GRAFANA_DB_PASSWORD}

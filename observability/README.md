@@ -4,7 +4,7 @@
 
 | Service | Port | What |
 |---|---|---|
-| Grafana | 3000 | Dashboards and alerts; viewers need no login, `admin`/`admin` to edit |
+| Grafana | 8080 (`dev-proxy`) | Dashboards and alerts at `http://localhost:8080/grafana/` behind web sign-in (`/giris`, moderators+); `admin`/`admin` to edit |
 | Loki | 3100 | Logs from `src/Fetih.*/logs/*.jsonl` (dev, `env=dev`) and `/logs/<env>/<server>/*.jsonl` (containers: `prod`, `test`, `shared`), per-event retention |
 | Prometheus | 9090 | Scrapes `game` (`:9818`), `account` (`:9819`), and `node-exporter` (`:9100`), 30 days |
 | Alloy | — | Tails the main log files into Loki (audit files are excluded) |
@@ -48,16 +48,16 @@ Loki labels are only `server`, `level` and `event`. Everything else (`characterI
 `packet.in` and `packet.out` events; leave them out with `event!~"packet\\.(in|out)"`. A
 selector needs one matcher that can't match empty, so add `server=~".+"` to negative-only ones.
 
-Links the web can build:
+Links the web can build (`Grafana` helper):
 
-- Player: `http://localhost:3000/d/fetih-player/player?var-characterId=1000000&var-accountId=1&from=now-24h&to=now`
+- Player: `/grafana/d/fetih-player/player?var-characterId=1000000&var-accountId=1`
   (incoming packets carry only `accountId`, so pass both)
-- Packets: `http://localhost:3000/d/fetih-packets/packets?var-accountId=1&var-packetName=MsgItem`
-- Overview: `http://localhost:3000/d/fetih-overview/overview`; a single panel embeds with
-  `/d-solo/fetih-overview/overview?panelId=<id>`
+- Packets: `/grafana/d/fetih-packets/packets?var-accountId=1&var-packetName=MsgItem`
+- Overview, Admin, Economy, Chat, Items, Audit: `/grafana/d/fetih-<name>/<name>`
 
-The dashboards are provisioned from `grafana/dashboards/*.json`. Edit them in Grafana, then
-export the JSON over the file.
+The dashboards are provisioned from `grafana/dashboards/*.json` (`allowUiUpdates: false`).
+Run `./deploy/grafana-db.sh` after schemas are created so Grafana's read-only MariaDB user
+(`fetih_account.grafana_account` view and game tables) works.
 
 ## Alerting
 

@@ -63,6 +63,7 @@
             }
 
             PacketTrace.Configure(config.Logging?.PacketTrace);
+            PacketTrace.SetDecoder(Network.Packets.PacketDecoder.For<Client>(PacketHandlers.Create));
             if (!config.Valid) 
             {
                 Log.Error("Invalid server configuration file");

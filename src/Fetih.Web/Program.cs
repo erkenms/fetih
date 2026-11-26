@@ -145,6 +145,7 @@ if (app.Environment.IsDevelopment())
 
 var api = app.MapGroup("/api");
 api.MapAuth();
+app.MapAuthCheck();
 foreach (var feature in FeatureRegistry.All)
 {
     feature.Map(api);

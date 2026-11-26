@@ -4,6 +4,6 @@ providers:
   - name: fetih
     folder: Fetih
     type: file
-    allowUiUpdates: true
+    allowUiUpdates: false
     options:
       path: /etc/grafana/dashboards
