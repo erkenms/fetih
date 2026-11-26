@@ -1,0 +1,106 @@
+@page "/hesabim"
+@model HesabimModel
+@{
+    ViewData["Title"] = "Hesabım";
+    var p = Model.Profile;
+    var cfg = Model.Config;
+}
+
+<div class="cols-2">
+    <panel title="Hesap Bilgileri" icon="713059">
+        <table class="grid">
+            <tbody>
+            <tr><td>E-posta</td><td><b>@p.Username</b></td></tr>
+            <tr><td>Yetki</td><td><span class="tag">@GameLabels.AuthorityName(p.Authority)</span></td></tr>
+            <tr><td>Kayıt tarihi</td><td>@WebTime.Format(p.Registered)</td></tr>
+            </tbody>
+        </table>
+    </panel>
+
+    <panel title="Şifre Değiştir" icon="711394">
+        <form method="post" asp-page-handler="Password" class="narrow">
+            @if (Model.PasswordError != null)
+            {
+                <div class="alert inline">@Model.PasswordError</div>
+            }
+
+            <label for="mevcut-sifre">Mevcut şifre</label>
+            <input id="mevcut-sifre" name="mevcutSifre" type="password"
+                   maxlength="@cfg.MaxPasswordLength" autocomplete="current-password" required>
+
+            <label for="yeni-sifre">Yeni şifre</label>
+            <input id="yeni-sifre" name="yeniSifre" type="password"
+                   minlength="@cfg.MinPasswordLength" maxlength="@cfg.MaxPasswordLength"
+                   autocomplete="new-password" required>
+            <span class="muted">@cfg.MinPasswordLength–@cfg.MaxPasswordLength ASCII karakter</span>
+
+            <label for="yeni-sifre-tekrar">Yeni şifreyi onayla</label>
+            <input id="yeni-sifre-tekrar" name="yeniSifreTekrar" type="password"
+                   minlength="@cfg.MinPasswordLength" maxlength="@cfg.MaxPasswordLength"
+                   autocomplete="new-password" required>
+
+            <div class="buttons" style="justify-content: flex-start">
+                <button>Şifreyi Güncelle</button>
+            </div>
+        </form>
+    </panel>
+</div>
+
+<panel title="Karakterler" icon="200007">
+    @if (p.Characters.Length > 0)
+    {
+        <div class="scroll">
+            <table class="grid">
+                <thead>
+                <tr><th>Ad</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Rebirth</th><th class="num">Harita</th><th class="num">Gümüş</th><th class="num">CP</th><th class="num">VIP</th><th>Eş</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var ch in p.Characters)
+                {
+                    <tr>
+                        <td><a href="/karakter/@ch.CharacterId">@ch.Name</a></td>
+                        <td>@GameLabels.ClassName(ch.CurrentClass)</td>
+                        <td class="num">@ch.Level</td>
+                        <td class="num">@ch.Rebirths</td>
+                        <td class="num">@ch.MapId</td>
+                        <td class="num">@GameLabels.Number(ch.Silver)</td>
+                        <td class="num">@GameLabels.Number(ch.Jewels)</td>
+                        <td class="num">@ch.VipLevel</td>
+                        <td>@(string.IsNullOrWhiteSpace(ch.Spouse) || ch.Spouse == "None" ? "Yok" : ch.Spouse)</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="muted" style="margin: 0">Bu hesapta henüz karakter yok. Oluşturmak için oyun istemcisine giriş yap.</p>
+    }
+</panel>
+
+<panel title="Son Oyun Girişleri" icon="2000247">
+    @if (p.Logins.Length > 0)
+    {
+        <div class="scroll">
+            <table class="grid">
+                <thead>
+                <tr><th>Tarih ve saat</th><th>IP adresi</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var login in p.Logins)
+                {
+                    <tr>
+                        <td>@WebTime.Format(login.Timestamp)</td>
+                        <td>@login.IpAddress</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="muted" style="margin: 0">Henüz kaydedilmiş oyun girişi yok.</p>
+    }
+</panel>

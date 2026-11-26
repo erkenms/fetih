@@ -1,0 +1,130 @@
+@page "/karakter/{id}"
+@model KarakterModel
+@{
+    var c = Model.Character;
+    ViewData["Title"] = c.Name;
+    var lineage = new[] { c.PreviousClass, c.AncestorClass }
+        .Where(x => x > 0)
+        .Select(GameLabels.ClassName)
+        .ToArray();
+}
+
+<panel title="Karakter Profili" icon="713059">
+    <div class="profile-head">
+        <div class="profile-id">
+            <img class="avatar avatar-lg" src="@GameLabels.AvatarUrl(c.Avatar)" alt="@c.Name">
+            <div>
+                <h1>@c.Name</h1>
+                <div class="tags">
+                    <span class="tag">Seviye @c.Level</span>
+                    <span class="tag info">@GameLabels.ClassName(c.CurrentClass)</span>
+                    @if (c.Rebirths > 0)
+                    {
+                        <span class="tag good">@c.Rebirths Rebirth</span>
+                    }
+                </div>
+            </div>
+        </div>
+        @if (c.Nobility != null && c.Nobility.Rank != "Commoner")
+        {
+            <div style="text-align: right">
+                <span class="tag">@GameLabels.NobilityName(c.Nobility.Rank)</span>
+                @if (c.Nobility.Position != null)
+                {
+                    <div class="muted">Sırada #@c.Nobility.Position</div>
+                }
+            </div>
+        }
+    </div>
+</panel>
+
+<div class="cols-2">
+    <panel title="Bilgiler" icon="711394">
+        <table class="grid">
+            <tbody>
+            <tr><td>Sınıf</td><td>@GameLabels.ClassName(c.CurrentClass)</td></tr>
+            @if (lineage.Length > 0)
+            {
+                <tr><td>Önceki / Ata</td><td>@string.Join(" / ", lineage)</td></tr>
+            }
+            <tr><td>Eş</td><td>@(c.Spouse ?? "Yok")</td></tr>
+            <tr>
+                <td>Lonca</td>
+                <td>
+                    @if (c.Guild != null)
+                    {
+                        <a href="/lonca/@c.Guild.GuildId">@c.Guild.Name</a>
+                        <span class="muted">(@GameLabels.GuildRankName(c.Guild.Rank))</span>
+                    }
+                    else
+                    {
+                        <text>Yok</text>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Klan</td>
+                <td>
+                    @(c.Family != null ? $"{c.Family.Name} ({GameLabels.ClanRankName(c.Family.Rank)})" : "Yok")
+                </td>
+            </tr>
+            <tr><td>PK Puanı</td><td>@c.PkPoints</td></tr>
+            <tr><td>Erdem</td><td>@GameLabels.Number(c.Virtue)</td></tr>
+            <tr><td>Bilgi Puanı</td><td>@GameLabels.Number(c.QuizPoints)</td></tr>
+            <tr><td>Oluşturulma</td><td>@GameLabels.Date(c.Registered)</td></tr>
+            </tbody>
+        </table>
+    </panel>
+
+    <div>
+        @if (c.Arena != null)
+        {
+            <panel title="Arena" icon="200007">
+                <table class="grid">
+                    <tbody>
+                    <tr><td>Puan</td><td class="num">@GameLabels.Number(c.Arena.Points)</td></tr>
+                    <tr><td>Toplam Onur</td><td class="num">@GameLabels.Number(c.Arena.HonorTotal)</td></tr>
+                    <tr><td>Galibiyet / Mağlubiyet</td><td class="num">@c.Arena.WinsTotal / @c.Arena.LossesTotal</td></tr>
+                    </tbody>
+                </table>
+            </panel>
+        }
+
+        @if (c.Flowers != null)
+        {
+            <panel title="Çiçekler" icon="724426">
+                <table class="grid">
+                    <tbody>
+                    <tr><td>Kırmızı Gül</td><td class="num">@GameLabels.Number(c.Flowers.RedRoses)</td></tr>
+                    <tr><td>Zambak</td><td class="num">@GameLabels.Number(c.Flowers.Lilies)</td></tr>
+                    <tr><td>Orkide</td><td class="num">@GameLabels.Number(c.Flowers.Orchids)</td></tr>
+                    <tr><td>Lale</td><td class="num">@GameLabels.Number(c.Flowers.Tulips)</td></tr>
+                    </tbody>
+                </table>
+            </panel>
+        }
+
+        @if (c.SubClasses.Length > 0)
+        {
+            <panel title="Alt Sınıflar" icon="610120">
+                <table class="grid">
+                    <tbody>
+                    @foreach (var s in c.SubClasses)
+                    {
+                        <tr>
+                            <td>
+                                @GameLabels.SubClassName(s.SubClassId)
+                                @if (s.Active)
+                                {
+                                    <span class="tag good">Etkin</span>
+                                }
+                            </td>
+                            <td class="num">Seviye @s.Level · Aşama @s.Phase</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </panel>
+        }
+    </div>
+</div>

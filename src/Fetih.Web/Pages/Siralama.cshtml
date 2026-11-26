@@ -1,0 +1,376 @@
+@page "/siralama/{tur?}"
+@model SiralamaModel
+@{
+    ViewData["Title"] = $"Sıralamalar · {Model.KindTitle}";
+    var war = Model.GuildWar;
+}
+
+@section Side {
+    <panel title="Sıralamalar" icon="200007">
+        <div class="menu">
+            @foreach (var (slug, title) in SiralamaModel.Kinds)
+            {
+                <a class="@(Model.Kind == slug ? "on" : null)" href="/siralama/@slug">@title</a>
+            }
+        </div>
+    </panel>
+
+    <panel title="Lonca Savaşı" icon="410036">
+        @if (war?.HolderGuildId != null && war.HolderGuildName != null)
+        {
+            <div style="text-align: center">
+                <div class="muted">Direk sahibi</div>
+                <a class="holder" href="/lonca/@war.HolderGuildId">@war.HolderGuildName</a>
+            </div>
+        }
+        else
+        {
+            <p class="muted" style="text-align: center; margin: 0">Şu anda direği elinde tutan lonca yok.</p>
+        }
+    </panel>
+}
+
+<panel title="@Model.KindTitle" icon="200007">
+    <p class="muted">Sunucu sıralamaları dakikada bir yenilenir. Toplam: @GameLabels.Number(Model.Total)</p>
+
+    @if (Model.Kind == "seviye")
+    {
+        <form method="get" action="/siralama/seviye" class="form-row">
+            <div>
+                <label for="sinif">Sınıf</label>
+                <select id="sinif" name="sinif">
+                    <option value="">Tüm sınıflar</option>
+                    @foreach (var (id, name) in GameLabels.BaseClasses)
+                    {
+                        <option value="@id" selected="@(Model.Sinif == id)">@name</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <button>Filtrele</button>
+            </div>
+        </form>
+    }
+    else if (Model.Kind == "lonca")
+    {
+        <nav class="tabs">
+            <a class="@(Model.GuildSort == "fon" ? "on" : null)" href="/siralama/lonca?sirala=fon">Gümüş fonu</a>
+            <a class="@(Model.GuildSort == "uye" ? "on" : null)" href="/siralama/lonca?sirala=uye">Üye sayısı</a>
+        </nav>
+    }
+    else if (Model.Kind == "arena")
+    {
+        <nav class="tabs">
+            <a class="@(Model.ArenaMode == "puan" ? "on" : null)" href="/siralama/arena?mod=puan">Güncel puan</a>
+            <a class="@(Model.ArenaMode == "onur" ? "on" : null)" href="/siralama/arena?mod=onur">Güncel onur</a>
+            <a class="@(Model.ArenaMode == "sezon" ? "on" : null)" href="/siralama/arena?mod=sezon">Geçmiş sezonlar</a>
+        </nav>
+        @if (Model.ArenaMode == "sezon" && Model.ArenaSeasons.Length > 0)
+        {
+            <form method="get" action="/siralama/arena" class="form-row">
+                <input type="hidden" name="mod" value="sezon">
+                <div>
+                    <label for="sezon">Sezon</label>
+                    <select id="sezon" name="sezon">
+                        @foreach (var s in Model.ArenaSeasons)
+                        {
+                            <option value="@s.Season" selected="@(Model.Sezon == s.Season)">Sezon #@s.Season (@s.Entries oyuncu)</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <button>Göster</button>
+                </div>
+            </form>
+        }
+    }
+    else if (Model.Kind == "cicek")
+    {
+        <nav class="tabs">
+            @foreach (var (slug, _, label) in SiralamaModel.FlowerKinds)
+            {
+                <a class="@(Model.FlowerSlug == slug ? "on" : null)" href="/siralama/cicek?cicek=@slug">@label</a>
+            }
+        </nav>
+    }
+
+    <div class="scroll">
+        @if (Model.Level != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Rebirth</th><th>Lonca</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Level.Items)
+                {
+                    <tr>
+                        <td class="muted">@r.Rank</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(r.Avatar)" alt="">
+                                <a href="/karakter/@r.CharacterId">@r.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(r.Class)</td>
+                        <td class="num">@r.Level</td>
+                        <td class="num">@r.Rebirths</td>
+                        <td>
+                            @if (r.GuildId != null && r.GuildName != null)
+                            {
+                                <a href="/lonca/@r.GuildId">@r.GuildName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (Model.Level.Items.Length == 0)
+                {
+                    <tr><td colspan="6" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Nobility != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Unvan</th><th class="num">Seviye</th><th class="num">Bağış</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Nobility.Items)
+                {
+                    <tr>
+                        <td class="muted">@r.Rank</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(r.Avatar)" alt="">
+                                <a href="/karakter/@r.CharacterId">@r.Name</a>
+                            </span>
+                        </td>
+                        <td><span class="tag">@GameLabels.NobilityName(r.NobilityRank)</span></td>
+                        <td class="num">@r.Level</td>
+                        <td class="num">@GameLabels.Number(r.Donation)</td>
+                    </tr>
+                }
+                @if (Model.Nobility.Items.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Guilds != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Lonca</th><th class="num">Seviye</th><th>Lider</th><th class="num">Üyeler</th><th class="num">Gümüş fonu</th><th class="num">CP fonu</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var g in Model.Guilds.Items)
+                {
+                    <tr>
+                        <td class="muted">@g.Rank</td>
+                        <td>
+                            <a href="/lonca/@g.GuildId">@g.Name</a>
+                            @if (g.IsGuildWarHolder)
+                            {
+                                <span class="tag good">Direk Sahibi</span>
+                            }
+                            else if (g.IsGuildWarWinner)
+                            {
+                                <span class="tag info">Savaş Kazananı</span>
+                            }
+                        </td>
+                        <td class="num">@g.Level</td>
+                        <td>
+                            @if (g.LeaderName != null)
+                            {
+                                <a href="/karakter/@g.LeaderId">@g.LeaderName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                        <td class="num">@g.MemberCount</td>
+                        <td class="num">@GameLabels.Number(g.Fund)</td>
+                        <td class="num">@GameLabels.Number(g.ConquerPointsFund)</td>
+                    </tr>
+                }
+                @if (Model.Guilds.Items.Length == 0)
+                {
+                    <tr><td colspan="7" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Arena != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Puan</th><th class="num">Onur</th><th class="num">G / M</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var a in Model.Arena.Items)
+                {
+                    <tr>
+                        <td class="muted">@a.Rank</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(a.Avatar)" alt="">
+                                <a href="/karakter/@a.CharacterId">@a.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(a.Class)</td>
+                        <td class="num">@a.Level</td>
+                        <td class="num">@GameLabels.Number(a.Points)</td>
+                        <td class="num">@GameLabels.Number(a.HonorTotal)</td>
+                        <td class="num">@a.WinsTotal / @a.LossesTotal</td>
+                    </tr>
+                }
+                @if (Model.Arena.Items.Length == 0)
+                {
+                    <tr><td colspan="7" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Kind == "arena" && Model.ArenaMode == "sezon")
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Puan</th><th class="num">G / M</th></tr>
+                </thead>
+                <tbody>
+                @if (Model.ArenaSeason != null)
+                {
+                    foreach (var a in Model.ArenaSeason.Items)
+                    {
+                        <tr>
+                            <td class="muted">@a.Rank</td>
+                            <td><a href="/karakter/@a.CharacterId">@a.Name</a></td>
+                            <td>@GameLabels.ClassName(a.Class)</td>
+                            <td class="num">@a.Level</td>
+                            <td class="num">@GameLabels.Number(a.Points)</td>
+                            <td class="num">@a.Wins / @a.Losses</td>
+                        </tr>
+                    }
+                }
+                @if (Model.ArenaSeason == null || Model.ArenaSeason.Items.Length == 0)
+                {
+                    <tr><td colspan="6" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Flowers != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Miktar</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var f in Model.Flowers.Items)
+                {
+                    <tr>
+                        <td class="muted">@f.Rank</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(f.Avatar)" alt="">
+                                <a href="/karakter/@f.CharacterId">@f.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(f.Class)</td>
+                        <td class="num">@f.Level</td>
+                        <td class="num">@GameLabels.Number(f.Amount)</td>
+                    </tr>
+                }
+                @if (Model.Flowers.Items.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Pk != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th>Lonca</th><th class="num">PK Puanı</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model.Pk.Items)
+                {
+                    <tr>
+                        <td class="muted">@p.Rank</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(p.Avatar)" alt="">
+                                <a href="/karakter/@p.CharacterId">@p.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(p.Class)</td>
+                        <td class="num">@p.Level</td>
+                        <td>
+                            @if (p.GuildId != null && p.GuildName != null)
+                            {
+                                <a href="/lonca/@p.GuildId">@p.GuildName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                        <td class="num"><span class="tag bad">@p.PkPoints</span></td>
+                    </tr>
+                }
+                @if (Model.Pk.Items.Length == 0)
+                {
+                    <tr><td colspan="6" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.Families != null)
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Klan</th><th class="num">Seviye</th><th>Lider</th><th class="num">Üyeler</th><th class="num">Haritalar</th><th class="num">Gümüş fonu</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var f in Model.Families.Items)
+                {
+                    <tr>
+                        <td class="muted">@f.Rank</td>
+                        <td><b>@f.Name</b></td>
+                        <td class="num">@f.Level</td>
+                        <td>
+                            @if (f.LeaderName != null)
+                            {
+                                <a href="/karakter/@f.LeaderId">@f.LeaderName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                        <td class="num">@f.MemberCount</td>
+                        <td class="num">@f.OccupiedMaps</td>
+                        <td class="num">@GameLabels.Number(f.Fund)</td>
+                    </tr>
+                }
+                @if (Model.Families.Items.Length == 0)
+                {
+                    <tr><td colspan="7" class="empty">Kayıt bulunamadı.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+
+    <pager page="Model.Sayfa" pages="Model.Pages" />
+</panel>

@@ -6,9 +6,6 @@ import { dataRoute } from '../features/data'
 import { healthRoute } from '../features/health'
 import { economyRoute } from '../features/economy'
 import { itemsRoute } from '../features/items'
-import { myAccountRoute, registerRoute } from '../features/public/account'
-import { publicSiteRoutes } from '../features/public/site'
-import { publicHeatmapRoute } from '../features/public/heatmap'
 import { logsRoute } from '../features/logs'
 import { itemHistoryRoutes } from '../features/itemhistory'
 import { chatRoute } from '../features/chat'
@@ -31,10 +28,6 @@ export const featureRoutes: FeatureRoute[] = [
   auditRoute,
   itemsRoute,
   ...catalogRoutes,
-  registerRoute,
-  myAccountRoute,
-  ...publicSiteRoutes,
-  publicHeatmapRoute,
   logsRoute,
   ...itemHistoryRoutes,
   chatRoute,

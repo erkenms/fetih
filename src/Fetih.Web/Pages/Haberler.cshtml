@@ -1,0 +1,35 @@
+@page "/haberler"
+@model HaberlerModel
+@{
+    ViewData["Title"] = "Haberler";
+}
+
+<panel title="Sunucu Güncellemeleri" icon="2000247">
+    <p class="muted">Depo geçmişinden son değişiklikler.</p>
+
+    @if (Model.News.Items.Length > 0)
+    {
+        @foreach (var item in Model.News.Items)
+        {
+            <article class="news-item">
+                <div class="news-head">
+                    <div>
+                        <span class="tag">@item.ShortHash</span>
+                        <b>@item.Subject</b>
+                    </div>
+                    <span class="muted">@WebTime.Format(item.Date)</span>
+                </div>
+                @if (item.Body != null)
+                {
+                    <p class="muted pre">@item.Body</p>
+                }
+            </article>
+        }
+    }
+    else
+    {
+        <p class="muted">Güncelleme bulunamadı.</p>
+    }
+
+    <pager page="Model.Sayfa" pages="Model.Pages" />
+</panel>

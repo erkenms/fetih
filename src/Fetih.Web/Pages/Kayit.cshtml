@@ -1,0 +1,45 @@
+@page "/kayit"
+@model KayitModel
+@{
+    ViewData["Title"] = "Kayıt Ol";
+    var cfg = Model.Config;
+}
+
+<panel title="Hesap Oluştur" icon="713059">
+    <p class="muted">Oyun istemcisine ve web sitesine giriş için aynı e-posta ve şifreyi kullan.</p>
+
+    <form method="post" class="narrow">
+        @if (Model.Error != null)
+        {
+            <div class="alert inline">@Model.Error</div>
+        }
+
+        <label for="eposta">E-posta adresi</label>
+        <input id="eposta" name="Eposta" type="email" value="@Model.Eposta"
+               maxlength="@cfg.MaxUsernameLength" autocomplete="email" required autofocus>
+
+        <label for="sifre">Şifre</label>
+        <input id="sifre" name="Sifre" type="password"
+               minlength="@cfg.MinPasswordLength" maxlength="@cfg.MaxPasswordLength"
+               autocomplete="new-password" required>
+        <span class="muted">@cfg.MinPasswordLength–@cfg.MaxPasswordLength ASCII karakter (harf, rakam, boşluk, sembol)</span>
+
+        <label for="sifre-tekrar">Şifreyi onayla</label>
+        <input id="sifre-tekrar" name="SifreTekrar" type="password"
+               minlength="@cfg.MinPasswordLength" maxlength="@cfg.MaxPasswordLength"
+               autocomplete="new-password" required>
+
+        @if (cfg.CaptchaEnabled && !string.IsNullOrWhiteSpace(cfg.CaptchaSiteKey))
+        {
+            <div style="margin-top: 8px">
+                <div class="cf-turnstile" data-sitekey="@cfg.CaptchaSiteKey"></div>
+            </div>
+            <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        }
+
+        <div class="buttons" style="justify-content: flex-start">
+            <button>Hesap Oluştur</button>
+            <span class="muted">Zaten hesabın var mı? <a href="/giris">Giriş yap</a></span>
+        </div>
+    </form>
+</panel>

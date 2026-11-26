@@ -1,0 +1,37 @@
+@page "/indir"
+@model IndirModel
+@{
+    ViewData["Title"] = "İndir";
+    var info = Model.Info;
+}
+
+<panel title="İstemciyi İndir" icon="724426">
+    <p>Fetih Online'a katılmak için klasik <b>@info.Version</b> oyun istemcisini indir.</p>
+    <p><span class="tag info">İstemci sürümü: @info.Version</span></p>
+
+    @if (info.Url != null)
+    {
+        bool external = info.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+        <div class="buttons" style="justify-content: flex-start">
+            <a class="button" href="@info.Url"
+               target="@(external ? "_blank" : null)"
+               rel="@(external ? "noreferrer" : null)"
+               download="@(external ? null : "")">İstemciyi indir</a>
+        </div>
+    }
+    else
+    {
+        <div class="alert inline">
+            Doğrudan indirme bağlantısı henüz yapılandırılmadı.
+            Yerelde <code>dotnet run tools/build.cs client --ip &lt;ip&gt;</code> ile derleyebilirsin.
+        </div>
+    }
+</panel>
+
+<panel title="Başlangıç" icon="711394">
+    <ol style="margin: 0; padding-left: 18px">
+        <li>Siteden bir <a href="/kayit">hesap oluştur</a>.</li>
+        <li>İstemci arşivini indir ve çıkar.</li>
+        <li><code>Conquer.exe</code> dosyasını açıp e-posta ve şifrenle giriş yap.</li>
+    </ol>
+</panel>

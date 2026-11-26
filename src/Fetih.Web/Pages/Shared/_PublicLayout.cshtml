@@ -1,7 +1,11 @@
 @inject Fetih.Web.Game.GameRpc Game
 @{
     string path = Context.Request.Path;
-    string On(string url) => path == url ? "on" : "";
+    bool signedIn = User.Identity?.IsAuthenticated == true;
+    string On(string url, bool prefix = false) =>
+        prefix
+            ? (path.StartsWith(url, StringComparison.OrdinalIgnoreCase) ? "on" : "")
+            : (string.Equals(path, url, StringComparison.OrdinalIgnoreCase) ? "on" : "");
 }
 <!doctype html>
 <html lang="tr">
@@ -22,9 +26,10 @@
             }
         </span>
         <span>
-            @if (User.Identity?.IsAuthenticated == true)
+            @if (signedIn)
             {
                 <text>Giriş yapan: <b>@User.Username()</b> | </text>
+                <a href="/hesabim">Hesabım</a><text> | </text>
                 @if (User.Has(Permission.AdminArea))
                 {
                     <a href="/admin">Yönetim paneli</a><text> | </text>
@@ -33,7 +38,8 @@
             }
             else
             {
-                <a href="/giris">Giriş</a>
+                <a href="/giris">Giriş</a><text> | </text>
+                <a href="/kayit">Kayıt Ol</a>
             }
         </span>
     </div>
@@ -45,16 +51,30 @@
 
     <nav class="site-menu" aria-label="Ana menü">
         <a class="@On("/")" href="/">Ana Sayfa</a>
-        <a class="@On("/news")" href="/news">Haberler</a>
-        <a class="@On("/rankings")" href="/rankings">Sıralamalar</a>
-        <a class="@On("/download")" href="/download">İndir</a>
-        <a class="@On("/register")" href="/register">Kayıt Ol</a>
+        <a class="@On("/haberler", prefix: true)" href="/haberler">Haberler</a>
+        <a class="@On("/siralama", prefix: true)" href="/siralama">Sıralamalar</a>
+        <a class="@On("/indir", prefix: true)" href="/indir">İndir</a>
+        @if (signedIn)
+        {
+            <a class="@On("/hesabim", prefix: true)" href="/hesabim">Hesabım</a>
+        }
+        else
+        {
+            <a class="@On("/kayit", prefix: true)" href="/kayit">Kayıt Ol</a>
+        }
     </nav>
 
     <div class="site-columns">
         <aside class="site-side">
-            <big-button kind="gold" href="/download" note="İstemci, sürüm 5619">Oyunu İndir</big-button>
-            <big-button kind="red" href="/register" note="Ücretsiz, bir dakika sürer">Hesap Oluştur</big-button>
+            <big-button kind="gold" href="/indir" note="İstemci, sürüm 5619">Oyunu İndir</big-button>
+            @if (signedIn)
+            {
+                <big-button kind="red" href="/hesabim" note="Hesap ayarların">Hesabım</big-button>
+            }
+            else
+            {
+                <big-button kind="red" href="/kayit" note="Ücretsiz, bir dakika sürer">Hesap Oluştur</big-button>
+            }
             @await RenderSectionAsync("Side", required: false)
         </aside>
         <main class="site-main">

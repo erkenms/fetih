@@ -1,0 +1,256 @@
+@page "/"
+@model IndexModel
+@{
+    ViewData["Title"] = "Ana Sayfa";
+    var h = Model.Home;
+    var war = h.GuildWar;
+}
+
+@section Side {
+    <panel title="Sunucu Durumu" icon="724426">
+        <table class="grid">
+            <tbody>
+            <tr>
+                <td>Durum</td>
+                <td class="num">
+                    @if (h.GameOnline)
+                    {
+                        <span class="tag good">Açık</span>
+                    }
+                    else
+                    {
+                        <span class="tag bad">Kapalı</span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td>Çevrimiçi</td>
+                <td class="num"><b>@(h.OnlinePlayers != null ? GameLabels.Number(h.OnlinePlayers.Value) : "—")</b></td>
+            </tr>
+            <tr>
+                <td>Sürüm</td>
+                <td class="num"><b>5619</b></td>
+            </tr>
+            </tbody>
+        </table>
+    </panel>
+
+    <panel title="Lonca Savaşı" icon="410036">
+        @if (war?.HolderGuildId != null && war.HolderGuildName != null)
+        {
+            <div style="text-align: center">
+                <div class="muted">Direk sahibi</div>
+                <a class="holder" href="/lonca/@war.HolderGuildId">@war.HolderGuildName</a>
+                @if (war.WinnerGuildId != null && war.WinnerGuildName != null)
+                {
+                    <div class="muted">Son kazanan: <a href="/lonca/@war.WinnerGuildId">@war.WinnerGuildName</a></div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="muted" style="text-align: center; margin: 0">Şu anda direği elinde tutan lonca yok.</p>
+        }
+    </panel>
+
+    <panel title="Menü" icon="711394">
+        <div class="menu">
+            <h3>Haberler</h3>
+            <a href="/haberler">Son güncellemeler</a>
+            <h3>Oyun</h3>
+            <a href="/indir">Oyunu İndir</a>
+            <h3>Topluluk</h3>
+            <a href="/siralama/seviye">Sıralamalar</a>
+            <a href="/siralama/lonca">Loncalar</a>
+            <a href="/siralama/arena">Arena</a>
+            <h3>Hesap</h3>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <a href="/hesabim">Hesabım</a>
+            }
+            else
+            {
+                <a href="/kayit">Hesap Oluştur</a>
+                <a href="/giris">Giriş Yap</a>
+            }
+        </div>
+    </panel>
+}
+
+<panel title="Fetih Online'a Hoş Geldin" icon="610120">
+    <p>
+        Fetih Online, klasik <b>5619</b> sürüm Conquer Online sunucusudur.
+        Başlamak için <a href="/kayit">hesap oluştur</a> ve <a href="/indir">oyun istemcisini indir</a>.
+    </p>
+</panel>
+
+<panel title="Haber Bandı" icon="2000247">
+    @if (h.LatestNews.Length > 0)
+    {
+        <table class="grid">
+            <tbody>
+            @foreach (var item in h.LatestNews)
+            {
+                <tr>
+                    <td class="muted" style="white-space: nowrap">@GameLabels.Date(item.Date)</td>
+                    <td>@item.Subject</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="muted">Henüz kayıt yok.</p>
+    }
+    <div class="more"><a href="/haberler">Tüm haberler »</a></div>
+</panel>
+
+<panel title="En İyiler" icon="200007">
+    <nav class="tabs">
+        <a class="@(Model.BestTab == "seviye" ? "on" : null)" href="/?eniyi=seviye">Seviye</a>
+        <a class="@(Model.BestTab == "soyluluk" ? "on" : null)" href="/?eniyi=soyluluk">Soyluluk</a>
+        <a class="@(Model.BestTab == "lonca" ? "on" : null)" href="/?eniyi=lonca">Lonca</a>
+        <a class="@(Model.BestTab == "arena" ? "on" : null)" href="/?eniyi=arena">Arena</a>
+    </nav>
+
+    <div class="scroll">
+        @if (Model.BestTab == "seviye")
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th class="num">Rebirth</th><th>Lonca</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var p in h.TopPlayers)
+                {
+                    <tr>
+                        <td class="muted">@p.Rank.</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(p.Avatar)" alt="">
+                                <a href="/karakter/@p.CharacterId">@p.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(p.Class)</td>
+                        <td class="num">@p.Level</td>
+                        <td class="num">@p.Rebirths</td>
+                        <td>
+                            @if (p.GuildId != null && p.GuildName != null)
+                            {
+                                <a href="/lonca/@p.GuildId">@p.GuildName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (h.TopPlayers.Length == 0)
+                {
+                    <tr><td colspan="6" class="empty">Henüz kayıt yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.BestTab == "soyluluk")
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Unvan</th><th class="num">Seviye</th><th class="num">Bağış</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var n in h.TopNobility)
+                {
+                    <tr>
+                        <td class="muted">@n.Rank.</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(n.Avatar)" alt="">
+                                <a href="/karakter/@n.CharacterId">@n.Name</a>
+                            </span>
+                        </td>
+                        <td><span class="tag">@GameLabels.NobilityName(n.NobilityRank)</span></td>
+                        <td class="num">@n.Level</td>
+                        <td class="num">@GameLabels.Number(n.Donation)</td>
+                    </tr>
+                }
+                @if (h.TopNobility.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else if (Model.BestTab == "lonca")
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Lonca</th><th>Lider</th><th class="num">Üyeler</th><th class="num">Gümüş fonu</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var g in h.TopGuilds)
+                {
+                    <tr>
+                        <td class="muted">@g.Rank.</td>
+                        <td>
+                            <a href="/lonca/@g.GuildId">@g.Name</a>
+                            @if (g.IsGuildWarHolder)
+                            {
+                                <span class="tag good">Direk Sahibi</span>
+                            }
+                        </td>
+                        <td>
+                            @if (g.LeaderName != null)
+                            {
+                                <a href="/karakter/@g.LeaderId">@g.LeaderName</a>
+                            }
+                            else
+                            {
+                                <text>—</text>
+                            }
+                        </td>
+                        <td class="num">@g.MemberCount</td>
+                        <td class="num">@GameLabels.Number(g.Fund)</td>
+                    </tr>
+                }
+                @if (h.TopGuilds.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <table class="grid">
+                <thead>
+                <tr><th>#</th><th>Oyuncu</th><th>Sınıf</th><th class="num">Puan</th><th class="num">G / M</th></tr>
+                </thead>
+                <tbody>
+                @foreach (var a in h.TopArena)
+                {
+                    <tr>
+                        <td class="muted">@a.Rank.</td>
+                        <td>
+                            <span class="player-cell">
+                                <img class="avatar" src="@GameLabels.AvatarUrl(a.Avatar)" alt="">
+                                <a href="/karakter/@a.CharacterId">@a.Name</a>
+                            </span>
+                        </td>
+                        <td>@GameLabels.ClassName(a.Class)</td>
+                        <td class="num">@GameLabels.Number(a.Points)</td>
+                        <td class="num">@a.WinsTotal / @a.LossesTotal</td>
+                    </tr>
+                }
+                @if (h.TopArena.Length == 0)
+                {
+                    <tr><td colspan="5" class="empty">Henüz kayıt yok.</td></tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+    <div class="more"><a href="/siralama/@Model.BestTab">Tüm sıralama »</a></div>
+</panel>

@@ -1,0 +1,131 @@
+@page "/lonca/{id}"
+@model LoncaModel
+@{
+    var g = Model.Guild;
+    ViewData["Title"] = g.Name;
+}
+
+<panel title="Lonca Profili" icon="410036">
+    <div class="profile-head">
+        <div>
+            <h1>@g.Name</h1>
+            <div class="tags">
+                <span class="tag">Seviye @g.Level</span>
+                @if (g.IsGuildWarHolder)
+                {
+                    <span class="tag good">Direk Sahibi</span>
+                }
+                else if (g.IsGuildWarWinner)
+                {
+                    <span class="tag info">Savaş Kazananı</span>
+                }
+            </div>
+        </div>
+    </div>
+    @if (g.Announcement != null)
+    {
+        <p class="muted" style="margin-top: 6px">@g.Announcement</p>
+    }
+</panel>
+
+<div class="cols-2">
+    <panel title="Lonca Bilgileri" icon="711394">
+        <table class="grid">
+            <tbody>
+            <tr>
+                <td>Lider</td>
+                <td>
+                    @if (g.LeaderName != null)
+                    {
+                        <a href="/karakter/@g.LeaderId">@g.LeaderName</a>
+                    }
+                    else
+                    {
+                        <text>—</text>
+                    }
+                </td>
+            </tr>
+            <tr><td>Gümüş Fonu</td><td class="num">@GameLabels.Number(g.Fund)</td></tr>
+            <tr><td>CP Fonu</td><td class="num">@GameLabels.Number(g.ConquerPointsFund)</td></tr>
+            <tr><td>Kuruluş</td><td>@GameLabels.UnixDate(g.Created)</td></tr>
+            </tbody>
+        </table>
+    </panel>
+
+    <panel title="İlişkiler" icon="200007">
+        <h3>Müttefikler</h3>
+        @if (g.Allies.Length > 0)
+        {
+            <div class="tags" style="margin-bottom: 8px">
+                @foreach (var a in g.Allies)
+                {
+                    <a class="tag good" href="/lonca/@a.GuildId">@a.Name</a>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="muted">Yok</p>
+        }
+
+        <h3>Düşmanlar</h3>
+        @if (g.Enemies.Length > 0)
+        {
+            <div class="tags">
+                @foreach (var e in g.Enemies)
+                {
+                    <a class="tag bad" href="/lonca/@e.GuildId">@e.Name</a>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="muted" style="margin-bottom: 0">Yok</p>
+        }
+    </panel>
+</div>
+
+@if (User.Has(Permission.ManageCharacters))
+{
+    <panel title="Yetkili İşlemleri" icon="713059">
+        @if (!Model.GameConnected)
+        {
+            <div class="alert inline">Oyun sunucusu kapalı. Loncayı dağıtmak için oyun sunucusu açık olmalı.</div>
+        }
+        <form method="post" asp-page-handler="Disband" asp-route-id="@g.GuildId"
+              data-confirm="“@g.Name” loncası dağıtılsın mı? Bu işlem geri alınamaz.">
+            <button disabled="@(!Model.GameConnected)">Loncayı Dağıt</button>
+        </form>
+    </panel>
+}
+
+<panel title="Üyeler (@g.Members.Length)" icon="724426">
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr><th>Oyuncu</th><th>Sınıf</th><th class="num">Seviye</th><th>Rütbe</th><th>Katılım</th></tr>
+            </thead>
+            <tbody>
+            @foreach (var m in g.Members)
+            {
+                <tr>
+                    <td>
+                        <span class="player-cell">
+                            <img class="avatar" src="@GameLabels.AvatarUrl(m.Avatar)" alt="">
+                            <a href="/karakter/@m.CharacterId">@m.Name</a>
+                        </span>
+                    </td>
+                    <td>@GameLabels.ClassName(m.Class)</td>
+                    <td class="num">@m.Level</td>
+                    <td>@GameLabels.GuildRankName(m.Rank)</td>
+                    <td>@GameLabels.UnixDate(m.Joined)</td>
+                </tr>
+            }
+            @if (g.Members.Length == 0)
+            {
+                <tr><td colspan="5" class="empty">Üye yok.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</panel>
