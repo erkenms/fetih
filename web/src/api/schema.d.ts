@@ -100,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/catalogs/looks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listCatalogLooks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/items": {
         parameters: {
             query?: never;
@@ -3038,6 +3054,17 @@ export interface components {
             accounts: number;
             recentLogins: components["schemas"]["LoginLine"][];
         };
+        LookMonster: {
+            /** Format: uint32 */
+            id: number;
+            name: string;
+        };
+        LooksCatalogResponse: {
+            /** Format: int32 */
+            previewDirection: number;
+            npc: components["schemas"]["NpcLook"][];
+            monster: components["schemas"]["MonsterLook"][];
+        };
         MapBooth: {
             /** Format: uint32 */
             id?: number;
@@ -3567,6 +3594,16 @@ export interface components {
             bossScheduleCount: number;
             hasCustomDrops: boolean;
         };
+        MonsterLook: {
+            /** Format: uint32 */
+            look: number;
+            image: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            monsters: components["schemas"]["LookMonster"][];
+        };
         MonsterProblemDto: {
             file: string;
             /** Format: int32 */
@@ -3679,6 +3716,16 @@ export interface components {
             nobilityRank: string;
             /** Format: uint64 */
             donation: number;
+        };
+        NpcLook: {
+            /** Format: uint32 */
+            lookface: number;
+            image: string;
+            /** Format: int32 */
+            x: number;
+            /** Format: int32 */
+            y: number;
+            name: null | string;
         };
         OnlinePlayersResponse: {
             gameOnline: boolean;
@@ -4612,6 +4659,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardResponse"];
+                };
+            };
+        };
+    };
+    listCatalogLooks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LooksCatalogResponse"];
                 };
             };
         };

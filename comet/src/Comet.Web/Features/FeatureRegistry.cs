@@ -26,5 +26,6 @@ public static class FeatureRegistry
         new Integrity.IntegrityFeature(),
         new Chat.ChatFeature(),
         new Live.LiveFeature(),
+        new Looks.LooksFeature(),
     ];
 }

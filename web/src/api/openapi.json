@@ -213,6 +213,26 @@
         }
       }
     },
+    "/api/catalogs/looks": {
+      "get": {
+        "tags": [
+          "Comet.Web"
+        ],
+        "operationId": "listCatalogLooks",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LooksCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/items": {
       "get": {
         "tags": [
@@ -9579,6 +9599,48 @@
           }
         }
       },
+      "LookMonster": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "LooksCatalogResponse": {
+        "required": [
+          "previewDirection",
+          "npc",
+          "monster"
+        ],
+        "type": "object",
+        "properties": {
+          "previewDirection": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "npc": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NpcLook"
+            }
+          },
+          "monster": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonsterLook"
+            }
+          }
+        }
+      },
       "MapBooth": {
         "type": "object",
         "properties": {
@@ -11472,6 +11534,39 @@
           }
         }
       },
+      "MonsterLook": {
+        "required": [
+          "look",
+          "image",
+          "x",
+          "y",
+          "monsters"
+        ],
+        "type": "object",
+        "properties": {
+          "look": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "image": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "monsters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LookMonster"
+            }
+          }
+        }
+      },
       "MonsterProblemDto": {
         "required": [
           "file",
@@ -11844,6 +11939,39 @@
           "donation": {
             "type": "integer",
             "format": "uint64"
+          }
+        }
+      },
+      "NpcLook": {
+        "required": [
+          "lookface",
+          "image",
+          "x",
+          "y",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "lookface": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "image": {
+            "type": "string"
+          },
+          "x": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "y": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
