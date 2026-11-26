@@ -36,9 +36,9 @@ export function grafanaPanel(base: string, panelId: number, theme: 'light' | 'da
     theme,
     refresh: '1m',
   })
-  return `${base}/d-solo/comet-overview/overview?${query}`
+  return `${base}/d-solo/fetih-overview/overview?${query}`
 }
 
 export function grafanaDashboard(base: string) {
-  return `${base}/d/comet-overview/overview`
+  return `${base}/d/fetih-overview/overview`
 }

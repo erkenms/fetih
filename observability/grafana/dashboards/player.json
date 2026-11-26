@@ -1,9 +1,9 @@
 {
-  "uid": "comet-player",
+  "uid": "fetih-player",
   "title": "Player",
-  "description": "One character's or account's events. Link: /d/comet-player/player?var-characterId=<id>&var-accountId=<id>",
+  "description": "One character's or account's events. Link: /d/fetih-player/player?var-characterId=<id>&var-accountId=<id>",
   "tags": [
-    "comet"
+    "fetih"
   ],
   "timezone": "browser",
   "schemaVersion": 41,
@@ -94,10 +94,10 @@
     {
       "type": "dashboards",
       "tags": [
-        "comet"
+        "fetih"
       ],
       "asDropdown": false,
-      "title": "Comet",
+      "title": "Fetih",
       "includeVars": true,
       "keepTime": true
     }

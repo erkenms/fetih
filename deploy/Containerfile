@@ -1,0 +1,49 @@
+# The account, game and web servers, built from the repository root:
+#
+#   podman build -f deploy/Containerfile --target game .
+#
+# deploy/compose.yaml builds all three (profile deploy). The client files, the game's Data
+# directory and the web's client art are mounted, not baked in.
+
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
+WORKDIR /src
+COPY src/Fetih.Core/Fetih.Core.csproj src/Fetih.Core/
+COPY src/Fetih.Network/Fetih.Network.csproj src/Fetih.Network/
+COPY src/Fetih.Shared/Fetih.Shared.csproj src/Fetih.Shared/
+COPY src/Fetih.Account/Fetih.Account.csproj src/Fetih.Account/
+COPY src/Fetih.Game/Fetih.Game.csproj src/Fetih.Game/
+COPY src/Fetih.Web/Fetih.Web.csproj src/Fetih.Web/
+RUN dotnet restore src/Fetih.Web/Fetih.Web.csproj
+COPY src/ src/
+# The schema baseline and migrations, embedded in the account and game servers
+COPY sql/ sql/
+RUN dotnet publish src/Fetih.Account -c Release --no-restore -o /out/account \
+ && dotnet publish src/Fetih.Game -c Release --no-restore -o /out/game \
+ && dotnet publish src/Fetih.Web -c Release --no-restore -o /out/web
+
+FROM docker.io/library/node:24-alpine AS frontend
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
+FROM mcr.microsoft.com/dotnet/runtime:11.0 AS account
+WORKDIR /app
+COPY --from=build /out/account .
+ENTRYPOINT ["dotnet", "Fetih.Account.dll"]
+
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS game
+WORKDIR /app
+COPY --from=build /out/game .
+ENTRYPOINT ["dotnet", "Fetih.Game.dll"]
+
+# git for the Studio's Changes page, which diffs the mounted checkout's Data directory
+FROM mcr.microsoft.com/dotnet/aspnet:11.0 AS web
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+ && rm -rf /var/lib/apt/lists/* \
+ && git config --system --add safe.directory '*'
+WORKDIR /app
+COPY --from=build /out/web .
+COPY --from=frontend /src/web/dist ./wwwroot
+ENTRYPOINT ["dotnet", "Fetih.Web.dll"]

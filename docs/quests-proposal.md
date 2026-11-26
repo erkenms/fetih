@@ -131,7 +131,7 @@ quests that are implemented:
 text. Quests not listed stay at status 2, can't be accepted, and are refused with a short
 message.
 
-**State per character**, a new table (goes in `comet/sql/comet.game.sql`):
+**State per character**, a new table (goes in `sql/fetih_game.sql` or a new migration):
 
 ```sql
 CREATE TABLE IF NOT EXISTS `task` (

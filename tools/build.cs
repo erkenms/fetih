@@ -31,8 +31,8 @@
 // patches from client/patches.json, swaps the RSA modulus in Conquer.exe for client/rsa.pem
 // (committed in git so every build signs with the same key), and re-signs the RSA-signed .dat
 // files. Unchanged files are skipped.
-#:project ../comet/src/Comet.Game/Comet.Game.csproj
-#:project ../comet/src/Comet.Patch/Comet.Patch.csproj
+#:project ../src/Fetih.Game/Fetih.Game.csproj
+#:project ../src/Fetih.Patch/Fetih.Patch.csproj
 #:package StbImageSharp@2.30.15
 #:package SkiaSharp@3.119.1
 #:package SkiaSharp.NativeAssets.Linux.NoDependencies@3.119.1
@@ -57,7 +57,7 @@ using System.Runtime.CompilerServices;
 
 var root = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ScriptPath())!, ".."));
 var clientInputsDir = Path.Combine(root, "client");
-var dataDir = Path.Combine(root, "comet", "src", "Comet.Game", "Data");
+var dataDir = Path.Combine(root, "src", "Fetih.Game", "Data");
 
 if (args.Length == 0 || args[0] is "-h" or "--help")
 {

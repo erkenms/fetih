@@ -1,7 +1,7 @@
 import createClient from 'openapi-fetch'
 import type { components, paths } from './schema'
 
-// Typed client for Comet.Web. Types come from `npm run api`; never write DTOs by hand.
+// Typed client for Fetih.Web. Types come from `npm run api`; never write DTOs by hand.
 export const api = createClient<paths>({ baseUrl: '', credentials: 'same-origin' })
 
 export type Schemas = components['schemas']

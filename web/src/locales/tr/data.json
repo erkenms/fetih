@@ -1,7 +1,7 @@
 {
   "navTitle": "Veri düzenleyiciler",
   "title": "Veri düzenleyiciler",
-  "subtitle": "Seviyeler, eğitim hedefleri, ışınlayıcılar ve konuşmacıları düzenleyin. Değişiklikler doğrudan Comet.Game/Data/*.json dosyalarına yazılır.",
+  "subtitle": "Seviyeler, eğitim hedefleri, ışınlayıcılar ve konuşmacıları düzenleyin. Değişiklikler doğrudan Fetih.Game/Data/*.json dosyalarına yazılır.",
   "tabs": {
     "levels": "Seviyeler",
     "goals": "Eğitim hedefleri",

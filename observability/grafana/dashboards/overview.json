@@ -1,9 +1,9 @@
 {
-  "uid": "comet-overview",
+  "uid": "fetih-overview",
   "title": "Overview",
   "description": "Online players, logins, errors and the world",
   "tags": [
-    "comet"
+    "fetih"
   ],
   "timezone": "browser",
   "schemaVersion": 41,
@@ -86,10 +86,10 @@
     {
       "type": "dashboards",
       "tags": [
-        "comet"
+        "fetih"
       ],
       "asDropdown": false,
-      "title": "Comet",
+      "title": "Fetih",
       "includeVars": true,
       "keepTime": true
     }
@@ -115,7 +115,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_online_players{env=\"$env\"})",
+          "expr": "sum(fetih_online_players{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -347,7 +347,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_monsters_alive{env=\"$env\"})",
+          "expr": "sum(fetih_monsters_alive{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -404,7 +404,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_maps_loaded{env=\"$env\"})",
+          "expr": "sum(fetih_maps_loaded{env=\"$env\"})",
           "refId": "A",
           "instant": true,
           "range": false
@@ -462,7 +462,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_online_players{env=\"$env\"})",
+          "expr": "sum(fetih_online_players{env=\"$env\"})",
           "refId": "A",
           "legendFormat": "online",
           "instant": false,
@@ -514,7 +514,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(fetih_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "A",
           "legendFormat": "in",
           "instant": false,
@@ -525,7 +525,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(fetih_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "B",
           "legendFormat": "out",
           "instant": false,
@@ -687,7 +687,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_save_round_seconds_sum{env=\"$env\"}[$__rate_interval])) / sum(rate(comet_save_round_seconds_count{env=\"$env\"}[$__rate_interval]))",
+          "expr": "sum(rate(fetih_save_round_seconds_sum{env=\"$env\"}[$__rate_interval])) / sum(rate(fetih_save_round_seconds_count{env=\"$env\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "average",
           "instant": false,
@@ -698,7 +698,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(comet_save_round_seconds_bucket{env=\"$env\"}[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(fetih_save_round_seconds_bucket{env=\"$env\"}[$__rate_interval])))",
           "refId": "B",
           "legendFormat": "p95",
           "instant": false,
@@ -751,7 +751,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_monsters_alive{env=\"$env\"})",
+          "expr": "sum(fetih_monsters_alive{env=\"$env\"})",
           "refId": "A",
           "legendFormat": "monsters alive",
           "instant": false,
@@ -762,7 +762,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_ground_items{env=\"$env\"})",
+          "expr": "sum(fetih_ground_items{env=\"$env\"})",
           "refId": "B",
           "legendFormat": "ground items",
           "instant": false,
@@ -773,7 +773,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(comet_maps_loaded{env=\"$env\"})",
+          "expr": "sum(fetih_maps_loaded{env=\"$env\"})",
           "refId": "C",
           "legendFormat": "maps loaded",
           "instant": false,

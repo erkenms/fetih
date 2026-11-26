@@ -1,22 +1,22 @@
 # Logs and metrics
 
-`podman compose up -d` starts these next to MariaDB, all on 127.0.0.1:
+`podman compose -f deploy/compose.yaml up -d` starts these next to MariaDB, all on 127.0.0.1:
 
 | Service | Port | What |
 |---|---|---|
 | Grafana | 3000 | Dashboards and alerts; viewers need no login, `admin`/`admin` to edit |
-| Loki | 3100 | Logs from `comet/src/Comet.*/logs/*.jsonl` (dev, `env=dev`) and `/logs/<env>/<server>/*.jsonl` (containers: `prod`, `test`, `shared`), per-event retention |
+| Loki | 3100 | Logs from `src/Fetih.*/logs/*.jsonl` (dev, `env=dev`) and `/logs/<env>/<server>/*.jsonl` (containers: `prod`, `test`, `shared`), per-event retention |
 | Prometheus | 9090 | Scrapes `game` (`:9818`), `account` (`:9819`), and `node-exporter` (`:9100`), 30 days |
 | Alloy | — | Tails the main log files into Loki (audit files are excluded) |
 | Node Exporter | — | Host CPU/memory/disk metrics and backup textfile metrics (`observability/node-exporter/textfile`) |
 
 ## Retention and outputs
 
-Each server writes three outputs (`Comet.Core/Logging/LogSetup.cs`):
+Each server writes three outputs (`Fetih.Core/Logging/LogSetup.cs`):
 
-1. **Main JSONL files** (`<Directory>/<server>-YYYYMMDD.jsonl`): Alloy's buffer so logs survive a Loki restart. Kept for `RetainDays` (`30` in dev configs, `3` in `compose.yaml` production containers).
+1. **Main JSONL files** (`<Directory>/<server>-YYYYMMDD.jsonl`): Alloy's buffer so logs survive a Loki restart. Kept for `RetainDays` (`30` in dev configs, `3` in `deploy/compose.yaml` production containers).
 2. **Audit JSONL files** (`<Directory>/audit/<server>-audit-YYYYMMDD.jsonl`): an allowlist of permanent events (`AuditEvents.cs`) — account/session logins and logouts (with account, character, IP, time and session length), completed trades and booth sales (with items and money), all `gm.*` actions and bans, character deletes, cheat reports, and web admin actions. Never deleted by the server; rolled daily files are gzip-compressed (`.jsonl.gz`) when the next day's file opens. Alloy excludes these files so Loki does not ingest them twice.
-3. **Console stdout**: everything except packet traces in dev; restricted to `warn` and above in containers (`Logging__ConsoleLevel=warn`), with a `10m` × 3 container log cap in `compose.yaml`.
+3. **Console stdout**: everything except packet traces in dev; restricted to `warn` and above in containers (`Logging__ConsoleLevel=warn`), with a `10m` × 3 container log cap in `deploy/compose.yaml`.
 
 ### Loki per-stream retention (`loki/loki.yaml`)
 
@@ -33,9 +33,9 @@ Loki's compactor enforces retention per stream (higher priority wins):
 
 ## Production volume
 
-In production (`compose.yaml`), `Logging__Level` is `info` and `PacketTrace__All` is `false`. High-volume `move.walk`, `move.jump`, `combat.hit`, and `monster.respawned` events stay at `debug` (not written at `info`), while `monster.killed` (used by the Player dashboard), `monster.drop`, `move.teleport`, and rejections remain at `info`/`warn` with 7-day Loki retention. Packet tracing can still be enabled per IP/account in config or toggled at runtime for an account from the admin panel.
+In production (`deploy/compose.yaml`), `Logging__Level` is `info` and `PacketTrace__All` is `false`. High-volume `move.walk`, `move.jump`, `combat.hit`, and `monster.respawned` events stay at `debug` (not written at `info`), while `monster.killed` (used by the Player dashboard), `monster.drop`, `move.teleport`, and rejections remain at `info`/`warn` with 7-day Loki retention. Packet tracing can still be enabled per IP/account in config or toggled at runtime for an account from the admin panel.
 
-Measured with 10 `Comet.Bots` (5 hunting, 3 wandering, 2 jumping) over 4 minutes under production logging settings (`Level=info`, `ConsoleLevel=warn`, `PacketTrace.All=false`):
+Measured with 10 `Fetih.Bots` (5 hunting, 3 wandering, 2 jumping) over 4 minutes under production logging settings (`Level=info`, `ConsoleLevel=warn`, `PacketTrace.All=false`):
 
 - **Game main JSONL**: ~115 KB total (~77 KB steady-state gameplay: 32% `monster.killed`, 17% `monster.drop`, 10% `item.expired`), or **~2.8–4.1 MB per continuously active player per day** (~280–410 MB/day for 100 active players, down from ~10 GB/day with `PacketTrace.All=true`).
 - **Audit JSONL**: ~830 B per game login+logout pair and ~313 B per account login (~400 KB/day uncompressed, ~60 KB/day gzipped for 100 players logging in 5 times/day).
@@ -50,11 +50,11 @@ selector needs one matcher that can't match empty, so add `server=~".+"` to nega
 
 Links the web can build:
 
-- Player: `http://localhost:3000/d/comet-player/player?var-characterId=1000000&var-accountId=1&from=now-24h&to=now`
+- Player: `http://localhost:3000/d/fetih-player/player?var-characterId=1000000&var-accountId=1&from=now-24h&to=now`
   (incoming packets carry only `accountId`, so pass both)
-- Packets: `http://localhost:3000/d/comet-packets/packets?var-accountId=1&var-packetName=MsgItem`
-- Overview: `http://localhost:3000/d/comet-overview/overview`; a single panel embeds with
-  `/d-solo/comet-overview/overview?panelId=<id>`
+- Packets: `http://localhost:3000/d/fetih-packets/packets?var-accountId=1&var-packetName=MsgItem`
+- Overview: `http://localhost:3000/d/fetih-overview/overview`; a single panel embeds with
+  `/d-solo/fetih-overview/overview?panelId=<id>`
 
 The dashboards are provisioned from `grafana/dashboards/*.json`. Edit them in Grafana, then
 export the JSON over the file.

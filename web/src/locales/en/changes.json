@@ -1,8 +1,8 @@
 {
   "title": "Data changes",
-  "description": "Inspect uncommitted edits in Comet.Game/Data, check validation results, reload into the running game, or discard changes.",
+  "description": "Inspect uncommitted edits in Fetih.Game/Data, check validation results, reload into the running game, or discard changes.",
   "refresh": "Refresh",
-  "empty": "No uncommitted changes in Comet.Game/Data.",
+  "empty": "No uncommitted changes in Fetih.Game/Data.",
   "status": {
     "gameOnline": "Game server online",
     "gameOffline": "Game server offline",

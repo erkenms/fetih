@@ -2,3 +2,39 @@ _CLIENT/
 web/assets/
 # Deployment settings (deploy/env.example)
 .env
+deploy/.env
+
+# .NET build artifacts and editor files
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+nupkg/
+
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+Debug/
+DebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+.vs/
+
+# The database volume from deploy/compose.yaml
+sql/data
+
+logs/

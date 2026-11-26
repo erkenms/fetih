@@ -1,7 +1,7 @@
-# Build context for Containerfile: only sources go in
+# Build context for deploy/Containerfile: only sources go in
 **/bin
 **/obj
-comet/src/*/logs
+src/*/logs
 **/node_modules
 _CLIENT
 client
@@ -10,7 +10,7 @@ tools
 .git
 .github
 .claude
-comet/sql/data
-comet/tests
+sql/data
+tests
 web/assets
 web/dist

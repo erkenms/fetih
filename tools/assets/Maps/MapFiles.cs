@@ -58,7 +58,7 @@ static class MapFiles
         return files.Read(plain);
     }
 
-    // The DMap layout is in Comet.Game's MapGrid. Terrain objects (type 1) name a scene file,
+    // The DMap layout is in Fetih.Game's MapGrid. Terrain objects (type 1) name a scene file,
     // whose parts sit at the object's cell plus the part's cell offset and are drawn at that
     // cell's pixel plus the part's pixel offset. Covers (type 4) are char[260] .ani file,
     // char[128] section, int32 cell x, y, base width, height, pixel offset x, y, frame
@@ -108,7 +108,7 @@ static class MapFiles
         return new MapDrawing(puzzle, width, height, ground, covers);
     }
 
-    // map/Scene/*.scene parts, as Comet.Game's SceneFile reads them, with the picture: char[256]
+    // map/Scene/*.scene parts, as Fetih.Game's SceneFile reads them, with the picture: char[256]
     // .ani file, char[64] section, int32 pixel offset x, y, frame interval, width, height,
     // thickness, cell offset x, y.
     public static List<SceneSprite> ParseScene(ReadOnlySpan<byte> data)

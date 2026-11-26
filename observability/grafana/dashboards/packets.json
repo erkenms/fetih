@@ -1,9 +1,9 @@
 {
-  "uid": "comet-packets",
+  "uid": "fetih-packets",
   "title": "Packets",
   "description": "Packet rates, unhandled packets and the packet trace",
   "tags": [
-    "comet"
+    "fetih"
   ],
   "timezone": "browser",
   "schemaVersion": 41,
@@ -142,10 +142,10 @@
     {
       "type": "dashboards",
       "tags": [
-        "comet"
+        "fetih"
       ],
       "asDropdown": false,
-      "title": "Comet",
+      "title": "Fetih",
       "includeVars": true,
       "keepTime": true
     }
@@ -171,7 +171,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(fetih_packets_received_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "A",
           "legendFormat": "in",
           "instant": false,
@@ -182,7 +182,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
+          "expr": "sum(rate(fetih_packets_sent_total{env=\"$env\"}[$__rate_interval])) or vector(0)",
           "refId": "B",
           "legendFormat": "out",
           "instant": false,
@@ -235,7 +235,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, sum by (type) (rate(comet_packets_received_total{env=\"$env\"}[$__rate_interval])))",
+          "expr": "topk(15, sum by (type) (rate(fetih_packets_received_total{env=\"$env\"}[$__rate_interval])))",
           "refId": "A",
           "legendFormat": "{{type}}",
           "instant": false,
@@ -291,7 +291,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "topk(15, sum by (type) (rate(comet_packets_sent_total{env=\"$env\"}[$__rate_interval])))",
+          "expr": "topk(15, sum by (type) (rate(fetih_packets_sent_total{env=\"$env\"}[$__rate_interval])))",
           "refId": "A",
           "legendFormat": "{{type}}",
           "instant": false,

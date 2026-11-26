@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using Comet.Patch;
+using Fetih.Patch;
 
 static class PatchBuild
 {

@@ -1,0 +1,168 @@
+namespace Fetih.Integration.Tests
+{
+    using System.Linq;
+    using System.Threading.Tasks;
+    using Fetih.TestClient;
+    using Xunit;
+    using static Fetih.TestClient.UserAttribMessage;
+
+    // Skills from class masters and books, and the spells of ServerFixture they lead to
+    public class SkillLearningTests : IntegrationTest
+    {
+        private const uint TrojanStar = 10022, HeadAbbot = 8314;
+        private const byte Teach = 4, Cyclone = 10, Hercules = 11;
+
+        public SkillLearningTests(ServerFixture servers) : base(servers) { }
+
+        private static async Task<System.Collections.Generic.List<DialogMessage>> TalkAsync(Player player, uint npc, byte option)
+        {
+            await player.Game.TalkToNpcAsync(npc);
+            Assert.NotNull(await player.Game.ReadDialogAsync());
+            await player.Game.AnswerNpcAsync(option);
+            return await player.Game.ReadDialogAsync();
+        }
+
+        private static async Task<string> AnswerAsync(Player player, byte option)
+        {
+            await player.Game.AnswerNpcAsync(option);
+            return (await player.Game.ReadDialogAsync())?[0].Text;
+        }
+
+        private async Task<Player> AtJobCenterAsync(int x, byte level, byte currentClass)
+        {
+            var player = (await this.PlayingAtAsync(ServerFixture.JobCenter, x, 38, GameMaster, level)).Player;
+            await CommandAsync(player, $"/class {currentClass}");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Class, out var c) && c == currentClass));
+            return player;
+        }
+
+        private static string[] Skills(System.Collections.Generic.List<DialogMessage> page) =>
+            page.Where(p => p.Action == DialogMessage.Choice && p.Option != DialogMessage.NoOption).Select(p => p.Text).ToArray();
+
+        [Fact]
+        public async Task TheTrojanStarListsEverySkillAndSaysWhatOneStillNeeds()
+        {
+            await using var player = await this.AtJobCenterAsync(46, 15, 10);
+
+            Assert.Equal(new[] { "Cyclone", "Hercules" },
+                Skills(await TalkAsync(player, TrojanStar, Teach)));
+            Assert.Contains("need to be promoted", await AnswerAsync(player, Cyclone));
+            var unpromoted = await this.Servers.WaitForEventAsync("game", "magic.learn_rejected", "name", player.User.Name);
+            Assert.Equal("promotion", unpromoted.GetProperty("reason").GetString());
+
+            await CommandAsync(player, "/class 11");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Class, out var c) && c == 11));
+            Assert.NotNull(await TalkAsync(player, TrojanStar, Teach));
+            Assert.Contains("learned Cyclone", await AnswerAsync(player, Cyclone));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1110 && m.Level == 0));
+
+            Assert.NotNull(await TalkAsync(player, TrojanStar, Teach));
+            Assert.Contains("level 40", await AnswerAsync(player, Hercules));
+            await this.Servers.WaitForEventAsync("game", "magic.learn_rejected", e =>
+                e.GetProperty("name").GetString() == player.User.Name && e.GetProperty("reason").GetString() == "level");
+
+            await CommandAsync(player, "/level 40");
+            await CommandAsync(player, "/class 12");
+            Assert.NotNull(await player.Game.WaitForAttribAsync(a => a.Id == player.User.Id &&
+                a.Values.TryGetValue(Class, out var c) && c == 12));
+            Assert.NotNull(await TalkAsync(player, TrojanStar, Teach));
+            Assert.Contains("learned Hercules", await AnswerAsync(player, Hercules));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1115));
+        }
+
+        [Fact]
+        public async Task TheHeadAbbotTeachesMonkSkills()
+        {
+            await using var player = await this.AtJobCenterAsync(36, 100, 60);
+
+            var page = await TalkAsync(player, HeadAbbot, Teach);
+            Assert.Equal(new[] { "TripleAttack", "Oblivion", "WhirlwindKick", "TyrantAura", "FendAura", "Serenity", "More skills." },
+                Skills(page));
+            await player.Game.AnswerNpcAsync(101);
+            Assert.Equal(new[] { "RadiantPalm", "Tranquility", "SoulShackle", "Compassion" },
+                Skills(await player.Game.ReadDialogAsync()));
+
+            Assert.NotNull(await TalkAsync(player, HeadAbbot, Teach));
+            Assert.Contains("learned TripleAttack", await AnswerAsync(player, 10));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 10490 && m.Level == 0));
+        }
+
+        [Fact]
+        public async Task ThePirateLordTeachesPirateSkills()
+        {
+            const uint PirateLord = 10070;
+            await using var player = await this.AtJobCenterAsync(60, 40, 70);
+            var page = await TalkAsync(player, PirateLord, Teach);
+            Assert.Equal("Windstorm", page.First(p => p.Action == DialogMessage.Choice && p.Option != DialogMessage.NoOption).Text);
+            Assert.Contains("learned Windstorm", await AnswerAsync(player, 10));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 11140 && m.Level == 0));
+        }
+
+        [Fact]
+        public async Task MastersTeachOnlyTheirOwnLine()
+        {
+            await using var player = await this.AtJobCenterAsync(50, 40, 100);
+            Assert.Contains("only teach trojans", (await TalkAsync(player, TrojanStar, Teach))[0].Text);
+        }
+
+        [Fact]
+        public async Task AThunderBookTeachesTaoistsAndStaysWithOthers()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 760, 960, GameMaster)).Player;
+            await CommandAsync(player, "/class 10");
+            var book = await GiveAsync(player, ServerFixture.ThunderBook.Id);
+
+            await player.Game.UseAsync(book.Id);
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text == "Only taoists can learn Thunder."));
+            var refused = await this.Servers.WaitForEventAsync("game", "item.use_rejected", "name", player.User.Name);
+            Assert.Equal("class", refused.GetProperty("reason").GetString());
+
+            await CommandAsync(player, "/class 100");
+            await player.Game.UseAsync(book.Id);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Remove, book.Id));
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1000 && m.Level == 0));
+            Assert.Equal(0L, (long)await this.Servers.QueryGameScalarAsync(
+                "SELECT COUNT(*) FROM item WHERE CharacterID = @id", ("@id", player.User.Id)));
+
+            var second = await GiveAsync(player, ServerFixture.ThunderBook.Id);
+            await player.Game.UseAsync(second.Id);
+            Assert.NotNull(await player.Game.WaitForTalkAsync(t => t.Text == "You have already learned Thunder."));
+        }
+
+        [Fact]
+        public async Task ALearnedWeaponSkillGoesOffInPlaceOfASwing()
+        {
+            var at = ServerFixture.PheasantForPassive;
+            await using var player = (await this.PlayingAtAsync(1002, at.X + 1, at.Y, GameMaster, level: 100)).Player;
+            var pheasant = await player.Game.WaitForMonsterAsync(m => m.X == at.X && m.Y == at.Y);
+            Assert.NotNull(pheasant);
+            await CommandAsync(player, "/learn 5030");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 5030));
+
+            await player.Game.CastAsync(player.User.Id, 5030, pheasant.Id, at.X, at.Y);
+            Assert.Equal("passive", (await this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name))
+                .GetProperty("reason").GetString());
+
+            var blade = await GiveAsync(player, ServerFixture.Blade.Id);
+            await player.Game.EquipAsync(blade.Id, 4);
+            Assert.NotNull(await player.Game.WaitForItemActionAsync(ItemMessage.Equipped, blade.Id));
+            await player.Game.AttackAsync(player.User.Id, pheasant.Id, at.X, at.Y);
+            var effect = await player.Game.WaitForEffectAsync(e => e.Caster == player.User.Id && e.Type == 5030);
+            Assert.Equal(pheasant.Id, Assert.Single(effect.Targets).Id);
+        }
+
+        [Fact]
+        public async Task MeditationRefusesAFullManaBar()
+        {
+            await using var player = (await this.PlayingAtAsync(1002, 780, 960, GameMaster, level: 50)).Player;
+            await CommandAsync(player, "/learn 1195");
+            Assert.NotNull(await player.Game.WaitForMagicInfoAsync(m => m.Type == 1195));
+            await CommandAsync(player, "/restore");
+            await player.Game.CastAsync(player.User.Id, 1195, 0, 780, 960);
+            Assert.Equal("full_mana", (await this.Servers.WaitForEventAsync("game", "magic.rejected", "name", player.User.Name))
+                .GetProperty("reason").GetString());
+        }
+    }
+}

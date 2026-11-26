@@ -1,14 +1,13 @@
 # fetih
 
-A Conquer Online server for the 5619 client, built on the Comet emulator:
-`comet/src/Comet.Account` (login), `Comet.Game` (world), `Comet.Network` (sockets, ciphers,
-RPC), `Comet.Core` (logging), `Comet.Shared` (RPC types), `Comet.Client` (headless client for
-tests). `client/` builds the patched client. The web app (issue #37, its plan and rules) is
-`Comet.Web` plus `web/` (React), with client art built by `tools/build.cs`.
-`Comet.Bots` runs bots that log in and play (hunt, wander, jump, idle) for trying features
-with others around and for load tests. Its look,
-public site and admin alike, follows [docs/web-style.md](docs/web-style.md): read it before
-any UI work.
+A Conquer Online server for the 5619 client:
+`src/Fetih.Account` (login), `src/Fetih.Game` (world), `src/Fetih.Web` (web backend),
+`src/Fetih.Network` (sockets, ciphers, RPC), `src/Fetih.Core` (logging, migrations),
+`src/Fetih.Shared` (RPC types), `src/Fetih.Patch` (launcher manifests), `src/Fetih.Bots`
+(bots), `src/Fetih.TestClient` (headless client for tests). `client/` holds client build
+inputs, `tools/build.cs` builds the client and web assets, and `web/` is the React
+frontend. The web UI follows [docs/web-style.md](docs/web-style.md): read it before any UI
+work. See [docs/overview.md](docs/overview.md) for the full project picture.
 
 ## Rules
 
@@ -21,34 +20,33 @@ any UI work.
 ## Commands
 
 ```bash
-podman compose up -d db                       # MariaDB (integration tests need it)
-dotnet test comet/Comet.slnx
-cd comet/src/Comet.Game && dotnet run        # likewise Comet.Account, Comet.Web (:5820)
-cd web && npm run dev                         # the web frontend (:5173); npm run build, npm test
-FETIH_BACKEND=https://test.<domain> npm run dev   # Vite against a remote web (see web/vite.config.ts)
-dotnet run tools/build.cs client --ip <ip>    # the client, into _CLIENT/fetih (or `all`)
-cd comet/src/Comet.Bots && dotnet run -- --Groups:0:Count=300   # bots against the running servers
+podman compose -f deploy/compose.yaml up -d db              # MariaDB (integration tests need it)
+dotnet test Fetih.slnx
+cd src/Fetih.Game && dotnet run                             # likewise Fetih.Account, Fetih.Web (:5820)
+cd web && npm run dev                                       # frontend (:5173); npm run build, npm test
+FETIH_BACKEND=https://test.<domain> npm run dev             # Vite against a remote web (see web/vite.config.ts)
+dotnet run tools/build.cs client --ip <ip>                  # build client into _CLIENT/fetih (or `all`)
+cd src/Fetih.Bots && dotnet run -- --Groups:0:Count=300     # bots against the running servers
 ```
 
-A public server runs the same `compose.yaml` with `--profile deploy` (servers in containers
-behind an HTTPS proxy): [docs/deploy.md](docs/deploy.md). Settings the servers read from
-their `.config` files can be overridden by `COMET_GAME_`, `COMET_ACCOUNT_` and `COMET_WEB_`
-environment variables (`COMET_GAME_Database__Hostname=db`).
+A public server runs `deploy/compose.yaml` with `--profile deploy` and `deploy/compose.env.yaml`
+per environment: [docs/deploy.md](docs/deploy.md). Settings from `.config` files can be
+overridden with `FETIH_GAME_`, `FETIH_ACCOUNT_`, `FETIH_WEB_`, and `FETIH_BOTS_` environment
+variables (`FETIH_GAME_Database__Hostname=db`).
 
 ## Don't break the user's setup
 
-- The user often has `Comet.Game` and `Comet.Account` running from `comet/src`, with a
-  character logged in from a Windows VM. For a smoke test, run on other ports
+- The user often has `Fetih.Game` and `Fetih.Account` running from `src/`, with a character
+  logged in from a Windows VM. For a smoke test, run on other ports
   (`--GameNetwork:Port=... --RpcNetwork:Port=...`) and stop only the PID you started. Never
-  `pkill -f Comet.Game`. Starting the game server also runs startup jobs (like the arena season
-  catch-up) against the dev database.
-- A new table or column is a migration: `comet/sql/migrations/<game|account>/NNNN-name.sql`,
+  `pkill -f Fetih.Game`. Starting the game server also runs startup jobs against the dev DB.
+- A new table or column is a migration: `sql/migrations/<game|account>/NNNN-name.sql`,
   applied by the server at startup and recorded in `schema_migrations`. Never edit an applied
-  migration or the baseline `comet.*.sql` (startup refuses); add a new migration. Don't
-  `ALTER` the dev database by hand.
-- Never pipe SQL files into the container by hand (an old baseline with `USE` and `DROP TABLE`
-  wiped every account and character once, 2026-11-23). To compare
-  schemas, read `information_schema` or `SHOW CREATE TABLE`.
+  migration or the baseline `fetih_account.sql` / `fetih_game.sql` (startup refuses); add a
+  new migration. Don't `ALTER` the dev database by hand.
+- Never pipe `.sql` files into a live database container by hand (an old baseline with `USE`
+  and `DROP TABLE` wiped every account and character once, 2026-11-23). To compare schemas,
+  read `information_schema` or `SHOW CREATE TABLE`.
 
 ## Finding out how the game behaves
 

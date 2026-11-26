@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Fetih.Game\Fetih.Game.csproj" />
+    <!-- Writes test map files, and builds and parses packets as the client would, apart from the server -->
+    <ProjectReference Include="..\..\src\Fetih.TestClient\Fetih.TestClient.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A small DMap packed with libarchive's 7z writer, to test reading .7z maps, and
+         jumps seen in VM on map 1010, to check the real map's walkable cells -->
+    <None Include="World\Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

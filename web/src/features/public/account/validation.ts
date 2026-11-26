@@ -1,4 +1,4 @@
-// Mirrors Comet.Account.Database.Repositories.AccountRules so invalid inputs fail before hitting the API.
+// Mirrors Fetih.Account.Database.Repositories.AccountRules so invalid inputs fail before hitting the API.
 
 export function isValidEmail(raw: string, maxLength = 127): boolean {
   const username = raw.trim()

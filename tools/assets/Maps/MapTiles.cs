@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using System.Text.Json;
-using Comet.Game.World;
+using Fetih.Game.World;
 using SkiaSharp;
 
 // Renders each map the client has into two Leaflet tile pyramids: the ground (puzzle

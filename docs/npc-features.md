@@ -1,6 +1,6 @@
 # Unhandled Feature NPCs
 
-Triage of placed NPCs in `comet/src/Comet.Game/Data/npcs.json` that still fall through to the default dialog because they require server features (quests, exchanges, client windows, missing maps, or game events) rather than pure talker text or fixed teleports.
+Triage of placed NPCs in `src/Fetih.Game/Data/npcs.json` that still fall through to the default dialog because they require server features (quests, exchanges, client windows, missing maps, or game events) rather than pure talker text or fixed teleports.
 
 ## Summary of triage (397 placed NPCs)
 

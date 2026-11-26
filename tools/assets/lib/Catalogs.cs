@@ -1,9 +1,9 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using Comet.Game.Items;
-using Comet.Game.Magic;
-using Comet.Game.World;
+using Fetih.Game.Items;
+using Fetih.Game.Magic;
+using Fetih.Game.World;
 
 // Every output of the asset build. Paths in the JSON are relative to the output folder,
 // which the web serves as /assets.

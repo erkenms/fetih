@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Fetih.Account/Fetih.Account.csproj" />
+    <Project Path="src/Fetih.Bots/Fetih.Bots.csproj" />
+    <Project Path="src/Fetih.TestClient/Fetih.TestClient.csproj" />
+    <Project Path="src/Fetih.Core/Fetih.Core.csproj" />
+    <Project Path="src/Fetih.Game/Fetih.Game.csproj" />
+    <Project Path="src/Fetih.Network/Fetih.Network.csproj" />
+    <Project Path="src/Fetih.Patch/Fetih.Patch.csproj" />
+    <Project Path="src/Fetih.Shared/Fetih.Shared.csproj" />
+    <Project Path="src/Fetih.Web/Fetih.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Fetih.Account.Tests/Fetih.Account.Tests.csproj" />
+    <Project Path="tests/Fetih.Core.Tests/Fetih.Core.Tests.csproj" />
+    <Project Path="tests/Fetih.Game.Tests/Fetih.Game.Tests.csproj" />
+    <Project Path="tests/Fetih.Integration.Tests/Fetih.Integration.Tests.csproj" />
+    <Project Path="tests/Fetih.Network.Tests/Fetih.Network.Tests.csproj" />
+    <Project Path="tests/Fetih.Patch.Tests/Fetih.Patch.Tests.csproj" />
+    <Project Path="tests/Fetih.Web.Tests/Fetih.Web.Tests.csproj" />
+  </Folder>
+</Solution>

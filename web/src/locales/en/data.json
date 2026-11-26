@@ -1,7 +1,7 @@
 {
   "navTitle": "Data editors",
   "title": "Data editors",
-  "subtitle": "Edit levels, training ground goals, teleporters and talkers. Edits write directly to Comet.Game/Data/*.json.",
+  "subtitle": "Edit levels, training ground goals, teleporters and talkers. Edits write directly to Fetih.Game/Data/*.json.",
   "tabs": {
     "levels": "Levels",
     "goals": "Goals",

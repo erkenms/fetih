@@ -31,7 +31,7 @@ describe('since', () => {
 describe('grafanaPanel', () => {
   it('builds a solo panel URL of the overview dashboard', () => {
     const url = new URL(grafanaPanel('http://localhost:3000', 7, 'dark'))
-    expect(url.pathname).toBe('/d-solo/comet-overview/overview')
+    expect(url.pathname).toBe('/d-solo/fetih-overview/overview')
     expect(url.searchParams.get('panelId')).toBe('7')
     expect(url.searchParams.get('theme')).toBe('dark')
     expect(url.searchParams.get('from')).toBe('now-6h')

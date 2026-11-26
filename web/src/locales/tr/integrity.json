@@ -1,7 +1,7 @@
 {
   "nav": "Bütünlük",
   "title": "Veri bütünlüğü kontrolleri",
-  "description": "Comet.Game/Data dosyaları ile istemcinin harita ve eşya dosyaları arasındaki referansları doğrula.",
+  "description": "Fetih.Game/Data dosyaları ile istemcinin harita ve eşya dosyaları arasındaki referansları doğrula.",
   "refresh": "Yeniden kontrol et",
   "status": {
     "clientAvailable": "İstemci dosyaları yüklendi",

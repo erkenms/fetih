@@ -1,8 +1,8 @@
 {
   "title": "Veri değişiklikleri",
-  "description": "Comet.Game/Data içindeki kaydedilmemiş düzenlemeleri incele, doğrulama sonuçlarını kontrol et, çalışan oyuna yeniden yükle veya değişiklikleri geri al.",
+  "description": "Fetih.Game/Data içindeki kaydedilmemiş düzenlemeleri incele, doğrulama sonuçlarını kontrol et, çalışan oyuna yeniden yükle veya değişiklikleri geri al.",
   "refresh": "Yenile",
-  "empty": "Comet.Game/Data içinde işlenmemiş değişiklik yok.",
+  "empty": "Fetih.Game/Data içinde işlenmemiş değişiklik yok.",
   "status": {
     "gameOnline": "Oyun sunucusu çevrimiçi",
     "gameOffline": "Oyun sunucusu çevrimdışı",

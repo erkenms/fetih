@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fetih.Core\Fetih.Core.csproj" />
+    <ProjectReference Include="..\Fetih.Network\Fetih.Network.csproj" />
+    <ProjectReference Include="..\Fetih.Shared\Fetih.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BouncyCastle.NetCore" Version="1.9.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.23" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.23" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="9.0.23" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.23" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="8.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Fetih.Account.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\sql\fetih_account.sql" LogicalName="sql/baseline.sql" />
+    <EmbeddedResource Include="..\..\sql\migrations\account\*.sql" LogicalName="sql/migrations/%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+  </PropertyGroup>
+
+</Project>

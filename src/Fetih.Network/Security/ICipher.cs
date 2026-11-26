@@ -1,0 +1,13 @@
+namespace Fetih.Network.Security
+{
+    using System;
+
+    public interface ICipher
+    {
+        void GenerateKeys(object[] seeds);
+
+        void Decrypt(Span<byte> src, Span<byte> dst);
+        
+        void Encrypt(Span<byte> src, Span<byte> dst);
+    }
+}

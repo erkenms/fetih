@@ -1,25 +1,25 @@
 # fetih web
 
 The web app's frontend: Vite, React, TypeScript, Mantine, TanStack Query, React Router,
-react-i18next. The backend is `comet/src/Comet.Web`. The plan is issue #37. The look is set by
+react-i18next. The backend is `src/Fetih.Web`. The plan is issue #37. The look is set by
 [docs/web-style.md](../docs/web-style.md).
 
 ```bash
-cd comet/src/Comet.Web && dotnet run   # backend on 127.0.0.1:5820
+cd src/Fetih.Web && dotnet run   # backend on 127.0.0.1:5820
 cd web && npm install && npm run dev   # http://localhost:5173, proxies /api and /assets
-npm run build                          # into web/dist, which Comet.Web serves
+npm run build                          # into web/dist, which Fetih.Web serves
 npm test                               # Vitest, pure logic only
 npm run api                            # regenerate src/api/schema.d.ts after a backend change
 ```
 
 Log in with the seed account `test` / `test`. The admin panel needs authority 2 or more
-(`UPDATE account SET AuthorityID = 5 WHERE Username = 'test'` in `comet.account`).
+(`UPDATE account SET AuthorityID = 5 WHERE Username = 'test'` in `fetih_account`).
 
 ## Adding a feature
 
-Copy `features/health` (and `Comet.Web/Features/Health` for the backend):
+Copy `features/health` (and `Fetih.Web/Features/Health` for the backend):
 
-1. Backend: `Comet.Web/Features/<Name>/<Name>Feature.cs` implements `IFeature`; add it to
+1. Backend: `Fetih.Web/Features/<Name>/<Name>Feature.cs` implements `IFeature`; add it to
    `Features/FeatureRegistry.cs`. Guard endpoints with `.RequirePermission(Permission.X)`,
    return typed records, and answer errors with `ApiError.Result("code", status)`.
    Changes go through `AuditLog.WriteAsync`; game calls through `GameRpc.CallAsync`.

@@ -1,7 +1,7 @@
 {
   "openapi": "3.2.0",
   "info": {
-    "title": "Comet.Web | v1",
+    "title": "Fetih.Web | v1",
     "version": "1.0.0"
   },
   "paths": {
@@ -216,7 +216,7 @@
     "/api/catalogs/looks": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "listCatalogLooks",
         "responses": {
@@ -2635,7 +2635,7 @@
     "/api/social/guildwar/start": {
       "post": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "socialStartGuildWar",
         "responses": {
@@ -2665,7 +2665,7 @@
     "/api/social/guildwar/end": {
       "post": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "socialEndGuildWar",
         "responses": {
@@ -4931,7 +4931,7 @@
     "/api/data/levels": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "getLevelsData",
         "responses": {
@@ -4989,7 +4989,7 @@
     "/api/data/goals": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "getGoalsData",
         "responses": {
@@ -5047,7 +5047,7 @@
     "/api/data/teleporters": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "getTeleportersData",
         "responses": {
@@ -5105,7 +5105,7 @@
     "/api/data/talkers": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "getTalkersData",
         "responses": {
@@ -5163,7 +5163,7 @@
     "/api/data/maps/{mapId}/info": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "getDataMapInfo",
         "parameters": [
@@ -5194,7 +5194,7 @@
     "/api/data/maps/{mapId}/cell": {
       "get": {
         "tags": [
-          "Comet.Web"
+          "Fetih.Web"
         ],
         "operationId": "checkDataMapCell",
         "parameters": [
@@ -16445,9 +16445,6 @@
       "name": "ChatFeature"
     },
     {
-      "name": "Comet.Web"
-    },
-    {
       "name": "DashboardFeature"
     },
     {
@@ -16455,6 +16452,9 @@
     },
     {
       "name": "EconomyFeature"
+    },
+    {
+      "name": "Fetih.Web"
     },
     {
       "name": "HealthFeature"

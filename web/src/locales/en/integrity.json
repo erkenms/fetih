@@ -1,7 +1,7 @@
 {
   "nav": "Integrity",
   "title": "Data integrity checks",
-  "description": "Verify cross-references across Comet.Game/Data and the client's map and item files.",
+  "description": "Verify cross-references across Fetih.Game/Data and the client's map and item files.",
   "refresh": "Re-run checks",
   "status": {
     "clientAvailable": "Client files loaded",

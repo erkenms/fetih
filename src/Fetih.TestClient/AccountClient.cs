@@ -1,0 +1,80 @@
+namespace Fetih.TestClient
+{
+    using System;
+    using System.Text;
+    using System.Threading.Tasks;
+    using Fetih.Network.Security;
+
+    public sealed record LoginResult(
+        bool Accepted, uint RejectCode, bool Challenged, ulong Token, string GameHost,
+        int GamePort);
+
+    public sealed class AccountClient : Connection
+    {
+        private AccountClient(System.Net.Sockets.TcpClient tcp)
+            : base(tcp, new TQClientCipher(), footer: "")
+        {
+        }
+
+        public uint Seed { get; private set; }
+
+        public static async Task<AccountClient> ConnectAsync(string host, int port)
+        {
+            var client = new AccountClient(await OpenAsync(host, port));
+            client.StartReading();
+            var seed = await client.ReceiveAsync()
+                ?? throw new InvalidOperationException("Account server closed the connection");
+            if (BitConverter.ToUInt16(seed, 2) != PacketTypes.MsgEncryptCode)
+                throw new InvalidOperationException("Expected MsgEncryptCode first");
+            client.Seed = BitConverter.ToUInt32(seed, 4);
+            return client;
+        }
+
+        public static byte[] BuildAccountRequest(byte[] username, string realm)
+        {
+            var packet = Packet.Create(PacketTypes.MsgAccountSRP6, 240);
+            Packet.WriteText(packet, 8, username, 128);
+            Packet.WriteText(packet, 136, Encoding.ASCII.GetBytes(realm), 16);
+            return packet;
+        }
+
+        public static byte[] BuildProof(byte[] publicKey, byte[] proof)
+        {
+            var packet = Packet.Create(PacketTypes.MsgLoginProofC, 262);
+            packet[4] = (byte)publicKey.Length;
+            publicKey.CopyTo(packet, 5);
+            packet[133] = (byte)proof.Length;
+            proof.CopyTo(packet, 134);
+            return packet;
+        }
+
+        public Task<LoginResult> LoginAsync(string username, string password, string realm) =>
+            this.LoginAsync(Encoding.Latin1.GetBytes(username), Encoding.Latin1.GetBytes(password), realm);
+
+        public async Task<LoginResult> LoginAsync(byte[] username, byte[] password, string realm)
+        {
+            await this.SendAsync(BuildAccountRequest(username, realm));
+            var reply = await this.ReceiveAsync();
+            if (reply == null || BitConverter.ToUInt16(reply, 2) != PacketTypes.MsgLoginChallengeS)
+                return ReadConnectEx(reply, challenged: false);
+
+            // MsgLoginChallengeS: B at 4 and the salt at 391, each a length byte and slot
+            var serverPublicKey = reply.AsSpan(5, reply[4]).ToArray();
+            var salt = reply.AsSpan(392, reply[391]).ToArray();
+            var (publicKey, proof, _) = Srp6Client.ComputeProof(
+                username, password, salt, serverPublicKey);
+            await this.SendAsync(BuildProof(publicKey, proof));
+            return ReadConnectEx(await this.ReceiveAsync(), challenged: true);
+        }
+
+        private static LoginResult ReadConnectEx(byte[] packet, bool challenged)
+        {
+            if (packet == null || BitConverter.ToUInt16(packet, 2) != PacketTypes.MsgConnectEx)
+                return new LoginResult(false, 0, challenged, 0, null, 0);
+            if (BitConverter.ToUInt32(packet, 4) == 0)
+                return new LoginResult(false, BitConverter.ToUInt32(packet, 8), challenged, 0, null, 0);
+            return new LoginResult(true, 0, challenged, BitConverter.ToUInt64(packet, 4),
+                Packet.ReadText(packet, 20, 32), (int)BitConverter.ToUInt32(packet, 12));
+        }
+    }
+}
