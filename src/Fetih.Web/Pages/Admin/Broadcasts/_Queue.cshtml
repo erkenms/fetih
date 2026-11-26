@@ -1,0 +1,19 @@
+@model Fetih.Web.Pages.Admin.Broadcasts.IndexModel
+<table class="grid">
+    <thead><tr><th>#</th><th>Gönderen</th><th>Mesaj</th><th>Acil CP</th></tr></thead>
+    <tbody>
+    @foreach (var item in Model.Queue)
+    {
+        <tr>
+            <td>@(item.Position + 1)</td>
+            <td>@item.SenderName <span class="muted">#@item.CharacterId</span></td>
+            <td>@item.Message</td>
+            <td>@item.Addition</td>
+        </tr>
+    }
+    @if (Model.Queue.Length == 0)
+    {
+        <tr><td colspan="4" class="empty">Ücretli yayın kuyruğu boş.</td></tr>
+    }
+    </tbody>
+</table>

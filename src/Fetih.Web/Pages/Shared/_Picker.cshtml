@@ -1,0 +1,12 @@
+@model PickerField
+@inject PickerSearch Search
+@* An input that finds an item, monster, look or map as you type, and posts its ID as Model.Name.
+   The list comes from /admin/pickers; site.js fills the hidden input when one is clicked. *@
+<div class="picker">
+    <input type="hidden" name="@Model.Name" value="@Model.Value">
+    <input type="search" name="q" autocomplete="off" value="@Search.LabelOf(Model.Kind, Model.Value)"
+           placeholder="@(Model.Kind switch { PickerKind.Item => "Eşya", PickerKind.Monster => "Canavar", PickerKind.Look => "Görünüş", _ => "Harita" }) adı ya da numarası"
+           hx-get="/admin/pickers?kind=@Model.Kind" hx-trigger="input changed delay:250ms, focus"
+           hx-target="next .picker-list">
+    <div class="picker-list"></div>
+</div>

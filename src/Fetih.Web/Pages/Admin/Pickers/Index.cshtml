@@ -1,0 +1,20 @@
+@page
+@model Fetih.Web.Pages.Admin.Pickers.IndexModel
+@* The list a picker shows as you type. Not a page of its own: _Picker.cshtml asks for it. *@
+@{
+    Layout = null;
+}
+@foreach (var option in Model.Options)
+{
+    <button type="button" data-value="@option.Value" data-label="@option.Label">
+        @if (option.Image != null)
+        {
+            <img src="/assets/@option.Image" alt="" loading="lazy">
+        }
+        @option.Label
+    </button>
+}
+@if (Model.Options.Length == 0)
+{
+    <div class="none">Bulunamadı.</div>
+}

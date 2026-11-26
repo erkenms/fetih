@@ -6,8 +6,8 @@ import { createBrowserRouter, RouterProvider, type RouteObject } from 'react-rou
 import { ApiError } from '../api/client'
 import { AdminLayout } from './AdminLayout'
 import type { FeatureRoute } from './feature'
-import { NotFound, RequirePermission } from './Guards'
-import { AdminHome, PublicHome } from './HomePages'
+import { NotFound, RequirePermission, ServerPage } from './Guards'
+import { PublicHome } from './HomePages'
 import { LoginPage } from './LoginPage'
 import { PublicLayout } from './PublicLayout'
 import { featureRoutes } from './routes'
@@ -56,9 +56,9 @@ const router = createBrowserRouter([
       </RequirePermission>
     ),
     children: [
-      { index: true, handle: { bare: true }, element: <AdminHome /> },
+      { index: true, element: <ServerPage /> },
       ...featureRoutes.filter((r) => r.area === 'admin').map(toRoute),
-      { path: '*', element: <NotFound /> },
+      { path: '*', element: <ServerPage /> },
     ],
   },
   {

@@ -1,0 +1,20 @@
+@* The read-only views, which move to Grafana (#97). Until then these are the React pages. *@
+@{
+    var links = new (string Text, string Url, Permission Permission)[]
+    {
+        ("Ekonomi", "/admin/economy", Permission.AdminArea),
+        ("Sohbet günlüğü", "/admin/chat", Permission.ViewLogs),
+        ("Eşya geçmişi", "/admin/item-history", Permission.ViewLogs),
+        ("Zaman çizelgeleri", "/admin/logs", Permission.ViewLogs),
+        ("Paket çözücü", "/admin/packets", Permission.ViewLogs),
+        ("Denetim kaydı", "/admin/audit", Permission.ViewAudit),
+    }.Where(l => User.Has(l.Permission)).ToArray();
+}
+@if (links.Length > 0)
+{
+    <h3>Kayıtlar</h3>
+    @foreach (var link in links)
+    {
+        <a href="@link.Url">» @link.Text</a>
+    }
+}

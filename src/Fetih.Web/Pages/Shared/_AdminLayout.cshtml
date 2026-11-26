@@ -1,0 +1,58 @@
+@inject Fetih.Web.Game.GameRpc Game
+@{
+    string path = Context.Request.Path;
+    string On(string url) => path == url || path.StartsWith(url + "/") ? "on" : "";
+}
+<!doctype html>
+<html lang="tr">
+<head>
+    <partial name="_Head" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true">
+</head>
+<body>
+<header class="admin-top">
+    <div class="brand">
+        <a class="logo" href="/admin">Fetih</a>
+        <span class="subtitle">Yönetim Paneli</span>
+    </div>
+    <div class="links">
+        @if (Game.Connected)
+        {
+            <span class="online">Oyun sunucusu açık</span>
+        }
+        else
+        {
+            <span class="offline">Oyun sunucusu kapalı</span>
+        }
+        | <span>Giriş yapan: <b>@User.Username()</b></span>
+        | <a href="/">Siteye dön</a>
+        | <form method="post" asp-page="/Giris" asp-page-handler="Cikis" class="inline"><button>Çıkış</button></form>
+    </div>
+</header>
+
+<div class="admin-columns">
+    <aside class="admin-side">
+        <panel title="Menü" icon="711394">
+            <nav class="menu" aria-label="Yönetim menüsü">
+                <a class="@(path == "/admin" ? "on" : "")" href="/admin">» Ana sayfa</a>
+                @foreach (var group in AdminMenu.For(User))
+                {
+                    <h3>@group.Title</h3>
+                    @foreach (var link in group.Links)
+                    {
+                        <a class="@On(link.Url)" href="@link.Url">» @link.Text</a>
+                    }
+                }
+                <partial name="_GrafanaLinks" />
+            </nav>
+        </panel>
+    </aside>
+    <main class="admin-main">
+        <partial name="_Flash" />
+        @RenderBody()
+    </main>
+</div>
+
+<div class="admin-foot">Fetih Online yönetim paneli</div>
+</body>
+</html>

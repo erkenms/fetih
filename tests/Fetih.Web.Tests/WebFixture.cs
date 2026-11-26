@@ -91,6 +91,27 @@ public sealed class WebFixture : IAsyncLifetime
         return email;
     }
 
+    // A client that signs in through /giris and doesn't follow redirects, for page tests
+    public async Task<HttpClient> SignInAsync(string username, string password)
+    {
+        var client = this.Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        var response = await PostFormAsync(client, "/giris", new() { ["kullanici"] = username, ["sifre"] = password });
+        Assert.Equal(System.Net.HttpStatusCode.Redirect, response.StatusCode);
+        return client;
+    }
+
+    // Opens the page for its anti-forgery token, then posts the form to url (a page handler)
+    public static async Task<HttpResponseMessage> PostFormAsync(HttpClient client, string url,
+        Dictionary<string, string> fields)
+    {
+        string page = await client.GetStringAsync(url.Split('?')[0]);
+        var token = System.Text.RegularExpressions.Regex.Match(page,
+            "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"");
+        Assert.True(token.Success, "No anti-forgery token on " + url);
+        fields["__RequestVerificationToken"] = token.Groups[1].Value;
+        return await client.PostAsync(url, new FormUrlEncodedContent(fields));
+    }
+
     public async Task<HttpClient> LoginAsync(string username, string password)
     {
         var client = this.Factory.CreateClient();

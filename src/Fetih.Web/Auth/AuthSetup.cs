@@ -26,9 +26,14 @@ public static class AuthSetup
                 ? CookieSecurePolicy.Always : CookieSecurePolicy.SameAsRequest;
             options.ExpireTimeSpan = TimeSpan.FromDays(7);
             options.SlidingExpiration = true;
+            options.LoginPath = "/giris";
+            options.ReturnUrlParameter = "donus";
             options.Events.OnRedirectToLogin = context =>
             {
-                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                if (context.Request.Path.StartsWithSegments("/api"))
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                else
+                    context.Response.Redirect(context.RedirectUri);
                 return Task.CompletedTask;
             };
             options.Events.OnRedirectToAccessDenied = context =>

@@ -1,0 +1,148 @@
+@page
+@model Fetih.Web.Pages.Admin.Broadcasts.IndexModel
+@using Fetih.Web.Features.Broadcasts
+@{
+    ViewData["Title"] = "Duyurular";
+    var now = DateTime.UtcNow;
+}
+
+<panel title="Duyuru Gönder" icon="2000247">
+    @if (!Model.GameConnected)
+    {
+        <div class="alert inline">Oyun sunucusu kapalı. Duyuru göndermek için oyun sunucusunu başlat.</div>
+    }
+    <form method="post" asp-page-handler="Send">
+        <label for="send-text">Mesaj</label>
+        <textarea id="send-text" name="text" maxlength="@BroadcastService.MaxMessageLength" required
+                  placeholder="Çevrimiçi tüm oyunculara gönderilecek mesaj"></textarea>
+        <div class="buttons">
+            <label for="send-channel" style="margin: 0">Kanal</label>
+            <select id="send-channel" name="channel">
+                @foreach (var (channel, text) in IndexModel.Channels)
+                {
+                    <option value="@channel">@text</option>
+                }
+            </select>
+            <button disabled="@(!Model.GameConnected)">Gönder</button>
+        </div>
+    </form>
+</panel>
+
+<panel title="Zamanlanmış Duyurular" icon="711394">
+    <div class="buttons" style="margin: 0 0 6px">
+        <button type="button" data-dialog="announcement-0">Yeni duyuru</button>
+    </div>
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr><th>Duyuru</th><th>Kanal</th><th>Aralık</th><th>Durum</th><th>Son gönderim</th><th>Sonraki</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var a in Model.Announcements)
+            {
+                var next = BroadcastService.NextRun(a, now);
+                <tr>
+                    <td><b>@a.Title</b><br><span class="muted">@a.Message</span></td>
+                    <td>@IndexModel.ChannelText(a.Channel)</td>
+                    <td>@a.IntervalMinutes dk</td>
+                    <td>
+                        @switch (BroadcastService.StateOf(a, now))
+                        {
+                            case BroadcastService.State.Active: <span class="tag good">Etkin</span> break;
+                            case BroadcastService.State.Scheduled: <span class="tag info">Zamanlandı</span> break;
+                            case BroadcastService.State.Expired: <span class="tag">Süresi doldu</span> break;
+                            default: <span class="tag">Kapalı</span> break;
+                        }
+                    </td>
+                    <td>@(a.LastSentAt == null ? "Hiç" : WebTime.Format(a.LastSentAt))</td>
+                    <td>@(next == null ? "—" : next <= now ? "Şimdi sırada" : WebTime.Format(next))</td>
+                    <td class="actions">
+                        <form method="post" asp-page-handler="SendNow" class="inline">
+                            <input type="hidden" name="id" value="@a.Id">
+                            <button disabled="@(!Model.GameConnected)">Şimdi gönder</button>
+                        </form>
+                        <form method="post" asp-page-handler="Enable" class="inline">
+                            <input type="hidden" name="id" value="@a.Id">
+                            <input type="hidden" name="enabled" value="@(a.Enabled ? "false" : "true")">
+                            <button class="plain">@(a.Enabled ? "Kapat" : "Aç")</button>
+                        </form>
+                        <button type="button" class="plain" data-dialog="announcement-@a.Id">Düzenle</button>
+                        <form method="post" asp-page-handler="Delete" class="inline"
+                              data-confirm="“@a.Title” silinsin mi? Bu işlem geri alınamaz.">
+                            <input type="hidden" name="id" value="@a.Id">
+                            <button class="plain">Sil</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            @if (Model.Announcements.Length == 0)
+            {
+                <tr><td colspan="7" class="empty">Henüz zamanlanmış duyuru yok.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</panel>
+
+<panel title="Ücretli Yayın Kuyruğu" icon="713059">
+    <div class="scroll" hx-get="@Url.Page("Index", "Queue")" hx-trigger="every 10s">
+        <partial name="_Queue" model="Model" />
+    </div>
+</panel>
+
+@foreach (var form in Model.Announcements.Select(IndexModel.AnnouncementForm.From).Prepend(new()))
+{
+    var failed = Model.Failed?.Id == form.Id;
+    var f = failed ? Model.Failed! : form;
+    <dialog id="announcement-@f.Id" class="@(failed ? "open" : null)">
+        <h2>@(f.Id == 0 ? "Yeni duyuru" : "Duyuruyu düzenle")</h2>
+        <form method="post" asp-page-handler="Save">
+            @if (failed)
+            {
+                <div class="alert inline">@Model.FailedError</div>
+            }
+            <input type="hidden" name="Id" value="@f.Id">
+            <label for="title-@f.Id">Başlık</label>
+            <input id="title-@f.Id" name="Title" type="text" value="@f.Title" required
+                   maxlength="@BroadcastService.MaxTitleLength" placeholder="ör. Lonca savaşı hatırlatması" style="width: 100%">
+            <label for="message-@f.Id">Mesaj</label>
+            <textarea id="message-@f.Id" name="Message" required maxlength="@BroadcastService.MaxMessageLength">@f.Message</textarea>
+            <div class="form-row">
+                <div>
+                    <label for="channel-@f.Id">Kanal</label>
+                    <select id="channel-@f.Id" name="Channel">
+                        @foreach (var (channel, text) in IndexModel.Channels)
+                        {
+                            <option value="@channel" selected="@(channel == f.Channel)">@text</option>
+                        }
+                    </select>
+                </div>
+                <div>
+                    <label for="interval-@f.Id">Aralık (dakika)</label>
+                    <input id="interval-@f.Id" name="IntervalMinutes" type="number" value="@f.IntervalMinutes"
+                           min="1" max="@BroadcastService.MaxIntervalMinutes" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label for="start-@f.Id">Başlangıç (isteğe bağlı)</label>
+                    <input id="start-@f.Id" name="StartAt" type="datetime-local" value="@WebTime.Input(f.StartAt)">
+                </div>
+                <div>
+                    <label for="end-@f.Id">Bitiş (isteğe bağlı)</label>
+                    <input id="end-@f.Id" name="EndAt" type="datetime-local" value="@WebTime.Input(f.EndAt)">
+                </div>
+            </div>
+            <label class="check">
+                <input type="checkbox" name="Enabled" value="true" checked="@f.Enabled">
+                <input type="hidden" name="Enabled" value="false">
+                Etkin
+            </label>
+            <span class="muted">Saatler Türkiye saatidir.</span>
+            <div class="buttons">
+                <button type="button" class="plain" data-close>İptal</button>
+                <button>Kaydet</button>
+            </div>
+        </form>
+    </dialog>
+}

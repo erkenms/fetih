@@ -6,6 +6,8 @@ using Fetih.Web.Audit;
 using Fetih.Web.Auth;
 using Fetih.Web.Features;
 using Fetih.Web.Game;
+using Fetih.Web.Pages;
+using Fetih.Web.Pages.Shared;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -44,6 +46,8 @@ Fetih.Game.Database.ServerDbContext.Configuration = new()
 };
 
 builder.WebHost.UseUrls(config.Web.Urls);
+// Serves wwwroot from the project folder when run from a build; a publish copies it instead
+builder.WebHost.UseStaticWebAssets();
 builder.Services.AddSingleton(config);
 builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -60,6 +64,16 @@ builder.Services.AddSingleton<ClientFiles>();
 builder.Services.AddSingleton<GameRpc>();
 builder.Services.AddHostedService(services => services.GetRequiredService<GameRpc>());
 builder.Services.AddWebAuth(config);
+builder.Services.AddSingleton<SignIn>();
+builder.Services.AddSingleton<PickerSearch>();
+// Pages keep Turkish letters as they are instead of &#x…; escapes
+builder.Services.Configure<Microsoft.Extensions.WebEncoders.WebEncoderOptions>(options =>
+    options.TextEncoderSettings = new System.Text.Encodings.Web.TextEncoderSettings(
+        System.Text.Unicode.UnicodeRanges.All));
+builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
+builder.Services.AddRazorPages(options =>
+        options.Conventions.AuthorizeFolder("/Admin", Permissions.Policy(Permission.AdminArea)))
+    .AddMvcOptions(options => options.Filters.Add<PageChecks>());
 foreach (var feature in FeatureRegistry.All)
     feature.AddServices(builder.Services, config);
 
@@ -75,7 +89,9 @@ var app = builder.Build();
 if (config.Web.ForwardedHeaders)
     app.UseForwardedHeaders();
 
-app.UseExceptionHandler(error => error.Run(async context =>
+static bool IsApi(HttpContext context) => context.Request.Path.StartsWithSegments("/api");
+
+app.UseWhen(IsApi, api => api.UseExceptionHandler(error => error.Run(async context =>
 {
     var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
     if (exception is GameOfflineException)
@@ -89,7 +105,14 @@ app.UseExceptionHandler(error => error.Run(async context =>
         "Unhandled error on {Method} {Path}", context.Request.Method, context.Request.Path);
     context.Response.StatusCode = StatusCodes.Status500InternalServerError;
     await context.Response.WriteAsJsonAsync(new ApiError("server_error"));
-}));
+})));
+
+// Pages: errors and empty 403/404/503 answers render Pages/Hata
+app.UseWhen(context => !IsApi(context), pages =>
+{
+    pages.UseExceptionHandler("/hata/500");
+    pages.UseStatusCodePagesWithReExecute("/hata/{0}");
+});
 
 // Client art, built by tools/assets into web/assets. Pages show placeholders without it.
 string? assets = WebConfiguration.PathsSection.Resolve(config.Paths.AssetsDirectory);
@@ -110,6 +133,9 @@ var frontendFiles = frontend != null && File.Exists(Path.Combine(frontend, "inde
 if (frontendFiles != null)
     app.UseStaticFiles(new StaticFileOptions { FileProvider = frontendFiles });
 
+app.UseStaticFiles();
+// After the error pages, so a re-executed /hata/… request is routed again
+app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
@@ -125,6 +151,7 @@ foreach (var feature in FeatureRegistry.All)
     feature.MapRoot(app);
 }
 api.MapFallback(() => Results.NotFound(new ApiError("not_found")));
+app.MapRazorPages();
 
 if (frontendFiles != null)
     app.MapFallbackToFile("index.html", new StaticFileOptions { FileProvider = frontendFiles });

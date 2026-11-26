@@ -1,0 +1,69 @@
+@inject Fetih.Web.Game.GameRpc Game
+@{
+    string path = Context.Request.Path;
+    string On(string url) => path == url ? "on" : "";
+}
+<!doctype html>
+<html lang="tr">
+<head>
+    <partial name="_Head" />
+</head>
+<body>
+<div class="site">
+    <div class="site-top">
+        <span>
+            @if (Game.Connected)
+            {
+                <span class="online">Sunucu açık</span>
+            }
+            else
+            {
+                <span class="offline">Sunucu kapalı</span>
+            }
+        </span>
+        <span>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <text>Giriş yapan: <b>@User.Username()</b> | </text>
+                @if (User.Has(Permission.AdminArea))
+                {
+                    <a href="/admin">Yönetim paneli</a><text> | </text>
+                }
+                <form method="post" asp-page="/Giris" asp-page-handler="Cikis"><button>Çıkış</button></form>
+            }
+            else
+            {
+                <a href="/giris">Giriş</a>
+            }
+        </span>
+    </div>
+
+    <header class="site-header">
+        <a class="logo" href="/">Fetih</a>
+        <div class="tagline">Klasik 5619 sunucusu</div>
+    </header>
+
+    <nav class="site-menu" aria-label="Ana menü">
+        <a class="@On("/")" href="/">Ana Sayfa</a>
+        <a class="@On("/news")" href="/news">Haberler</a>
+        <a class="@On("/rankings")" href="/rankings">Sıralamalar</a>
+        <a class="@On("/download")" href="/download">İndir</a>
+        <a class="@On("/register")" href="/register">Kayıt Ol</a>
+    </nav>
+
+    <div class="site-columns">
+        <aside class="site-side">
+            <big-button kind="gold" href="/download" note="İstemci, sürüm 5619">Oyunu İndir</big-button>
+            <big-button kind="red" href="/register" note="Ücretsiz, bir dakika sürer">Hesap Oluştur</big-button>
+            @await RenderSectionAsync("Side", required: false)
+        </aside>
+        <main class="site-main">
+            <partial name="_Flash" />
+            @RenderBody()
+        </main>
+    </div>
+
+    <div class="site-foot">Fetih Online</div>
+</div>
+</body>
+</html>

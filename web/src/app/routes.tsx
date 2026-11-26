@@ -1,7 +1,6 @@
 import type { FeatureRoute } from './feature'
 import { auditRoute } from '../features/audit'
 import { catalogRoutes } from '../features/catalogs'
-import { broadcastsRoute } from '../features/broadcasts'
 import { changesRoute } from '../features/changes'
 import { dataRoute } from '../features/data'
 import { healthRoute } from '../features/health'
@@ -30,7 +29,6 @@ import { serverRoute } from '../features/server'
 export const featureRoutes: FeatureRoute[] = [
   healthRoute,
   economyRoute,
-  broadcastsRoute,
   auditRoute,
   itemsRoute,
   ...catalogRoutes,

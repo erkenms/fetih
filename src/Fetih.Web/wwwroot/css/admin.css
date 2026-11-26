@@ -1,0 +1,91 @@
+/* The admin layout: a leather top bar, the menu box on the left, pages fluid on the right.
+   Loaded after site.css. */
+
+.admin-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 14px;
+  min-height: 46px;
+  background: #5a1512 url('../img/redleather.jpg');
+  border-bottom: 1px solid #000;
+  box-shadow: inset 0 1px 0 rgb(255 190 140 / 35%), 0 3px 0 #4a3019, 0 4px 0 #000;
+}
+
+.admin-top .brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.admin-top .logo {
+  font-size: 26px;
+}
+
+.admin-top .subtitle {
+  font: italic bold 13px Georgia, serif;
+  color: #f5dfa3;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.admin-top .links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 10px;
+  color: #e8d2a0;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.admin-top .links a,
+.admin-top .links button {
+  padding: 0;
+  font: inherit;
+  color: #f5dfa3;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  text-shadow: inherit;
+}
+
+.admin-columns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px;
+}
+
+.admin-side {
+  flex: 1 1 200px;
+  max-width: 100%;
+}
+
+.admin-main {
+  flex: 999 1 700px;
+  min-width: 0;
+}
+
+.admin-foot {
+  padding: 0 14px 14px;
+  text-align: center;
+  color: #8a7350;
+  font-size: 10px;
+}
+
+/* The admin home: one box per menu section */
+
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.sections > .box {
+  flex: 1 1 220px;
+  margin: 0;
+}

@@ -47,4 +47,5 @@ Strongest first:
 
 - [deploy.md](deploy.md): public server
 - [web-style.md](web-style.md): the site's look
+- [web.md](web.md): how a web page is built (Razor Pages)
 - Feature backlog: issues ([NPCs](https://github.com/erkenms/fetih/issues/105), [quests](https://github.com/erkenms/fetih/issues/106))

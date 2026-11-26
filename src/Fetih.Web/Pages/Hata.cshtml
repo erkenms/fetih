@@ -1,0 +1,14 @@
+@page "/hata/{code:int}"
+@model HataModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = Model.Admin ? "_AdminLayout" : "_PublicLayout";
+}
+@if (Model.Code == 503)
+{
+    <div class="alert">Oyun sunucusu kapalı. Bu sayfa oyun sunucusu açıkken çalışır.</div>
+}
+<panel title="@Model.Title" icon="2000247">
+    <p>@Model.Text</p>
+    <p><a href="@(Model.Admin ? "/admin" : "/")">Ana sayfaya dön »</a></p>
+</panel>

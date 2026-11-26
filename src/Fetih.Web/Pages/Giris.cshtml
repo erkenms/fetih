@@ -1,0 +1,35 @@
+@page "/giris"
+@model GirisModel
+@{
+    ViewData["Title"] = "Giriş";
+}
+<panel title="Hesap Girişi" icon="713059">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p>Giriş yaptın: <b>@User.Username()</b>.</p>
+        <div class="buttons" style="justify-content: flex-start">
+            @if (User.Has(Permission.AdminArea))
+            {
+                <a class="button" href="/admin">Yönetim paneli</a>
+            }
+            <form method="post" asp-page-handler="Cikis" class="inline"><button class="plain">Çıkış</button></form>
+        </div>
+    }
+    else
+    {
+        <form method="post" style="max-width: 300px">
+            @if (Model.Error != null)
+            {
+                <div class="alert inline">@Model.Error</div>
+            }
+            <input type="hidden" name="donus" value="@Model.Donus">
+            <label for="kullanici">Hesap adı</label>
+            <input id="kullanici" name="kullanici" type="text" value="@Model.Kullanici" autocomplete="username" required autofocus style="width: 100%">
+            <label for="sifre">Şifre</label>
+            <input id="sifre" name="sifre" type="password" autocomplete="current-password" required style="width: 100%">
+            <div class="buttons" style="justify-content: flex-start">
+                <button>Giriş</button>
+            </div>
+        </form>
+    }
+</panel>

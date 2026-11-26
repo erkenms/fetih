@@ -1,0 +1,20 @@
+@page
+@{
+    ViewData["Title"] = "Yönetim paneli";
+}
+<panel title="Yönetim Paneli" icon="724426">
+    <p>Hoş geldin, <b>@User.Username()</b>. Sayfalar aşağıda ve soldaki menüde.</p>
+</panel>
+<div class="sections">
+    @foreach (var group in AdminMenu.For(User))
+    {
+        <panel title="@group.Title">
+            <nav class="menu">
+                @foreach (var link in group.Links)
+                {
+                    <a href="@link.Url">» @link.Text</a>
+                }
+            </nav>
+        </panel>
+    }
+</div>
