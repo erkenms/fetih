@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { api, unwrap, type Schemas } from '../../api/client'
 import { ErrorAlert } from '../../app/ErrorAlert'
+import { LookSprite, monsterLook, useLooks } from '../../components/looks'
 
 const pageSize = 50
 type Monster = Schemas['MonsterCatalogEntry']
@@ -18,6 +19,7 @@ export default function MonstersCatalogPage() {
   const [minLevel, setMinLevel] = useState<number | string>('')
   const [maxLevel, setMaxLevel] = useState<number | string>('')
   const [selected, setSelected] = useState<Monster | null>(null)
+  const looks = useLooks()
   const [filters] = useDebouncedValue({ search, source, bossOnly, minLevel, maxLevel }, 250)
 
   const query = {
@@ -119,7 +121,8 @@ export default function MonstersCatalogPage() {
                 <Table.Tr key={m.id} onClick={() => setSelected(m)} style={{ cursor: 'pointer' }}>
                   <Table.Td><Code>{m.id}</Code></Table.Td>
                   <Table.Td>
-                    <Group gap="xs">
+                    <Group gap="xs" wrap="nowrap">
+                      <LookSprite look={monsterLook(looks.index, m.lookface)} alt={m.name} size={32} />
                       <Text fw={500}>{m.name}</Text>
                       {m.boss && <Badge size="xs" color="red" variant="light">{t('monsters.boss')}</Badge>}
                     </Group>
@@ -158,6 +161,11 @@ export default function MonstersCatalogPage() {
       <Modal opened={!!selected} onClose={() => setSelected(null)} title={selected ? `${selected.name} (#${selected.id})` : ''} size="lg">
         {selected && (
           <Stack gap="sm">
+            {monsterLook(looks.index, selected.lookface) && (
+              <Group justify="center">
+                <LookSprite look={monsterLook(looks.index, selected.lookface)} alt={selected.name} size={180} />
+              </Group>
+            )}
             <Text fw={600}>{t('monsters.detail.serverStats')}</Text>
             <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="xs">
               <Stat label={t('monsters.column.level')} value={selected.level} />

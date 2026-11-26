@@ -4,7 +4,8 @@
     "spells": "Büyüler",
     "maps": "Haritalar",
     "faces": "Yüzler",
-    "shops": "Mağazalar"
+    "shops": "Mağazalar",
+    "looks": "Görünümler"
   },
   "pickers": {
     "clear": "Temizle",
@@ -27,7 +28,9 @@
       "direction": "Yön",
       "browse": "Gözat",
       "modalTitle": "Yüz seç",
-      "filterPlaceholder": "Yüz ID ile filtrele..."
+      "filterPlaceholder": "Yüz ID ile filtrele...",
+      "lookModalTitle": "Görünüm seç",
+      "lookFilterPlaceholder": "Ada veya türe göre süz..."
     }
   },
   "monsters": {

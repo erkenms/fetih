@@ -4,7 +4,8 @@
     "spells": "Spells",
     "maps": "Maps",
     "faces": "Faces",
-    "shops": "Shops"
+    "shops": "Shops",
+    "looks": "Looks"
   },
   "pickers": {
     "clear": "Clear",
@@ -27,7 +28,9 @@
       "direction": "Dir",
       "browse": "Browse",
       "modalTitle": "Choose face",
-      "filterPlaceholder": "Filter by face ID..."
+      "filterPlaceholder": "Filter by face ID...",
+      "lookModalTitle": "Choose look",
+      "lookFilterPlaceholder": "Filter by name or type..."
     }
   },
   "monsters": {
