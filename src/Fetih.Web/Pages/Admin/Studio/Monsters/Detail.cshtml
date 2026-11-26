@@ -1,0 +1,264 @@
+@page "/admin/studio/monsters/{id}"
+@model Fetih.Web.Pages.Admin.Studio.Monsters.DetailModel
+@{
+    ViewData["Title"] = Model.IsNew ? "Yeni Canavar" : $"{Model.Input.Name} (#{Model.Input.Id})";
+    bool ro = !Model.CanEdit;
+}
+
+<p><a href="/admin/studio/monsters">« Canavar listesine dön</a></p>
+
+@if (Model.HasStudio && Model.StudioReadOnly)
+{
+    <div class="alert inline">Stüdyo salt okunur modda; değişiklikler kaydedilemez, silinemez veya yeniden yüklenemez.</div>
+}
+
+<panel title="@(Model.IsNew ? "Yeni Canavar" : $"{Model.Input.Name} (#{Model.Input.Id})")" icon="711394">
+    @if (Model.ErrorMessage != null)
+    {
+        <div class="alert inline">@Model.ErrorMessage</div>
+    }
+    @if (Model.Problems.Length > 0)
+    {
+        <div class="alert inline">
+            Doğrulama sorunları:
+            <ul class="problem-list">
+                @foreach (var p in Model.Problems)
+                {
+                    <li>
+                        @if (p.Level == "warning") { <span class="tag info">Uyarı</span> }
+                        else { <span class="tag bad">Hata</span> }
+                        @p.Message
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" name="Hash" value="@Model.Hash">
+
+        <div class="form-row">
+            @if (Model.LookImage != null)
+            {
+                <div style="flex: 0 0 auto;">
+                    <img class="sprite-lg" src="/assets/@Model.LookImage" alt="" title="Görünüş #@Model.Input.Lookface">
+                </div>
+            }
+            <div>
+                <label for="m-id">ID</label>
+                <input id="m-id" type="number" name="Input.Id" value="@Model.Input.Id" min="1" required disabled="@ro">
+            </div>
+            <div>
+                <label for="m-name">Ad</label>
+                <input id="m-name" type="text" name="Input.Name" value="@Model.Input.Name" required disabled="@ro">
+            </div>
+            <div>
+                <label>Görünüş (Lookface)</label>
+                @if (Model.CanEdit)
+                {
+                    <partial name="_Picker" model='new PickerField(PickerKind.Look, "Input.Lookface", Model.Input.Lookface)' />
+                }
+                else
+                {
+                    <input type="number" value="@Model.Input.Lookface" disabled>
+                }
+            </div>
+            <div style="flex: 0 0 auto;">
+                <label class="check">
+                    <input type="checkbox" name="Input.Boss" value="true" checked="@Model.Input.Boss" disabled="@ro">
+                    <input type="hidden" name="Input.Boss" value="false">
+                    Boss
+                </label>
+            </div>
+        </div>
+
+        <h3>Temel İstatistikler</h3>
+        <div class="form-row">
+            <div>
+                <label for="m-level">Seviye</label>
+                <input id="m-level" type="number" name="Input.Level" value="@Model.Input.Level" min="0" max="255" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-life">Can</label>
+                <input id="m-life" type="number" name="Input.Life" value="@Model.Input.Life" min="1" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-amin">Min saldırı</label>
+                <input id="m-amin" type="number" name="Input.AttackMin" value="@Model.Input.AttackMin" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-amax">Max saldırı</label>
+                <input id="m-amax" type="number" name="Input.AttackMax" value="@Model.Input.AttackMax" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-def">Savunma</label>
+                <input id="m-def" type="number" name="Input.Defense" value="@Model.Input.Defense" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-dex">Çeviklik</label>
+                <input id="m-dex" type="number" name="Input.Dexterity" value="@Model.Input.Dexterity" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-dodge">Kaçınma</label>
+                <input id="m-dodge" type="number" name="Input.Dodge" value="@Model.Input.Dodge" min="0" disabled="@ro">
+            </div>
+        </div>
+
+        <h3>Hareket ve Menzil</h3>
+        <div class="form-row">
+            <div>
+                <label for="m-arange">Saldırı menzili</label>
+                <input id="m-arange" type="number" name="Input.AttackRange" value="@Model.Input.AttackRange" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-vrange">Görüş menzili</label>
+                <input id="m-vrange" type="number" name="Input.ViewRange" value="@Model.Input.ViewRange" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-aspeed">Saldırı hızı (ms)</label>
+                <input id="m-aspeed" type="number" name="Input.AttackSpeed" value="@Model.Input.AttackSpeed" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-mspeed">Hareket hızı (ms)</label>
+                <input id="m-mspeed" type="number" name="Input.MoveSpeed" value="@Model.Input.MoveSpeed" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-auser">Saldırı davranışı (AttackUser)</label>
+                <input id="m-auser" type="number" name="Input.AttackUser" value="@Model.Input.AttackUser" min="0" disabled="@ro">
+            </div>
+        </div>
+
+        <h3>Ganimet ve Büyü</h3>
+        <div class="form-row">
+            <div>
+                <label for="m-money">Gümüş (DropMoney)</label>
+                <input id="m-money" type="number" name="Input.DropMoney" value="@Model.Input.DropMoney" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-hp">HP İksiri (DropHp)</label>
+                <input id="m-hp" type="number" name="Input.DropHp" value="@Model.Input.DropHp" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-mp">MP İksiri (DropMp)</label>
+                <input id="m-mp" type="number" name="Input.DropMp" value="@Model.Input.DropMp" min="0" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-mtype">Büyü türü (MagicType)</label>
+                <input id="m-mtype" type="number" name="Input.MagicType" value="@Model.Input.MagicType" min="0" max="65535" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-mhit">Büyü isabeti (%)</label>
+                <input id="m-mhit" type="number" name="Input.MagicHitRate" value="@Model.Input.MagicHitRate" min="0" max="100" disabled="@ro">
+            </div>
+            <div>
+                <label for="m-spells">Büyüler (virgülle ayrılmış ID)</label>
+                <input id="m-spells" type="text" name="Input.SpellsText" value="@Model.Input.SpellsText" placeholder="ör. 1000, 1001" disabled="@ro">
+            </div>
+        </div>
+
+        @if (Model.HasStudio)
+        {
+            <div class="buttons">
+                <button disabled="@Model.StudioReadOnly">Kaydet</button>
+            </div>
+        }
+    </form>
+
+    @if (Model.HasStudio && !Model.IsNew)
+    {
+        <div class="buttons" style="margin-top: 8px; padding-top: 6px; border-top: 1px dotted #a88a5a; justify-content: flex-start;">
+            <form method="post" asp-page-handler="Reload" class="inline">
+                <button class="plain" disabled="@(!Model.GameConnected || Model.StudioReadOnly)">Yeniden yükle</button>
+            </form>
+            <form method="post" asp-page-handler="Delete" class="inline"
+                  data-confirm="“@Model.Input.Name” (#@Model.Input.Id) silinsin mi?">
+                <input type="hidden" name="Hash" value="@Model.Hash">
+                <button class="plain" disabled="@Model.StudioReadOnly">Sil</button>
+            </form>
+            <a class="button plain" href="/admin/studio/changes">Değişiklikler »</a>
+            @if (!Model.GameConnected)
+            {
+                <span class="muted">Oyun sunucusu kapalı</span>
+            }
+        </div>
+    }
+</panel>
+
+@if (!Model.IsNew)
+{
+    @if (Model.Spawns.Length > 0)
+    {
+        <panel title="Doğma Alanları (@Model.Spawns.Length)" icon="711394">
+            <div class="scroll">
+                <table class="grid">
+                    <thead>
+                    <tr><th>ID</th><th>Harita</th><th>Konum</th><th>Yayılım</th><th>Adet</th><th>Yeniden doğma</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var s in Model.Spawns)
+                    {
+                        <tr>
+                            <td>@s.Id</td>
+                            <td>@(s.MapName ?? $"#{s.MapId}") <span class="muted">(#@s.MapId)</span></td>
+                            <td>@s.X, @s.Y</td>
+                            <td>@s.Spread</td>
+                            <td>@s.Amount</td>
+                            <td>@s.RespawnSeconds sn</td>
+                            <td class="actions"><a href="/admin/maps/@s.MapId?x=@s.X&y=@s.Y">Haritada aç »</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </panel>
+    }
+
+    @if (Model.BossSpawns.Length > 0)
+    {
+        <panel title="Boss Zamanlamaları (@Model.BossSpawns.Length)" icon="711394">
+            <div class="scroll">
+                <table class="grid">
+                    <thead>
+                    <tr><th>ID</th><th>Harita</th><th>Konum</th><th>Saatler / Aralık</th><th>Duyuru</th><th></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var b in Model.BossSpawns)
+                    {
+                        <tr>
+                            <td>@b.Id</td>
+                            <td>@(b.MapName ?? $"#{b.MapId}") <span class="muted">(#@b.MapId)</span></td>
+                            <td>@b.X, @b.Y</td>
+                            <td>@(b.Times.Length > 0 ? string.Join(", ", b.Times) : $"{b.IntervalSeconds} sn")</td>
+                            <td>@(b.Broadcast ?? "—")</td>
+                            <td class="actions"><a href="/admin/maps/@b.MapId?x=@b.X&y=@b.Y">Haritada aç »</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </panel>
+    }
+
+    @if (Model.Drops.Length > 0)
+    {
+        <panel title="Özel Ganimetler (@Model.Drops.Length)" icon="711394">
+            <div class="scroll">
+                <table class="grid">
+                    <thead>
+                    <tr><th>Eşya</th><th>Şans</th><th>Adet</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var d in Model.Drops)
+                    {
+                        <tr>
+                            <td><item-icon item="@d.ItemId"></item-icon> #@d.ItemId</td>
+                            <td>%@d.Chance</td>
+                            <td>@d.Count</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </panel>
+    }
+}

@@ -1,0 +1,108 @@
+@page
+@model Fetih.Web.Pages.Admin.Studio.Goals.IndexModel
+@{
+    ViewData["Title"] = "Hedefler (goals.json)";
+}
+
+<partial name="../_DataTabs" model='"goals"' />
+
+@if (Model.StudioReadOnly)
+{
+    <div class="alert inline">Stüdyo salt okunur modda; değişiklikler kaydedilemez.</div>
+}
+
+<panel title="Hedefler (goals.json)" icon="711394">
+    @if (Model.ConflictError != null)
+    {
+        <div class="alert inline">@Model.ConflictError</div>
+    }
+    @if (Model.Problems.Length > 0)
+    {
+        <div class="alert inline">
+            Kaydetme doğrulama sorunları nedeniyle durduruldu:
+            <ul class="problem-list">
+                @foreach (var p in Model.Problems)
+                {
+                    <li>
+                        @if (p.Entry is int idx) { <b>Satır @(idx + 1):</b> }
+                        @p.Message
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+
+    <form method="post" asp-page-handler="Save">
+        <input type="hidden" name="Hash" value="@Model.Hash">
+        <div class="buttons" style="margin: 0 0 6px; justify-content: flex-start;">
+            <button type="button" class="plain" data-add-row="goal-row" disabled="@Model.StudioReadOnly">+ Satır ekle</button>
+            <button disabled="@Model.StudioReadOnly">Kaydet</button>
+            <a class="button plain" href="/admin/studio/changes">Değişiklikler »</a>
+            <span class="muted">@Model.Rows.Count satır (Rol 21: Kazık, 22: Korkuluk)</span>
+        </div>
+
+        <div class="scroll">
+            <table class="grid edit-grid">
+                <thead>
+                <tr><th>NPC ID</th><th>Görünüş</th><th>Rol</th><th>Seviye</th><th>Can</th><th>Harita</th><th>X</th><th>Y</th><th>Sil</th></tr>
+                </thead>
+                <tbody data-rows="goal-row" data-next-index="@Model.Rows.Count">
+                @for (int i = 0; i < Model.Rows.Count; i++)
+                {
+                    var r = Model.Rows[i];
+                    <tr>
+                        <td class="@(Model.IsBad(i, "Id") ? "bad" : null)">
+                            <input type="number" name="Rows[@i].Id" value="@r.Id" min="1" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Lookface") ? "bad" : null)">
+                            <input type="number" class="narrow" name="Rows[@i].Lookface" value="@r.Lookface" min="0" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Role") ? "bad" : null)">
+                            <input type="number" class="narrow" name="Rows[@i].Role" value="@r.Role" min="0" max="255" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Level") ? "bad" : null)">
+                            <input type="number" class="narrow" name="Rows[@i].Level" value="@r.Level" min="0" max="255" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Life") ? "bad" : null)">
+                            <input type="number" name="Rows[@i].Life" value="@r.Life" min="0" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Map") ? "bad" : null)">
+                            <input type="number" name="Rows[@i].Map" value="@r.Map" min="1" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "X") ? "bad" : null)">
+                            <input type="number" class="narrow" name="Rows[@i].X" value="@r.X" min="0" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td class="@(Model.IsBad(i, "Y") ? "bad" : null)">
+                            <input type="number" class="narrow" name="Rows[@i].Y" value="@r.Y" min="0" disabled="@Model.StudioReadOnly">
+                        </td>
+                        <td>
+                            <input type="checkbox" name="Rows[@i].Delete" value="true" data-delete-row disabled="@Model.StudioReadOnly">
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="buttons">
+            <button type="button" class="plain" data-add-row="goal-row" disabled="@Model.StudioReadOnly">+ Satır ekle</button>
+            <button disabled="@Model.StudioReadOnly">Kaydet</button>
+        </div>
+    </form>
+</panel>
+
+<template id="goal-row">
+    <tr>
+        <td><input type="number" name="Rows[__INDEX__].Id" value="0" min="1"></td>
+        <td><input type="number" class="narrow" name="Rows[__INDEX__].Lookface" value="427" min="0"></td>
+        <td><input type="number" class="narrow" name="Rows[__INDEX__].Role" value="21" min="0" max="255"></td>
+        <td><input type="number" class="narrow" name="Rows[__INDEX__].Level" value="20" min="0" max="255"></td>
+        <td><input type="number" name="Rows[__INDEX__].Life" value="10000" min="0"></td>
+        <td><input type="number" name="Rows[__INDEX__].Map" value="1039" min="1"></td>
+        <td><input type="number" class="narrow" name="Rows[__INDEX__].X" value="0" min="0"></td>
+        <td><input type="number" class="narrow" name="Rows[__INDEX__].Y" value="0" min="0"></td>
+        <td><input type="checkbox" name="Rows[__INDEX__].Delete" value="true" data-delete-row></td>
+    </tr>
+</template>
+
+<script src="~/js/studio.js" asp-append-version="true" defer></script>

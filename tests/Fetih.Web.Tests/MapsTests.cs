@@ -235,7 +235,7 @@ public class MapsTests(WebFixture web)
         return ms.ToArray();
     }
 
-    private static byte[] BuildGameMapDat((uint Id, string Path, uint PuzzleSize)[] entries)
+    internal static byte[] BuildGameMapDat((uint Id, string Path, uint PuzzleSize)[] entries)
     {
         using var ms = new MemoryStream();
         using var bw = new BinaryWriter(ms, Encoding.Latin1);

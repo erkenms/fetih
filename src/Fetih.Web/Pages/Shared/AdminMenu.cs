@@ -26,22 +26,21 @@ public static class AdminMenu
         ]),
         new("Stüdyo",
         [
-            new("Değişiklikler", "/admin/changes", Permission.Studio),
-            new("Veri düzenleyiciler", "/admin/data", Permission.Studio),
-            new("Canavarlar", "/admin/monsters", Permission.Studio),
+            new("Değişiklikler", "/admin/studio/changes", Permission.Studio),
+            new("Seviyeler", "/admin/studio/levels", Permission.Studio),
+            new("Hedefler", "/admin/studio/goals", Permission.Studio),
+            new("Işınlayıcılar", "/admin/studio/teleporters", Permission.Studio),
+            new("Konuşmacılar", "/admin/studio/talkers", Permission.Studio),
+            new("Canavarlar", "/admin/studio/monsters", Permission.ViewCatalogs),
             new("Haritalar", "/admin/maps", Permission.ViewCatalogs),
             new("NPC konuşmaları", "/admin/npc-dialogs", Permission.ViewCatalogs),
-            new("Bütünlük", "/admin/integrity", Permission.Studio),
         ]),
         new("Başvuru",
         [
             new("Eşyalar", "/admin/items", Permission.ViewCatalogs),
             new("Büyüler", "/admin/catalogs/spells", Permission.ViewCatalogs),
             new("Dükkânlar", "/admin/catalogs/shops", Permission.ViewCatalogs),
-            new("Canavar kataloğu", "/admin/catalogs/monsters", Permission.ViewCatalogs),
             new("Harita kataloğu", "/admin/catalogs/maps", Permission.ViewCatalogs),
-            new("Yüzler", "/admin/catalogs/faces", Permission.ViewCatalogs),
-            new("Görünüşler", "/admin/catalogs/looks", Permission.ViewCatalogs),
         ]),
     ];
 

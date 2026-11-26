@@ -1,0 +1,120 @@
+@page
+@model Fetih.Web.Pages.Admin.Studio.Changes.IndexModel
+@{
+    ViewData["Title"] = "Stüdyo Değişiklikleri";
+}
+
+@if (Model.StudioReadOnly)
+{
+    <div class="alert inline">Stüdyo salt okunur modda; değişiklikler kaydedilemez, yeniden yüklenemez veya geri alınamaz.</div>
+}
+
+<panel title="Veri Bütünlüğü" icon="711394">
+    <p>
+        <b>@Model.Integrity.CheckedFiles</b> dosya denetlendi:
+        <span class="tag @(Model.Integrity.ErrorCount > 0 ? "bad" : "good")">@Model.Integrity.ErrorCount hata</span>
+        <span class="tag @(Model.Integrity.WarningCount > 0 ? "info" : "good")">@Model.Integrity.WarningCount uyarı</span>
+        @if (!Model.Integrity.ClientFilesAvailable)
+        {
+            <span class="muted"> (İstemci dosyaları bağlı değil; harita ve eşya kontrolleri atlandı.)</span>
+        }
+    </p>
+    @if (Model.Integrity.Problems.Length > 0)
+    {
+        <div class="scroll">
+            <table class="grid">
+                <thead>
+                <tr><th>Seviye</th><th>Dosya</th><th>Satır</th><th>Öğe</th><th>Sorun</th><th></th></tr>
+                </thead>
+                <tbody>
+                @foreach (var p in Model.Integrity.Problems)
+                {
+                    <tr>
+                        <td>
+                            @if (p.Level == "error")
+                            {
+                                <span class="tag bad">Hata</span>
+                            }
+                            else
+                            {
+                                <span class="tag info">Uyarı</span>
+                            }
+                        </td>
+                        <td>@p.File</td>
+                        <td>@(p.Line?.ToString() ?? "—")</td>
+                        <td>@(p.EntityId ?? "—")</td>
+                        <td>@p.Message</td>
+                        <td class="actions"><a href="@p.EditorPath">Düzenle »</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p class="muted">Tüm veri dosyaları temiz.</p>
+    }
+</panel>
+
+<panel title="Değişiklikler" icon="2000247">
+    @if (!Model.GitAvailable)
+    {
+        <div class="alert inline">Git deposu bulunamadı; dosya farkları gösterilemiyor.</div>
+    }
+    @if (!Model.GameConnected)
+    {
+        <div class="alert inline">Oyun sunucusu kapalı. Değişiklikleri oyuna göndermek için oyun sunucusunu başlat.</div>
+    }
+
+    @if (Model.ChangedFiles.Length == 0)
+    {
+        <p class="muted">Değiştirilmiş veri dosyası yok.</p>
+    }
+    else
+    {
+        @foreach (var f in Model.ChangedFiles)
+        {
+            <div class="file-head">
+                <b>@f.File</b>
+                <span class="tag info">@IndexModel.StatusText(f.GitStatus)</span>
+                <span class="tag good">+@f.AddedLines</span>
+                <span class="tag bad">-@f.RemovedLines</span>
+                <div class="file-actions">
+                    @if (f.Reloadable)
+                    {
+                        <form method="post" asp-page-handler="Reload" class="inline">
+                            <input type="hidden" name="file" value="@f.File">
+                            <button disabled="@(!Model.GameConnected || Model.StudioReadOnly)">Yeniden yükle</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <span class="muted">Yeniden başlatma gerekir</span>
+                    }
+                    <form method="post" asp-page-handler="Discard" class="inline"
+                          data-confirm="@f.File dosyasındaki yerel değişiklikler geri alınsın mı?">
+                        <input type="hidden" name="file" value="@f.File">
+                        <button class="plain" disabled="@Model.StudioReadOnly">Geri al</button>
+                    </form>
+                </div>
+            </div>
+            @if (!string.IsNullOrEmpty(f.Diff))
+            {
+                <pre class="diff">@foreach (var raw in f.Diff.Replace("\r\n", "\n").Split('\n'))
+{
+    var cls = IndexModel.DiffLineClass(raw);
+    if (cls.Length > 0)
+    {
+        <span class="@cls">@raw</span>
+    }
+    else
+    {
+        @raw
+        @("\n")
+    }
+}</pre>
+            }
+        }
+    }
+</panel>

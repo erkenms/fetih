@@ -1,0 +1,147 @@
+@page
+@model Fetih.Web.Pages.Admin.Studio.Monsters.IndexModel
+@{
+    ViewData["Title"] = "Canavarlar";
+}
+
+@if (Model.HasStudio && Model.StudioReadOnly)
+{
+    <div class="alert inline">Stüdyo salt okunur modda; canavarlar değiştirilemez veya yeniden yüklenemez.</div>
+}
+
+<panel title="Canavarlar (@Model.Rows.Length / @Model.TotalCount)" icon="711394">
+    @if (Model.HasStudio && Model.Problems.Length > 0)
+    {
+        <div class="alert inline">
+            monsters.json içinde @Model.Problems.Length doğrulama sorunu var:
+            <ul class="problem-list">
+                @foreach (var p in Model.Problems.Take(10))
+                {
+                    <li>@(p.Line is int l ? $"Satır {l}: " : "")@p.Message</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <form method="get" class="form-row">
+        <div>
+            <label for="monster-q">Ara (ad, ID veya görünüş)</label>
+            <input id="monster-q" type="search" name="q" value="@Model.Q" placeholder="ör. Pheasant veya 1">
+        </div>
+        <div>
+            <label for="monster-boss">Tür</label>
+            <select id="monster-boss" name="boss">
+                <option value="" selected="@(string.IsNullOrEmpty(Model.Boss))">Tümü</option>
+                <option value="boss" selected="@(Model.Boss == "boss")">Sadece Boss</option>
+                <option value="normal" selected="@(Model.Boss == "normal")">Normal</option>
+            </select>
+        </div>
+        <input type="hidden" name="sort" value="@Model.Sort">
+        <input type="hidden" name="dir" value="@Model.Dir">
+        <div style="flex: 0 0 auto;">
+            <button>Filtrele</button>
+            @if (!string.IsNullOrEmpty(Model.Q) || !string.IsNullOrEmpty(Model.Boss))
+            {
+                <a class="button plain" href="/admin/studio/monsters">Temizle</a>
+            }
+        </div>
+    </form>
+
+    @if (Model.HasStudio)
+    {
+        <div class="buttons" style="margin: 0 0 6px; justify-content: flex-start;">
+            @if (Model.CanEdit)
+            {
+                <a class="button" href="/admin/studio/monsters/new">+ Yeni canavar</a>
+            }
+            <form method="post" asp-page-handler="Reload" class="inline">
+                <button class="plain" disabled="@(!Model.GameConnected || Model.StudioReadOnly)">Yeniden yükle</button>
+            </form>
+            <a class="button plain" href="/admin/studio/changes">Değişiklikler »</a>
+            @if (!Model.GameConnected)
+            {
+                <span class="muted">Oyun sunucusu kapalı</span>
+            }
+        </div>
+    }
+
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr>
+                <th>Görünüş</th>
+                <th><a href="@Model.SortUrl("id")">ID@Model.SortArrow("id")</a></th>
+                <th><a href="@Model.SortUrl("name")">Ad@Model.SortArrow("name")</a></th>
+                <th><a href="@Model.SortUrl("level")">Seviye@Model.SortArrow("level")</a></th>
+                <th><a href="@Model.SortUrl("life")">Can@Model.SortArrow("life")</a></th>
+                <th><a href="@Model.SortUrl("attack")">Saldırı@Model.SortArrow("attack")</a></th>
+                <th><a href="@Model.SortUrl("defense")">Savunma@Model.SortArrow("defense")</a></th>
+                <th><a href="@Model.SortUrl("spawns")">Doğma@Model.SortArrow("spawns")</a></th>
+                <th>Ganimet</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var r in Model.Rows)
+            {
+                var m = r.Monster;
+                <tr>
+                    <td>
+                        @if (r.LookImage != null)
+                        {
+                            <img class="sprite" src="/assets/@r.LookImage" alt="" loading="lazy" title="Görünüş #@m.Lookface">
+                        }
+                        else
+                        {
+                            <span class="muted">#@m.Lookface</span>
+                        }
+                    </td>
+                    <td>@m.Id</td>
+                    <td>
+                        <b><a href="/admin/studio/monsters/@m.Id">@m.Name</a></b>
+                        @if (m.Boss)
+                        {
+                            <span class="tag bad">Boss</span>
+                        }
+                    </td>
+                    <td>@m.Level</td>
+                    <td>@m.Life.ToString("N0")</td>
+                    <td>@m.AttackMin – @m.AttackMax</td>
+                    <td>@m.Defense</td>
+                    <td>
+                        @if (r.SpawnAreaCount > 0)
+                        {
+                            <span>@r.TotalSpawnAmount (@r.SpawnAreaCount alan)</span>
+                        }
+                        @if (r.BossScheduleCount > 0)
+                        {
+                            <span class="tag info">@r.BossScheduleCount zamanlı</span>
+                        }
+                        @if (r.SpawnAreaCount == 0 && r.BossScheduleCount == 0)
+                        {
+                            <span class="muted">—</span>
+                        }
+                    </td>
+                    <td>
+                        @if (r.HasCustomDrops)
+                        {
+                            <span class="tag good">Özel</span>
+                        }
+                        else
+                        {
+                            <span class="muted">—</span>
+                        }
+                    </td>
+                    <td class="actions">
+                        <a href="/admin/studio/monsters/@m.Id">@(Model.CanEdit ? "Düzenle »" : "Görüntüle »")</a>
+                    </td>
+                </tr>
+            }
+            @if (Model.Rows.Length == 0)
+            {
+                <tr><td colspan="10" class="empty">Eşleşen canavar bulunamadı.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</panel>

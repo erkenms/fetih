@@ -1,0 +1,7 @@
+@model string
+<nav class="tabs" aria-label="Veri dosyaları">
+    <a class="@(Model == "levels" ? "on" : "")" href="/admin/studio/levels">Seviyeler</a>
+    <a class="@(Model == "goals" ? "on" : "")" href="/admin/studio/goals">Hedefler</a>
+    <a class="@(Model == "teleporters" ? "on" : "")" href="/admin/studio/teleporters">Işınlayıcılar</a>
+    <a class="@(Model == "talkers" ? "on" : "")" href="/admin/studio/talkers">Konuşmacılar</a>
+</nav>

@@ -93,7 +93,7 @@ public static class IntegrityChecker
                     var b = f[i];
                     return (string.IsNullOrWhiteSpace(b.ID) ? $"Boss #{i}" : b.ID, $"/admin/maps/{b.MapID}?x={b.X}&y={b.Y}", "map");
                 case DataFile<Npc> f when kind == DataFileKinds.Goals:
-                    return ($"Goal {f[i].NpcID}", "/admin/data?tab=goals", "goals");
+                    return ($"Goal {f[i].NpcID}", "/admin/studio/goals", "goals");
                 case DataFile<Npc> f:
                     var n = f[i];
                     return ($"NPC {n.NpcID}", $"/admin/maps/{n.MapID}?x={n.X}&y={n.Y}", "map");
@@ -105,27 +105,27 @@ public static class IntegrityChecker
                     return (string.IsNullOrWhiteSpace(m.Name) ? $"Map {m.MapID}" : $"{m.Name} ({m.MapID})", $"/admin/maps/{m.MapID}", "map");
                 case DataFile<MonsterType> f:
                     var mon = f[i];
-                    return (string.IsNullOrWhiteSpace(mon.Name) ? $"Monster {mon.ID}" : $"{mon.Name} ({mon.ID})", "/admin/monsters", "monsters");
+                    return (string.IsNullOrWhiteSpace(mon.Name) ? $"Monster {mon.ID}" : $"{mon.Name} ({mon.ID})", $"/admin/studio/monsters/{mon.ID}", "monsters");
                 case DataFile<LevelExp> f:
-                    return ($"Level {f[i].Level}", "/admin/data?tab=levels", "levels");
+                    return ($"Level {f[i].Level}", "/admin/studio/levels", "levels");
                 case DataFile<Talker> f:
-                    return ($"NPC {f[i].NpcID}", "/admin/data?tab=talkers", "talkers");
+                    return ($"NPC {f[i].NpcID}", "/admin/studio/talkers", "talkers");
                 case DataFile<Teleporter> f:
-                    return ($"NPC {f[i].NpcID}", "/admin/data?tab=teleporters", "teleporters");
+                    return ($"NPC {f[i].NpcID}", "/admin/studio/teleporters", "teleporters");
                 case DataFile<MonsterDrops> f:
-                    return ($"Monster {f[i].MonsterID}", "/admin/changes", "changes");
+                    return ($"Monster {f[i].MonsterID}", "/admin/studio/changes", "changes");
             }
         }
 
         return kind.FileName switch
         {
             "spawns.json" or "bosses.json" or "npcs.json" or "portals.json" or "maps.json" => (null, "/admin/maps", "map"),
-            "monsters.json" => (null, "/admin/monsters", "monsters"),
-            "levels.json" => (null, "/admin/data?tab=levels", "levels"),
-            "goals.json" => (null, "/admin/data?tab=goals", "goals"),
-            "teleporters.json" => (null, "/admin/data?tab=teleporters", "teleporters"),
-            "talkers.json" => (null, "/admin/data?tab=talkers", "talkers"),
-            _ => (null, "/admin/changes", "changes"),
+            "monsters.json" => (null, "/admin/studio/monsters", "monsters"),
+            "levels.json" => (null, "/admin/studio/levels", "levels"),
+            "goals.json" => (null, "/admin/studio/goals", "goals"),
+            "teleporters.json" => (null, "/admin/studio/teleporters", "teleporters"),
+            "talkers.json" => (null, "/admin/studio/talkers", "talkers"),
+            _ => (null, "/admin/studio/changes", "changes"),
         };
     }
 }

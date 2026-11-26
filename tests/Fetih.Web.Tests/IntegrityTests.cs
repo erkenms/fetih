@@ -81,15 +81,15 @@ public class IntegrityTests(WebFixture web, ITestOutputHelper output)
             Assert.Contains(report.Problems, p => p.File == "spawns.json" && p.Category == "missing_map");
             Assert.Contains(report.Problems, p => p.File == "bosses.json" && p.Category == "missing_monster");
             Assert.Contains(report.Problems, p => p.File == "bosses.json" && p.Category == "missing_map");
-            Assert.Contains(report.Problems, p => p.File == "drops.json" && p.Category == "missing_item" && p.EditorPath == "/admin/changes");
+            Assert.Contains(report.Problems, p => p.File == "drops.json" && p.Category == "missing_item" && p.EditorPath == "/admin/studio/changes");
             Assert.Contains(report.Problems, p => p.File == "portals.json" && p.Category == "unwalkable_cell");
             Assert.Contains(report.Problems, p => p.File == "portals.json" && p.Category == "missing_map");
-            Assert.Contains(report.Problems, p => p.File == "teleporters.json" && p.Category == "unwalkable_cell" && p.EditorPath == "/admin/data?tab=teleporters");
+            Assert.Contains(report.Problems, p => p.File == "teleporters.json" && p.Category == "unwalkable_cell" && p.EditorPath == "/admin/studio/teleporters");
             Assert.Contains(report.Problems, p => p.File == "teleporters.json" && p.Category == "missing_map");
             Assert.Contains(report.Problems, p => p.File == "teleporters.json" && p.Category == "missing_npc");
             Assert.Contains(report.Problems, p => p.File == "talkers.json" && p.Category == "missing_npc" && p.Entry == 1);
             Assert.DoesNotContain(report.Problems, p => p.File == "npcs.json");
-            Assert.Contains(report.Problems, p => p.File == "talkers.json" && p.Category == "missing_npc" && p.EditorPath == "/admin/data?tab=talkers");
+            Assert.Contains(report.Problems, p => p.File == "talkers.json" && p.Category == "missing_npc" && p.EditorPath == "/admin/studio/talkers");
         }
         finally
         {
