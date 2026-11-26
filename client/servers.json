@@ -1,20 +1,20 @@
 {
   "group": {
     "flashName": "Group1",
-    "flashIcon": "Group13.swf"
+    "flashIcon": "Group7.swf"
   },
   "realms": [
     {
       "name": "Altay",
       "port": 9960,
       "flashName": "Altay",
-      "flashIcon": "Group2/server3.swf"
+      "flashIcon": "Group1/server2.swf"
     },
     {
       "name": "Mihenk",
       "port": 9960,
       "flashName": "Mihenk",
-      "flashIcon": "Group2/server4.swf"
+      "flashIcon": "Group2/server10.swf"
     }
   ]
 }

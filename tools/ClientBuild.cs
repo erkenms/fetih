@@ -119,6 +119,12 @@ static class ClientBuild
             if (!files.ContainsKey(file))
                 return Fail($"patches.json: {file} isn't in the client");
 
+        var flashBitmaps = JsonSerializer.Deserialize<List<FlashBitmap>>(File.ReadAllText(Path.Combine(clientInputsDir, "flash.json")), jsonOptions)!;
+        var flashByFile = flashBitmaps.GroupBy(b => b.File.Replace('\\', '/'), Comparer).ToDictionary(g => g.Key, g => g.ToList(), Comparer);
+        foreach (var file in flashByFile.Keys)
+            if (!files.ContainsKey(file))
+                return Fail($"flash.json: {file} isn't in the client");
+
         const string itemTypeName = "ini/itemtype.dat";
         var itemTypeEdits = JsonSerializer.Deserialize<List<ItemTypeEdit>>(File.ReadAllText(Path.Combine(clientInputsDir, "itemtype.json")), jsonOptions)!;
         if (itemTypeEdits.Count > 0 && !files.ContainsKey(itemTypeName))
@@ -162,6 +168,13 @@ static class ClientBuild
                 if (error != null)
                     return Fail($"itemtype.json: {error}");
                 bytes = edited;
+            }
+            if (flashByFile.TryGetValue(key, out var fileBitmaps))
+            {
+                var (swapped, error) = FlashBitmap.ApplyAll(bytes ?? File.ReadAllBytes(from), fileBitmaps, clientInputsDir);
+                if (error != null)
+                    return Fail($"flash.json: {key}: {error}");
+                bytes = swapped;
             }
             if (patchesByFile.TryGetValue(key, out var filePatches))
             {
@@ -208,7 +221,7 @@ static class ClientBuild
         }
 
         Console.WriteLine($"{output}: {files.Count} files ({added} added, {replaced} replaced, {deleted} deleted, " +
-            $"{patches.Count} byte patches, {itemTypeEdits.Count} itemtype edits, {signed.Count} signed again); {written} written, {stale} stale removed");
+            $"{patches.Count} byte patches, {itemTypeEdits.Count} itemtype edits, {flashBitmaps.Count} flash bitmaps, {signed.Count} signed again); {written} written, {stale} stale removed");
         return 0;
     }
 
@@ -459,6 +472,105 @@ static class ClientBuild
             }
 
             return (ItemTypeCipher.Encrypt(Encoding.Latin1.GetBytes(string.Join("\r\n", lines))), null);
+        }
+    }
+
+    sealed record FlashBitmap(string File, int Id, string Png, string Reason)
+    {
+        const int DefineBitsLossless2 = 36, End = 0;
+
+        // SWF: "FWS" or "CWS" (zlib after the 8-byte header), version, file length. The body
+        // opens with the frame rect (5-bit field size, then four fields), frame rate and
+        // count, then tags: u16 code << 6 | length, length 63 meaning a u32 length follows.
+        // DefineBitsLossless2 is id u16, format u8 (5 = 32-bit), width u16, height u16, then
+        // zlib of premultiplied ARGB rows.
+        public static (byte[]? Bytes, string? Error) ApplyAll(byte[] swf, List<FlashBitmap> swaps, string inputsDir)
+        {
+            if (swf.Length < 8 || swf[1] != 'W' || swf[2] != 'S' || swf[0] is not ((byte)'F' or (byte)'C'))
+                return (null, "not a SWF file");
+            byte[] body;
+            if (swf[0] == 'C')
+            {
+                using var inflate = new ZLibStream(new MemoryStream(swf, 8, swf.Length - 8), CompressionMode.Decompress);
+                var inflated = new MemoryStream();
+                inflate.CopyTo(inflated);
+                body = inflated.ToArray();
+            }
+            else
+                body = swf[8..];
+
+            var byId = swaps.ToDictionary(s => s.Id);
+            var output = new MemoryStream();
+            var at = ((5 + 4 * (body[0] >> 3) + 7) >> 3) + 4;
+            output.Write(body, 0, at);
+            var done = new HashSet<int>();
+            while (at < body.Length)
+            {
+                int start = at, header = BitConverter.ToUInt16(body, at), code = header >> 6, length = header & 63;
+                at += 2;
+                if (length == 63)
+                {
+                    length = BitConverter.ToInt32(body, at);
+                    at += 4;
+                }
+                var tag = body.AsSpan(at, length);
+                at += length;
+                if (code == DefineBitsLossless2 && byId.TryGetValue(BitConverter.ToUInt16(tag), out var swap))
+                {
+                    var (replaced, error) = swap.Replace(tag, inputsDir);
+                    if (error != null)
+                        return (null, $"bitmap {swap.Id} ({swap.Reason}): {error}");
+                    output.Write(BitConverter.GetBytes((ushort)(DefineBitsLossless2 << 6 | 63)));
+                    output.Write(BitConverter.GetBytes(replaced!.Length));
+                    output.Write(replaced);
+                    done.Add(swap.Id);
+                }
+                else
+                    output.Write(body, start, at - start);
+                if (code == End)
+                    break;
+            }
+            if (swaps.FirstOrDefault(s => !done.Contains(s.Id)) is { } missing)
+                return (null, $"bitmap {missing.Id} ({missing.Reason}): no such lossless bitmap");
+
+            var result = new MemoryStream();
+            result.Write(swf, 0, 4);
+            result.Write(BitConverter.GetBytes((uint)(output.Length + 8)));
+            if (swf[0] == 'C')
+                using (var deflate = new ZLibStream(result, CompressionLevel.SmallestSize, leaveOpen: true))
+                    output.WriteTo(deflate);
+            else
+                output.WriteTo(result);
+            return (result.ToArray(), null);
+        }
+
+        (byte[]? Tag, string? Error) Replace(ReadOnlySpan<byte> tag, string inputsDir)
+        {
+            int format = tag[2], width = BitConverter.ToUInt16(tag[3..]), height = BitConverter.ToUInt16(tag[5..]);
+            if (format != 5)
+                return (null, $"expected a 32-bit bitmap, found format {format}");
+            using var png = SkiaSharp.SKBitmap.Decode(Path.Combine(inputsDir, this.Png));
+            if (png == null)
+                return (null, $"can't read {this.Png}");
+            if (png.Width != width || png.Height != height)
+                return (null, $"{this.Png} is {png.Width}x{png.Height}, the client's bitmap is {width}x{height}");
+
+            var argb = new byte[width * height * 4];
+            for (var y = 0; y < height; y++)
+                for (var x = 0; x < width; x++)
+                {
+                    var c = png.GetPixel(x, y);
+                    var i = (y * width + x) * 4;
+                    argb[i] = c.Alpha;
+                    argb[i + 1] = (byte)(c.Red * c.Alpha / 255);
+                    argb[i + 2] = (byte)(c.Green * c.Alpha / 255);
+                    argb[i + 3] = (byte)(c.Blue * c.Alpha / 255);
+                }
+            var packed = new MemoryStream();
+            packed.Write(tag[..7]);
+            using (var deflate = new ZLibStream(packed, CompressionLevel.SmallestSize, leaveOpen: true))
+                deflate.Write(argb);
+            return (packed.ToArray(), null);
         }
     }
 

@@ -1,0 +1,17 @@
+// Pictures swapped into the client's Flash files: each entry replaces one lossless bitmap
+// (DefineBitsLossless2, by character ID) with a PNG from this folder. The client's bitmap
+// must exist with the PNG's size, or the build fails.
+[
+  {
+    "file": "data/main/flash/Group7.swf",
+    "id": 1,
+    "png": "flash/Group7-label.png",
+    "reason": "The realm group button reads TABİAT instead of NATURE (normal state): Baskerville Bold, 16 px capital and 12.5 px small caps, colour 60 21 00, 2 px right of centre to sit in the frame."
+  },
+  {
+    "file": "data/main/flash/Group7.swf",
+    "id": 6,
+    "png": "flash/Group7-label-hover.png",
+    "reason": "The same label in the hover colour, ff 05 03."
+  }
+]

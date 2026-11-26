@@ -23,9 +23,10 @@
 //
 // Client build: mirrors the base client, minus client/delete.txt, plus client/files/,
 // generates Server.dat from client/servers.json with the given IP, edits ini/itemtype.dat
-// from client/itemtype.json, applies byte patches from client/patches.json, swaps the RSA
-// modulus in Conquer.exe for client/rsa.pem (committed in git so every build signs with the
-// same key), and re-signs the RSA-signed .dat files. Unchanged files are skipped.
+// from client/itemtype.json, swaps Flash bitmaps listed in client/flash.json, applies byte
+// patches from client/patches.json, swaps the RSA modulus in Conquer.exe for client/rsa.pem
+// (committed in git so every build signs with the same key), and re-signs the RSA-signed .dat
+// files. Unchanged files are skipped.
 #:project ../comet/src/Comet.Game/Comet.Game.csproj
 #:package StbImageSharp@2.30.15
 #:package SkiaSharp@3.119.1
