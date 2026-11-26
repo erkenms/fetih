@@ -1,0 +1,81 @@
+@page
+@model Fetih.Web.Pages.Admin.Catalogs.Spells.IndexModel
+@{
+    ViewData["Title"] = "Büyüler";
+}
+
+<panel title="Büyüler" icon="1088000">
+    <form method="get" class="form-row">
+        <div><label for="q">Ad veya numara</label><input id="q" type="search" name="q" value="@Model.Query"></div>
+        <div>
+            <label for="sort">Grup</label>
+            <select id="sort" name="sort">
+                <option value="">Hepsi</option>
+                @foreach (var sort in Model.Sorts)
+                {
+                    <option value="@sort" selected="@(sort == Model.Sort)">@sort</option>
+                }
+            </select>
+        </div>
+        <div>
+            <label class="check"><input type="checkbox" name="xpOnly" value="true" checked="@Model.XpOnly"> Sadece XP</label>
+        </div>
+        <button>Ara</button>
+    </form>
+    <div class="scroll">
+        <table class="grid">
+            <thead>
+            <tr><th></th><th>No</th><th>Ad</th><th>Grup</th><th>Seviyeler</th><th>Gereken seviye</th><th></th></tr>
+            </thead>
+            <tbody>
+            @foreach (var s in Model.Spells)
+            {
+                <tr>
+                    <td>@if (s.Icon != null) { <img src="/assets/@s.Icon" alt="" width="32" height="32"> }</td>
+                    <td>@s.Type</td>
+                    <td>
+                        <details>
+                            <summary>@s.Name</summary>
+                            <table class="grid">
+                                <thead><tr><th>Sv.</th><th>Gereken sv.</th><th>MP</th><th>SP</th><th>Güç</th><th>Yüzde</th><th>Menzil</th><th>Mesafe</th><th>Gecikme (ms)</th><th>Gereken XP</th></tr></thead>
+                                <tbody>
+                                @foreach (var l in s.Levels)
+                                {
+                                    <tr>
+                                        <td>@l.Level</td>
+                                        <td>@l.NeedLevel</td>
+                                        <td>@l.UseMana</td>
+                                        <td>@l.UseStamina</td>
+                                        <td>@ItemLabels.SpellPower(l.Power)</td>
+                                        <td>@l.Percent</td>
+                                        <td>@l.Range</td>
+                                        <td>@l.Distance</td>
+                                        <td>@l.DelayMilliseconds</td>
+                                        <td>@l.NeedExperience.ToString("N0")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </details>
+                    </td>
+                    <td>@s.Sort</td>
+                    <td>@s.Levels.Length</td>
+                    <td>@(s.Levels.Length > 0 ? s.Levels.Min(l => l.NeedLevel) : 0)</td>
+                    <td>
+                        @if (s.UseXp == 1) { <span class="tag info">XP</span> }
+                        @if (s.Ground) { <span class="tag">Alan</span> }
+                        @if (s.Multi) { <span class="tag">Çoklu</span> }
+                        @if (s.Crime) { <span class="tag bad">Suç</span> }
+                    </td>
+                </tr>
+            }
+            @if (Model.Spells.Length == 0)
+            {
+                <tr><td colspan="7" class="empty">Büyü bulunamadı.</td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <p class="muted">@Model.Total büyü</p>
+    <pager page="@Model.PageNo" pages="@Model.Pages" />
+</panel>

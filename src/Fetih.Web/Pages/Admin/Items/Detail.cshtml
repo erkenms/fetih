@@ -1,0 +1,32 @@
+@page "/admin/items/{id:long}"
+@model Fetih.Web.Pages.Admin.Items.DetailModel
+@{
+    ViewData["Title"] = Model.Item.Name;
+}
+
+<panel title="@Model.Item.Name" icon="1088000">
+    <p>
+        <item-icon item="@Model.Item.Id" />
+        @if (!string.IsNullOrEmpty(Model.Item.GroundIcon))
+        {
+            <img src="/assets/@Model.Item.GroundIcon" alt="" width="32" height="32" style="vertical-align:middle">
+        }
+        <b>#@Model.Item.Id</b>
+        @if (!string.IsNullOrEmpty(Model.Item.Description))
+        {
+            <br><span class="muted">@Model.Item.Description</span>
+        }
+    </p>
+    <table class="grid">
+        <tbody>
+        @foreach (var (label, value) in Model.Rows)
+        {
+            <tr><td>@label</td><td>@value</td></tr>
+        }
+        </tbody>
+    </table>
+    <p>
+        <a href="@Grafana.ItemsUrl(Model.Item.Id)">» Eşya geçmişi (Grafana)</a>
+        · <a asp-page="Index">« Eşyalar</a>
+    </p>
+</panel>

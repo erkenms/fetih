@@ -1,0 +1,57 @@
+@page
+@model Fetih.Web.Pages.Admin.Items.IndexModel
+@using Fetih.Web.Features.Items
+@{
+    ViewData["Title"] = "Eşyalar";
+}
+
+<panel title="Eşyalar" icon="1088000">
+    @if (!Model.AssetsAvailable)
+    {
+        <div class="alert inline">Eşya verisi (items.json) bulunamadı.</div>
+    }
+    <form method="get" class="form-row">
+        <div><label for="q">Ad veya numara</label><input id="q" type="search" name="q" value="@Model.Query"></div>
+        <div>
+            <label for="category">Tür</label>
+            <select id="category" name="category">
+                <option value="">Hepsi</option>
+                @foreach (var (category, text) in ItemLabels.Categories)
+                {
+                    <option value="@category" selected="@(Model.Category == category)">@text</option>
+                }
+            </select>
+        </div>
+        <div><label for="minLevel">En düşük seviye</label><input id="minLevel" type="number" min="0" max="255" name="minLevel" value="@Model.MinLevel"></div>
+        <div><label for="maxLevel">En yüksek seviye</label><input id="maxLevel" type="number" min="0" max="255" name="maxLevel" value="@Model.MaxLevel"></div>
+        <button>Ara</button>
+    </form>
+    <table class="grid">
+        <thead>
+        <tr><th></th><th>No</th><th>Ad</th><th>Tür</th><th>Kalite</th><th>Seviye</th><th>Fiyat</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model.Items)
+        {
+            <tr>
+                <td><item-icon item="@item.Id" /></td>
+                <td>@item.Id</td>
+                <td><a asp-page="Detail" asp-route-id="@item.Id">@item.Name</a></td>
+                <td>@ItemLabels.Category(item.Category) <span class="muted">@item.Type</span></td>
+                <td>@(item.Quality != ItemQuality.None ? ItemLabels.Quality(item.Quality) : "")</td>
+                <td>@(item.RequiredLevel > 0 ? item.RequiredLevel : "")</td>
+                <td>
+                    @if (item.Price > 0) { <span>@item.Price.ToString("N0") Gümüş</span> }
+                    @if (item.EmoneyPrice > 0) { <span class="muted">@item.EmoneyPrice.ToString("N0") CP</span> }
+                </td>
+            </tr>
+        }
+        @if (Model.Items.Length == 0)
+        {
+            <tr><td colspan="7" class="empty">Eşya bulunamadı.</td></tr>
+        }
+        </tbody>
+    </table>
+    <p class="muted">@Model.Total eşya</p>
+    <pager page="@Model.PageNo" pages="@Model.Pages" />
+</panel>

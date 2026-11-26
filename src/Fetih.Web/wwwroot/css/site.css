@@ -482,12 +482,15 @@ dialog > form {
   left: 36px;
   top: 0;
   min-width: 160px;
-  padding: 4px 6px;
-  background: rgb(10 6 3 / 92%);
-  border: 1px solid #6b4a26;
-  color: #f5f0e0;
-  font: 11px Verdana, sans-serif;
-  white-space: nowrap;
+  max-width: 300px;
+  width: max-content;
+  padding: 4px 8px;
+  background: rgb(0 0 0 / 78%);
+  border: 1px solid #c8c8c8;
+  color: #fff;
+  font: 12px/1.35 Tahoma, Verdana, Arial, sans-serif;
+  white-space: normal;
+  pointer-events: none;
 }
 
 .item-icon:hover > .tip {
@@ -495,7 +498,32 @@ dialog > form {
 }
 
 .item-icon .tip b {
-  color: #fff;
+  font-weight: bold;
+}
+
+.item-icon .tip .tip-desc {
+  margin-top: 2px;
+  white-space: pre-wrap;
+}
+
+/* Collapsible sections (shops, spell levels) */
+
+details {
+  margin: 0 0 4px;
+}
+
+details > summary {
+  cursor: pointer;
+  padding: 3px 4px;
+}
+
+details > summary:hover {
+  background: rgb(120 80 30 / 13%);
+}
+
+details > table.grid,
+details > .scroll {
+  margin-top: 4px;
 }
 
 /* Pickers: a search box and the list the server sends back */

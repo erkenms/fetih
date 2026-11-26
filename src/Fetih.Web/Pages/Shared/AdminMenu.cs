@@ -40,7 +40,6 @@ public static class AdminMenu
             new("Eşyalar", "/admin/items", Permission.ViewCatalogs),
             new("Büyüler", "/admin/catalogs/spells", Permission.ViewCatalogs),
             new("Dükkânlar", "/admin/catalogs/shops", Permission.ViewCatalogs),
-            new("Harita kataloğu", "/admin/catalogs/maps", Permission.ViewCatalogs),
         ]),
     ];
 

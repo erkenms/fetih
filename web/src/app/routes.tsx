@@ -2,7 +2,6 @@ import type { FeatureRoute } from './feature'
 import { auditRoute } from '../features/audit'
 import { catalogRoutes } from '../features/catalogs'
 import { economyRoute } from '../features/economy'
-import { itemsRoute } from '../features/items'
 import { logsRoute } from '../features/logs'
 import { itemHistoryRoutes } from '../features/itemhistory'
 import { chatRoute } from '../features/chat'
@@ -15,7 +14,6 @@ import { liveRoutes } from '../features/live'
 export const featureRoutes: FeatureRoute[] = [
   economyRoute,
   auditRoute,
-  itemsRoute,
   ...catalogRoutes.filter((r) => r.path !== 'catalogs/monsters' && r.path !== 'catalogs/faces'),
   logsRoute,
   ...itemHistoryRoutes,

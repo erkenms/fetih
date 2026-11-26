@@ -1,0 +1,59 @@
+@page
+@model Fetih.Web.Pages.Admin.Catalogs.Shops.IndexModel
+@{
+    ViewData["Title"] = "Dükkânlar";
+    bool autoOpen = !string.IsNullOrWhiteSpace(Model.Query);
+}
+
+<panel title="Dükkânlar" icon="1088000">
+    <form method="get" class="form-row">
+        <div><label for="q">Dükkân, eşya adı veya numara</label><input id="q" type="search" name="q" value="@Model.Query"></div>
+        <div>
+            <label for="source">Kaynak</label>
+            <select id="source" name="source">
+                <option value="">Hepsi</option>
+                @foreach (var source in Model.Sources)
+                {
+                    <option value="@source" selected="@(source == Model.Source)">@source</option>
+                }
+            </select>
+        </div>
+        <button>Ara</button>
+    </form>
+    @foreach (var shop in Model.Shops)
+    {
+        <details open="@autoOpen">
+            <summary>
+                <b>@shop.Name</b>
+                <span class="muted">
+                    @shop.Source
+                    @(shop.NpcId is { } npc ? "#" + npc : "")
+                    @(shop.MapId is { } map ? $"· Harita #{map} ({shop.X}, {shop.Y})" : "")
+                    · @ItemLabels.Currency(shop.Currency) · @shop.ItemCount eşya
+                </span>
+            </summary>
+            <table class="grid">
+                <thead><tr><th></th><th>No</th><th>Ad</th><th>Fiyat</th><th>Kategori</th><th>Açıklama</th></tr></thead>
+                <tbody>
+                @foreach (var i in shop.Items)
+                {
+                    <tr>
+                        <td><item-icon item="@i.ItemId" /></td>
+                        <td><a asp-page="/Admin/Items/Detail" asp-route-id="@i.ItemId">@i.ItemId</a></td>
+                        <td>@(i.ItemName ?? "—")</td>
+                        <td>@(i.Price is { } price ? $"{price:N0} {ItemLabels.Currency(i.Currency)}" : "—")</td>
+                        <td>@i.Category @foreach (var tag in i.Tags) { <span class="tag">@tag</span> }</td>
+                        <td class="muted">@i.Description</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </details>
+    }
+    @if (Model.Shops.Length == 0)
+    {
+        <p class="empty">Dükkân bulunamadı.</p>
+    }
+    <p class="muted">@Model.Total dükkân</p>
+    <pager page="@Model.PageNo" pages="@Model.Pages" />
+</panel>
