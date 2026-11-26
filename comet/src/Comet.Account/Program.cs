@@ -6,6 +6,7 @@
     using System.Threading.Tasks;
     using Comet.Account.Database;
     using Comet.Account.Database.Repositories;
+    using Comet.Core.Database;
     using Comet.Core.Logging;
     using Comet.Network.Sockets;
     using Serilog;
@@ -42,6 +43,11 @@
 
             Log.Information("Initializing server...");
             ServerDbContext.Configuration = config.Database;
+            if (!await Program.MigrateAsync(config.Database))
+            {
+                Log.CloseAndFlush();
+                return 1;
+            }
             if (!ServerDbContext.Ping())
             {
                 Log.Error("Invalid database configuration");
@@ -74,6 +80,22 @@
             
             await serverTask;
             return 0;
+        }
+
+        // Brings the account schema up to date before anything else reads it
+        private static async Task<bool> MigrateAsync(ServerConfiguration.DatabaseConfiguration db)
+        {
+            try
+            {
+                await SchemaMigrator.ApplyAsync(db.Hostname, db.Schema, db.Username, db.Password,
+                    SchemaMigrator.Load(typeof(Program).Assembly));
+                return true;
+            }
+            catch (MigrationException e)
+            {
+                Log.Error("Schema migration failed: {Message}", e.Message);
+                return false;
+            }
         }
 
         // Accounts and passwords are only set here: the SRP6 verifier can't be computed in SQL.

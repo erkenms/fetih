@@ -15,6 +15,8 @@ COPY comet/src/Comet.Game/Comet.Game.csproj comet/src/Comet.Game/
 COPY comet/src/Comet.Web/Comet.Web.csproj comet/src/Comet.Web/
 RUN dotnet restore comet/src/Comet.Web/Comet.Web.csproj
 COPY comet/src/ comet/src/
+# The schema baseline and migrations, embedded in the account and game servers
+COPY comet/sql/ comet/sql/
 RUN dotnet publish comet/src/Comet.Account -c Release --no-restore -o /out/account \
  && dotnet publish comet/src/Comet.Game -c Release --no-restore -o /out/game \
  && dotnet publish comet/src/Comet.Web -c Release --no-restore -o /out/web

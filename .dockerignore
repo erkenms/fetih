@@ -10,7 +10,7 @@ tools
 .git
 .github
 .claude
-comet/sql
+comet/sql/data
 comet/tests
 web/assets
 web/dist

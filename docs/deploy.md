@@ -42,8 +42,8 @@ cp deploy/env.example .env               # then set FETIH_DOMAIN and the passwor
 sudo podman compose --profile deploy up -d --build
 ```
 
-MariaDB creates the schemas from `comet/sql/*.sql` on its first start (into
-`comet/sql/data`). Then point the realm at this machine: the account server hands the
+MariaDB starts empty (its files are in `comet/sql/data`); the account and game servers create
+and migrate their own schemas when they start. Then point the realm at this machine: the account server hands the
 client `GameIPAddress`, and reaches the game's RPC at `RpcIPAddress`.
 
 ```bash
@@ -81,9 +81,9 @@ git pull
 sudo podman compose --profile deploy up -d --build
 ```
 
-A new table or column goes into the running database with `IF NOT EXISTS` statements
-(`sudo podman exec -i fetih-db mariadb -uroot -p<password>`), as in development. Never pipe
-`comet/sql/*.sql` in: they drop the live tables.
+A new table or column is a migration in `comet/sql/migrations/<account|game>/`: the server
+applies it when it starts, so `git pull` and rebuilding is all it takes. Never pipe SQL files
+into the database by hand.
 
 Studio edits made on the server are uncommitted changes in its checkout: commit them there,
 or `git stash` them before a `git pull` that touches the same files.

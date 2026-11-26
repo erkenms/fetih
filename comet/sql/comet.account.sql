@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `comet.account` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
-USE `comet.account`;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -12,7 +10,6 @@ USE `comet.account`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-DROP TABLE IF EXISTS `account`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `account` (
@@ -47,7 +44,6 @@ INSERT INTO `account` VALUES (1,'test','E662B6D5DDED2A085435284DA8C0269EBF6AA7AF
 /*!40000 ALTER TABLE `account` ENABLE KEYS */;
 UNLOCK TABLES;
 
-DROP TABLE IF EXISTS `account_authority`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `account_authority` (
@@ -65,7 +61,6 @@ INSERT INTO `account_authority` VALUES (5,'Administrator'),(4,'Project Manager')
 /*!40000 ALTER TABLE `account_authority` ENABLE KEYS */;
 UNLOCK TABLES;
 
-DROP TABLE IF EXISTS `account_status`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `account_status` (
@@ -83,7 +78,6 @@ INSERT INTO `account_status` VALUES (2,'Activated'),(5,'Banned'),(3,'Limited'),(
 /*!40000 ALTER TABLE `account_status` ENABLE KEYS */;
 UNLOCK TABLES;
 
-DROP TABLE IF EXISTS `logins`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `logins` (
@@ -101,7 +95,6 @@ LOCK TABLES `logins` WRITE;
 /*!40000 ALTER TABLE `logins` ENABLE KEYS */;
 UNLOCK TABLES;
 
-DROP TABLE IF EXISTS `realm`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `realm` (

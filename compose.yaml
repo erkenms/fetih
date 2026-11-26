@@ -14,9 +14,6 @@ services:
       - "127.0.0.1:3306:3306"
     volumes:
       - ./comet/sql/data:/var/lib/mysql
-      # Auto-seed schemas on first run
-      - ./comet/sql/comet.account.sql:/docker-entrypoint-initdb.d/01-account.sql:ro
-      - ./comet/sql/comet.game.sql:/docker-entrypoint-initdb.d/02-game.sql:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

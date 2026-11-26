@@ -438,8 +438,8 @@ namespace Comet.Integration.Tests
 
         private async Task StartAsync()
         {
-            await this.LoadSchemaAsync("comet.account.sql", "comet.account", this.AccountSchema);
-            await this.LoadSchemaAsync("comet.game.sql", "comet.game", this.GameSchema);
+            await this.LoadSchemaAsync("account", this.AccountSchema);
+            await this.LoadSchemaAsync("game", this.GameSchema);
             this.AccountPort = FreePort();
             this.GamePort = FreePort();
             int rpcPort = this.RpcPort = FreePort();
@@ -719,14 +719,12 @@ namespace Comet.Integration.Tests
                 await new MySqlCommand($"DROP DATABASE IF EXISTS `{schema}`", db).ExecuteNonQueryAsync();
         }
 
-        private async Task LoadSchemaAsync(string file, string defaultName, string schema)
-        {
-            var sql = await File.ReadAllTextAsync(Path.Combine(this.RepoRoot, "sql", file));
-            sql = sql.Replace($"`{defaultName}`", $"`{schema}`");
-            await using var db = new MySqlConnection(this.ConnectionString());
-            await db.OpenAsync();
-            await new MySqlCommand(sql, db).ExecuteNonQueryAsync();
-        }
+        private string SqlRoot() => Path.Combine(this.RepoRoot, "sql");
+
+        private Task LoadSchemaAsync(string server, string schema) =>
+            Comet.Core.Database.SchemaMigrator.ApplyAsync(DbHost, schema, DbUser, DbPassword,
+                Comet.Core.Database.SchemaMigrator.LoadFromDirectory(
+                Path.Combine(this.SqlRoot(), $"comet.{server}.sql"), Path.Combine(this.SqlRoot(), "migrations", server)));
 
         private static void CopyDirectory(string from, string to)
         {

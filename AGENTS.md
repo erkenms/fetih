@@ -42,11 +42,12 @@ environment variables (`COMET_GAME_Database__Hostname=db`).
   (`--GameNetwork:Port=... --RpcNetwork:Port=...`) and stop only the PID you started. Never
   `pkill -f Comet.Game`. Starting the game server also runs startup jobs (like the arena season
   catch-up) against the dev database.
-- A new table or column goes in `comet/sql/*.sql` **and** into the running `fetih-db`
-  container (root/password) with `CREATE TABLE IF NOT EXISTS` / `ADD COLUMN IF NOT EXISTS`.
-  The container seeds from the .sql files only on its first run.
-- Never pipe the .sql files into the container: they start with `USE` and `DROP TABLE` for the
-  live schemas. That wiped every account and character once (2026-11-23). To compare
+- A new table or column is a migration: `comet/sql/migrations/<game|account>/NNNN-name.sql`,
+  applied by the server at startup and recorded in `schema_migrations`. Never edit an applied
+  migration or the baseline `comet.*.sql` (startup refuses); add a new migration. Don't
+  `ALTER` the dev database by hand.
+- Never pipe SQL files into the container by hand (an old baseline with `USE` and `DROP TABLE`
+  wiped every account and character once, 2026-11-23). To compare
   schemas, read `information_schema` or `SHOW CREATE TABLE`.
 
 ## Finding out how the game behaves

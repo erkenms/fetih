@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `comet.game` /*!40100 DEFAULT CHARACTER SET utf8 COLLATE utf8_bin */;
-USE `comet.game`;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -12,7 +10,6 @@ USE `comet.game`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-DROP TABLE IF EXISTS `character`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;
 CREATE TABLE `character` (
@@ -83,7 +80,6 @@ UNLOCK TABLES;
 -- the count of a stackable item. PlusProgress is the composition points toward the next
 -- plus. A locked item can only go to trade partners; UnlocksAt is when a requested unlock
 -- takes effect.
-DROP TABLE IF EXISTS `item`;
 CREATE TABLE `item` (
   `ItemID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `CharacterID` int(10) unsigned NOT NULL,
@@ -115,14 +111,12 @@ CREATE TABLE `item` (
 
 -- A friendship is a row for each of the two characters. An enemy is someone who killed
 -- the character, one way only.
-DROP TABLE IF EXISTS `friend`;
 CREATE TABLE `friend` (
   `CharacterID` int(10) unsigned NOT NULL,
   `FriendID` int(10) unsigned NOT NULL,
   PRIMARY KEY (`CharacterID`,`FriendID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `enemy`;
 CREATE TABLE `enemy` (
   `CharacterID` int(10) unsigned NOT NULL,
   `EnemyID` int(10) unsigned NOT NULL,
@@ -133,7 +127,6 @@ CREATE TABLE `enemy` (
 
 -- A partnership is a row for each of the two characters, both with the same Since. It is
 -- a trial for its first three days.
-DROP TABLE IF EXISTS `trade_partner`;
 CREATE TABLE `trade_partner` (
   `CharacterID` int(10) unsigned NOT NULL,
   `PartnerID` int(10) unsigned NOT NULL,
@@ -144,7 +137,6 @@ CREATE TABLE `trade_partner` (
 -- Spells a character learned, by magic type, and weapon proficiencies, by item type / 1000
 -- (410 blade). Experience counts toward the next level; OldLevel is a spell's level before a
 -- rebirth put it back to 0.
-DROP TABLE IF EXISTS `magic`;
 CREATE TABLE `magic` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Type` smallint(5) unsigned NOT NULL,
@@ -154,7 +146,6 @@ CREATE TABLE `magic` (
   PRIMARY KEY (`CharacterID`,`Type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `proficiency`;
 CREATE TABLE `proficiency` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Type` smallint(5) unsigned NOT NULL,
@@ -166,7 +157,6 @@ CREATE TABLE `proficiency` (
 -- Guilds. A character is in one guild at most. Relations are one row per side: Kind 1 is
 -- an ally (both guilds have a row), 2 an enemy (only the guild that named it). Dates are
 -- YYYYMMDD numbers, as the client shows them.
-DROP TABLE IF EXISTS `syndicate`;
 CREATE TABLE `syndicate` (
   `SyndicateID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Name` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -185,7 +175,6 @@ CREATE TABLE `syndicate` (
   UNIQUE KEY `Name` (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `syndicate_member`;
 CREATE TABLE `syndicate_member` (
   `CharacterID` int(10) unsigned NOT NULL,
   `SyndicateID` int(10) unsigned NOT NULL,
@@ -197,7 +186,6 @@ CREATE TABLE `syndicate_member` (
   KEY `SyndicateID` (`SyndicateID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `syndicate_relation`;
 CREATE TABLE `syndicate_relation` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `TargetID` int(10) unsigned NOT NULL,
@@ -207,7 +195,6 @@ CREATE TABLE `syndicate_relation` (
 
 -- Unlocked guild arsenals (Type 0..7: headgear, armor, weapon, ring, boots, necklace, fan,
 -- tower). EnhancementExpiration is a YYYYMMDD date, or 0 when not enhanced.
-DROP TABLE IF EXISTS `syndicate_totem_pole`;
 CREATE TABLE `syndicate_totem_pole` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `Type` tinyint(3) unsigned NOT NULL,
@@ -217,7 +204,6 @@ CREATE TABLE `syndicate_totem_pole` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Equipment inscribed in a guild's arsenals. The item stays with its owner.
-DROP TABLE IF EXISTS `syndicate_totem`;
 CREATE TABLE `syndicate_totem` (
   `ItemID` int(10) unsigned NOT NULL,
   `SyndicateID` int(10) unsigned NOT NULL,
@@ -230,7 +216,6 @@ CREATE TABLE `syndicate_totem` (
 
 -- Clans. A character is in one clan at most. Relations as for guilds: Kind 1 is an ally
 -- (both clans have a row), 2 an enemy (only the clan that named it).
-DROP TABLE IF EXISTS `family`;
 CREATE TABLE `family` (
   `FamilyID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Name` varchar(15) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
@@ -243,7 +228,6 @@ CREATE TABLE `family` (
   UNIQUE KEY `Name` (`Name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `family_member`;
 CREATE TABLE `family_member` (
   `CharacterID` int(10) unsigned NOT NULL,
   `FamilyID` int(10) unsigned NOT NULL,
@@ -254,7 +238,6 @@ CREATE TABLE `family_member` (
   KEY `FamilyID` (`FamilyID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `family_relation`;
 CREATE TABLE `family_relation` (
   `FamilyID` int(10) unsigned NOT NULL,
   `TargetID` int(10) unsigned NOT NULL,
@@ -264,7 +247,6 @@ CREATE TABLE `family_relation` (
 
 -- Clan War: which clan occupies each war map (keyed by the map's banner NPC), for how many
 -- days, and whether its leader claimed today's revenue.
-DROP TABLE IF EXISTS `family_occupy`;
 CREATE TABLE `family_occupy` (
   `NpcID` int(10) unsigned NOT NULL,
   `FamilyID` int(10) unsigned NOT NULL,
@@ -274,7 +256,6 @@ CREATE TABLE `family_occupy` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Clan War sign-ups for the next war: one map per clan.
-DROP TABLE IF EXISTS `family_war_signup`;
 CREATE TABLE `family_war_signup` (
   `FamilyID` int(10) unsigned NOT NULL,
   `NpcID` int(10) unsigned NOT NULL,
@@ -285,7 +266,6 @@ CREATE TABLE `family_war_signup` (
 -- character. Group 0-3 is the level group (under 100, 100-119, 120-129, 130+), Rank 1-3 the
 -- podium and 4 the rest of the final eight. Unclaimed rows go when the group's next
 -- tournament opens.
-DROP TABLE IF EXISTS `elite_pk_reward`;
 CREATE TABLE `elite_pk_reward` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Group` tinyint(3) unsigned NOT NULL,
@@ -299,7 +279,6 @@ CREATE TABLE `elite_pk_reward` (
 -- by the team's leader at the event's manager: Group 0-3 as in elite_pk_reward, Rank 1-3 the
 -- podium and 4 the rest of the final eight. Unclaimed rows go when the group's next
 -- tournament of the same event opens.
-DROP TABLE IF EXISTS `team_pk_reward`;
 CREATE TABLE `team_pk_reward` (
   `Event` tinyint(3) unsigned NOT NULL,
   `LeaderID` int(10) unsigned NOT NULL,
@@ -314,7 +293,6 @@ CREATE TABLE `team_pk_reward` (
 -- Contest ends: Seed is the contest place (1-8, odd seeds Group A, even Group B), Points the
 -- round-robin points, Score the guild points earned in matches, FinalRank the place after
 -- Saturday's final (0 before it).
-DROP TABLE IF EXISTS `guild_pk_entry`;
 CREATE TABLE `guild_pk_entry` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `Name` varchar(16) NOT NULL DEFAULT '',
@@ -329,7 +307,6 @@ CREATE TABLE `guild_pk_entry` (
 
 -- Prizes a guild's leader or deputy claims from the Awarder of its place: Kind 0 the Guild
 -- Contest (until midnight), 1 the Guild PK Tournament (until the next final). Expires is UTC.
-DROP TABLE IF EXISTS `guild_pk_prize`;
 CREATE TABLE `guild_pk_prize` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `Kind` tinyint(3) unsigned NOT NULL,
@@ -341,7 +318,6 @@ CREATE TABLE `guild_pk_prize` (
 
 -- Exploits earned in the Guild Contest (a monster killed) and the Guild PK Tournament (an
 -- enemy defeated or a guild member revived).
-DROP TABLE IF EXISTS `guild_pk_exploit`;
 CREATE TABLE `guild_pk_exploit` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Exploits` int(10) unsigned NOT NULL DEFAULT '0',
@@ -351,7 +327,6 @@ CREATE TABLE `guild_pk_exploit` (
 -- Guild reward pools (help "Guild Reward", "Capture Flag"): CPs and silver the leader moved
 -- out of the guild's funds, split among the members by exploits when the event next ends.
 -- Event 1 is Capture the Flag, 2 the Guild Contest and Guild PK Tournament.
-DROP TABLE IF EXISTS `guild_reward_pool`;
 CREATE TABLE `guild_reward_pool` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `Event` tinyint(3) unsigned NOT NULL,
@@ -361,7 +336,6 @@ CREATE TABLE `guild_reward_pool` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- What each member got from the guild's last split of an event's pool.
-DROP TABLE IF EXISTS `guild_reward_share`;
 CREATE TABLE `guild_reward_share` (
   `SyndicateID` int(10) unsigned NOT NULL,
   `Event` tinyint(3) unsigned NOT NULL,
@@ -375,7 +349,6 @@ CREATE TABLE `guild_reward_share` (
 
 -- Arena qualifier records, one per character that opened the arena. Day is the UTC day
 -- (days since 1970) the "today" wins and losses count for.
-DROP TABLE IF EXISTS `arena`;
 CREATE TABLE `arena` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Points` int(10) unsigned NOT NULL DEFAULT '0',
@@ -390,7 +363,6 @@ CREATE TABLE `arena` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Top ten of each ended arena qualifier season.
-DROP TABLE IF EXISTS `arena_season`;
 CREATE TABLE `arena_season` (
   `Season` int(10) unsigned NOT NULL,
   `Rank` int(10) unsigned NOT NULL,
@@ -407,7 +379,6 @@ CREATE TABLE `arena_season` (
 
 -- Silver donated for nobility, one row per character that has donated. Ranks follow from
 -- the donations, so they aren't stored.
-DROP TABLE IF EXISTS `nobility`;
 CREATE TABLE `nobility` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Donation` bigint(20) unsigned NOT NULL DEFAULT '0',
@@ -415,7 +386,6 @@ CREATE TABLE `nobility` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Flowers received by female characters, all-time and on TodayDate (server-local day).
-DROP TABLE IF EXISTS `flower`;
 CREATE TABLE `flower` (
   `CharacterID` int(10) unsigned NOT NULL,
   `RedRoses` int(10) unsigned NOT NULL DEFAULT '0',
@@ -432,7 +402,6 @@ CREATE TABLE `flower` (
 
 -- Guild War state (single row, ID = 1): the guild that won the last war, the guild currently
 -- holding the pole, whether the winning leader has claimed the prize, and when the war was won.
-DROP TABLE IF EXISTS `guild_war`;
 CREATE TABLE `guild_war` (
   `ID` int(10) unsigned NOT NULL,
   `WinnerGuildID` int(10) unsigned NOT NULL DEFAULT '0',
@@ -444,7 +413,6 @@ CREATE TABLE `guild_war` (
 
 -- Message board posts (Trade, Friend, Team, Guild, Others). One active post per character
 -- per channel; Guild posts are scoped by SyndicateID.
-DROP TABLE IF EXISTS `message_board`;
 CREATE TABLE `message_board` (
   `Channel` smallint(5) unsigned NOT NULL,
   `CharacterID` int(10) unsigned NOT NULL,
@@ -460,7 +428,6 @@ CREATE TABLE `message_board` (
 -- Redeemed = 0: item is held at position 250 until TargetID redeems it for Cost CPs within
 -- 7 days, or HunterID claims the item after expiry.
 -- Redeemed = 1: TargetID redeemed the item; HunterID can claim Cost CPs.
-DROP TABLE IF EXISTS `detained_item`;
 CREATE TABLE `detained_item` (
   `DetainID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `ItemID` int(10) unsigned NOT NULL DEFAULT '0',
@@ -479,7 +446,6 @@ CREATE TABLE `detained_item` (
 -- Mentor-apprentice relations: one row per apprentice (at most one mentor each). Enrolled is
 -- YYYYMMDD; Experience (level-up time, 600 per EXP ball), Blessing (hours) and Composition
 -- (points, 100 per +1 Stone) are what this apprentice has contributed to the mentor.
-DROP TABLE IF EXISTS `mentor`;
 CREATE TABLE `mentor` (
   `ApprenticeID` int(10) unsigned NOT NULL,
   `MentorID` int(10) unsigned NOT NULL,
@@ -492,7 +458,6 @@ CREATE TABLE `mentor` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Unclaimed mentor rewards accrued from apprentices, kept even if an apprentice leaves.
-DROP TABLE IF EXISTS `mentor_reward`;
 CREATE TABLE `mentor_reward` (
   `CharacterID` int(10) unsigned NOT NULL,
   `Experience` int(10) unsigned NOT NULL DEFAULT '0',
@@ -504,7 +469,6 @@ CREATE TABLE `mentor_reward` (
 -- Sub-classes a character has learned (1 Martial Artist, 2 Warlock, 3 Chi Master, 4 Sage,
 -- 5 Apothecary, 6 Performer, 9 Wrangler). Level (1..9) is raised with study points, and Phase
 -- (1..9) is promoted once character level, rebirths, and sub-class level meet SubProfessionInfo.ini.
-DROP TABLE IF EXISTS `subclass`;
 CREATE TABLE `subclass` (
   `CharacterID` int(10) unsigned NOT NULL,
   `SubClassID` tinyint(3) unsigned NOT NULL,
@@ -514,7 +478,6 @@ CREATE TABLE `subclass` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Paid broadcasts waiting to be shown, ordered by Position (0 is next).
-DROP TABLE IF EXISTS `broadcast`;
 CREATE TABLE `broadcast` (
   `ID` int(10) unsigned NOT NULL,
   `Position` int(10) unsigned NOT NULL,
@@ -528,7 +491,6 @@ CREATE TABLE `broadcast` (
 
 -- Changes made from the web app: who (account), what (Action like "character.give_item"),
 -- on what (TargetType and TargetID), and the target's state before and after as JSON.
-DROP TABLE IF EXISTS `web_audit`;
 CREATE TABLE `web_audit` (
   `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `Timestamp` datetime(3) NOT NULL,
@@ -548,7 +510,6 @@ CREATE TABLE `web_audit` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Scheduled announcements sent periodically by Comet.Web through the game admin RPC.
-DROP TABLE IF EXISTS `web_announcement`;
 CREATE TABLE `web_announcement` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Title` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -567,7 +528,6 @@ CREATE TABLE `web_announcement` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Discord webhook endpoints for bans, errors and cheat reports.
-DROP TABLE IF EXISTS `web_notification_webhook`;
 CREATE TABLE `web_notification_webhook` (
   `ID` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `Name` varchar(127) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -586,7 +546,6 @@ CREATE TABLE `web_notification_webhook` (
   KEY `Enabled` (`Enabled`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
-DROP TABLE IF EXISTS `web_notification_delivery`;
 CREATE TABLE `web_notification_delivery` (
   `ID` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `WebhookID` int(10) unsigned NOT NULL,
@@ -604,7 +563,6 @@ CREATE TABLE `web_notification_delivery` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 -- Server control settings managed from the web app (maintenance mode and login MOTD).
-DROP TABLE IF EXISTS `web_server_settings`;
 CREATE TABLE `web_server_settings` (
   `ID` tinyint(3) unsigned NOT NULL,
   `MaintenanceEnabled` tinyint(1) NOT NULL DEFAULT '0',

@@ -6,6 +6,7 @@
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
+    using Comet.Core.Database;
     using Comet.Core.Logging;
     using Comet.Network.Sockets;
     using Comet.Game.Database;
@@ -22,6 +23,23 @@
 
     internal static class Program
     {
+        // Brings the game schema up to date before anything else reads it. Account migrations
+        // are the account server's.
+        private static async Task<bool> MigrateAsync(ServerConfiguration.DatabaseConfiguration db)
+        {
+            try
+            {
+                await SchemaMigrator.ApplyAsync(db.Hostname, db.Schema, db.Username, db.Password,
+                    SchemaMigrator.Load(typeof(Program).Assembly));
+                return true;
+            }
+            catch (MigrationException e)
+            {
+                Log.Error("Schema migration failed: {Message}", e.Message);
+                return false;
+            }
+        }
+
         private static async Task Main(string[] args)
         {
             Console.Title = "Comet, Game Server";
@@ -68,6 +86,11 @@
             MsgConnect.StrictAuthentication = config.Authentication.StrictAuthPass;
             ServerDbContext.Configuration = config.Database;
             AccountsRepository.Configuration = config.AccountDatabase;
+            if (!await Program.MigrateAsync(config.Database))
+            {
+                Log.CloseAndFlush();
+                return;
+            }
             if (!ServerDbContext.Ping())
             {
                 Log.Error("Invalid database configuration");

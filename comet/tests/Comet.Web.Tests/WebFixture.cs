@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using MySqlConnector;
 using Xunit;
 
-// The web app against its own copy of both schemas, loaded from comet/sql. The seed account
+// The web app against its own copy of both schemas, migrated from comet/sql. The seed account
 // "test" (password "test") is there; tests add accounts with the account server's code.
 public sealed class WebFixture : IAsyncLifetime
 {
@@ -30,8 +30,8 @@ public sealed class WebFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await this.LoadSchemaAsync("comet.account.sql", "comet.account", this.AccountSchema);
-        await this.LoadSchemaAsync("comet.game.sql", "comet.game", this.GameSchema);
+        await this.LoadSchemaAsync("account", this.AccountSchema);
+        await this.LoadSchemaAsync("game", this.GameSchema);
 
         var settings = new Dictionary<string, string>
         {
@@ -61,18 +61,19 @@ public sealed class WebFixture : IAsyncLifetime
             await new MySqlCommand($"DROP DATABASE IF EXISTS `{schema}`", db).ExecuteNonQueryAsync();
     }
 
-    private async Task LoadSchemaAsync(string file, string defaultName, string schema)
+    private static string SqlRoot()
     {
         string root = AppContext.BaseDirectory;
         while (!File.Exists(Path.Combine(root, "Comet.slnx")))
             root = Path.GetDirectoryName(root.TrimEnd(Path.DirectorySeparatorChar))
                 ?? throw new InvalidOperationException("Can't find Comet.slnx");
-        var sql = await File.ReadAllTextAsync(Path.Combine(root, "sql", file));
-        sql = sql.Replace($"`{defaultName}`", $"`{schema}`");
-        await using var db = new MySqlConnection(this.ConnectionString());
-        await db.OpenAsync();
-        await new MySqlCommand(sql, db).ExecuteNonQueryAsync();
+        return Path.Combine(root, "sql");
     }
+
+    private Task LoadSchemaAsync(string server, string schema) =>
+        Comet.Core.Database.SchemaMigrator.ApplyAsync(DbHost, schema, DbUser, DbPassword,
+            Comet.Core.Database.SchemaMigrator.LoadFromDirectory(
+                Path.Combine(SqlRoot(), $"comet.{server}.sql"), Path.Combine(SqlRoot(), "migrations", server)));
 
     public async Task<string> CreateAccountAsync(ushort authority, ushort status = 2)
     {
