@@ -11,10 +11,9 @@ public sealed record PatchPublishOptions
     public string? Version { get; init; }
     public string GitShortSha { get; init; } = "nogit";
     public DateTimeOffset? BuiltAt { get; init; }
-    public string MinLauncherVersion { get; init; } = "1.0.0";
     public string LauncherFileName { get; init; } = "Fetih.exe";
+    public string StartFileName { get; init; } = "Conquer.exe";
     public int KeepVersions { get; init; } = 10;
-    public bool BuildZip { get; init; }
     public int MaxDegreeOfParallelism { get; init; } = Math.Clamp(Environment.ProcessorCount, 1, 8);
 }
 
@@ -27,9 +26,9 @@ public sealed record PatchPublishResult
     public required int ObjectsReused { get; init; }
     public required int ObjectsGarbageCollected { get; init; }
     public required int ManifestsGarbageCollected { get; init; }
-    public required int ZipsGarbageCollected { get; init; }
-    public string? ZipPath { get; init; }
-    public bool ZipBuilt { get; init; }
+
+    // download/Fetih.exe, what /indir hands out; null when the client has no launcher
+    public string? LauncherDownloadPath { get; init; }
 }
 
 public static class PatchObjectStore
@@ -99,11 +98,6 @@ public static class PatchObjectStore
 
 public static class PatchPublisher
 {
-    static readonly HashSet<string> PrecompressedExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".7z", ".zip", ".gz", ".br", ".jpg", ".jpeg", ".png", ".ogg", ".mp3", ".wma", ".mp4"
-    };
-
     public static PatchPublishResult Publish(PatchPublishOptions options)
     {
         if (options.KeepVersions < 1)
@@ -202,9 +196,14 @@ public static class PatchPublisher
         {
             Version = version,
             BuiltAt = builtAt,
-            MinLauncherVersion = options.MinLauncherVersion,
+            Start = PatchManifest.NormalizePath(options.StartFileName),
             Launcher = launcherEntry,
             Files = entries,
+            Folders = Directory.EnumerateDirectories(clientDir, "*", SearchOption.AllDirectories)
+                .Where(d => !Directory.EnumerateFileSystemEntries(d).Any())
+                .Select(d => PatchManifest.NormalizePath(Path.GetRelativePath(clientDir, d)))
+                .Order(StringComparer.OrdinalIgnoreCase)
+                .ToList(),
         };
 
         var diff = PatchManifestDiff.Compute(previousManifest, candidate);
@@ -227,26 +226,19 @@ public static class PatchPublisher
             publishedNew = true;
         }
 
-        // Step 5: optionally build first-download zip
-        var stableLinkPath = Path.Combine(downloadDir, "fetih.zip");
-        var zipPath = Path.Combine(downloadDir, $"fetih-{activeManifest.Version}.zip");
-        var stableLinkExists = Path.Exists(stableLinkPath) || new FileInfo(stableLinkPath).LinkTarget != null;
-        var shouldBuildZip = options.BuildZip || (publishedNew && stableLinkExists);
-        var zipBuilt = false;
-
-        if (shouldBuildZip)
+        // Step 5: the launcher players download from the site
+        string? launcherDownload = null;
+        if (activeManifest.Launcher != null)
         {
-            Directory.CreateDirectory(downloadDir);
-            if (!File.Exists(zipPath))
-            {
-                BuildClientZip(clientDir, zipPath);
-                zipBuilt = true;
-            }
-            UpdateRelativeSymlink(stableLinkPath, Path.GetFileName(zipPath));
+            launcherDownload = Path.Combine(downloadDir, Path.GetFileName(options.LauncherFileName));
+            var source = Path.Combine(clientDir, activeManifest.Launcher.Path);
+            var current = new FileInfo(launcherDownload);
+            if (!current.Exists || current.Length != activeManifest.Launcher.Size || HashFile(launcherDownload).Sha256 != activeManifest.Launcher.Sha256)
+                WriteFileAtomic(launcherDownload, File.ReadAllBytes(source));
         }
 
-        // Step 6: garbage collect unreferenced objects, old manifests, and old zips
-        var gc = GarbageCollect(manifestsDir, objectsDir, downloadDir, activeManifest.Version, options.KeepVersions);
+        // Step 6: garbage collect unreferenced objects and old manifests
+        var gc = GarbageCollect(manifestsDir, objectsDir, activeManifest.Version, options.KeepVersions);
 
         return new PatchPublishResult
         {
@@ -257,9 +249,7 @@ public static class PatchPublisher
             ObjectsReused = objectsReused,
             ObjectsGarbageCollected = gc.ObjectsRemoved,
             ManifestsGarbageCollected = gc.ManifestsRemoved,
-            ZipsGarbageCollected = gc.ZipsRemoved,
-            ZipPath = File.Exists(zipPath) ? zipPath : null,
-            ZipBuilt = zipBuilt,
+            LauncherDownloadPath = launcherDownload,
         };
     }
 
@@ -370,75 +360,9 @@ public static class PatchPublisher
         }
     }
 
-    public static void BuildClientZip(string clientDir, string destinationZipPath)
-    {
-        var dir = Path.GetDirectoryName(destinationZipPath)!;
-        Directory.CreateDirectory(dir);
-        var tempZip = Path.Combine(dir, $".{Path.GetFileName(destinationZipPath)}.{Guid.NewGuid():N}.tmp");
-        try
-        {
-            using (var zipStream = File.Create(tempZip))
-            using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: false))
-            {
-                // Preserve empty directories (such as screenshot/ or AutoPatch/update/)
-                var allDirs = Directory.EnumerateDirectories(clientDir, "*", SearchOption.AllDirectories)
-                    .OrderBy(d => d, StringComparer.OrdinalIgnoreCase);
-                foreach (var subDir in allDirs)
-                {
-                    if (!Directory.EnumerateFileSystemEntries(subDir).Any())
-                    {
-                        var relDir = PatchManifest.NormalizePath(Path.GetRelativePath(clientDir, subDir)) + "/";
-                        archive.CreateEntry(relDir);
-                    }
-                }
-
-                var allFiles = Directory.EnumerateFiles(clientDir, "*", SearchOption.AllDirectories)
-                    .Select(full => (FullPath: full, RelPath: PatchManifest.NormalizePath(Path.GetRelativePath(clientDir, full))))
-                    .OrderBy(x => x.RelPath, StringComparer.OrdinalIgnoreCase)
-                    .ThenBy(x => x.RelPath, StringComparer.Ordinal);
-
-                foreach (var (fullPath, relPath) in allFiles)
-                {
-                    var level = PrecompressedExtensions.Contains(Path.GetExtension(fullPath))
-                        ? CompressionLevel.NoCompression
-                        : CompressionLevel.Fastest;
-                    var entry = archive.CreateEntry(relPath, level);
-                    entry.LastWriteTime = File.GetLastWriteTimeUtc(fullPath);
-                    using var entryStream = entry.Open();
-                    using var fileStream = File.OpenRead(fullPath);
-                    fileStream.CopyTo(entryStream);
-                }
-            }
-
-            File.Move(tempZip, destinationZipPath, overwrite: true);
-        }
-        catch
-        {
-            PatchObjectStore.TryDelete(tempZip);
-            throw;
-        }
-    }
-
-    static void UpdateRelativeSymlink(string linkPath, string relativeTarget)
-    {
-        var dir = Path.GetDirectoryName(linkPath)!;
-        var tempLink = Path.Combine(dir, $".{Path.GetFileName(linkPath)}.{Guid.NewGuid():N}.tmp");
-        try
-        {
-            File.CreateSymbolicLink(tempLink, relativeTarget);
-            File.Move(tempLink, linkPath, overwrite: true);
-        }
-        catch
-        {
-            PatchObjectStore.TryDelete(tempLink);
-            throw;
-        }
-    }
-
     static GcStats GarbageCollect(
         string manifestsDir,
         string objectsDir,
-        string downloadDir,
         string activeVersion,
         int keepVersions)
     {
@@ -492,29 +416,7 @@ public static class PatchPublisher
             }
         }
 
-        var zipsRemoved = 0;
-        if (Directory.Exists(downloadDir))
-        {
-            var keptZipNames = kept.Take(Math.Min(keepVersions, 2))
-                .Select(m => $"fetih-{m.Manifest.Version}.zip")
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            var stableLink = new FileInfo(Path.Combine(downloadDir, "fetih.zip"));
-            if (stableLink.LinkTarget is { } linkTarget)
-                keptZipNames.Add(Path.GetFileName(linkTarget));
-
-            foreach (var file in Directory.EnumerateFiles(downloadDir, "fetih-*.zip"))
-            {
-                var name = Path.GetFileName(file);
-                if (!keptZipNames.Contains(name))
-                {
-                    File.Delete(file);
-                    zipsRemoved++;
-                }
-            }
-        }
-
-        return new GcStats(objectsRemoved, manifestsRemoved, zipsRemoved);
+        return new GcStats(objectsRemoved, manifestsRemoved);
     }
 
     static bool IsSha256Hex(string s)
@@ -530,5 +432,5 @@ public static class PatchPublisher
 
     sealed record HashedFile(string FullPath, string RelPath, long Size, string Sha256);
     sealed record StoredObject(string Compression, long CompressedSize);
-    sealed record GcStats(int ObjectsRemoved, int ManifestsRemoved, int ZipsRemoved);
+    sealed record GcStats(int ObjectsRemoved, int ManifestsRemoved);
 }

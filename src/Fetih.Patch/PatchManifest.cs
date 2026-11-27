@@ -40,8 +40,9 @@ public sealed record PatchManifest
     [JsonPropertyName("builtAt")]
     public required DateTimeOffset BuiltAt { get; init; }
 
-    [JsonPropertyName("minLauncherVersion")]
-    public required string MinLauncherVersion { get; init; }
+    // The exe the launcher starts, relative to the client folder
+    [JsonPropertyName("start")]
+    public string Start { get; init; } = "Conquer.exe";
 
     [JsonPropertyName("launcher")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -49,6 +50,10 @@ public sealed record PatchManifest
 
     [JsonPropertyName("files")]
     public required IReadOnlyList<PatchFileEntry> Files { get; init; }
+
+    // Empty folders the client expects (screenshot)
+    [JsonPropertyName("folders")]
+    public IReadOnlyList<string> Folders { get; init; } = [];
 
     public IEnumerable<string> AllObjectHashes()
     {

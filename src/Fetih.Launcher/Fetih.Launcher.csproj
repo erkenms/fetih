@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Builds on Linux and macOS too: self-contained, trimmed, one file, no NativeAOT.
+       FetihArt is the old Turkish client (Play/ art, conquer.ico), FetihLauncherJson the
+       launcher.json to bake in; tools/build.cs passes both. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Fetih</AssemblyName>
+    <RootNamespace>Fetih.Launcher</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <TrimMode>full</TrimMode>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <DebugType>none</DebugType>
+    <Deterministic>true</Deterministic>
+    <FetihArt Condition="'$(FetihArt)' == ''">$(MSBuildThisFileDirectory)../../_CLIENT/tr/app</FetihArt>
+    <ApplicationIcon Condition="Exists('$(FetihArt)/conquer.ico')">$(FetihArt)/conquer.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="Exists('$(FetihArt)/Play/Main.bmp')">
+    <EmbeddedResource Include="$(FetihArt)/Play/Main.bmp;$(FetihArt)/Play/Main.rgn" LogicalName="%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(FetihArt)/Play/Button/high0?.bmp;$(FetihArt)/Play/Button/Exit0?.bmp" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FetihLauncherJson)' != ''">
+    <EmbeddedResource Include="$(FetihLauncherJson)" LogicalName="launcher.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Fetih.Patch\Fetih.Patch.csproj" />
+  </ItemGroup>
+
+</Project>

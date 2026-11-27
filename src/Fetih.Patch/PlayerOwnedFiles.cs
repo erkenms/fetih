@@ -1,8 +1,7 @@
 namespace Fetih.Patch;
 
-// Files that Conquer.exe or the player writes at runtime. They ship in the first-download
-// zip so defaults and folders exist, but are flagged playerOwned in the manifest so the
-// launcher never overwrites a player's copy once it exists.
+// Files that Conquer.exe or the player writes at runtime. The launcher downloads them when
+// missing and never overwrites or deletes a player's copy.
 public static class PlayerOwnedFiles
 {
     // Exact relative paths (case-insensitive, '/' separator)
@@ -10,7 +9,6 @@ public static class PlayerOwnedFiles
     {
         "ini/GameSetUp.ini",      // Resolution, fullscreen/windowed, last group/server, interface
         "ini/c3.wdb",             // GraphicData.dll rebuilds this cache from the ini files at runtime
-        "AutoPatch/Update.log",   // AutoPatch history log
         "debug.log",
         "ChatLog.log",
         "leavewordsystem.log",
@@ -22,7 +20,6 @@ public static class PlayerOwnedFiles
         "Log/",               // Per-character Setup.ini (volume, hotkeys, PK mode, blacklist) and chat logs
         "debug/",             // Client debug logs (debug/<date>.log) and crash dumps (.dmp)
         "screenshot/",        // Player screenshots (ScreenShot/%u.jpg)
-        "AutoPatch/update/",  // AutoPatch staging directory
     ];
 
     public static bool IsPlayerOwned(string relativePath)

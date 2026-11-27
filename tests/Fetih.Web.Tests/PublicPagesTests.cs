@@ -137,6 +137,11 @@ public class PublicPagesTests(WebFixture fixture)
             Assert.Contains(expected, html);
         }
 
+        var launcherNews = await client.GetAsync("/haberler?handler=launcher");
+        Assert.Equal("text/plain", launcherNews.Content.Headers.ContentType?.MediaType);
+        Assert.All((await launcherNews.Content.ReadAsStringAsync()).Split('\n', StringSplitOptions.RemoveEmptyEntries),
+            line => Assert.Matches(@"^\d\d\.\d\d\.\d{4}\t.+$", line));
+
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/karakter/999999")).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/lonca/999999")).StatusCode);
 

@@ -22,5 +22,12 @@
     "original": "85 c0",
     "patched": "31 c0",
     "reason": "Start without play.exe (2 of 2): the compare of that argument with 'blacknull', the one play.exe passes (VA 0x5ac026), always comes out equal."
+  },
+  {
+    "file": "Conquer.exe",
+    "offset": "0x4b2d34",
+    "original": "25 73 2f 70 6c 61 79 2e 65 78 65 00",
+    "patched": "46 65 74 69 68 2e 65 78 65 00 00 00",
+    "reason": "Restart through the launcher: the client's own restart (message 85 with 4, VA 0x5d7e93) runs ShellExecute on '%s/play.exe' (VA 0x8b4d34) with the current folder; 'Fetih.exe' alone resolves in that folder."
   }
 ]

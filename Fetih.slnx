@@ -4,6 +4,7 @@
     <Project Path="src/Fetih.TestClient/Fetih.TestClient.csproj" />
     <Project Path="src/Fetih.Core/Fetih.Core.csproj" />
     <Project Path="src/Fetih.Game/Fetih.Game.csproj" />
+    <Project Path="src/Fetih.Launcher/Fetih.Launcher.csproj" />
     <Project Path="src/Fetih.Network/Fetih.Network.csproj" />
     <Project Path="src/Fetih.Patch/Fetih.Patch.csproj" />
     <Project Path="src/Fetih.Shared/Fetih.Shared.csproj" />

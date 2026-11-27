@@ -6,7 +6,7 @@ Conquer Online server for the 5619 client.
 |---|---|
 | `src/` | Servers: `Fetih.Account` (login, `:9960`), `Fetih.Game` (world, `:5816`, RPC `:5817`), `Fetih.Web` (site and admin, `:5820`). Plus libraries and the test client. |
 | `tests/` | .NET tests |
-| `client/`, `tools/build.cs` | Build the playable client, web assets, launcher patches |
+| `client/`, `tools/build.cs` | Build the playable client with the launcher (`Fetih.Launcher`), web assets, patches |
 | `sql/` | Schemas and `migrations/` (applied at startup) |
 | `deploy/`, `observability/` | Containers, Caddy; Loki, Prometheus, Grafana |
 
@@ -16,7 +16,7 @@ Conquer Online server for the 5619 client.
 podman compose -f deploy/compose.yaml up -d db
 dotnet test Fetih.slnx
 cd src/Fetih.Game && dotnet run              # likewise Account, Web
-dotnet run tools/build.cs all --ip <ip>      # client, web assets, patches
+dotnet run tools/build.cs all --ip <ip> --url <site>   # client, web assets, patches
 ```
 
 Settings: `.config` files, or env like `FETIH_GAME_Database__Hostname=db`.
@@ -43,6 +43,7 @@ Strongest first:
 ## More
 
 - [deploy.md](deploy.md): public server
+- [launcher.md](launcher.md): `Fetih.exe`, and testing it from a Windows VM
 - [web-style.md](web-style.md): the site's look
 - [web.md](web.md): how a web page is built (Razor Pages)
 - Feature backlog: issues ([NPCs](https://github.com/erkenms/fetih/issues/105), [quests](https://github.com/erkenms/fetih/issues/106))

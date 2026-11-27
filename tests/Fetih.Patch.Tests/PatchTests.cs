@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using Fetih.Patch;
@@ -18,11 +17,10 @@ public sealed class PatchManifestDiffTests
         PlayerOwned = playerOwned,
     };
 
-    static PatchManifest Manifest(string version, PatchFileEntry[] files, PatchFileEntry? launcher = null, string minLauncher = "1.0.0") => new()
+    static PatchManifest Manifest(string version, PatchFileEntry[] files, PatchFileEntry? launcher = null) => new()
     {
         Version = version,
         BuiltAt = DateTimeOffset.UnixEpoch,
-        MinLauncherVersion = minLauncher,
         Launcher = launcher,
         Files = files,
     };
@@ -62,14 +60,12 @@ public sealed class PatchManifestDiffTests
         var prev = Manifest(
             "v1",
             [Entry("Conquer.exe", "aaa"), Entry("ini/a.ini", "bbb"), Entry("old.dat", "ccc")],
-            launcher: Entry("Fetih.exe", "l1"),
-            minLauncher: "1.0.0");
+            launcher: Entry("Fetih.exe", "l1"));
 
         var next = Manifest(
             "v2",
             [Entry("Conquer.exe", "aaa"), Entry("ini/a.ini", "bbb2"), Entry("new.dat", "ddd")],
-            launcher: Entry("Fetih.exe", "l2"),
-            minLauncher: "1.1.0");
+            launcher: Entry("Fetih.exe", "l2"));
 
         var diff = PatchManifestDiff.Compute(prev, next);
 
@@ -79,7 +75,6 @@ public sealed class PatchManifestDiffTests
         Assert.Single(diff.Changed, e => e.Path == "ini/a.ini");
         Assert.Single(diff.Removed, e => e.Path == "old.dat");
         Assert.True(diff.LauncherChanged);
-        Assert.True(diff.MinLauncherVersionChanged);
     }
 }
 
@@ -94,8 +89,6 @@ public sealed class PlayerOwnedFilesTests
     [InlineData("debug/2026_11_23.log", true)]
     [InlineData("debug/2026_11_23__12_00_00.dmp", true)]
     [InlineData("screenshot/12345.jpg", true)]
-    [InlineData("AutoPatch/Update.log", true)]
-    [InlineData("AutoPatch/update/enzf/state.dat", true)]
     [InlineData("p2pTemp1.log", true)]
     [InlineData("debug.log", true)]
     [InlineData("ini/c3.wdb", true)]
@@ -104,7 +97,6 @@ public sealed class PlayerOwnedFilesTests
     [InlineData("ini/itemtype.dat", false)]
     [InlineData("ini/StrRes.ini", false)]
     [InlineData("c3.wdf", false)]
-    [InlineData("AutoPatch/GUI.ini", false)]
     public void ClassifiesPlayerOwnedPaths(string path, bool expected)
     {
         Assert.Equal(expected, PlayerOwnedFiles.IsPlayerOwned(path));
@@ -287,87 +279,22 @@ public sealed class PatchPublisherTests : IDisposable
     }
 
     [Fact]
-    public void ZipUnpacksIdenticallyToBuildOutputAndUpdatesOnlyWhenNeeded()
+    public void LauncherIsSeparateFromFilesAndCopiedForDownload()
     {
         WriteClientText("Conquer.exe", "exe-bytes");
         WriteClientText("Fetih.exe", "launcher-bytes");
-        WriteClientText("ini/GameSetUp.ini", "[ScreenMode]\r\nScrWidth=1024\r\n");
-        WriteClientText("Log/0/Setup.ini", "[Record]\r\nMusicRecord=50\r\n");
         Directory.CreateDirectory(Path.Combine(_clientDir, "screenshot"));
 
-        var t = new DateTimeOffset(2026, 11, 26, 14, 0, 0, TimeSpan.Zero);
+        var r = PatchPublisher.Publish(new PatchPublishOptions { ClientDirectory = _clientDir, PatchDirectory = _patchDir });
 
-        // Without --zip on a fresh patch dir, no zip is created
-        var rNoZip = PatchPublisher.Publish(new PatchPublishOptions
-        {
-            ClientDirectory = _clientDir,
-            PatchDirectory = _patchDir,
-            BuiltAt = t,
-            GitShortSha = "v1sha",
-            BuildZip = false,
-        });
-        Assert.False(rNoZip.ZipBuilt);
-        Assert.Null(rNoZip.ZipPath);
+        Assert.Equal("Fetih.exe", r.Manifest.Launcher!.Path);
+        Assert.Equal("Conquer.exe", r.Manifest.Start);
+        Assert.DoesNotContain(r.Manifest.Files, f => f.Path == "Fetih.exe");
+        Assert.Equal(["screenshot"], r.Manifest.Folders);
+        Assert.Equal("launcher-bytes", File.ReadAllText(Path.Combine(_patchDir, "download", "Fetih.exe")));
 
-        // With --zip, creates versioned zip + relative fetih.zip symlink
-        var rZip = PatchPublisher.Publish(new PatchPublishOptions
-        {
-            ClientDirectory = _clientDir,
-            PatchDirectory = _patchDir,
-            BuiltAt = t.AddMinutes(1),
-            GitShortSha = "v1sha",
-            BuildZip = true,
-        });
-        Assert.True(rZip.ZipBuilt);
-        Assert.NotNull(rZip.ZipPath);
-        Assert.True(File.Exists(rZip.ZipPath));
-
-        var stableLink = Path.Combine(_patchDir, "download", "fetih.zip");
-        var target = File.ResolveLinkTarget(stableLink, returnFinalTarget: false);
-        Assert.NotNull(target);
-        Assert.Equal(Path.GetFileName(rZip.ZipPath), target!.Name);
-
-        // Unpack and verify exact match with build output (files + empty screenshot dir)
-        var unpackDir = Path.Combine(_tempRoot, "unpacked");
-        ZipFile.ExtractToDirectory(stableLink, unpackDir);
-
-        var expectedFiles = Directory.EnumerateFiles(_clientDir, "*", SearchOption.AllDirectories)
-            .Select(p => Path.GetRelativePath(_clientDir, p).Replace('\\', '/'))
-            .OrderBy(p => p, StringComparer.Ordinal)
-            .ToList();
-        var actualFiles = Directory.EnumerateFiles(unpackDir, "*", SearchOption.AllDirectories)
-            .Select(p => Path.GetRelativePath(unpackDir, p).Replace('\\', '/'))
-            .OrderBy(p => p, StringComparer.Ordinal)
-            .ToList();
-
-        Assert.Equal(expectedFiles, actualFiles);
-        foreach (var rel in expectedFiles)
-            Assert.Equal(File.ReadAllBytes(Path.Combine(_clientDir, rel)), File.ReadAllBytes(Path.Combine(unpackDir, rel)));
-        Assert.True(Directory.Exists(Path.Combine(unpackDir, "screenshot")));
-
-        // Publishing again with --zip and no changes skips rebuilding the zip
-        var rZipAgain = PatchPublisher.Publish(new PatchPublishOptions
-        {
-            ClientDirectory = _clientDir,
-            PatchDirectory = _patchDir,
-            BuiltAt = t.AddMinutes(2),
-            GitShortSha = "v1sha",
-            BuildZip = true,
-        });
-        Assert.False(rZipAgain.ZipBuilt);
-
-        // Changing a file when fetih.zip already exists updates the zip even without --zip
-        WriteClientText("ini/StrRes.ini", "updated");
-        var rChanged = PatchPublisher.Publish(new PatchPublishOptions
-        {
-            ClientDirectory = _clientDir,
-            PatchDirectory = _patchDir,
-            BuiltAt = t.AddMinutes(3),
-            GitShortSha = "v2sha",
-            BuildZip = false,
-        });
-        Assert.True(rChanged.ZipBuilt);
-        Assert.NotEqual(rZip.ZipPath, rChanged.ZipPath);
-        Assert.Equal(Path.GetFileName(rChanged.ZipPath), File.ResolveLinkTarget(stableLink, false)!.Name);
+        WriteClientText("Fetih.exe", "launcher-bytes-2");
+        PatchPublisher.Publish(new PatchPublishOptions { ClientDirectory = _clientDir, PatchDirectory = _patchDir });
+        Assert.Equal("launcher-bytes-2", File.ReadAllText(Path.Combine(_patchDir, "download", "Fetih.exe")));
     }
 }

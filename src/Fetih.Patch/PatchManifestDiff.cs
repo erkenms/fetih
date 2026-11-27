@@ -6,14 +6,14 @@ public sealed record PatchManifestDiff(
     IReadOnlyList<PatchFileEntry> Removed,
     int UnchangedCount,
     bool LauncherChanged,
-    bool MinLauncherVersionChanged)
+    bool StartOrFoldersChanged)
 {
     public bool HasChanges =>
         Added.Count > 0 ||
         Changed.Count > 0 ||
         Removed.Count > 0 ||
         LauncherChanged ||
-        MinLauncherVersionChanged;
+        StartOrFoldersChanged;
 
     public static PatchManifestDiff Compute(PatchManifest? previous, PatchManifest next)
     {
@@ -25,7 +25,7 @@ public sealed record PatchManifestDiff(
                 Removed: [],
                 UnchangedCount: 0,
                 LauncherChanged: next.Launcher != null,
-                MinLauncherVersionChanged: false);
+                StartOrFoldersChanged: false);
         }
 
         var prevByPath = new Dictionary<string, PatchFileEntry>(StringComparer.OrdinalIgnoreCase);
@@ -66,18 +66,14 @@ public sealed record PatchManifestDiff(
         }
 
         var launcherChanged = !EntriesMatch(previous.Launcher, next.Launcher);
-        var minLauncherVersionChanged = !string.Equals(
-            previous.MinLauncherVersion,
-            next.MinLauncherVersion,
-            StringComparison.Ordinal);
-
         return new PatchManifestDiff(
             Added: added,
             Changed: changed,
             Removed: removed,
             UnchangedCount: unchanged,
             LauncherChanged: launcherChanged,
-            MinLauncherVersionChanged: minLauncherVersionChanged);
+            StartOrFoldersChanged: !string.Equals(previous.Start, next.Start, StringComparison.OrdinalIgnoreCase) ||
+                                   !previous.Folders.SequenceEqual(next.Folders, StringComparer.OrdinalIgnoreCase));
     }
 
     static bool EntriesMatch(PatchFileEntry? a, PatchFileEntry? b)

@@ -7,9 +7,7 @@ static class PatchBuild
         string repoRoot,
         string clientDir,
         string patchDir,
-        bool buildZip,
-        int keepVersions,
-        string minLauncherVersion)
+        int keepVersions)
     {
         if (!Directory.Exists(clientDir))
         {
@@ -29,9 +27,7 @@ static class PatchBuild
             ClientDirectory = clientDir,
             PatchDirectory = patchDir,
             GitShortSha = gitSha,
-            MinLauncherVersion = minLauncherVersion,
             KeepVersions = keepVersions,
-            BuildZip = buildZip,
         });
 
         var manifest = result.Manifest;
@@ -43,7 +39,7 @@ static class PatchBuild
             $" (+{diff.Added.Count} ~{diff.Changed.Count} -{diff.Removed.Count}); " +
             $"objects: {result.ObjectsWritten} written, {result.ObjectsReused} reused, {result.ObjectsGarbageCollected} gc'd; " +
             $"manifests gc'd: {result.ManifestsGarbageCollected}" +
-            (result.ZipBuilt ? $"; zip: {result.ZipPath}" : "") +
+            (result.LauncherDownloadPath != null ? $"; {result.LauncherDownloadPath}" : "; no Fetih.exe in the client") +
             $" ({sw.Elapsed.TotalSeconds:F1}s)");
 
         return 0;

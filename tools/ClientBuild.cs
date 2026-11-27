@@ -36,7 +36,7 @@ static class ClientBuild
         return 0;
     }
 
-    public static int Run(string clientInputsDir, string source, string output, string? accountIp)
+    public static int Run(string clientInputsDir, string source, string output, string? accountIp, IReadOnlyDictionary<string, byte[]> generated)
     {
         if (string.IsNullOrWhiteSpace(accountIp))
             return Fail("Account server IP is required: pass --ip <ipv4> or set FETIH_ACCOUNT_IP");
@@ -98,6 +98,12 @@ static class ClientBuild
                 files.Remove(key);
                 files[key] = path;
             }
+        foreach (var key in generated.Keys)
+        {
+            if (files.ContainsKey(key))
+                return Fail($"{key} is built (the launcher); remove it from the client");
+            files[key] = key;
+        }
         foreach (var key in files.Keys.ToList())
             for (var dir = Path.GetDirectoryName(key)?.Replace('\\', '/'); !string.IsNullOrEmpty(dir); dir = Path.GetDirectoryName(dir)?.Replace('\\', '/'))
                 folders.Add(dir);
@@ -151,7 +157,7 @@ static class ClientBuild
         {
             var to = Path.Combine(output, key);
             Directory.CreateDirectory(Path.GetDirectoryName(to)!);
-            byte[]? bytes = null;
+            byte[]? bytes = generated.GetValueOrDefault(key);
             if (Comparer.Equals(key, exeName))
             {
                 bytes = File.ReadAllBytes(from);
@@ -221,7 +227,7 @@ static class ClientBuild
         }
 
         Console.WriteLine($"{output}: {files.Count} files ({added} added, {replaced} replaced, {deleted} deleted, " +
-            $"{patches.Count} byte patches, {itemTypeEdits.Count} itemtype edits, {flashBitmaps.Count} flash bitmaps, {signed.Count} signed again); {written} written, {stale} stale removed");
+            $"{generated.Count} built, {patches.Count} byte patches, {itemTypeEdits.Count} itemtype edits, {flashBitmaps.Count} flash bitmaps, {signed.Count} signed again); {written} written, {stale} stale removed");
         return 0;
     }
 

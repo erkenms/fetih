@@ -1,1 +1,10 @@
 # Paths removed from the original client, relative to it; a folder removes all it holds
+# The launcher replaces these: Conquer.exe starts without play.exe (patches.json)
+AutoPatch
+AutoPatch.dat
+AutoPatch.exe
+AutoPatchRestart.exe
+AutoPatch_pic
+play.exe
+unins000.dat
+unins000.exe

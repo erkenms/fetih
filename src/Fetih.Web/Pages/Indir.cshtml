@@ -6,7 +6,8 @@
 }
 
 <panel title="İstemciyi İndir" icon="724426">
-    <p>Fetih Online'a katılmak için klasik <b>@info.Version</b> oyun istemcisini indir.</p>
+    <p>Fetih Online'a katılmak için klasik <b>@info.Version</b> oyun istemcisini indir. Tek dosya:
+        oyunu kurar, güncel tutar ve başlatır.</p>
     <p><span class="tag info">İstemci sürümü: @info.Version</span></p>
 
     @if (info.Url != null)
@@ -16,7 +17,7 @@
             <a class="button" href="@info.Url"
                target="@(external ? "_blank" : null)"
                rel="@(external ? "noreferrer" : null)"
-               download="@(external ? null : "")">İstemciyi indir</a>
+               download="@(external ? null : "")">Fetih.exe indir</a>
         </div>
     }
     else
@@ -31,7 +32,7 @@
 <panel title="Başlangıç" icon="711394">
     <ol style="margin: 0; padding-left: 18px">
         <li>Siteden bir <a href="/kayit">hesap oluştur</a>.</li>
-        <li>İstemci arşivini indir ve çıkar.</li>
-        <li><code>Conquer.exe</code> dosyasını açıp e-posta ve şifrenle giriş yap.</li>
+        <li><code>Fetih.exe</code> dosyasını indirip aç. Windows uyarırsa "Ek bilgi", sonra "Yine de çalıştır".</li>
+        <li>Oyun indirilince <b>Oyna</b>'ya bas, e-posta ve şifrenle giriş yap.</li>
     </ol>
 </panel>
