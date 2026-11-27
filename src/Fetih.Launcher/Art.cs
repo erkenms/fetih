@@ -39,12 +39,12 @@ static unsafe class Art
         }
     }
 
-    // Main.rgn is an RGNDATA blob as GetRegionData wrote it
+    // Main.rgn: u32 length of the rest, then an RGNDATA blob as GetRegionData wrote it
     public static nint Region(string name)
     {
-        if (Bytes(name) is not { } rgn)
+        if (Bytes(name) is not { Length: > 36 } rgn || BitConverter.ToInt32(rgn, 0) != rgn.Length - 4)
             return 0;
         fixed (byte* p = rgn)
-            return Native.ExtCreateRegion(0, (uint)rgn.Length, p);
+            return Native.ExtCreateRegion(0, (uint)rgn.Length - 4, p + 4);
     }
 }
