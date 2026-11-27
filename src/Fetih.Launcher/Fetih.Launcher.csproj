@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="Exists('$(FetihArt)/Play/Main.bmp')">
-    <EmbeddedResource Include="$(FetihArt)/Play/Main.bmp;$(FetihArt)/Play/Main.rgn" LogicalName="%(Filename)%(Extension)" />
+    <EmbeddedResource Include="$(FetihArt)/Play/Main.bmp;$(FetihArt)/Play/Main.rgn;$(FetihArt)/Play/MainS.bmp" LogicalName="%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(FetihArt)/Play/Button/high0?.bmp;$(FetihArt)/Play/Button/Exit0?.bmp" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 

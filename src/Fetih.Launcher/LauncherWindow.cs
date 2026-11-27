@@ -12,16 +12,17 @@ sealed unsafe class LauncherWindow
     const int ArtWidth = 800, ArtHeight = 600;
     const uint WM_SYNCED = WM_APP + 1;
 
+    const int CharacterX = 594;
     static readonly RECT NewsArea = new(62, 116, 574, 504);
     static readonly RECT PlayButton = new(584, 448, 584 + 210, 448 + 80);
     static readonly RECT ExitButton = new(635, 532, 635 + 108, 532 + 30);
-    static readonly RECT SettingsButton = new(652, 36, 652 + 108, 36 + 30);
+    static readonly RECT SettingsButton = new(462, 24, 462 + 108, 24 + 30);
     static readonly RECT StatusArea = new(608, 360, 778, 400);
     static readonly RECT Bar = new(618, 404, 768, 409);
     static readonly RECT Amount = new(608, 413, 778, 431);
 
     static readonly uint Ink = Rgb(74, 44, 16), Faded = Rgb(132, 94, 46), Hot = Rgb(150, 40, 20);
-    static readonly uint Gold = Rgb(205, 182, 92), GoldHot = Rgb(239, 207, 99), GoldDim = Rgb(150, 128, 70);
+    static readonly uint Gold = Rgb(205, 182, 92), GoldHot = Rgb(239, 207, 99);
 
     static LauncherWindow? _current;
 
@@ -30,7 +31,7 @@ sealed unsafe class LauncherWindow
     readonly int _width, _height;
     readonly List<(RECT Rect, Action Click)> _hot = [];
     nint _hwnd, _region;
-    nint _main;
+    nint _main, _character;
     readonly nint[] _play = new nint[3], _exit = new nint[3], _settings = new nint[3];
     nint _newsFont, _newsDateFont, _smallFont, _buttonFont, _titleFont;
     int _hover = -1, _pressed = -1;
@@ -103,6 +104,7 @@ sealed unsafe class LauncherWindow
     void LoadArt()
     {
         _main = Art.Parchment()?.Scale(_scale).ToBitmap() ?? 0;
+        _character = Art.Character()?.Scale(_scale).ToBitmap() ?? 0;
         _region = Art.Region("Main.rgn", (float)_scale);
         for (var i = 0; i < 3; i++)
         {
@@ -266,7 +268,8 @@ sealed unsafe class LauncherWindow
         var background = CreateSolidBrush(_main != 0 ? Rgb(24, 16, 8) : Rgb(222, 190, 130));
         FillRect(dc, &all, background);
         DeleteObject(background);
-        this.Image(dc, art, _main, 0, 0);
+        this.Image(dc, art, _main, 0, 0, _width, _height);
+        this.Image(dc, art, _character, this.S(CharacterX), 0, _width - this.S(CharacterX), _height);
 
         if (_settingsOpen)
             this.DrawSettings(dc);
@@ -374,7 +377,7 @@ sealed unsafe class LauncherWindow
 
     void DrawStatus(nint dc)
     {
-        this.Text(dc, _smallFont, Gold, _updater.Status, StatusArea, DT_CENTER | DT_WORDBREAK);
+        this.Shadowed(dc, _smallFont, Gold, _updater.Status, StatusArea, DT_CENTER | DT_WORDBREAK);
         if (_updater.Phase != Phase.Updating || _updater.Total <= 0)
             return;
 
@@ -393,15 +396,16 @@ sealed unsafe class LauncherWindow
         DeleteObject(gold);
 
         var amount = $"%{(int)(done * 100)}  ·  {_updater.Done >> 20} / {_updater.Total >> 20} MB";
-        this.Text(dc, _smallFont, GoldDim, amount, Amount, DT_CENTER | DT_SINGLELINE);
+        this.Shadowed(dc, _smallFont, Gold, amount, Amount, DT_CENTER | DT_SINGLELINE);
     }
 
-    void Image(nint dc, nint art, nint image, int x, int y)
+    // w×h pixels of the image's top left at (x, y)
+    void Image(nint dc, nint art, nint image, int x, int y, int w, int h)
     {
         if (image == 0)
             return;
         var old = SelectObject(art, image);
-        AlphaBlend(dc, x, y, _width, _height, art, 0, 0, _width, _height, PremultipliedOver);
+        AlphaBlend(dc, x, y, w, h, art, 0, 0, w, h, PremultipliedOver);
         SelectObject(art, old);
     }
 
@@ -443,6 +447,19 @@ sealed unsafe class LauncherWindow
     {
         if (_updater.StartGame())
             DestroyWindow(_hwnd);
+    }
+
+    // Over the character: a dark copy one pixel down and right keeps it readable
+    void Shadowed(nint dc, nint font, uint color, string text, RECT rect, uint format)
+    {
+        var pixels = this.S(rect);
+        SelectObject(dc, font);
+        var offset = Math.Max(1, this.S(1));
+        var shadow = new RECT(pixels.Left + offset, pixels.Top + offset, pixels.Right + offset, pixels.Bottom + offset);
+        SetTextColor(dc, Rgb(0, 0, 0));
+        DrawText(dc, text, -1, &shadow, format | DT_NOPREFIX);
+        SetTextColor(dc, color);
+        DrawText(dc, text, -1, &pixels, format | DT_NOPREFIX);
     }
 
     // rect in art units

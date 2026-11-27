@@ -19,6 +19,9 @@ static unsafe class Art
     // The parchment's green is pure; the buttons' edges blend into it
     public static Picture? Parchment() => Bytes("Main.bmp") is { } bmp ? Picture.FromBmp(bmp, (r, g, b) => g > 200 && r < 80 && b < 80) : null;
 
+    // The character over the right pane, as PlayGui.ini's fg_pic0 (Play/MainS.bmp at 594,0)
+    public static Picture? Character() => Button("MainS.bmp");
+
     public static Picture? Button(string name) =>
         Bytes(name) is { } bmp ? Picture.FromBmp(bmp, (r, g, b) => g > 100 && g - Math.Max(r, b) > 50) : null;
 
