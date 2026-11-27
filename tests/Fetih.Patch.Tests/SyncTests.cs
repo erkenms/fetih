@@ -48,7 +48,7 @@ public sealed class SyncTests : IDisposable
         var baseUri = new Uri($"http://fetih.test/{channel}/");
         var manifest = await PatchSync.FetchManifestAsync(http, baseUri, CancellationToken.None);
         var plan = SyncPlan.Create(_install, manifest, state, repair);
-        var sync = new PatchSync(http, baseUri, _install) { RetryDelay = TimeSpan.Zero, SmallObject = 64 * 1024 };
+        var sync = new PatchSync(http, baseUri, _install) { RetryDelay = TimeSpan.Zero };
         return (await sync.ApplyAsync(manifest, plan, state, CancellationToken.None), plan, sync);
     }
 
@@ -157,7 +157,7 @@ public sealed class SyncTests : IDisposable
     }
 
     [Fact]
-    public async Task DownloadsResumeAfterADroppedConnectionAndRetryAfterErrors()
+    public async Task ADroppedConnectionOrAnErrorStartsTheFileOver()
     {
         var big = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(100_000));
         Client("big.dat", big);
@@ -169,7 +169,7 @@ public sealed class SyncTests : IDisposable
         await Sync(new LocalState());
 
         Assert.Equal(big, Installed("big.dat"));
-        Assert.Contains(_server.Ranges, r => r > 0);
+        Assert.Empty(Directory.GetFiles(_install, "*.tmp", SearchOption.AllDirectories));
     }
 
     [Fact]
@@ -214,13 +214,12 @@ public sealed class SyncTests : IDisposable
         Assert.False(SyncPlan.LauncherIsCurrent(exe, manifest, new LocalState { Launcher = local }, out _));
     }
 
-    // Serves <root>/<channel>/... like Caddy: Range requests, and failures on demand
+    // Serves <root>/<channel>/..., cut short or failing on demand
     sealed class FakeServer(string root) : HttpMessageHandler
     {
         public long CutAfter { get; set; } = long.MaxValue;
         public int FailFirst { get; set; }
         public bool FailAlways { get; set; }
-        public List<long> Ranges { get; } = [];
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
@@ -231,18 +230,13 @@ public sealed class SyncTests : IDisposable
             if (!File.Exists(path))
                 return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound));
 
-            var bytes = File.ReadAllBytes(path);
-            var from = request.Headers.Range?.Ranges.First().From ?? 0;
-            if (isObject)
-                lock (Ranges)
-                    Ranges.Add(from);
-            var body = bytes[(int)from..];
+            var body = File.ReadAllBytes(path);
             if (isObject && body.Length > CutAfter)
             {
                 body = body[..(int)CutAfter];
                 CutAfter = long.MaxValue;
             }
-            var response = new HttpResponseMessage(from > 0 ? HttpStatusCode.PartialContent : HttpStatusCode.OK)
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent(body),
             };

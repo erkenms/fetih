@@ -3,14 +3,11 @@ using System.Net.Http.Headers;
 
 namespace Fetih.Patch;
 
-// Downloads a plan's objects (several at a time, resuming and retrying), verifies each file,
+// Downloads a plan's objects (several at a time, retrying), verifies each file,
 // renames it into place, deletes what the plan says and records the new state.
 public sealed class PatchSync(HttpClient http, Uri patchBase, string root)
 {
     public int Parallel { get; init; } = 16;
-
-    // Objects up to this size are fetched into memory; bigger ones resume from .launcher/download/
-    public long SmallObject { get; init; } = 1 << 20;
     public int Attempts { get; init; } = 5;
     public TimeSpan RetryDelay { get; init; } = TimeSpan.FromSeconds(1);
 
@@ -39,7 +36,7 @@ public sealed class PatchSync(HttpClient http, Uri patchBase, string root)
                 new ParallelOptions { MaxDegreeOfParallelism = this.Parallel, CancellationToken = ct },
                 async (group, token) =>
                 {
-                    var files = await this.InstallObjectAsync(group.ToList(), token);
+                    var files = await this.InstallObjectAsync(group.ToList(), null, token);
                     lock (done)
                         done.AddRange(files);
                 });
@@ -68,147 +65,86 @@ public sealed class PatchSync(HttpClient http, Uri patchBase, string root)
     }
 
     // Fetches one object and writes the file at destination, verified; for the launcher itself
-    public async Task DownloadFileAsync(PatchFileEntry entry, string destination, CancellationToken ct)
-    {
-        var part = await this.FetchObjectAsync(entry, ct);
-        try
-        {
-            PatchObjectStore.DecompressAndVerify(part, entry, destination);
-        }
-        finally
-        {
-            File.Delete(part);
-        }
-    }
+    public Task DownloadFileAsync(PatchFileEntry entry, string destination, CancellationToken ct) =>
+        this.InstallObjectAsync([entry], destination, ct);
 
-    async Task<List<LocalFile>> InstallObjectAsync(List<PatchFileEntry> entries, CancellationToken ct)
+    // Streams the object through the decompressor into each entry's file. A failure starts the
+    // object over; the biggest (data.wdf) is under 200 MB.
+    async Task<List<LocalFile>> InstallObjectAsync(List<PatchFileEntry> entries, string? destination, CancellationToken ct)
     {
         var first = entries[0];
+        var url = new Uri(patchBase, "objects/" + first.Sha256.ToLowerInvariant());
         for (var attempt = 1; ; attempt++)
         {
-            // Small objects stay in memory: one new file per game file instead of three
-            byte[]? small = null;
-            string? part = null;
-            if (first.CompressedSize <= SmallObject)
-                small = await this.FetchSmallAsync(first, ct);
-            else
-                part = await this.FetchObjectAsync(first, ct);
+            var counted = new Counter(this);
             try
             {
+                var firstPath = destination ?? SyncPlan.FullPath(root, first.Path);
+                using (var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct))
+                {
+                    response.EnsureSuccessStatusCode();
+                    await using var body = await response.Content.ReadAsStreamAsync(ct);
+                    using var raw = new CountingStream(body, counted);
+                    PatchObjectStore.DecompressAndVerify(raw, first, firstPath);
+                    if (counted.Bytes != first.CompressedSize)
+                        throw new InvalidDataException($"Size mismatch for the object of {first.Path}");
+                }
+
+                // The same content elsewhere: copy what's already verified
                 var installed = new List<LocalFile>();
                 foreach (var entry in entries)
                 {
-                    var path = SyncPlan.FullPath(root, entry.Path);
-                    using (var raw = small != null ? new MemoryStream(small, writable: false) : (Stream)File.OpenRead(part!))
-                        PatchObjectStore.DecompressAndVerify(raw, entry, path);
+                    var path = destination ?? SyncPlan.FullPath(root, entry.Path);
+                    if (path != firstPath)
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                        File.Copy(firstPath, path, overwrite: true);
+                    }
                     if (!entry.PlayerOwned)
                         installed.Add(LocalFile.Of(PatchManifest.NormalizePath(entry.Path), new FileInfo(path), entry.Sha256));
                 }
-                if (part != null)
-                    File.Delete(part);
                 return installed;
             }
-            catch (InvalidDataException) when (attempt < this.Attempts)
-            {
-                // A corrupt download: start this object over
-                Interlocked.Add(ref _done, -(small?.Length ?? new FileInfo(part!).Length));
-                if (part != null)
-                    File.Delete(part);
-            }
-        }
-    }
-
-    async Task<byte[]> FetchSmallAsync(PatchFileEntry entry, CancellationToken ct)
-    {
-        if (entry.CompressedSize == 0)
-            return [];
-        var url = new Uri(patchBase, "objects/" + entry.Sha256.ToLowerInvariant());
-        for (var attempt = 1; ; attempt++)
-        {
-            try
-            {
-                var bytes = await http.GetByteArrayAsync(url, ct);
-                if (bytes.Length != entry.CompressedSize)
-                    throw new IOException($"Short download of {entry.Path}");
-                Interlocked.Add(ref _done, bytes.Length);
-                return bytes;
-            }
             catch (Exception ex) when (attempt < this.Attempts && !ct.IsCancellationRequested &&
-                                       ex is HttpRequestException or IOException or TaskCanceledException)
+                                       ex is HttpRequestException or IOException or InvalidDataException or TaskCanceledException)
             {
+                counted.Undo();
                 await Task.Delay(this.RetryDelay * attempt, ct);
             }
         }
     }
 
-    // Downloads objects/<sha256> into .launcher/download/, resuming a partial one
-    async Task<string> FetchObjectAsync(PatchFileEntry entry, CancellationToken ct)
+    // Progress for one attempt, taken back when it fails
+    sealed class Counter(PatchSync sync)
     {
-        var dir = Path.Combine(root, LocalState.Folder, "download");
-        Directory.CreateDirectory(dir);
-        var part = Path.Combine(dir, entry.Sha256.ToLowerInvariant());
-        var url = new Uri(patchBase, "objects/" + entry.Sha256.ToLowerInvariant());
-        var counted = 0L;
-        if (entry.CompressedSize == 0)
+        public long Bytes;
+
+        public void Add(int n)
         {
-            File.WriteAllBytes(part, []);
-            return part;
+            this.Bytes += n;
+            Interlocked.Add(ref sync._done, n);
         }
 
-        for (var attempt = 1; ; attempt++)
+        public void Undo() => Interlocked.Add(ref sync._done, -this.Bytes);
+    }
+
+    sealed class CountingStream(Stream inner, Counter counter) : Stream
+    {
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override int Read(byte[] buffer, int offset, int count)
         {
-            try
-            {
-                var have = File.Exists(part) ? new FileInfo(part).Length : 0;
-                if (have > entry.CompressedSize)
-                {
-                    File.Delete(part);
-                    have = 0;
-                }
-                Interlocked.Add(ref _done, have - counted);
-                counted = have;
-                if (have == entry.CompressedSize)
-                    return part;
-
-                using var request = new HttpRequestMessage(HttpMethod.Get, url);
-                if (have > 0)
-                    request.Headers.Range = new RangeHeaderValue(have, null);
-                using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-                if (response.StatusCode == HttpStatusCode.RequestedRangeNotSatisfiable)
-                {
-                    File.Delete(part);
-                    throw new IOException("Range not satisfiable");
-                }
-                response.EnsureSuccessStatusCode();
-                var append = have > 0 && response.StatusCode == HttpStatusCode.PartialContent;
-                if (!append)
-                {
-                    Interlocked.Add(ref _done, -counted);
-                    counted = 0;
-                }
-
-                await using (var output = new FileStream(part, append ? FileMode.Append : FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true))
-                await using (var input = await response.Content.ReadAsStreamAsync(ct))
-                {
-                    var buffer = new byte[81920];
-                    int read;
-                    while ((read = await input.ReadAsync(buffer, ct)) > 0)
-                    {
-                        await output.WriteAsync(buffer.AsMemory(0, read), ct);
-                        Interlocked.Add(ref _done, read);
-                        counted += read;
-                    }
-                }
-
-                if (new FileInfo(part).Length == entry.CompressedSize)
-                    return part;
-                throw new IOException($"Short download of {entry.Path}");
-            }
-            catch (Exception ex) when (attempt < this.Attempts && !ct.IsCancellationRequested &&
-                                       ex is HttpRequestException or IOException or TaskCanceledException)
-            {
-                await Task.Delay(this.RetryDelay * attempt, ct);
-            }
+            var read = inner.Read(buffer, offset, count);
+            counter.Add(read);
+            return read;
         }
     }
 }
