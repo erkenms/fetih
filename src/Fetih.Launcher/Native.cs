@@ -11,7 +11,7 @@ static unsafe partial class Native
         WM_LBUTTONDOWN = 0x0201, WM_LBUTTONUP = 0x0202, WM_MOUSELEAVE = 0x02A3, WM_APP = 0x8000;
     public const int HTCLIENT = 1, HTCAPTION = 2;
     public const int SM_CXSCREEN = 0, SM_CYSCREEN = 1;
-    public const int SW_SHOW = 5;
+    public const int SW_SHOW = 5, SW_MINIMIZE = 6;
     public const uint SRCCOPY = 0x00CC0020;
     public const int TRANSPARENT = 1;
     public const uint DT_LEFT = 0, DT_CENTER = 1, DT_VCENTER = 4, DT_WORDBREAK = 0x10, DT_SINGLELINE = 0x20,
@@ -171,6 +171,9 @@ static unsafe partial class Native
 
     [LibraryImport("user32.dll")]
     public static partial int FillRect(nint hdc, RECT* rect, nint brush);
+
+    [LibraryImport("user32.dll")]
+    public static partial int FrameRect(nint hdc, RECT* rect, nint brush);
 
     [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW")]
     public static partial nint GetModuleHandle(nint name);

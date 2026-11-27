@@ -4,8 +4,8 @@ using static Fetih.Launcher.Native;
 
 namespace Fetih.Launcher;
 
-// The old Play screen: news on the parchment, progress with Oyna and Çık bottom right, Ayarlar
-// top right. Laid out in the art's 800x600 and drawn at the screen's DPI: the art scaled once,
+// The old Play screen: news on the parchment, progress with Oyna and Ayarlar bottom right,
+// minimize and close top right. Laid out in the art's 800x600 and drawn at the screen's DPI: the art scaled once,
 // text at full resolution.
 sealed unsafe class LauncherWindow
 {
@@ -15,8 +15,9 @@ sealed unsafe class LauncherWindow
     const int CharacterX = 594;
     static readonly RECT NewsArea = new(62, 116, 574, 504);
     static readonly RECT PlayButton = new(584, 448, 584 + 210, 448 + 80);
-    static readonly RECT ExitButton = new(635, 532, 635 + 108, 532 + 30);
-    static readonly RECT SettingsButton = new(462, 24, 462 + 108, 24 + 30);
+    static readonly RECT SettingsButton = new(635, 532, 635 + 108, 532 + 30);
+    static readonly RECT MinimizeButton = new(750, 24, 750 + 15, 24 + 20);
+    static readonly RECT CloseButton = new(768, 24, 768 + 15, 24 + 20);
     static readonly RECT StatusArea = new(608, 360, 778, 400);
     static readonly RECT Bar = new(618, 404, 768, 409);
     static readonly RECT Amount = new(608, 413, 778, 431);
@@ -32,7 +33,8 @@ sealed unsafe class LauncherWindow
     readonly List<(RECT Rect, Action Click)> _hot = [];
     nint _hwnd, _region;
     nint _main, _character;
-    readonly nint[] _play = new nint[3], _exit = new nint[3], _settings = new nint[3];
+    readonly nint[] _play = new nint[3], _settings = new nint[3];
+    nint _minimize, _close;
     nint _newsFont, _newsDateFont, _smallFont, _buttonFont, _titleFont;
     int _hover = -1, _pressed = -1;
     bool _tracking;
@@ -110,7 +112,6 @@ sealed unsafe class LauncherWindow
         {
             _play[i] = Art.Button($"high0{i + 1}.bmp")?.Scale(_scale).ToBitmap() ?? 0;
             var exit = Art.Button($"Exit0{i + 1}.bmp");
-            _exit[i] = exit?.Scale(_scale).ToBitmap() ?? 0;
             if (exit != null)
             {
                 // The Çık frame with its text covered by the plain texture left of it
@@ -120,6 +121,8 @@ sealed unsafe class LauncherWindow
                 _settings[i] = blank.Scale(_scale).ToBitmap();
             }
         }
+        _minimize = Art.Plain("TMin.bmp")?.Scale(_scale).ToBitmap() ?? 0;
+        _close = Art.Plain("TClose.bmp")?.Scale(_scale).ToBitmap() ?? 0;
         _titleFont = this.Font(20, FW_BOLD, false, "Palatino Linotype");
         _newsFont = this.Font(17, FW_NORMAL, false, "Palatino Linotype");
         _newsDateFont = this.Font(13, FW_NORMAL, false, "Palatino Linotype");
@@ -280,7 +283,8 @@ sealed unsafe class LauncherWindow
 
         var ready = _updater.Phase is Phase.Ready or Phase.Failed;
         this.ImageButton(dc, art, PlayButton, _play, ready, _updater.Phase == Phase.Failed ? _updater.Retry : this.PlayClicked);
-        this.ImageButton(dc, art, ExitButton, _exit, true, () => DestroyWindow(_hwnd));
+        this.TitleButton(dc, art, MinimizeButton, _minimize, () => ShowWindow(_hwnd, SW_MINIMIZE));
+        this.TitleButton(dc, art, CloseButton, _close, () => DestroyWindow(_hwnd));
         if (_updater.Phase == Phase.Ready)
         {
             var index = this.ImageButton(dc, art, SettingsButton, _settings, true, this.OpenSettings);
@@ -407,6 +411,20 @@ sealed unsafe class LauncherWindow
         var old = SelectObject(art, image);
         AlphaBlend(dc, x, y, w, h, art, 0, 0, w, h, PremultipliedOver);
         SelectObject(art, old);
+    }
+
+    // The game's own title bar buttons (data/main/TMin.bmp, TClose.bmp); no hover art, so a gold frame
+    void TitleButton(nint dc, nint art, RECT rect, nint image, Action click)
+    {
+        var index = _hot.Count;
+        var pixels = this.S(rect);
+        _hot.Add((pixels, click));
+        this.Image(dc, art, image, pixels.Left, pixels.Top, this.S(rect.Right - rect.Left), this.S(rect.Bottom - rect.Top));
+        if (index != _hover)
+            return;
+        var gold = CreateSolidBrush(index == _pressed ? Gold : GoldHot);
+        FrameRect(dc, &pixels, gold);
+        DeleteObject(gold);
     }
 
     // Returns the button's index in the hot list (-1 when disabled)
