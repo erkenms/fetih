@@ -137,7 +137,8 @@ sealed class Updater(string root, string selfPath, LauncherSettings settings, st
             if (!state.GameSetUp && File.Exists(this.GameSetUpPath))
             {
                 GameSetUp.SetHighQuality(this.GameSetUpPath);
-                GameSetUp.WriteScreen(this.GameSetUpPath, new ScreenMode(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), FullScreen: true));
+                var (width, height) = GameScreen();
+                GameSetUp.WriteScreen(this.GameSetUpPath, new ScreenMode(width, height, FullScreen: true));
                 state = state with { GameSetUp = true };
                 state.Save(root);
             }

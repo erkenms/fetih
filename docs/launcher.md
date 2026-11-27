@@ -22,7 +22,7 @@ keeps it in line with the server's manifest and starts it.
   Player-owned files (`PlayerOwnedFiles`) are fetched only when missing; files go only when the
   previous manifest had them. Then Oyna starts the manifest's `start` (`Conquer.exe`).
 - First sync: `ini/GameSetUp.ini` gets high quality, as `play.exe` set it, and the screen's
-  size full screen. After that only Ayarlar writes `[ScreenMode]`.
+  size as `Conquer.exe` sees it (not DPI-aware: 2560 at 150% → 1707), full screen. After that only Ayarlar writes `[ScreenMode]`.
 - `--channel test` (staff: a shortcut to `Fetih.exe --channel test`) syncs the same folder to
   `/patch/test/` for that run; the next normal start syncs back.
 - News on the parchment: `/haberler?handler=launcher`.

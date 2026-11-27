@@ -66,6 +66,17 @@ static unsafe partial class Native
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct BITMAPINFOHEADER
+    {
+        public uint Size;
+        public int Width, Height;
+        public ushort Planes, BitCount;
+        public uint Compression, SizeImage;
+        public int XPelsPerMeter, YPelsPerMeter;
+        public uint ClrUsed, ClrImportant;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     public struct TRACKMOUSEEVENT
     {
         public uint Size, Flags;
@@ -171,7 +182,7 @@ static unsafe partial class Native
     public static partial nint CreateCompatibleBitmap(nint hdc, int w, int h);
 
     [LibraryImport("gdi32.dll")]
-    public static partial nint CreateDIBitmap(nint hdc, void* header, uint init, void* bits, void* info, uint usage);
+    public static partial nint CreateDIBSection(nint hdc, BITMAPINFOHEADER* info, uint usage, void** bits, nint section, uint offset);
 
     [LibraryImport("gdi32.dll")]
     public static partial nint SelectObject(nint hdc, nint obj);
@@ -188,8 +199,14 @@ static unsafe partial class Native
     [LibraryImport("gdi32.dll")]
     public static partial int StretchBlt(nint dest, int x, int y, int w, int h, nint src, int sx, int sy, int sw, int sh, uint rop);
 
+    // BLENDFUNCTION { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA } as one DWORD
+    public const uint PremultipliedOver = 0x01FF0000;
+
     [LibraryImport("msimg32.dll")]
-    public static partial int TransparentBlt(nint dest, int x, int y, int w, int h, nint src, int sx, int sy, int sw, int sh, uint key);
+    public static partial int AlphaBlend(nint dest, int x, int y, int w, int h, nint src, int sx, int sy, int sw, int sh, uint blend);
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetDpiForSystem();
 
     [LibraryImport("gdi32.dll")]
     public static partial nint ExtCreateRegion(nint xform, uint count, void* data);
@@ -213,6 +230,14 @@ static unsafe partial class Native
 
     [LibraryImport("ole32.dll")]
     public static partial int CoCreateInstance(Guid* clsid, nint outer, uint context, Guid* iid, nint* obj);
+
+    // The screen as Conquer.exe sees it: it isn't DPI-aware, so Windows hands it the size
+    // divided by the scale (2560 at 150% → 1707)
+    public static (int Width, int Height) GameScreen()
+    {
+        var dpi = GetDpiForSystem();
+        return ((int)Math.Round(GetSystemMetrics(SM_CXSCREEN) * 96.0 / dpi), (int)Math.Round(GetSystemMetrics(SM_CYSCREEN) * 96.0 / dpi));
+    }
 
     public static uint Rgb(int r, int g, int b) => (uint)(r | (g << 8) | (b << 16));
 

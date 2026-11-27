@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Fetih.Patch;
 using static Fetih.Launcher.Native;
@@ -6,27 +5,33 @@ using static Fetih.Launcher.Native;
 namespace Fetih.Launcher;
 
 // The old Play screen: news on the parchment, progress with Oyna and Çık bottom right, Ayarlar
-// top right. All drawn with GDI on the 800x600 Main.bmp.
+// top right. Laid out in the art's 800x600 and drawn at the screen's DPI: the art scaled once,
+// text at full resolution.
 sealed unsafe class LauncherWindow
 {
-    const int Width = 800, Height = 600;
+    const int ArtWidth = 800, ArtHeight = 600;
     const uint WM_SYNCED = WM_APP + 1;
 
     static readonly RECT NewsArea = new(62, 116, 574, 504);
-    static readonly RECT PlayButton = new(578, 440, 578 + 210, 440 + 80);
-    static readonly RECT ExitButton = new(629, 526, 629 + 108, 526 + 30);
-    static readonly RECT SettingsButton = new(650, 34, 650 + 108, 34 + 30);
-    static readonly RECT StatusArea = new(596, 362, 784, 396);
-    static readonly RECT Bar = new(606, 402, 774, 412);
+    static readonly RECT PlayButton = new(584, 448, 584 + 210, 448 + 80);
+    static readonly RECT ExitButton = new(635, 532, 635 + 108, 532 + 30);
+    static readonly RECT SettingsButton = new(652, 36, 652 + 108, 36 + 30);
+    static readonly RECT StatusArea = new(608, 360, 778, 400);
+    static readonly RECT Bar = new(618, 404, 768, 409);
+    static readonly RECT Amount = new(608, 413, 778, 431);
 
-    static readonly uint Ink = Rgb(74, 44, 16), Faded = Rgb(138, 98, 48), Hot = Rgb(150, 40, 20);
-    static readonly uint Gold = Rgb(205, 182, 92), GoldHot = Rgb(239, 207, 99);
+    static readonly uint Ink = Rgb(74, 44, 16), Faded = Rgb(132, 94, 46), Hot = Rgb(150, 40, 20);
+    static readonly uint Gold = Rgb(205, 182, 92), GoldHot = Rgb(239, 207, 99), GoldDim = Rgb(150, 128, 70);
 
     static LauncherWindow? _current;
 
     readonly Updater _updater;
+    readonly double _scale;
+    readonly int _width, _height;
     readonly List<(RECT Rect, Action Click)> _hot = [];
-    nint _hwnd, _main, _region, _play, _playHot, _playDown, _exit, _exitHot, _exitDown;
+    nint _hwnd, _region;
+    nint _main;
+    readonly nint[] _play = new nint[3], _exit = new nint[3], _settings = new nint[3];
     nint _newsFont, _newsDateFont, _smallFont, _buttonFont, _titleFont;
     int _hover = -1, _pressed = -1;
     bool _tracking;
@@ -35,7 +40,13 @@ sealed unsafe class LauncherWindow
     bool _settingsOpen;
     ScreenMode _editing;
 
-    LauncherWindow(Updater updater) => _updater = updater;
+    LauncherWindow(Updater updater)
+    {
+        _updater = updater;
+        _scale = GetDpiForSystem() / 96.0;
+        _width = this.S(ArtWidth);
+        _height = this.S(ArtHeight);
+    }
 
     public static int Run(Updater updater)
     {
@@ -43,6 +54,10 @@ sealed unsafe class LauncherWindow
         _current = window;
         return window.Loop();
     }
+
+    int S(int v) => (int)Math.Round(v * _scale);
+
+    RECT S(RECT r) => new(this.S(r.Left), this.S(r.Top), this.S(r.Right), this.S(r.Bottom));
 
     int Loop()
     {
@@ -62,10 +77,10 @@ sealed unsafe class LauncherWindow
         }
 
         this.LoadArt();
-        var x = (GetSystemMetrics(SM_CXSCREEN) - Width) / 2;
-        var y = (GetSystemMetrics(SM_CYSCREEN) - Height) / 2;
+        var x = (GetSystemMetrics(SM_CXSCREEN) - _width) / 2;
+        var y = (GetSystemMetrics(SM_CYSCREEN) - _height) / 2;
         _hwnd = CreateWindowEx(WS_EX_APPWINDOW, "FetihLauncher", Install.Name, WS_POPUP | WS_MINIMIZEBOX | WS_SYSMENU,
-            x, y, Width, Height, 0, 0, instance, 0);
+            x, y, _width, _height, 0, 0, instance, 0);
         if (_region != 0)
             SetWindowRgn(_hwnd, _region, 0);
         ShowWindow(_hwnd, SW_SHOW);
@@ -87,20 +102,31 @@ sealed unsafe class LauncherWindow
 
     void LoadArt()
     {
-        _main = Art.Bitmap("Main.bmp");
-        _region = Art.Region("Main.rgn");
-        _play = Art.Bitmap("high01.bmp");
-        _playHot = Art.Bitmap("high02.bmp");
-        _playDown = Art.Bitmap("high03.bmp");
-        _exit = Art.Bitmap("Exit01.bmp");
-        _exitHot = Art.Bitmap("Exit02.bmp");
-        _exitDown = Art.Bitmap("Exit03.bmp");
-        _titleFont = CreateFont(-20, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, "Palatino Linotype");
-        _newsFont = CreateFont(-17, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, "Palatino Linotype");
-        _newsDateFont = CreateFont(-14, 0, 0, 0, FW_NORMAL, 1, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, "Palatino Linotype");
-        _smallFont = CreateFont(-13, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, "Tahoma");
-        _buttonFont = CreateFont(-14, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, "Tahoma");
+        _main = Art.Parchment()?.Scale(_scale).ToBitmap() ?? 0;
+        _region = Art.Region("Main.rgn", (float)_scale);
+        for (var i = 0; i < 3; i++)
+        {
+            _play[i] = Art.Button($"high0{i + 1}.bmp")?.Scale(_scale).ToBitmap() ?? 0;
+            var exit = Art.Button($"Exit0{i + 1}.bmp");
+            _exit[i] = exit?.Scale(_scale).ToBitmap() ?? 0;
+            if (exit != null)
+            {
+                // The Çık frame with its text covered by the plain texture left of it
+                var blank = exit.Copy();
+                for (var x = 36; x < 80; x += 28)
+                    blank.CopyBlock(8, 5, Math.Min(28, 80 - x), 20, x, 5);
+                _settings[i] = blank.Scale(_scale).ToBitmap();
+            }
+        }
+        _titleFont = this.Font(20, FW_BOLD, false, "Palatino Linotype");
+        _newsFont = this.Font(17, FW_NORMAL, false, "Palatino Linotype");
+        _newsDateFont = this.Font(13, FW_NORMAL, false, "Palatino Linotype");
+        _smallFont = this.Font(13, FW_NORMAL, false, "Tahoma");
+        _buttonFont = this.Font(14, FW_BOLD, false, "Tahoma");
     }
+
+    nint Font(int pixels, int weight, bool italic, string face) =>
+        CreateFont(-this.S(pixels), 0, 0, 0, weight, italic ? 1u : 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, 0, face);
 
     [UnmanagedCallersOnly]
     static nint WndProc(nint hwnd, uint msg, nint w, nint l)
@@ -212,13 +238,13 @@ sealed unsafe class LauncherWindow
         PAINTSTRUCT ps;
         var hdc = BeginPaint(hwnd, &ps);
         var buffer = CreateCompatibleDC(hdc);
-        var surface = CreateCompatibleBitmap(hdc, Width, Height);
+        var surface = CreateCompatibleBitmap(hdc, _width, _height);
         var oldSurface = SelectObject(buffer, surface);
         var art = CreateCompatibleDC(hdc);
         try
         {
             this.Draw(buffer, art);
-            BitBlt(hdc, 0, 0, Width, Height, buffer, 0, 0, SRCCOPY);
+            BitBlt(hdc, 0, 0, _width, _height, buffer, 0, 0, SRCCOPY);
         }
         finally
         {
@@ -236,19 +262,11 @@ sealed unsafe class LauncherWindow
         _hot.Clear();
         SetBkMode(dc, TRANSPARENT);
 
-        if (_main != 0)
-        {
-            var old = SelectObject(art, _main);
-            BitBlt(dc, 0, 0, Width, Height, art, 0, 0, SRCCOPY);
-            SelectObject(art, old);
-        }
-        else
-        {
-            var all = new RECT(0, 0, Width, Height);
-            var brush = CreateSolidBrush(Rgb(222, 190, 130));
-            FillRect(dc, &all, brush);
-            DeleteObject(brush);
-        }
+        var all = new RECT(0, 0, _width, _height);
+        var background = CreateSolidBrush(_main != 0 ? Rgb(24, 16, 8) : Rgb(222, 190, 130));
+        FillRect(dc, &all, background);
+        DeleteObject(background);
+        this.Image(dc, art, _main, 0, 0);
 
         if (_settingsOpen)
             this.DrawSettings(dc);
@@ -258,12 +276,15 @@ sealed unsafe class LauncherWindow
         this.DrawStatus(dc);
 
         var ready = _updater.Phase is Phase.Ready or Phase.Failed;
-        this.ImageButton(dc, art, PlayButton, _play, _playHot, _playDown, transparent: true, enabled: ready,
-            _updater.Phase == Phase.Failed ? _updater.Retry : this.PlayClicked);
-        this.ImageButton(dc, art, ExitButton, _exit, _exitHot, _exitDown, transparent: false, enabled: true,
-            () => DestroyWindow(_hwnd));
+        this.ImageButton(dc, art, PlayButton, _play, ready, _updater.Phase == Phase.Failed ? _updater.Retry : this.PlayClicked);
+        this.ImageButton(dc, art, ExitButton, _exit, true, () => DestroyWindow(_hwnd));
         if (_updater.Phase == Phase.Ready)
-            this.SettingsButtonDraw(dc, art);
+        {
+            var index = this.ImageButton(dc, art, SettingsButton, _settings, true, this.OpenSettings);
+            this.Text(dc, _buttonFont, index == _hover ? GoldHot : Gold, "Ayarlar",
+                new RECT(SettingsButton.Left, SettingsButton.Top + 4, SettingsButton.Right, SettingsButton.Bottom - 4),
+                DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        }
 
         // The hot list changed under the mouse: hover again on the next move
         if (_hot.Count != previousHot)
@@ -273,24 +294,25 @@ sealed unsafe class LauncherWindow
     void DrawNews(nint dc)
     {
         var news = _updater.News;
-        var area = NewsArea;
         if (news == null)
         {
-            this.Text(dc, _newsDateFont, Faded, _updater.NewsFailed ? "Haberler alınamadı." : "Haberler yükleniyor...", area, DT_LEFT);
+            this.Text(dc, _newsDateFont, Faded, _updater.NewsFailed ? "Haberler alınamadı." : "Haberler yükleniyor...", NewsArea, DT_LEFT);
             return;
         }
-        var y = area.Top;
+        var y = NewsArea.Top;
         foreach (var (date, subject) in news)
         {
-            if (y + 44 > area.Bottom)
-                break;
-            this.Text(dc, _newsDateFont, Faded, date, new RECT(area.Left, y, area.Right, y + 18), DT_LEFT | DT_SINGLELINE);
-            var text = new RECT(area.Left, y + 17, area.Right, area.Bottom);
+            // Measured in pixels, laid out in art units
+            var measure = this.S(new RECT(NewsArea.Left, 0, NewsArea.Right, 1000));
             SelectObject(dc, _newsFont);
-            DrawText(dc, subject, -1, &text, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
-            var height = Math.Min(text.Bottom - text.Top, 44);
-            this.Text(dc, _newsFont, Ink, subject, new RECT(area.Left, y + 17, area.Right, y + 17 + height), DT_LEFT | DT_WORDBREAK | DT_END_ELLIPSIS);
-            y += 17 + height + 12;
+            DrawText(dc, subject, -1, &measure, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+            var height = Math.Min((int)Math.Ceiling((measure.Bottom - measure.Top) / _scale), 44);
+            if (y + 16 + height > NewsArea.Bottom)
+                break;
+            this.Text(dc, _newsDateFont, Faded, date, new RECT(NewsArea.Left, y, NewsArea.Right, y + 16), DT_LEFT | DT_SINGLELINE);
+            this.Text(dc, _newsFont, Ink, subject, new RECT(NewsArea.Left, y + 16, NewsArea.Right, y + 16 + height),
+                DT_LEFT | DT_WORDBREAK | DT_END_ELLIPSIS);
+            y += 16 + height + 12;
         }
     }
 
@@ -311,7 +333,7 @@ sealed unsafe class LauncherWindow
 
         this.Text(dc, _newsFont, Faded, "Boyut", new RECT(left, y, NewsArea.Right, y + 22), DT_LEFT | DT_SINGLELINE);
         y += 26;
-        var (screenW, screenH) = (GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+        var (screenW, screenH) = GameScreen();
         var sizes = GameSetUp.Sizes(screenW, screenH);
         if (!sizes.Contains((_editing.Width, _editing.Height)))
             sizes = [.. sizes, (_editing.Width, _editing.Height)];
@@ -342,7 +364,7 @@ sealed unsafe class LauncherWindow
     void Link(nint dc, RECT rect, string label, Action click, uint? color = null)
     {
         var index = _hot.Count;
-        _hot.Add((rect, () =>
+        _hot.Add((this.S(rect), () =>
         {
             click();
             InvalidateRect(_hwnd, 0, 0);
@@ -352,62 +374,55 @@ sealed unsafe class LauncherWindow
 
     void DrawStatus(nint dc)
     {
-        var status = _updater.Status;
-        this.Text(dc, _smallFont, Gold, status, StatusArea, DT_CENTER | DT_WORDBREAK);
+        this.Text(dc, _smallFont, Gold, _updater.Status, StatusArea, DT_CENTER | DT_WORDBREAK);
         if (_updater.Phase != Phase.Updating || _updater.Total <= 0)
             return;
 
-        var frame = new RECT(Bar.Left - 1, Bar.Top - 1, Bar.Right + 1, Bar.Bottom + 1);
-        var border = CreateSolidBrush(Rgb(120, 96, 48));
-        var back = CreateSolidBrush(Rgb(28, 22, 14));
-        var fill = CreateSolidBrush(Rgb(214, 168, 64));
-        FillRect(dc, &frame, border);
-        var inner = Bar;
-        FillRect(dc, &inner, back);
         var done = Math.Clamp((double)_updater.Done / _updater.Total, 0, 1);
-        var bar = new RECT(Bar.Left, Bar.Top, Bar.Left + (int)((Bar.Right - Bar.Left) * done), Bar.Bottom);
-        FillRect(dc, &bar, fill);
+        var bar = this.S(Bar);
+        var frame = new RECT(bar.Left - 1, bar.Top - 1, bar.Right + 1, bar.Bottom + 1);
+        var fill = new RECT(bar.Left, bar.Top, bar.Left + (int)((bar.Right - bar.Left) * done), bar.Bottom);
+        var border = CreateSolidBrush(Rgb(110, 88, 44));
+        var back = CreateSolidBrush(Rgb(20, 14, 8));
+        var gold = CreateSolidBrush(Rgb(214, 168, 64));
+        FillRect(dc, &frame, border);
+        FillRect(dc, &bar, back);
+        FillRect(dc, &fill, gold);
         DeleteObject(border);
         DeleteObject(back);
-        DeleteObject(fill);
+        DeleteObject(gold);
+
+        var amount = $"%{(int)(done * 100)}  ·  {_updater.Done >> 20} / {_updater.Total >> 20} MB";
+        this.Text(dc, _smallFont, GoldDim, amount, Amount, DT_CENTER | DT_SINGLELINE);
     }
 
-    void ImageButton(nint dc, nint art, RECT rect, nint normal, nint hot, nint down, bool transparent, bool enabled, Action click)
+    void Image(nint dc, nint art, nint image, int x, int y)
+    {
+        if (image == 0)
+            return;
+        var old = SelectObject(art, image);
+        AlphaBlend(dc, x, y, _width, _height, art, 0, 0, _width, _height, PremultipliedOver);
+        SelectObject(art, old);
+    }
+
+    // Returns the button's index in the hot list (-1 when disabled)
+    int ImageButton(nint dc, nint art, RECT rect, nint[] images, bool enabled, Action click)
     {
         var index = -1;
+        var pixels = this.S(rect);
         if (enabled)
         {
             index = _hot.Count;
-            _hot.Add((rect, click));
+            _hot.Add((pixels, click));
         }
-        var image = index >= 0 && index == _pressed && index == _hover ? down : index >= 0 && index == _hover ? hot : normal;
+        var image = images[index >= 0 && index == _pressed && index == _hover ? 2 : index >= 0 && index == _hover ? 1 : 0];
         if (image == 0)
-            return;
+            return index;
         var old = SelectObject(art, image);
-        var (w, h) = (rect.Right - rect.Left, rect.Bottom - rect.Top);
-        if (transparent)
-            TransparentBlt(dc, rect.Left, rect.Top, w, h, art, 0, 0, w, h, Art.Key);
-        else
-            BitBlt(dc, rect.Left, rect.Top, w, h, art, 0, 0, SRCCOPY);
+        var (w, h) = (this.S(rect.Right - rect.Left), this.S(rect.Bottom - rect.Top));
+        AlphaBlend(dc, pixels.Left, pixels.Top, w, h, art, 0, 0, w, h, PremultipliedOver);
         SelectObject(art, old);
-    }
-
-    // The Çık frame with its text tiled over by the plain texture left of it, and our own text
-    void SettingsButtonDraw(nint dc, nint art)
-    {
-        var rect = SettingsButton;
-        var index = _hot.Count;
-        _hot.Add((rect, this.OpenSettings));
-        var image = index == _pressed && index == _hover ? _exitDown : index == _hover ? _exitHot : _exit;
-        if (image == 0)
-            return;
-        var old = SelectObject(art, image);
-        BitBlt(dc, rect.Left, rect.Top, 108, 30, art, 0, 0, SRCCOPY);
-        for (var x = 36; x < 80; x += 28)
-            BitBlt(dc, rect.Left + x, rect.Top + 5, Math.Min(28, 80 - x), 20, art, 8, 5, SRCCOPY);
-        SelectObject(art, old);
-        this.Text(dc, _buttonFont, index == _hover ? GoldHot : Gold, "Ayarlar",
-            new RECT(rect.Left, rect.Top + 4, rect.Right, rect.Bottom - 4), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        return index;
     }
 
     void OpenSettings()
@@ -430,10 +445,12 @@ sealed unsafe class LauncherWindow
             DestroyWindow(_hwnd);
     }
 
+    // rect in art units
     void Text(nint dc, nint font, uint color, string text, RECT rect, uint format)
     {
+        var pixels = this.S(rect);
         SelectObject(dc, font);
         SetTextColor(dc, color);
-        DrawText(dc, text, -1, &rect, format | DT_NOPREFIX);
+        DrawText(dc, text, -1, &pixels, format | DT_NOPREFIX);
     }
 }
