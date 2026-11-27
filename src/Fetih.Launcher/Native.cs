@@ -172,9 +172,6 @@ static unsafe partial class Native
     [LibraryImport("user32.dll")]
     public static partial int FillRect(nint hdc, RECT* rect, nint brush);
 
-    [LibraryImport("user32.dll")]
-    public static partial int FrameRect(nint hdc, RECT* rect, nint brush);
-
     [LibraryImport("kernel32.dll", EntryPoint = "GetModuleHandleW")]
     public static partial nint GetModuleHandle(nint name);
 

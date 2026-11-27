@@ -22,7 +22,20 @@ static unsafe class Art
     // The character over the right pane, as PlayGui.ini's fg_pic0 (Play/MainS.bmp at 594,0)
     public static Picture? Character() => Button("MainS.bmp");
 
-    public static Picture? Plain(string name) => Bytes(name) is { } bmp ? Picture.FromBmp(bmp, (_, _, _) => false) : null;
+    // Only the glyph of the game's title bar buttons (data/main/TMin.bmp, TClose.bmp) in one
+    // colour: brightness is alpha, the blue background (up to ~110) and the frame rows go
+    public static Picture? Glyph(string name, uint rgb)
+    {
+        if (Bytes(name) is not { } bmp || Picture.FromBmp(bmp, (_, _, _) => false) is not { } source)
+            return null;
+        return source.Map((x, y, argb) =>
+        {
+            var brightness = (((argb >> 16) & 0xFF) + ((argb >> 8) & 0xFF) + (argb & 0xFF)) / 3.0;
+            var alpha = y < 2 ? 0 : Math.Clamp((brightness - 115) / 55, 0, 1);
+            uint Channel(int shift) => (uint)Math.Round(((rgb >> shift) & 0xFF) * alpha) << shift;
+            return (uint)Math.Round(alpha * 255) << 24 | Channel(16) | Channel(8) | Channel(0);
+        });
+    }
 
     public static Picture? Button(string name) =>
         Bytes(name) is { } bmp ? Picture.FromBmp(bmp, (r, g, b) => g > 100 && g - Math.Max(r, b) > 50) : null;
@@ -66,6 +79,14 @@ sealed unsafe class Picture(int width, int height, uint[] pixels)
             }
         }
         return new Picture(width, height, pixels);
+    }
+
+    public Picture Map(Func<int, int, uint, uint> map)
+    {
+        var pixels = new uint[_pixels.Length];
+        for (var i = 0; i < pixels.Length; i++)
+            pixels[i] = map(i % this.Width, i / this.Width, _pixels[i]);
+        return new Picture(this.Width, this.Height, pixels);
     }
 
     public Picture Copy() => new(this.Width, this.Height, (uint[])_pixels.Clone());

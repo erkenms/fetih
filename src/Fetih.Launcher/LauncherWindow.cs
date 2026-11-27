@@ -16,8 +16,8 @@ sealed unsafe class LauncherWindow
     static readonly RECT NewsArea = new(62, 116, 574, 504);
     static readonly RECT PlayButton = new(584, 448, 584 + 210, 448 + 80);
     static readonly RECT SettingsButton = new(635, 532, 635 + 108, 532 + 30);
-    static readonly RECT MinimizeButton = new(750, 24, 750 + 15, 24 + 20);
-    static readonly RECT CloseButton = new(768, 24, 768 + 15, 24 + 20);
+    static readonly RECT MinimizeButton = new(748, 20, 748 + 15, 20 + 20);
+    static readonly RECT CloseButton = new(766, 20, 766 + 15, 20 + 20);
     static readonly RECT StatusArea = new(608, 360, 778, 400);
     static readonly RECT Bar = new(618, 404, 768, 409);
     static readonly RECT Amount = new(608, 413, 778, 431);
@@ -34,7 +34,8 @@ sealed unsafe class LauncherWindow
     nint _hwnd, _region;
     nint _main, _character;
     readonly nint[] _play = new nint[3], _settings = new nint[3];
-    nint _minimize, _close;
+    // Normal, hot, shadow
+    readonly nint[] _minimize = new nint[3], _close = new nint[3];
     nint _newsFont, _newsDateFont, _smallFont, _buttonFont, _titleFont;
     int _hover = -1, _pressed = -1;
     bool _tracking;
@@ -121,8 +122,12 @@ sealed unsafe class LauncherWindow
                 _settings[i] = blank.Scale(_scale).ToBitmap();
             }
         }
-        _minimize = Art.Plain("TMin.bmp")?.Scale(_scale).ToBitmap() ?? 0;
-        _close = Art.Plain("TClose.bmp")?.Scale(_scale).ToBitmap() ?? 0;
+        uint[] glyphColors = [0xCDB65C, 0xEFCF63, 0x000000];
+        for (var i = 0; i < 3; i++)
+        {
+            _minimize[i] = Art.Glyph("TMin.bmp", glyphColors[i])?.Scale(_scale).ToBitmap() ?? 0;
+            _close[i] = Art.Glyph("TClose.bmp", glyphColors[i])?.Scale(_scale).ToBitmap() ?? 0;
+        }
         _titleFont = this.Font(20, FW_BOLD, false, "Palatino Linotype");
         _newsFont = this.Font(17, FW_NORMAL, false, "Palatino Linotype");
         _newsDateFont = this.Font(13, FW_NORMAL, false, "Palatino Linotype");
@@ -413,18 +418,16 @@ sealed unsafe class LauncherWindow
         SelectObject(art, old);
     }
 
-    // The game's own title bar buttons (data/main/TMin.bmp, TClose.bmp); no hover art, so a gold frame
-    void TitleButton(nint dc, nint art, RECT rect, nint image, Action click)
+    // The game's own minimize and close glyphs, gold with a shadow like the parchment's title
+    void TitleButton(nint dc, nint art, RECT rect, nint[] images, Action click)
     {
         var index = _hot.Count;
         var pixels = this.S(rect);
         _hot.Add((pixels, click));
-        this.Image(dc, art, image, pixels.Left, pixels.Top, this.S(rect.Right - rect.Left), this.S(rect.Bottom - rect.Top));
-        if (index != _hover)
-            return;
-        var gold = CreateSolidBrush(index == _pressed ? Gold : GoldHot);
-        FrameRect(dc, &pixels, gold);
-        DeleteObject(gold);
+        var (w, h) = (this.S(rect.Right - rect.Left), this.S(rect.Bottom - rect.Top));
+        var offset = Math.Max(1, this.S(1));
+        this.Image(dc, art, images[2], pixels.Left + offset, pixels.Top + offset, w, h);
+        this.Image(dc, art, images[index == _hover ? 1 : 0], pixels.Left, pixels.Top, w, h);
     }
 
     // Returns the button's index in the hot list (-1 when disabled)
