@@ -23,7 +23,9 @@ sealed unsafe class LauncherWindow
     static readonly RECT Bar = new(618, 404, 768, 409);
     static readonly RECT Amount = new(608, 413, 778, 431);
 
-    static readonly uint Ink = Rgb(74, 44, 16), Faded = Rgb(132, 94, 46), Hot = Rgb(150, 40, 20);
+    // docs/web-style.md
+    static readonly uint Ink = Rgb(0x3b, 0x26, 0x14), Heading = Rgb(0x5a, 0x2a, 0x10), LinkInk = Rgb(0x7a, 0x1a, 0x12),
+        HotInk = Rgb(0xa0, 0x1a, 0x10), Muted = Rgb(0x7a, 0x5a, 0x36), Divider = Rgb(0xa8, 0x8a, 0x5a);
     static readonly uint Gold = Rgb(205, 182, 92), GoldHot = Rgb(239, 207, 99);
 
     static LauncherWindow? _current;
@@ -34,10 +36,12 @@ sealed unsafe class LauncherWindow
     readonly List<(RECT Rect, Action Click)> _hot = [];
     nint _hwnd, _region;
     nint _main, _character;
-    readonly nint[] _play = new nint[3], _settings = new nint[3];
+    readonly nint[] _play = new nint[3], _radio = new nint[2];
+    readonly Picture?[] _frame = new Picture?[3];
+    readonly Dictionary<int, nint[]> _frames = [];
     // Normal, hot, shadow
     readonly nint[] _minimize = new nint[3], _close = new nint[3];
-    nint _newsFont, _newsDateFont, _smallFont, _buttonFont, _titleFont;
+    nint _titleFont, _labelFont, _bodyFont, _boldFont, _smallFont, _statusFont, _buttonFont;
     int _hover = -1, _pressed = -1;
     bool _tracking;
 
@@ -113,27 +117,24 @@ sealed unsafe class LauncherWindow
         for (var i = 0; i < 3; i++)
         {
             _play[i] = Art.Button($"high0{i + 1}.bmp")?.Scale(_scale).ToBitmap() ?? 0;
-            var exit = Art.Button($"Exit0{i + 1}.bmp");
-            if (exit != null)
-            {
-                // The Çık frame with its text covered by the plain texture left of it
-                var blank = exit.Copy();
-                for (var x = 36; x < 80; x += 28)
-                    blank.CopyBlock(8, 5, Math.Min(28, 80 - x), 20, x, 5);
-                _settings[i] = blank.Scale(_scale).ToBitmap();
-            }
+            _frame[i] = Art.Button($"Exit0{i + 1}.bmp");
         }
+        _radio[0] = Art.Alpha("RadioOff.bmp")?.ScaleTo(this.S(16), this.S(16)).ToBitmap() ?? 0;
+        _radio[1] = Art.Alpha("RadioOn.bmp")?.ScaleTo(this.S(16), this.S(16)).ToBitmap() ?? 0;
         uint[] glyphColors = [0xCDB65C, 0xEFCF63, 0x000000];
         for (var i = 0; i < 3; i++)
         {
             _minimize[i] = Art.Glyph("TMin.bmp", glyphColors[i])?.ScaleTo(this.S(20), this.S(26)).ToBitmap() ?? 0;
             _close[i] = Art.Glyph("TClose.bmp", glyphColors[i])?.ScaleTo(this.S(20), this.S(26)).ToBitmap() ?? 0;
         }
-        _titleFont = this.Font(20, FW_BOLD, false, "Palatino Linotype");
-        _newsFont = this.Font(17, FW_NORMAL, false, "Palatino Linotype");
-        _newsDateFont = this.Font(13, FW_NORMAL, false, "Palatino Linotype");
-        _smallFont = this.Font(13, FW_NORMAL, false, "Tahoma");
-        _buttonFont = this.Font(14, FW_BOLD, false, "Tahoma");
+        // As the site (docs/web-style.md): Georgia bold titles, Verdana text
+        _titleFont = this.Font(16, FW_BOLD, false, "Georgia");
+        _labelFont = this.Font(13, FW_BOLD, false, "Georgia");
+        _bodyFont = this.Font(12, FW_NORMAL, false, "Verdana");
+        _boldFont = this.Font(12, FW_BOLD, false, "Verdana");
+        _smallFont = this.Font(10, FW_NORMAL, false, "Verdana");
+        _statusFont = this.Font(13, FW_NORMAL, false, "Tahoma");
+        _buttonFont = this.Font(13, FW_BOLD, false, "Tahoma");
     }
 
     nint Font(int pixels, int weight, bool italic, string face) =>
@@ -281,7 +282,7 @@ sealed unsafe class LauncherWindow
         this.Image(dc, art, _character, this.S(CharacterX), 0, _width - this.S(CharacterX), _height);
 
         if (_settingsOpen)
-            this.DrawSettings(dc);
+            this.DrawSettings(dc, art);
         else
             this.DrawNews(dc);
 
@@ -292,60 +293,57 @@ sealed unsafe class LauncherWindow
         this.TitleButton(dc, art, MinimizeButton, _minimize, () => ShowWindow(_hwnd, SW_MINIMIZE));
         this.TitleButton(dc, art, CloseButton, _close, () => DestroyWindow(_hwnd));
         if (_updater.Phase == Phase.Ready)
-        {
-            var index = this.ImageButton(dc, art, SettingsButton, _settings, true, this.OpenSettings);
-            this.Text(dc, _buttonFont, index == _hover ? GoldHot : Gold, "Ayarlar",
-                new RECT(SettingsButton.Left, SettingsButton.Top + 4, SettingsButton.Right, SettingsButton.Bottom - 4),
-                DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-        }
+            this.FrameButton(dc, art, SettingsButton, "Ayarlar", this.OpenSettings);
 
         // The hot list changed under the mouse: hover again on the next move
         if (_hot.Count != previousHot)
             _hover = -1;
     }
 
+    // Like /haberler: bold subject, date on the right, dotted lines between
     void DrawNews(nint dc)
     {
+        var area = NewsArea;
+        this.Title(dc, "Sunucu Güncellemeleri", area.Left, area.Top);
+        var y = area.Top + 26;
         var news = _updater.News;
         if (news == null)
         {
-            this.Text(dc, _newsDateFont, Faded, _updater.NewsFailed ? "Haberler alınamadı." : "Haberler yükleniyor...", NewsArea, DT_LEFT);
+            this.Text(dc, _bodyFont, Muted, _updater.NewsFailed ? "Haberler alınamadı." : "Haberler yükleniyor...",
+                new RECT(area.Left, y, area.Right, y + 18), DT_LEFT | DT_SINGLELINE);
             return;
         }
-        var y = NewsArea.Top;
+
+        var bottom = area.Bottom - 22;
         foreach (var (date, subject) in news)
         {
-            // Measured in pixels, laid out in art units
-            var measure = this.S(new RECT(NewsArea.Left, 0, NewsArea.Right, 1000));
-            SelectObject(dc, _newsFont);
-            DrawText(dc, subject, -1, &measure, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
-            var height = Math.Min((int)Math.Ceiling((measure.Bottom - measure.Top) / _scale), 44);
-            if (y + 16 + height > NewsArea.Bottom)
+            var text = new RECT(area.Left, y, area.Right - 80, y + 32);
+            var height = Math.Min(this.Measure(dc, _boldFont, subject, text), 32);
+            if (y + height + 6 > bottom)
                 break;
-            this.Text(dc, _newsDateFont, Faded, date, new RECT(NewsArea.Left, y, NewsArea.Right, y + 16), DT_LEFT | DT_SINGLELINE);
-            this.Text(dc, _newsFont, Ink, subject, new RECT(NewsArea.Left, y + 16, NewsArea.Right, y + 16 + height),
-                DT_LEFT | DT_WORDBREAK | DT_END_ELLIPSIS);
-            y += 16 + height + 12;
+            this.Text(dc, _boldFont, Ink, subject, text with { Bottom = y + height }, DT_LEFT | DT_WORDBREAK | DT_END_ELLIPSIS);
+            this.Text(dc, _smallFont, Muted, date, new RECT(area.Right - 80, y + 2, area.Right, y + 16), DT_RIGHT | DT_SINGLELINE);
+            y += height + 5;
+            this.Dotted(dc, area.Left, area.Right, y);
+            y += 6;
         }
+        this.Link(dc, new RECT(area.Right - 120, area.Bottom - 18, area.Right, area.Bottom), "Tüm haberler »",
+            _updater.OpenNews, DT_RIGHT);
     }
 
-    void DrawSettings(nint dc)
+    void DrawSettings(nint dc, nint art)
     {
-        var left = NewsArea.Left;
-        var y = NewsArea.Top;
-        this.Text(dc, _titleFont, Ink, "Ayarlar", new RECT(left, y, NewsArea.Right, y + 26), DT_LEFT | DT_SINGLELINE);
-        y += 40;
+        var area = NewsArea;
+        var left = area.Left;
+        this.Title(dc, "Ayarlar", left, area.Top);
+        var y = area.Top + 30;
 
-        this.Text(dc, _newsFont, Faded, "Ekran", new RECT(left, y, NewsArea.Right, y + 22), DT_LEFT | DT_SINGLELINE);
-        y += 26;
-        this.Choice(dc, new RECT(left + 16, y, left + 176, y + 22), "Tam ekran", _editing.FullScreen,
-            () => _editing = _editing with { FullScreen = true });
-        this.Choice(dc, new RECT(left + 186, y, left + 346, y + 22), "Pencere", !_editing.FullScreen,
-            () => _editing = _editing with { FullScreen = false });
-        y += 38;
+        y = this.Section(dc, "Ekran", y);
+        this.Choice(dc, art, left + 8, y, 150, "Tam ekran", _editing.FullScreen, () => _editing = _editing with { FullScreen = true });
+        this.Choice(dc, art, left + 238, y, 150, "Pencere", !_editing.FullScreen, () => _editing = _editing with { FullScreen = false });
+        y += 32;
 
-        this.Text(dc, _newsFont, Faded, "Boyut", new RECT(left, y, NewsArea.Right, y + 22), DT_LEFT | DT_SINGLELINE);
-        y += 26;
+        y = this.Section(dc, "Boyut", y);
         var (screenW, screenH) = GameScreen();
         var sizes = GameSetUp.Sizes(screenW, screenH);
         if (!sizes.Contains((_editing.Width, _editing.Height)))
@@ -353,41 +351,120 @@ sealed unsafe class LauncherWindow
         for (var i = 0; i < sizes.Count; i++)
         {
             var (w, h) = sizes[i];
-            var column = i % 2;
-            var row = i / 2;
-            var rect = new RECT(left + 16 + column * 250, y + row * 26, left + 16 + column * 250 + 240, y + row * 26 + 22);
             var label = i == 0 ? $"{w} × {h} (ekranın)" : $"{w} × {h}";
-            this.Choice(dc, rect, label, w == _editing.Width && h == _editing.Height,
+            this.Choice(dc, art, left + 8 + i % 2 * 230, y + i / 2 * 22, 220, label, w == _editing.Width && h == _editing.Height,
                 () => _editing = _editing with { Width = w, Height = h });
         }
+        y += (sizes.Count + 1) / 2 * 22 + 10;
 
-        var bottom = NewsArea.Bottom - 26;
-        this.Link(dc, new RECT(left, bottom, left + 90, bottom + 22), "Kaydet", this.SaveSettings);
-        this.Link(dc, new RECT(left + 100, bottom, left + 190, bottom + 22), "Vazgeç", () => _settingsOpen = false);
-        this.Link(dc, new RECT(NewsArea.Right - 150, bottom, NewsArea.Right, bottom + 22), "Dosyaları onar", () =>
+        y = this.Section(dc, "Dosyalar", y);
+        this.Text(dc, _bodyFont, Muted, "Eksik ya da bozuk dosya varsa\nhepsini denetleyip yeniden indirir.",
+            new RECT(left + 8, y, area.Right - 150, y + 32), DT_LEFT | DT_WORDBREAK);
+        this.FrameButton(dc, art, new RECT(area.Right - 136, y, area.Right, y + 30), "Dosyaları onar", () =>
         {
             _settingsOpen = false;
             _updater.Repair();
         });
+
+        var bottom = area.Bottom - 30;
+        this.FrameButton(dc, art, new RECT(area.Right - 196, bottom, area.Right - 104, bottom + 30), "Vazgeç", () => _settingsOpen = false);
+        this.FrameButton(dc, art, new RECT(area.Right - 92, bottom, area.Right, bottom + 30), "Kaydet", this.SaveSettings);
     }
 
-    void Choice(nint dc, RECT rect, string label, bool selected, Action click) =>
-        this.Link(dc, rect, (selected ? "● " : "○ ") + label, click, selected ? Ink : Faded);
-
-    void Link(nint dc, RECT rect, string label, Action click, uint? color = null)
+    // A Georgia title with a light shadow, as on the site
+    void Title(nint dc, string text, int x, int y)
     {
-        var index = _hot.Count;
+        this.Text(dc, _titleFont, Rgb(250, 235, 200), text, new RECT(x + 1, y + 1, NewsArea.Right, y + 23), DT_LEFT | DT_SINGLELINE);
+        this.Text(dc, _titleFont, Heading, text, new RECT(x, y, NewsArea.Right, y + 22), DT_LEFT | DT_SINGLELINE);
+    }
+
+    // A section label with a dotted line under it; returns where its content starts
+    int Section(nint dc, string label, int y)
+    {
+        this.Text(dc, _labelFont, Heading, label, new RECT(NewsArea.Left, y, NewsArea.Right, y + 18), DT_LEFT | DT_SINGLELINE);
+        this.Dotted(dc, NewsArea.Left, NewsArea.Right, y + 19);
+        return y + 25;
+    }
+
+    void Dotted(nint dc, int x0, int x1, int y)
+    {
+        var brush = CreateSolidBrush(Divider);
+        var size = Math.Max(1, this.S(1));
+        for (var x = this.S(x0); x < this.S(x1); x += size * 2)
+        {
+            var dot = new RECT(x, this.S(y), x + size, this.S(y) + size);
+            FillRect(dc, &dot, brush);
+        }
+        DeleteObject(brush);
+    }
+
+    // The game's radio button and a label
+    void Choice(nint dc, nint art, int x, int y, int width, string label, bool selected, Action click)
+    {
+        var rect = new RECT(x, y, x + width, y + 18);
+        var index = this.Hot(rect, click);
+        var radio = this.S(new RECT(x, y + 1, x + 16, y + 17));
+        this.Image(dc, art, _radio[selected ? 1 : 0], radio.Left, radio.Top, this.S(16), this.S(16));
+        this.Text(dc, selected ? _boldFont : _bodyFont, index == _hover ? LinkInk : Ink, label,
+            new RECT(x + 22, y, x + width, y + 18), DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+    }
+
+    void Link(nint dc, RECT rect, string label, Action click, uint align = DT_LEFT)
+    {
+        var index = this.Hot(rect, click);
+        this.Text(dc, _boldFont, index == _hover ? HotInk : LinkInk, label, rect, align | DT_SINGLELINE | DT_VCENTER);
+    }
+
+    int Hot(RECT rect, Action click)
+    {
         _hot.Add((this.S(rect), () =>
         {
             click();
             InvalidateRect(_hwnd, 0, 0);
         }));
-        this.Text(dc, _newsFont, index == _hover ? Hot : color ?? Ink, label, rect, DT_LEFT | DT_SINGLELINE | DT_VCENTER);
+        return _hot.Count - 1;
+    }
+
+    int Measure(nint dc, nint font, string text, RECT rect)
+    {
+        var pixels = this.S(rect);
+        SelectObject(dc, font);
+        DrawText(dc, text, -1, &pixels, DT_LEFT | DT_WORDBREAK | DT_NOPREFIX | DT_CALCRECT);
+        return (int)Math.Ceiling((pixels.Bottom - pixels.Top) / _scale);
+    }
+
+    // The Çık frame stretched to any width: its ends as they are, the plain texture left of
+    // its text tiled between them
+    nint[] Frame(int width)
+    {
+        if (_frames.TryGetValue(width, out var cached))
+            return cached;
+        var images = new nint[3];
+        for (var i = 0; i < 3; i++)
+        {
+            if (_frame[i] is not { } exit)
+                continue;
+            var pixels = new uint[width * exit.Height];
+            var frame = new Picture(width, exit.Height, pixels);
+            frame.Blit(exit, 0, 0, 8, 0);
+            for (var x = 8; x < width - 8; x += 28)
+                frame.Blit(exit, 8, 0, Math.Min(28, width - 8 - x), x);
+            frame.Blit(exit, exit.Width - 8, 0, 8, width - 8);
+            images[i] = frame.ScaleTo(this.S(width), this.S(exit.Height)).ToBitmap();
+        }
+        return _frames[width] = images;
+    }
+
+    void FrameButton(nint dc, nint art, RECT rect, string label, Action click)
+    {
+        var index = this.ImageButton(dc, art, rect, this.Frame(rect.Right - rect.Left), true, click);
+        this.Text(dc, _buttonFont, index == _hover ? GoldHot : Gold, label,
+            new RECT(rect.Left, rect.Top + 4, rect.Right, rect.Bottom - 4), DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
 
     void DrawStatus(nint dc)
     {
-        this.Shadowed(dc, _smallFont, Gold, _updater.Status, StatusArea, DT_CENTER | DT_WORDBREAK);
+        this.Shadowed(dc, _statusFont, Gold, _updater.Status, StatusArea, DT_CENTER | DT_WORDBREAK);
         if (_updater.Phase != Phase.Updating || _updater.Total <= 0)
             return;
 
@@ -406,7 +483,7 @@ sealed unsafe class LauncherWindow
         DeleteObject(gold);
 
         var amount = $"%{(int)(done * 100)}  ·  {_updater.Done >> 20} / {_updater.Total >> 20} MB";
-        this.Shadowed(dc, _smallFont, Gold, amount, Amount, DT_CENTER | DT_SINGLELINE);
+        this.Shadowed(dc, _statusFont, Gold, amount, Amount, DT_CENTER | DT_SINGLELINE);
     }
 
     // w×h pixels of the image's top left at (x, y)

@@ -189,6 +189,18 @@ sealed class Updater(string root, string selfPath, LauncherSettings settings, st
         }
     }
 
+    public void OpenNews()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo($"{settings.Url.TrimEnd('/')}/haberler") { UseShellExecute = true });
+        }
+        catch (Exception)
+        {
+            // No browser; nothing to do
+        }
+    }
+
     public ScreenMode ReadScreen() => GameSetUp.ReadScreen(this.GameSetUpPath);
 
     public void WriteScreen(ScreenMode mode) => GameSetUp.WriteScreen(this.GameSetUpPath, mode);

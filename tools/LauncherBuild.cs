@@ -24,6 +24,20 @@ static class LauncherBuild
         var settingsPath = Path.Combine(work, LauncherSettings.FileName);
         File.WriteAllBytes(settingsPath, settings);
 
+        // The game's radio buttons are DDS; the launcher reads only BMP
+        var built = Path.Combine(work, "art");
+        Directory.CreateDirectory(built);
+        foreach (var (dds, name) in new[] { ("Radio_Button1Pic.dds", "RadioOff.bmp"), ("Radio_Button2Pic.dds", "RadioOn.bmp") })
+        {
+            var path = Path.Combine(artDir, "data", "interface", "Style01", "faction", dds);
+            if (!File.Exists(path))
+            {
+                Console.Error.WriteLine($"No {path}");
+                return null;
+            }
+            File.WriteAllBytes(Path.Combine(built, name), Bmp32(Dds.Decode(File.ReadAllBytes(path))));
+        }
+
         var output = Path.Combine(work, "publish");
         var psi = new ProcessStartInfo("dotnet")
         {
@@ -34,7 +48,7 @@ static class LauncherBuild
         foreach (var arg in new[]
                  {
                      "publish", Path.Combine("src", "Fetih.Launcher", "Fetih.Launcher.csproj"), "-c", "Release", "-o", output,
-                     $"-p:FetihArt={Path.GetFullPath(artDir)}", $"-p:FetihLauncherJson={settingsPath}", "-nologo", "-v:q",
+                     $"-p:FetihArt={Path.GetFullPath(artDir)}", $"-p:FetihBuiltArt={built}", $"-p:FetihLauncherJson={settingsPath}", "-nologo", "-v:q",
                  })
             psi.ArgumentList.Add(arg);
         using var process = Process.Start(psi)!;
@@ -55,5 +69,29 @@ static class LauncherBuild
             ["Fetih.exe"] = exe,
             [LauncherSettings.FileName] = settings,
         };
+    }
+
+    // Top-down 32-bit BGRA, straight alpha
+    static byte[] Bmp32(Rgba image)
+    {
+        var size = image.Width * image.Height * 4;
+        var bmp = new byte[54 + size];
+        "BM"u8.CopyTo(bmp);
+        BitConverter.TryWriteBytes(bmp.AsSpan(2), bmp.Length);
+        BitConverter.TryWriteBytes(bmp.AsSpan(10), 54);
+        BitConverter.TryWriteBytes(bmp.AsSpan(14), 40);
+        BitConverter.TryWriteBytes(bmp.AsSpan(18), image.Width);
+        BitConverter.TryWriteBytes(bmp.AsSpan(22), -image.Height);
+        BitConverter.TryWriteBytes(bmp.AsSpan(26), (short)1);
+        BitConverter.TryWriteBytes(bmp.AsSpan(28), (short)32);
+        BitConverter.TryWriteBytes(bmp.AsSpan(34), size);
+        for (var i = 0; i < image.Width * image.Height; i++)
+        {
+            bmp[54 + i * 4] = image.Pixels[i * 4 + 2];
+            bmp[54 + i * 4 + 1] = image.Pixels[i * 4 + 1];
+            bmp[54 + i * 4 + 2] = image.Pixels[i * 4];
+            bmp[54 + i * 4 + 3] = image.Pixels[i * 4 + 3];
+        }
+        return bmp;
     }
 }

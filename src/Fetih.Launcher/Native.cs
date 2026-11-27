@@ -14,7 +14,7 @@ static unsafe partial class Native
     public const int SW_SHOW = 5, SW_MINIMIZE = 6;
     public const uint SRCCOPY = 0x00CC0020;
     public const int TRANSPARENT = 1;
-    public const uint DT_LEFT = 0, DT_CENTER = 1, DT_VCENTER = 4, DT_WORDBREAK = 0x10, DT_SINGLELINE = 0x20,
+    public const uint DT_LEFT = 0, DT_CENTER = 1, DT_RIGHT = 2, DT_VCENTER = 4, DT_WORDBREAK = 0x10, DT_SINGLELINE = 0x20,
         DT_NOPREFIX = 0x800, DT_END_ELLIPSIS = 0x8000, DT_CALCRECT = 0x400;
     public const uint MB_OK = 0, MB_OKCANCEL = 1, MB_YESNO = 4, MB_RETRYCANCEL = 5, MB_ICONERROR = 0x10,
         MB_ICONWARNING = 0x30, MB_ICONINFORMATION = 0x40;

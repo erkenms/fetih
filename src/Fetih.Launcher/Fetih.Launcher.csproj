@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Builds on Linux and macOS too: self-contained, trimmed, one file, no NativeAOT.
-       FetihArt is the old Turkish client (Play/ art, conquer.ico), FetihLauncherJson the
-       launcher.json to bake in; tools/build.cs passes both. -->
+       FetihArt is the old Turkish client (Play/ art, conquer.ico), FetihBuiltArt what the build
+       converted from it (the radio buttons), FetihLauncherJson the launcher.json to bake in;
+       tools/build.cs passes all three. -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net11.0</TargetFramework>
@@ -30,6 +31,10 @@
     <EmbeddedResource Include="$(FetihArt)/Play/Main.bmp;$(FetihArt)/Play/Main.rgn;$(FetihArt)/Play/MainS.bmp" LogicalName="%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(FetihArt)/Play/Button/high0?.bmp;$(FetihArt)/Play/Button/Exit0?.bmp" LogicalName="%(Filename)%(Extension)" />
     <EmbeddedResource Include="$(FetihArt)/data/main/TMin.bmp;$(FetihArt)/data/main/TClose.bmp" LogicalName="%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(FetihBuiltArt)' != ''">
+    <EmbeddedResource Include="$(FetihBuiltArt)/*.bmp" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(FetihLauncherJson)' != ''">

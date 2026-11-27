@@ -44,6 +44,8 @@ static unsafe class Art
         });
     }
 
+    public static Picture? Alpha(string name) => Bytes(name) is { } bmp ? Picture.FromBmp(bmp, (_, _, _) => false) : null;
+
     public static Picture? Button(string name) =>
         Bytes(name) is { } bmp ? Picture.FromBmp(bmp, (r, g, b) => g > 100 && g - Math.Max(r, b) > 50) : null;
 
@@ -70,19 +72,23 @@ sealed unsafe class Picture(int width, int height, uint[] pixels)
         var offset = BitConverter.ToInt32(bmp, 10);
         var width = BitConverter.ToInt32(bmp, 18);
         var height = BitConverter.ToInt32(bmp, 22);
-        if (BitConverter.ToInt16(bmp, 28) != 24)
+        // 24-bit with a key colour, or 32-bit with straight alpha
+        var bytes = BitConverter.ToInt16(bmp, 28) / 8;
+        if (bytes is not (3 or 4))
             return null;
         var bottomUp = height > 0;
         height = Math.Abs(height);
-        var stride = (width * 3 + 3) & ~3;
+        var stride = (width * bytes + 3) & ~3;
         var pixels = new uint[width * height];
         for (var y = 0; y < height; y++)
         {
             var row = offset + (bottomUp ? height - 1 - y : y) * stride;
             for (var x = 0; x < width; x++)
             {
-                int b = bmp[row + x * 3], g = bmp[row + x * 3 + 1], r = bmp[row + x * 3 + 2];
-                pixels[y * width + x] = isKey(r, g, b) ? 0 : 0xFF000000u | (uint)(r << 16 | g << 8 | b);
+                var at = row + x * bytes;
+                int b = bmp[at], g = bmp[at + 1], r = bmp[at + 2];
+                var a = bytes == 4 ? bmp[at + 3] : isKey(r, g, b) ? 0 : 255;
+                pixels[y * width + x] = (uint)(a << 24 | r * a / 255 << 16 | g * a / 255 << 8 | b * a / 255);
             }
         }
         return new Picture(width, height, pixels);
@@ -96,6 +102,13 @@ sealed unsafe class Picture(int width, int height, uint[] pixels)
         for (var i = 0; i < pixels.Length; i++)
             pixels[i] = map(i % this.Width, i / this.Width, _pixels[i]);
         return new Picture(this.Width, this.Height, pixels);
+    }
+
+    // Copies columns [sx, sx + w) of source, full height, to column dx
+    public void Blit(Picture source, int sx, int dy, int w, int dx)
+    {
+        for (var y = 0; y < Math.Min(this.Height, source.Height); y++)
+            Array.Copy(source._pixels, y * source.Width + sx, _pixels, (y + dy) * this.Width + dx, w);
     }
 
     public Picture Copy() => new(this.Width, this.Height, (uint[])_pixels.Clone());
