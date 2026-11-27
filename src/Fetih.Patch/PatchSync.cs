@@ -7,7 +7,10 @@ namespace Fetih.Patch;
 // renames it into place, deletes what the plan says and records the new state.
 public sealed class PatchSync(HttpClient http, Uri patchBase, string root)
 {
-    public int Parallel { get; init; } = 4;
+    public int Parallel { get; init; } = 16;
+
+    // Objects up to this size are fetched into memory; bigger ones resume from .launcher/download/
+    public long SmallObject { get; init; } = 1 << 20;
     public int Attempts { get; init; } = 5;
     public TimeSpan RetryDelay { get; init; } = TimeSpan.FromSeconds(1);
 
@@ -83,25 +86,57 @@ public sealed class PatchSync(HttpClient http, Uri patchBase, string root)
         var first = entries[0];
         for (var attempt = 1; ; attempt++)
         {
-            var part = await this.FetchObjectAsync(first, ct);
+            // Small objects stay in memory: one new file per game file instead of three
+            byte[]? small = null;
+            string? part = null;
+            if (first.CompressedSize <= SmallObject)
+                small = await this.FetchSmallAsync(first, ct);
+            else
+                part = await this.FetchObjectAsync(first, ct);
             try
             {
                 var installed = new List<LocalFile>();
                 foreach (var entry in entries)
                 {
                     var path = SyncPlan.FullPath(root, entry.Path);
-                    PatchObjectStore.DecompressAndVerify(part, entry, path);
+                    using (var raw = small != null ? new MemoryStream(small, writable: false) : (Stream)File.OpenRead(part!))
+                        PatchObjectStore.DecompressAndVerify(raw, entry, path);
                     if (!entry.PlayerOwned)
                         installed.Add(LocalFile.Of(PatchManifest.NormalizePath(entry.Path), new FileInfo(path), entry.Sha256));
                 }
-                File.Delete(part);
+                if (part != null)
+                    File.Delete(part);
                 return installed;
             }
             catch (InvalidDataException) when (attempt < this.Attempts)
             {
                 // A corrupt download: start this object over
-                Interlocked.Add(ref _done, -new FileInfo(part).Length);
-                File.Delete(part);
+                Interlocked.Add(ref _done, -(small?.Length ?? new FileInfo(part!).Length));
+                if (part != null)
+                    File.Delete(part);
+            }
+        }
+    }
+
+    async Task<byte[]> FetchSmallAsync(PatchFileEntry entry, CancellationToken ct)
+    {
+        if (entry.CompressedSize == 0)
+            return [];
+        var url = new Uri(patchBase, "objects/" + entry.Sha256.ToLowerInvariant());
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var bytes = await http.GetByteArrayAsync(url, ct);
+                if (bytes.Length != entry.CompressedSize)
+                    throw new IOException($"Short download of {entry.Path}");
+                Interlocked.Add(ref _done, bytes.Length);
+                return bytes;
+            }
+            catch (Exception ex) when (attempt < this.Attempts && !ct.IsCancellationRequested &&
+                                       ex is HttpRequestException or IOException or TaskCanceledException)
+            {
+                await Task.Delay(this.RetryDelay * attempt, ct);
             }
         }
     }

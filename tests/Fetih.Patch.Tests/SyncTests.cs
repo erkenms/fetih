@@ -48,7 +48,7 @@ public sealed class SyncTests : IDisposable
         var baseUri = new Uri($"http://fetih.test/{channel}/");
         var manifest = await PatchSync.FetchManifestAsync(http, baseUri, CancellationToken.None);
         var plan = SyncPlan.Create(_install, manifest, state, repair);
-        var sync = new PatchSync(http, baseUri, _install) { RetryDelay = TimeSpan.Zero };
+        var sync = new PatchSync(http, baseUri, _install) { RetryDelay = TimeSpan.Zero, SmallObject = 64 * 1024 };
         return (await sync.ApplyAsync(manifest, plan, state, CancellationToken.None), plan, sync);
     }
 

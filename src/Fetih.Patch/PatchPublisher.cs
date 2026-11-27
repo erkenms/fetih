@@ -43,6 +43,13 @@ public static class PatchObjectStore
 
     public static void DecompressAndVerify(string objectPath, PatchFileEntry entry, string destinationPath)
     {
+        using var raw = File.OpenRead(objectPath);
+        DecompressAndVerify(raw, entry, destinationPath);
+    }
+
+    // Writes a temp file next to the destination, checks size and SHA-256, then renames it
+    public static void DecompressAndVerify(Stream raw, PatchFileEntry entry, string destinationPath)
+    {
         var dir = Path.GetDirectoryName(destinationPath);
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);
@@ -52,7 +59,6 @@ public static class PatchObjectStore
         {
             long written = 0;
             string actualHash;
-            using (var raw = File.OpenRead(objectPath))
             using (var input = OpenDecompressStream(raw, entry.Compression))
             using (var output = File.Create(tempPath))
             using (var hasher = IncrementalHash.CreateHash(HashAlgorithmName.SHA256))
