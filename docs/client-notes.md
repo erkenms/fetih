@@ -36,6 +36,18 @@ port: confirm in the Windows client, which wins. i386 only, doesn't run.
   `ScreenShot/%u.jpg`, `ChatLog.log`, `debug.log`, `leavewordsystem.log`, root `p2p*.log`.
   `GraphicData.dll` also rewrites `ini/c3.wdb` (a cache built from the ini files, through
   `c3.wdb.tmp`). The patch manifest flags these player-owned (`PlayerOwnedFiles`).
+- **Screen mode** (2026-11-27, Windows 5619 `Conquer.exe` VA 0x65e2c7, 0x65e37a): `[ScreenMode]`
+  of `ini/GameSetUp.ini`. `ScreenModeRecord` 0 is 800×600 with `FullScrType` 1, 1 800×600 with 0,
+  2 1024×768 with 1, 3 1024×768 with 0; 4 takes `ScrWidth`, `ScrHeight` and `FullScrType` as
+  written, unclamped. Missing keys default to 2 (0 when the desktop is under 1024×768) and
+  `FullScrType` 1. Which `FullScrType` is full screen, and whether odd sizes work, not yet
+  checked in Windows. `Conquer.exe` isn't DPI-aware: at 150% a 2560 screen is 1707 to it.
+- **play.exe** (2026-11-27): its high quality button writes `[GameMode] HighTimes` + 1 and
+  `GameModeRecord=1` (normal 0, low 2); `Conquer.exe` reads only `GameModeRecord`. The client
+  restarts itself (message 85 with 4, VA 0x5d7e93) by `ShellExecute` of `%s/play.exe`;
+  `client/patches.json` makes that `Fetih.exe`. The old Play screen is `ini/PlayGui.ini`:
+  `Play/Main.bmp` with `Main.rgn` (a u32 length, then RGNDATA), `Play/MainS.bmp` at 594,0, green
+  (00ff00) cut away.
 - **Role camera** (2026-11-26, Mac 1133): roles are drawn in an orthographic camera one world
   unit to a pixel (`CMyBitmap::GameCameraCreate`: eye (w/2, -1000, h/2) looking along +y, up
   -z). `C3DRole::Draw` turns the model around z by its angle, then around x by
