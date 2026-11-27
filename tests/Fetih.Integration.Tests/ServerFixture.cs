@@ -128,7 +128,6 @@ namespace Fetih.Integration.Tests
         public static readonly (ushort X, ushort Y) GuardOnPost = (740, 860);
         // Macaques (type 10) attack players within 8 cells
         public static readonly (ushort X, ushort Y) MacaqueOnWatch = (740, 820);
-        public static readonly (ushort X, ushort Y) PheasantForBots = (560, 860);
         public static readonly (ushort X, ushort Y) PheasantNearGuard = (903, 900);
         public static readonly (ushort X, ushort Y) PheasantForMagic = (880, 820);
         public static readonly (ushort X, ushort Y) PheasantForBlade = (900, 820);
@@ -679,7 +678,7 @@ namespace Fetih.Integration.Tests
                 (PheasantForPalm, 1u), (PheasantForKick, 1u), (PheasantForTripleAttack, 1u), (PheasantForOblivion, 1u),
                 (PheasantForAdrenaline, 1u), (PheasantForWindstorm, 1u), (PheasantForFatalStrike, 1u), (PheasantForGapingWounds, 1u), (PheasantForFreezingArrow, 1u), (PheasantForPoisonousArrows, 1u),
                 (MacaqueForTripleAttack, 10u), (MacaqueForWindstorm, 10u), (PheasantForGaleBomb, 1u),
-                (GuardOnPost, 900u), (MacaqueOnWatch, 10u), (PheasantForBots, 1u),
+                (GuardOnPost, 900u), (MacaqueOnWatch, 10u),
             }.Select((s, i) => $"{{ \"id\": {i + 1}, \"map\": 1002, \"x\": {s.Item1.X}, \"y\": {s.Item1.Y}, " +
                 $"\"spread\": 0, \"amount\": 1, \"respawn\": {RespawnSeconds}, \"monster\": {s.Item2} }}")
                 .Concat(new[] { ContestPheasantA, ContestPheasantB }.Select((at, i) =>

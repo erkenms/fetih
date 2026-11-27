@@ -35,7 +35,7 @@ Loki's compactor enforces retention per stream (higher priority wins):
 
 In production (`deploy/compose.yaml`), `Logging__Level` is `info` and `PacketTrace__All` is `false`. High-volume `move.walk`, `move.jump`, `combat.hit`, and `monster.respawned` events stay at `debug` (not written at `info`), while `monster.killed` (used by the Player dashboard), `monster.drop`, `move.teleport`, and rejections remain at `info`/`warn` with 7-day Loki retention. Packet tracing can still be enabled per IP/account in config or toggled at runtime for an account from the admin panel.
 
-Measured with 10 `Fetih.Bots` (5 hunting, 3 wandering, 2 jumping) over 4 minutes under production logging settings (`Level=info`, `ConsoleLevel=warn`, `PacketTrace.All=false`):
+Measured with 10 bots (5 hunting, 3 wandering, 2 jumping) over 4 minutes under production logging settings (`Level=info`, `ConsoleLevel=warn`, `PacketTrace.All=false`):
 
 - **Game main JSONL**: ~115 KB total (~77 KB steady-state gameplay: 32% `monster.killed`, 17% `monster.drop`, 10% `item.expired`), or **~2.8–4.1 MB per continuously active player per day** (~280–410 MB/day for 100 active players, down from ~10 GB/day with `PacketTrace.All=true`).
 - **Audit JSONL**: ~830 B per game login+logout pair and ~313 B per account login (~400 KB/day uncompressed, ~60 KB/day gzipped for 100 players logging in 5 times/day).

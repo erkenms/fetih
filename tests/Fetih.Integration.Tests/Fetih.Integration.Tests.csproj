@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Fetih.TestClient\Fetih.TestClient.csproj" />
-    <ProjectReference Include="..\..\src\Fetih.Bots\Fetih.Bots.csproj" />
     <!-- Account code is used directly to create test accounts -->
     <ProjectReference Include="..\..\src\Fetih.Account\Fetih.Account.csproj" />
     <!-- The game server only needs to be built; the tests run it as a process -->

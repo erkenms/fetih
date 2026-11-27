@@ -4,7 +4,7 @@ Conquer Online server for the 5619 client.
 
 | Where | What |
 |---|---|
-| `src/` | Servers: `Fetih.Account` (login, `:9960`), `Fetih.Game` (world, `:5816`, RPC `:5817`), `Fetih.Web` (site and admin, `:5820`). Plus libraries, bots, test client. |
+| `src/` | Servers: `Fetih.Account` (login, `:9960`), `Fetih.Game` (world, `:5816`, RPC `:5817`), `Fetih.Web` (site and admin, `:5820`). Plus libraries and the test client. |
 | `tests/` | .NET tests |
 | `client/`, `tools/build.cs` | Build the playable client, web assets, launcher patches |
 | `sql/` | Schemas and `migrations/` (applied at startup) |
@@ -17,7 +17,6 @@ podman compose -f deploy/compose.yaml up -d db
 dotnet test Fetih.slnx
 cd src/Fetih.Game && dotnet run              # likewise Account, Web
 dotnet run tools/build.cs all --ip <ip>      # client, web assets, patches
-cd src/Fetih.Bots && dotnet run -- --Groups:0:Count=300
 ```
 
 Settings: `.config` files, or env like `FETIH_GAME_Database__Hostname=db`.

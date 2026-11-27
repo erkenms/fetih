@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Fetih.Account/Fetih.Account.csproj" />
-    <Project Path="src/Fetih.Bots/Fetih.Bots.csproj" />
     <Project Path="src/Fetih.TestClient/Fetih.TestClient.csproj" />
     <Project Path="src/Fetih.Core/Fetih.Core.csproj" />
     <Project Path="src/Fetih.Game/Fetih.Game.csproj" />

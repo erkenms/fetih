@@ -1,6 +1,6 @@
 # fetih
 
-A Conquer Online v5619 compatible server emulator, with its website, admin panel, bots, and client build pipeline.
+A Conquer Online v5619 compatible server emulator, with its website, admin panel and client build pipeline.
 
 ## License
 
