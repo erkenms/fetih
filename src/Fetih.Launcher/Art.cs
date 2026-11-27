@@ -28,10 +28,17 @@ static unsafe class Art
     {
         if (Bytes(name) is not { } bmp || Picture.FromBmp(bmp, (_, _, _) => false) is not { } source)
             return null;
-        return source.Map((x, y, argb) =>
+        var ink = source.Map((x, y, argb) =>
         {
             var brightness = (((argb >> 16) & 0xFF) + ((argb >> 8) & 0xFF) + (argb & 0xFF)) / 3.0;
-            var alpha = y < 2 ? 0 : Math.Clamp((brightness - 115) / 55, 0, 1);
+            return (uint)Math.Round((y < 2 ? 0 : Math.Clamp((brightness - 115) / 55, 0, 1)) * 255);
+        });
+        // A little thicker: a neighbour's ink shows at 60%
+        return ink.Map((x, y, a) =>
+        {
+            var alpha = a / 255.0;
+            foreach (var (dx, dy) in new[] { (1, 0), (-1, 0), (0, 1), (0, -1) })
+                alpha = Math.Max(alpha, 0.6 * ink.At(x + dx, y + dy) / 255.0);
             uint Channel(int shift) => (uint)Math.Round(((rgb >> shift) & 0xFF) * alpha) << shift;
             return (uint)Math.Round(alpha * 255) << 24 | Channel(16) | Channel(8) | Channel(0);
         });
@@ -81,6 +88,8 @@ sealed unsafe class Picture(int width, int height, uint[] pixels)
         return new Picture(width, height, pixels);
     }
 
+    public uint At(int x, int y) => x >= 0 && y >= 0 && x < this.Width && y < this.Height ? _pixels[y * this.Width + x] : 0;
+
     public Picture Map(Func<int, int, uint, uint> map)
     {
         var pixels = new uint[_pixels.Length];
@@ -98,21 +107,22 @@ sealed unsafe class Picture(int width, int height, uint[] pixels)
             Array.Copy(_pixels, (sy + y) * this.Width + sx, _pixels, (dy + y) * this.Width + dx, w);
     }
 
-    public Picture Scale(double scale)
+    public Picture Scale(double scale) =>
+        Math.Abs(scale - 1) < 0.001 ? this : this.ScaleTo(Math.Max(1, (int)Math.Round(this.Width * scale)), Math.Max(1, (int)Math.Round(this.Height * scale)));
+
+    // Bilinear, premultiplied
+    public Picture ScaleTo(int w, int h)
     {
-        if (Math.Abs(scale - 1) < 0.001)
-            return this;
-        var w = Math.Max(1, (int)Math.Round(this.Width * scale));
-        var h = Math.Max(1, (int)Math.Round(this.Height * scale));
+        double sx = (double)w / this.Width, sy = (double)h / this.Height;
         var result = new uint[w * h];
         for (var y = 0; y < h; y++)
         {
-            var fy = Math.Clamp((y + 0.5) / scale - 0.5, 0, this.Height - 1);
+            var fy = Math.Clamp((y + 0.5) / sy - 0.5, 0, this.Height - 1);
             int y0 = (int)fy, y1 = Math.Min(y0 + 1, this.Height - 1);
             var ty = fy - y0;
             for (var x = 0; x < w; x++)
             {
-                var fx = Math.Clamp((x + 0.5) / scale - 0.5, 0, this.Width - 1);
+                var fx = Math.Clamp((x + 0.5) / sx - 0.5, 0, this.Width - 1);
                 int x0 = (int)fx, x1 = Math.Min(x0 + 1, this.Width - 1);
                 var tx = fx - x0;
                 uint p00 = _pixels[y0 * this.Width + x0], p01 = _pixels[y0 * this.Width + x1];

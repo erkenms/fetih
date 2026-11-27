@@ -16,8 +16,9 @@ sealed unsafe class LauncherWindow
     static readonly RECT NewsArea = new(62, 116, 574, 504);
     static readonly RECT PlayButton = new(584, 448, 584 + 210, 448 + 80);
     static readonly RECT SettingsButton = new(635, 532, 635 + 108, 532 + 30);
-    static readonly RECT MinimizeButton = new(748, 20, 748 + 15, 20 + 20);
-    static readonly RECT CloseButton = new(766, 20, 766 + 15, 20 + 20);
+    // The 15x20 glyphs at 1.3x
+    static readonly RECT MinimizeButton = new(734, 11, 734 + 20, 11 + 26);
+    static readonly RECT CloseButton = new(756, 11, 756 + 20, 11 + 26);
     static readonly RECT StatusArea = new(608, 360, 778, 400);
     static readonly RECT Bar = new(618, 404, 768, 409);
     static readonly RECT Amount = new(608, 413, 778, 431);
@@ -125,8 +126,8 @@ sealed unsafe class LauncherWindow
         uint[] glyphColors = [0xCDB65C, 0xEFCF63, 0x000000];
         for (var i = 0; i < 3; i++)
         {
-            _minimize[i] = Art.Glyph("TMin.bmp", glyphColors[i])?.Scale(_scale).ToBitmap() ?? 0;
-            _close[i] = Art.Glyph("TClose.bmp", glyphColors[i])?.Scale(_scale).ToBitmap() ?? 0;
+            _minimize[i] = Art.Glyph("TMin.bmp", glyphColors[i])?.ScaleTo(this.S(20), this.S(26)).ToBitmap() ?? 0;
+            _close[i] = Art.Glyph("TClose.bmp", glyphColors[i])?.ScaleTo(this.S(20), this.S(26)).ToBitmap() ?? 0;
         }
         _titleFont = this.Font(20, FW_BOLD, false, "Palatino Linotype");
         _newsFont = this.Font(17, FW_NORMAL, false, "Palatino Linotype");
