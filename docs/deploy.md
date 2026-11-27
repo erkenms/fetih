@@ -15,7 +15,7 @@ internal or `127.0.0.1`.
 
 - Rootful Podman 5+ or Docker. Rootless hides player IPs (bans, limits break).
 - A checkout per env (`/srv/fetih/prod`, `/srv/fetih/test`): Studio edits land there.
-- DNS: `<domain>` and `test.<domain>`.
+- DNS: `<domain>` and `mihenk.<domain>`.
 
 ## Build the client and assets
 
