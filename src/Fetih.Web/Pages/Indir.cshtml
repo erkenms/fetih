@@ -2,31 +2,14 @@
 @model IndirModel
 @{
     ViewData["Title"] = "İndir";
-    var info = Model.Info;
 }
 
 <panel title="İstemciyi İndir" icon="724426">
-    <p>Fetih Online'a katılmak için klasik <b>@info.Version</b> oyun istemcisini indir. Tek dosya:
+    <p>Fetih Online'a katılmak için klasik <b>5619</b> oyun istemcisini indir. Tek dosya:
         oyunu kurar, güncel tutar ve başlatır.</p>
-    <p><span class="tag info">İstemci sürümü: @info.Version</span></p>
-
-    @if (info.Url != null)
-    {
-        bool external = info.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase);
-        <div class="buttons" style="justify-content: flex-start">
-            <a class="button" href="@info.Url"
-               target="@(external ? "_blank" : null)"
-               rel="@(external ? "noreferrer" : null)"
-               download="@(external ? null : "")">Fetih.exe indir</a>
-        </div>
-    }
-    else
-    {
-        <div class="alert inline">
-            Doğrudan indirme bağlantısı henüz yapılandırılmadı.
-            Yerelde <code>dotnet run tools/build.cs client --ip &lt;ip&gt;</code> ile derleyebilirsin.
-        </div>
-    }
+    <div class="buttons" style="justify-content: flex-start">
+        <a class="button" href="/download/Fetih.exe" download>Fetih.exe indir</a>
+    </div>
 </panel>
 
 <panel title="Başlangıç" icon="711394">

@@ -15,7 +15,6 @@ public sealed class PublicSiteService(
     IMemoryCache cache,
     GameRpc rpc,
     GitNewsService newsService,
-    IConfiguration configuration,
     AuditLog audit)
 {
     public const int DefaultPageSize = 25;
@@ -442,14 +441,6 @@ public sealed class PublicSiteService(
         var all = await newsService.GetNewsAsync(ct);
         var items = all.Skip((page - 1) * pageSize).Take(pageSize).ToArray();
         return new NewsPage(items, all.Length);
-    }
-
-    public DownloadInfoResponse GetDownloadInfo()
-    {
-        string? url = configuration["Web:ClientDownloadUrl"];
-        if (string.IsNullOrWhiteSpace(url))
-            url = null;
-        return new DownloadInfoResponse(url, "5619");
     }
 
     internal static async Task<NobilityBoardCache> GetCachedNobilityBoardAsync(IMemoryCache cache)

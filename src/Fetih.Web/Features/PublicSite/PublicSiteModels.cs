@@ -184,5 +184,3 @@ public record NewsEntry(
     string? Body);
 
 public record NewsPage(NewsEntry[] Items, int Total);
-
-public record DownloadInfoResponse(string? Url, string Version);
