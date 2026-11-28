@@ -8,7 +8,7 @@ namespace Fetih.Account.Tests.Packets
 
     public class LoginPacketsTests
     {
-        // The vectors of Srp6Tests (from Vectors/srp6_client.py); b is little-endian here
+        // The vectors of Srp6Tests; b is little-endian here
         static readonly byte[] Salt = Convert.FromHexString(
             "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F60");
         static readonly byte[] Verifier = Convert.FromHexString(

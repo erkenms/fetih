@@ -31,7 +31,7 @@ namespace Fetih.Network.Security.Tests
         [Fact]
         public void Srp6ClientMatchesClientModelVectors()
         {
-            // Same inputs as Srp6Tests; a is from Vectors/srp6_client.py, little-endian
+            // Same inputs as Srp6Tests; a is little-endian
             var a = Convert.FromHexString(
                 "5EED5EED5EED5EED5EED5EED5EED5EED5EED5EED5EED5E0DF0DDE0FE0FDCBA");
             var (publicKey, proof, sessionKey) = Srp6Client.ComputeProof(

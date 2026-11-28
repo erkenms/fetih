@@ -95,8 +95,8 @@ namespace Fetih.Network.Security.Tests
         [Fact]
         public void HashesNumbersWithLeadingZerosShort()
         {
-            // "leading zeros" in Vectors/srp6_client.py: the top byte of the salt, B and K is
-            // zero, so each is hashed one byte shorter than its field
+            // The top byte of the salt, B and K is zero. Each is hashed
+            // one byte shorter than its field.
             var salt = Convert.FromHexString(
                 "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F00");
             var verifier = Srp6.ComputeVerifier(salt, Password);
@@ -121,8 +121,8 @@ namespace Fetih.Network.Security.Tests
         [Fact]
         public void FlagsShortSessionSecret()
         {
-            // "short session secret" in Vectors/srp6_client.py: S is 31 bytes. The client then
-            // hashes a byte past S, so its proof can't be known and isn't checked here.
+            // S is 31 bytes. The client reads past S when hashing, so
+            // its proof can't be known and isn't checked here.
             var salt = Convert.FromHexString(
                 "4142434445464748494A4B4C4D4E4F505152535455565758595A5B5C5D5E5F00");
             var srp = new Srp6(salt, Srp6.ComputeVerifier(salt, Password),
