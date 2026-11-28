@@ -65,6 +65,7 @@ in
       server = {
         http_listen_address = "127.0.0.1";
         http_listen_port = 3100;
+        grpc_listen_address = "127.0.0.1";
         log_level = "warn";
       };
       common = {
@@ -168,6 +169,7 @@ in
   };
   # Keep Prometheus TSDB inside /var/lib/fetih/prometheus
   systemd.services.prometheus.serviceConfig.StateDirectory = pkgs.lib.mkForce "";
+  systemd.services.prometheus.serviceConfig.WorkingDirectory = pkgs.lib.mkForce "/var/lib/fetih/prometheus";
   systemd.services.prometheus.serviceConfig.ReadWritePaths = [ "/var/lib/fetih/prometheus" ];
   systemd.services.prometheus.preStart = ''
     install -d -m 0750 -o prometheus -g prometheus /var/lib/fetih/prometheus

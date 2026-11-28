@@ -71,9 +71,7 @@ in
     serviceConfig = {
       Type = "oneshot";
       Environment = [
-        "NIX_CONFIG=experimental-features = nix-command flakes"
         "DOTNET_CLI_TELEMETRY_OPTOUT=1"
-        "HOME=/var/lib/fetih/deploy"
         "LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.stdenv.cc.cc.lib pkgs.zlib pkgs.fontconfig pkgs.freetype ]}"
       ];
     };
