@@ -22,6 +22,8 @@ fi
 
 : "${R2_ACCESS_KEY_ID:?R2 Access Key ID is required}"
 : "${R2_SECRET_ACCESS_KEY:?R2 Secret Access Key is required}"
+R2_ACCESS_KEY_ID=$(printf '%s' "$R2_ACCESS_KEY_ID" | tr -d '[:space:]')
+R2_SECRET_ACCESS_KEY=$(printf '%s' "$R2_SECRET_ACCESS_KEY" | tr -d '[:space:]')
 
 mkdir -p "$OUT_DIR"
 
@@ -79,7 +81,8 @@ upload_file() {
     RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
     RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
     RCLONE_CONFIG_R2_ENDPOINT="$R2_ENDPOINT" \
-    RCLONE_CONFIG_R2_ACL=private \
+    RCLONE_CONFIG_R2_REGION=auto \
+    RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true \
     rclone copyto "${OUT_DIR}/${name}.tar.zst" "r2:${R2_BUCKET}/client-base/${name}.tar.zst" --progress
   else
     podman run --rm \
@@ -89,7 +92,8 @@ upload_file() {
       -e RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID" \
       -e RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY" \
       -e RCLONE_CONFIG_R2_ENDPOINT="$R2_ENDPOINT" \
-      -e RCLONE_CONFIG_R2_ACL=private \
+      -e RCLONE_CONFIG_R2_REGION=auto \
+      -e RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true \
       docker.io/rclone/rclone:latest \
       copyto "/data/${name}.tar.zst" "r2:${R2_BUCKET}/client-base/${name}.tar.zst" --progress
   fi

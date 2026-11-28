@@ -40,9 +40,9 @@ prompt_hidden() {
 }
 
 if [[ "$TARGET" == "all" || "$TARGET" == "r2" ]]; then
-  R2_ACCESS_KEY_ID=$(prompt_hidden "R2 Access Key ID (leave empty to skip)")
+  R2_ACCESS_KEY_ID=$(prompt_hidden "R2 Access Key ID (leave empty to skip)" | tr -d '[:space:]')
   if [[ -n "$R2_ACCESS_KEY_ID" ]]; then
-    R2_SECRET_ACCESS_KEY=$(prompt_hidden "R2 Secret Access Key")
+    R2_SECRET_ACCESS_KEY=$(prompt_hidden "R2 Secret Access Key" | tr -d '[:space:]')
     if [[ -z "$R2_SECRET_ACCESS_KEY" ]]; then
       echo "R2 Secret Access Key cannot be empty." >&2
       exit 1

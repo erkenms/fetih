@@ -25,7 +25,8 @@ in
       export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
       export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
       export RCLONE_CONFIG_R2_ENDPOINT="$R2_ENDPOINT"
-      export RCLONE_CONFIG_R2_ACL=private
+      export RCLONE_CONFIG_R2_REGION=auto
+      export RCLONE_CONFIG_R2_NO_CHECK_BUCKET=true
 
       fetch_one() {
         local name="$1"
