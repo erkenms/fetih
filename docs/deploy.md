@@ -22,17 +22,18 @@ Prometheus, Grafana (`/grafana/`, behind web sign-in). Open ports: `22`, `80`, `
 
 ## Secrets (`deploy/secrets.sh`)
 
-Keep these three files in `~/.fetih-secrets/` (and in iCloud Passwords), never in git:
+Keep only in iCloud Passwords (never on disk or in git). `deploy/secrets.sh` prompts with hidden
+input and streams each secret over SSH into `/var/lib/fetih/secrets/` (`root`, `0400`):
 
-- `r2.env`: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (endpoint and bucket are in `deploy/nix/r2.nix`)
-- `discord-webhook`: Discord webhook URL on one line
-- `first-admin`: email on line 1, temporary password on line 2 (change after first login)
+- `r2`: `R2 Access Key ID` and `R2 Secret Access Key` (S3 credentials for `fetih-r2`; endpoint/bucket are in `deploy/nix/r2.nix`)
+- `discord`: Discord webhook URL
+- `admin`: first admin email and temporary password (change after first login)
 
 Upload the pinned client archives once, then push secrets anytime:
 
 ```bash
 ./deploy/upload-client-base.sh
-./deploy/secrets.sh 163.5.53.47
+./deploy/secrets.sh 163.5.53.47        # or r2|discord|admin
 ```
 
 ## Backups and restore

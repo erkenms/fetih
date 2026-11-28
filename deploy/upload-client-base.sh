@@ -1,65 +1,74 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Packages _CLIENT/co_5619 and _CLIENT/fo_3105 into deterministic .tar.zst archives,
-# verifies their SHA-256 against deploy/nix/client-base.nix, and uploads them to R2.
-# Usage: deploy/upload-client-base.sh [r2.env]
+# Packages _CLIENT/co_5619 and _CLIENT/fo_3105 into deterministic .tar.zst archives (reusing
+# cached archives if their SHA-256 already matches deploy/nix/client-base.nix) and uploads to R2.
+# Usage: deploy/upload-client-base.sh
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-R2_ENV="${1:-${HOME}/.fetih-secrets/r2.env}"
 OUT_DIR="${HOME}/.cache/fetih-client-base"
 NIX_PINS="${ROOT}/deploy/nix/client-base.nix"
-
-if [[ ! -f "$R2_ENV" ]]; then
-  echo "Missing r2.env at $R2_ENV" >&2
-  exit 1
-fi
-
-set -a
-# shellcheck disable=SC1090
-source "$R2_ENV"
-set +a
-
 R2_ENDPOINT="${R2_ENDPOINT:-https://c5d0a890b5bb2397e192cef5873bdd90.r2.cloudflarestorage.com}"
 R2_BUCKET="${R2_BUCKET:-fetih}"
-: "${R2_ACCESS_KEY_ID:?Set R2_ACCESS_KEY_ID in $R2_ENV}"
-: "${R2_SECRET_ACCESS_KEY:?Set R2_SECRET_ACCESS_KEY in $R2_ENV}"
+
+if [[ -z "${R2_ACCESS_KEY_ID:-}" ]]; then
+  read -rsp "R2 Access Key ID: " R2_ACCESS_KEY_ID </dev/tty
+  echo >&2
+fi
+if [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
+  read -rsp "R2 Secret Access Key: " R2_SECRET_ACCESS_KEY </dev/tty
+  echo >&2
+fi
+
+: "${R2_ACCESS_KEY_ID:?R2 Access Key ID is required}"
+: "${R2_SECRET_ACCESS_KEY:?R2 Secret Access Key is required}"
 
 mkdir -p "$OUT_DIR"
+
+expected_sha() {
+  local name="$1"
+  grep "${name}" "$NIX_PINS" | sed -E 's/.*"([0-9a-f]{64})".*/\1/'
+}
 
 pack_dir() {
   local name="$1"
   local src="${ROOT}/_CLIENT/${name}"
   local out="${OUT_DIR}/${name}.tar.zst"
+  local expected
+  expected=$(expected_sha "$name")
+
+  if [[ -f "$out" && -n "$expected" ]]; then
+    local actual
+    actual=$(shasum -a 256 "$out" | awk '{print $1}')
+    if [[ "$actual" == "$expected" ]]; then
+      echo "Reusing cached ${name}.tar.zst (sha256 matches client-base.nix)"
+      return
+    fi
+  fi
+
   if [[ ! -d "$src" ]]; then
     echo "Missing client directory: $src" >&2
     exit 1
   fi
+
   echo "Packing ${name}.tar.zst..."
-  # Use GNU tar + zstd inside Linux container for deterministic uid/gid/mtime/sort across macOS & Linux
   podman run --rm \
     -v "${src}:/src:ro" \
     -v "${OUT_DIR}:/out" \
     docker.io/library/alpine:latest \
     sh -c "apk add --no-cache tar zstd >/dev/null && tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -C /src -cf - . | zstd -f -T0 -9 -q -o /out/${name}.tar.zst"
+
+  local actual
+  actual=$(shasum -a 256 "$out" | awk '{print $1}')
+  echo "${name}.tar.zst sha256: $actual"
+  if [[ -n "$expected" && "$actual" != "$expected" ]]; then
+    echo "ERROR: SHA-256 does not match $NIX_PINS ($expected)!" >&2
+    exit 1
+  fi
 }
 
 pack_dir "co_5619"
 pack_dir "fo_3105"
-
-CO_SHA=$(shasum -a 256 "${OUT_DIR}/co_5619.tar.zst" | awk '{print $1}')
-FO_SHA=$(shasum -a 256 "${OUT_DIR}/fo_3105.tar.zst" | awk '{print $1}')
-
-echo "co_5619.tar.zst sha256: $CO_SHA"
-echo "fo_3105.tar.zst sha256: $FO_SHA"
-
-if [[ -f "$NIX_PINS" ]]; then
-  if ! grep -q "$CO_SHA" "$NIX_PINS" || ! grep -q "$FO_SHA" "$NIX_PINS"; then
-    echo "WARNING: SHA-256 does not match $NIX_PINS!" >&2
-    echo "Update deploy/nix/client-base.nix if you intentionally changed _CLIENT/co_5619 or _CLIENT/fo_3105." >&2
-    exit 1
-  fi
-fi
 
 upload_file() {
   local name="$1"

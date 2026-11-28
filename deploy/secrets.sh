@@ -1,46 +1,77 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Copies local secret files from ~/.fetih-secrets (or $2) to /var/lib/fetih/secrets/ on the host
-# and restarts the services that consume them.
-# Usage: deploy/secrets.sh <host> [secrets-dir]
+# Prompts for secrets (hidden input, nothing written to disk on this Mac), streams them over
+# SSH to /var/lib/fetih/secrets/ on the host (root:root, 0400), and restarts their services.
+# Usage: deploy/secrets.sh <host> [r2|discord|admin|all]
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 <host> [secrets-dir]" >&2
+  echo "Usage: $0 <host> [r2|discord|admin|all]" >&2
   exit 2
 fi
 
 HOST="$1"
-SECRETS_DIR="${2:-${HOME}/.fetih-secrets}"
-
-if [[ ! -d "$SECRETS_DIR" ]]; then
-  echo "Secrets directory not found: $SECRETS_DIR" >&2
-  exit 1
-fi
-
+TARGET="${2:-all}"
 RESTART=()
 
-copy_secret() {
+case "$TARGET" in
+  r2|discord|admin|all) ;;
+  *) echo "Unknown target: $TARGET (expected r2, discord, admin, or all)" >&2; exit 2 ;;
+esac
+
+install_secret() {
   local name="$1"
-  shift
-  local path="${SECRETS_DIR}/${name}"
-  if [[ ! -f "$path" ]]; then
-    echo "Skipping missing secret: $path"
-    return
-  fi
+  local content="$2"
+  shift 2
   echo "Installing $name -> root@${HOST}:/var/lib/fetih/secrets/${name}"
-  ssh "root@${HOST}" "install -d -m 0700 -o root -g root /var/lib/fetih/secrets && cat > /var/lib/fetih/secrets/${name}.tmp && chmod 0400 /var/lib/fetih/secrets/${name}.tmp && chown root:root /var/lib/fetih/secrets/${name}.tmp && mv /var/lib/fetih/secrets/${name}.tmp /var/lib/fetih/secrets/${name}" < "$path"
+  printf '%s' "$content" | ssh "root@${HOST}" \
+    "install -d -m 0700 -o root -g root /var/lib/fetih/secrets && cat > /var/lib/fetih/secrets/${name}.tmp && chmod 0400 /var/lib/fetih/secrets/${name}.tmp && chown root:root /var/lib/fetih/secrets/${name}.tmp && mv /var/lib/fetih/secrets/${name}.tmp /var/lib/fetih/secrets/${name}"
   for svc in "$@"; do
     RESTART+=("$svc")
   done
 }
 
-copy_secret "r2.env" "fetih-client-base.service" "fetih-deploy.service"
-copy_secret "discord-webhook" "grafana.service"
-copy_secret "first-admin" "fetih-account.service"
+prompt_hidden() {
+  local label="$1"
+  local val=""
+  read -rsp "${label}: " val </dev/tty
+  echo >&2
+  printf '%s' "$val"
+}
+
+if [[ "$TARGET" == "all" || "$TARGET" == "r2" ]]; then
+  R2_ACCESS_KEY_ID=$(prompt_hidden "R2 Access Key ID (leave empty to skip)")
+  if [[ -n "$R2_ACCESS_KEY_ID" ]]; then
+    R2_SECRET_ACCESS_KEY=$(prompt_hidden "R2 Secret Access Key")
+    if [[ -z "$R2_SECRET_ACCESS_KEY" ]]; then
+      echo "R2 Secret Access Key cannot be empty." >&2
+      exit 1
+    fi
+    install_secret "r2.env" "R2_ACCESS_KEY_ID=${R2_ACCESS_KEY_ID}"$'\n'"R2_SECRET_ACCESS_KEY=${R2_SECRET_ACCESS_KEY}"$'\n' \
+      "fetih-client-base.service" "fetih-deploy.service"
+  fi
+fi
+
+if [[ "$TARGET" == "all" || "$TARGET" == "discord" ]]; then
+  DISCORD_WEBHOOK=$(prompt_hidden "Discord webhook URL (leave empty to skip)")
+  if [[ -n "$DISCORD_WEBHOOK" ]]; then
+    install_secret "discord-webhook" "${DISCORD_WEBHOOK}"$'\n' "grafana.service"
+  fi
+fi
+
+if [[ "$TARGET" == "all" || "$TARGET" == "admin" ]]; then
+  read -rp "First admin email (leave empty to skip): " ADMIN_EMAIL </dev/tty
+  if [[ -n "$ADMIN_EMAIL" ]]; then
+    ADMIN_PASS=$(prompt_hidden "First admin temporary password")
+    if [[ -z "$ADMIN_PASS" ]]; then
+      echo "Password cannot be empty." >&2
+      exit 1
+    fi
+    install_secret "first-admin" "${ADMIN_EMAIL}"$'\n'"${ADMIN_PASS}"$'\n' "fetih-account.service"
+  fi
+fi
 
 if [[ ${#RESTART[@]} -gt 0 ]]; then
-  # Deduplicate while preserving order
   UNIQUE=$(printf '%s\n' "${RESTART[@]}" | awk '!seen[$0]++' | tr '\n' ' ')
   echo "Restarting: $UNIQUE"
   ssh "root@${HOST}" "systemctl restart --no-block $UNIQUE"
