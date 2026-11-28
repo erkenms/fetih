@@ -47,7 +47,7 @@
 
   systemd.tmpfiles.rules = [
     "d /var/lib/fetih 0755 root root -"
-    "d /var/lib/fetih/secrets 0700 root root -"
+    "d /var/lib/fetih/secrets 0711 root root -"
     "d /var/lib/fetih/secrets/web-keys-prod 0700 fetih-prod-web fetih-prod-web -"
     "d /var/lib/fetih/secrets/web-keys-test 0700 fetih-test-web fetih-test-web -"
     "d /var/lib/fetih/mysql 0750 mysql mysql -"
@@ -87,7 +87,7 @@
       RemainAfterExit = true;
     };
     script = ''
-      install -d -m 0700 -o root -g root /var/lib/fetih/secrets
+      install -d -m 0711 -o root -g root /var/lib/fetih/secrets
       if [ ! -f /var/lib/fetih/secrets/grafana-admin-password ]; then
         tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > /var/lib/fetih/secrets/grafana-admin-password.tmp
         chmod 0400 /var/lib/fetih/secrets/grafana-admin-password.tmp
@@ -97,6 +97,11 @@
         tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 32 > /var/lib/fetih/secrets/grafana-secret-key.tmp
         chmod 0400 /var/lib/fetih/secrets/grafana-secret-key.tmp
         mv /var/lib/fetih/secrets/grafana-secret-key.tmp /var/lib/fetih/secrets/grafana-secret-key
+      fi
+      if [ ! -f /var/lib/fetih/secrets/discord-webhook ]; then
+        printf 'http://127.0.0.1:9/unconfigured\n' > /var/lib/fetih/secrets/discord-webhook.tmp
+        chmod 0400 /var/lib/fetih/secrets/discord-webhook.tmp
+        mv /var/lib/fetih/secrets/discord-webhook.tmp /var/lib/fetih/secrets/discord-webhook
       fi
     '';
   };

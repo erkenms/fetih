@@ -1,9 +1,9 @@
 { pkgs, ... }:
 let
   r2 = import ./r2.nix;
-  rcloneScript = ''
+  rcloneScript = unit: ''
     set -euo pipefail
-    source /run/credentials/$1/r2
+    source /run/credentials/${unit}/r2
     export R2_ENDPOINT="${r2.endpoint}"
     export R2_BUCKET="${r2.bucket}"
     export RCLONE_CONFIG_R2_TYPE=s3
@@ -31,7 +31,7 @@ in
       PrivateTmp = true;
     };
     script = ''
-      ${rcloneScript} fetih-backup-hourly.service
+      ${rcloneScript "fetih-backup-hourly.service"}
       stamp="$(date +%Y-%m-%d-%H%M)"
       tmp="$(mktemp -d)"
       trap 'rm -rf "$tmp"' EXIT
@@ -68,7 +68,7 @@ in
       PrivateTmp = true;
     };
     script = ''
-      ${rcloneScript} fetih-backup-daily.service
+      ${rcloneScript "fetih-backup-daily.service"}
       day="$(date +%Y-%m-%d)"
       tmp="$(mktemp -d)"
       trap 'rm -rf "$tmp"' EXIT

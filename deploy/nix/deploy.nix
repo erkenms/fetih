@@ -42,6 +42,7 @@ in
         rm -rf "$dest.new"
         mkdir -p "$dest.new"
         ${pkgs.zstd}/bin/zstd -dc "$tmp/$name.tar.zst" | ${pkgs.gnutar}/bin/tar -C "$dest.new" -xf -
+        chmod -R a+rX "$dest.new"
         echo "$expected" > "$dest.new/.sha256"
         rm -rf "$dest.old"
         [ -d "$dest" ] && mv "$dest" "$dest.old" || true
@@ -149,6 +150,7 @@ in
             --patch /var/lib/fetih/client/patch \
             --ip 163.5.53.47 \
             --url https://fetihoyun.com)
+          chmod -R a+rX /var/lib/fetih/client/built /var/lib/fetih/client/assets /var/lib/fetih/client/patch
         fi
 
         # Graceful countdown on production game server before switching
