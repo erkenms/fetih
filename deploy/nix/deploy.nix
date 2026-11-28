@@ -89,7 +89,7 @@ in
       if [ ! -d "$REPOS/main/.git" ]; then
         git clone --branch main "${repoUrl}" "$REPOS/main"
       else
-        git -C "$REPOS/main" fetch --prune --tags origin main
+        git -C "$REPOS/main" fetch --prune --tags --force origin main
       fi
 
       MAIN_REV="$(git -C "$REPOS/main" rev-parse origin/main)"
@@ -131,7 +131,7 @@ in
         if [ ! -d "$REPOS/prod/.git" ]; then
           git clone --tags "${repoUrl}" "$REPOS/prod"
         else
-          git -C "$REPOS/prod" fetch --prune --tags origin
+          git -C "$REPOS/prod" fetch --prune --tags --force origin
         fi
         git -C "$REPOS/prod" checkout -f "tags/$LATEST_TAG"
 
