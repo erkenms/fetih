@@ -1,27 +1,16 @@
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Text.Json;
 using Fetih.Game.World;
-using SkiaSharp;
+using Fetih.Web.Features.Maps;
 
-// Renders each map the client has into two Leaflet tile pyramids: the ground (puzzle
-// background and terrain scene parts) and the covers, transparent, which the viewer can hide.
-// Maps that share a DMap share their tiles, under maps/tiles/<DMap name>/; maps/<id>/meta.json
-// says where they are and how a cell lands on them.
-//
-// A cell's world pixel is wx = 32·(x − y) + 32·mapWidth, wy = 16·(x + y) + 16 (the client's
-// Cell2World). The background's top left sits at world (32·mapWidth − bgWidth/2,
-// 16·mapHeight − bgHeight/2), 16 lower when mapHeight is odd, and the tiles are in background
-// pixels. The background is width × height puzzle tiles of the GameMap.dat puzzle size.
-//
-// Sprites with several frames (fires, orbs, dragonflies) aren't in the pyramids: their frames
-// go to anim/<n>/<frame>.png beside them, listed in animations.json and meta.json, and the
-// viewer loops them over the tiles.
+// Prerenders low-zoom Leaflet tiles (z = 0..2) and metadata/animations for each map; higher
+// zoom levels are rendered on demand by Fetih.Web's MapTileService.
 sealed class MapTiles(ClientFiles files, Output output)
 {
     // Raise it when the rendering changes, so every map is rendered again
-    public const string Version = "2";
-    public const int TileSize = 256;
+    public const string Version = "3";
+    public const int TileSize = MapTileRenderer.TileSize;
+    public const int PrerenderMaxZoom = 2;
 
     public List<string> Summary { get; } = new();
     public ConcurrentBag<string> Errors { get; } = new();
@@ -112,31 +101,35 @@ sealed class MapTiles(ClientFiles files, Output output)
 
         if (Directory.Exists(folder))
             Directory.Delete(folder, true);
-        var puzzleFrames = Ani(puzzle.Ani);
         var animations = new List<Animation>();
-        var ground = Place(drawing.Ground, drawing, bgX, bgY, key, folder, animations);
-        var covers = Place(drawing.Covers, drawing, bgX, bgY, key, folder, animations);
+        CollectAnimations(drawing.Ground, drawing, bgX, bgY, key, folder, animations);
+        CollectAnimations(drawing.Covers, drawing, bgX, bgY, key, folder, animations);
 
-        Pyramid(Path.Combine(folder, "ground"), maxZoom, width, height, (x, y) =>
+        var renderer = new MapTileRenderer(files.Read);
+        var rendered = renderer.LoadMap(mapFile, puzzleSize);
+        if (rendered != null)
         {
-            var tile = new Rgba(TileSize, TileSize, new byte[TileSize * TileSize * 4]);
-            int left = x * TileSize, top = y * TileSize;
-            for (var ty = top / grid; ty <= (top + TileSize - 1) / grid && ty < puzzle.Height; ty++)
-            for (var tx = left / grid; tx <= (left + TileSize - 1) / grid && tx < puzzle.Width; tx++)
+            int topZoom = Math.Min(PrerenderMaxZoom, rendered.MaxZoom);
+            foreach (var layer in new[] { "ground", "covers" })
             {
-                var n = puzzle.Tiles[ty * puzzle.Width + tx];
-                if (n != Puzzle.None && puzzleFrames?.GetValueOrDefault($"Puzzle{n}") is [var frame, ..] && Picture(frame) is { } picture)
-                    Draw(tile, picture, tx * grid - left, ty * grid - top);
+                for (int z = 0; z <= topZoom; z++)
+                {
+                    int scale = 1 << (rendered.MaxZoom - z);
+                    int tilesX = (int)Math.Ceiling((double)rendered.Width / (TileSize * scale));
+                    int tilesY = (int)Math.Ceiling((double)rendered.Height / (TileSize * scale));
+                    for (int x = 0; x < tilesX; x++)
+                    for (int y = 0; y < tilesY; y++)
+                    {
+                        var bytes = rendered.RenderTile(layer, z, x, y);
+                        if (bytes == null)
+                            continue;
+                        var path = Path.Combine(folder, layer, z.ToString(), x.ToString(), $"{y}.webp");
+                        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+                        File.WriteAllBytes(path, bytes);
+                    }
+                }
             }
-            ground.Draw(tile, left, top);
-            return tile;
-        });
-        Pyramid(Path.Combine(folder, "covers"), maxZoom, width, height, (x, y) =>
-        {
-            var tile = new Rgba(TileSize, TileSize, new byte[TileSize * TileSize * 4]);
-            covers.Draw(tile, x * TileSize, y * TileSize);
-            return tile;
-        });
+        }
         if (animations.Count > 0)
             File.WriteAllText(animationsFile, JsonSerializer.Serialize(animations, AnimationJson));
         File.WriteAllText(stampFile, stamp);
@@ -144,30 +137,19 @@ sealed class MapTiles(ClientFiles files, Output output)
         return animations.Count > 0 ? meta with { Animations = animations } : meta;
     }
 
-    // The sprites in the order the client draws them, back to front, bucketed by the
-    // max-zoom tiles they touch. Animated ones are written to anim/ and added to `animations`
-    // instead.
-    private Layer Place(List<MapSprite> list, MapDrawing drawing, int bgX, int bgY, string key, string folder, List<Animation> animations)
+    private void CollectAnimations(List<MapSprite> list, MapDrawing drawing, int bgX, int bgY, string key, string folder, List<Animation> animations)
     {
-        var placed = new List<(Rgba Picture, int X, int Y)>();
         foreach (var sprite in list.OrderBy(s => s.CellX + s.CellY).ThenBy(s => s.CellX))
         {
             var frames = Ani(sprite.Ani)?.GetValueOrDefault(sprite.Title);
-            // A .msk is the mask that hides roles under a bridge the puzzle already shows
             if (frames is [var mask, ..] && mask.EndsWith(".msk", StringComparison.OrdinalIgnoreCase))
                 continue;
-            if (frames is not [var frame, ..] || Picture(frame) is not { } picture)
-            {
-                Errors.Add($"{sprite.Ani} [{sprite.Title}]: no picture");
+            if (frames is null or { Count: <= 1 } || sprite.Interval <= 0)
                 continue;
-            }
             int x = 32 * (sprite.CellX - sprite.CellY) + 32 * drawing.Width + sprite.OffsetX - bgX;
             int y = 16 * (sprite.CellX + sprite.CellY) + 16 + sprite.OffsetY - bgY;
-            if (frames.Count > 1 && sprite.Interval > 0 && Animate(frames, x, y, sprite.Interval, key, folder, animations))
-                continue;
-            placed.Add((picture, x, y));
+            Animate(frames, x, y, sprite.Interval, key, folder, animations);
         }
-        return new Layer(placed);
     }
 
     // Writes the frames, each drawn at the same top left, padded to the largest of them
@@ -194,104 +176,6 @@ sealed class MapTiles(ClientFiles files, Output output)
 
     private static readonly JsonSerializerOptions AnimationJson = new(JsonSerializerDefaults.Web);
 
-    private sealed class Layer(List<(Rgba Picture, int X, int Y)> placed)
-    {
-        private readonly Dictionary<(int, int), List<int>> buckets = Bucket(placed);
-
-        public void Draw(Rgba tile, int left, int top)
-        {
-            if (buckets.TryGetValue((left / TileSize, top / TileSize), out var indices))
-                foreach (var i in indices)
-                    MapTiles.Draw(tile, placed[i].Picture, placed[i].X - left, placed[i].Y - top);
-        }
-
-        private static Dictionary<(int, int), List<int>> Bucket(List<(Rgba Picture, int X, int Y)> placed)
-        {
-            var buckets = new Dictionary<(int, int), List<int>>();
-            for (var i = 0; i < placed.Count; i++)
-            {
-                var (picture, x, y) = placed[i];
-                for (var ty = Math.Max(0, y) / TileSize; ty <= (y + picture.Height - 1) / TileSize; ty++)
-                for (var tx = Math.Max(0, x) / TileSize; tx <= (x + picture.Width - 1) / TileSize; tx++)
-                {
-                    if (!buckets.TryGetValue((tx, ty), out var list))
-                        buckets[(tx, ty)] = list = new List<int>();
-                    list.Add(i);
-                }
-            }
-            return buckets;
-        }
-    }
-
-    // Renders the max zoom tiles with `leaf` and halves them down to zoom 0, writing every tile
-    // that isn't fully transparent
-    private void Pyramid(string folder, int maxZoom, int width, int height, Func<int, int, Rgba> leaf)
-    {
-        Rgba? Tile(int z, int x, int y)
-        {
-            var scale = maxZoom - z;
-            if ((long)x * TileSize << scale >= width || (long)y * TileSize << scale >= height)
-                return null;
-            Rgba? tile;
-            if (z == maxZoom)
-                tile = leaf(x, y);
-            else
-            {
-                var children = new Rgba?[4];
-                if (maxZoom - z > 3)
-                    Parallel.For(0, 4, i => children[i] = Tile(z + 1, x * 2 + i % 2, y * 2 + i / 2));
-                else
-                    for (var i = 0; i < 4; i++)
-                        children[i] = Tile(z + 1, x * 2 + i % 2, y * 2 + i / 2);
-                tile = children.Any(c => c != null) ? Half(children) : null;
-            }
-            if (tile == null || !Visible(tile))
-                return null;
-            var path = Path.Combine(folder, z.ToString(), x.ToString(), $"{y}.webp");
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllBytes(path, Webp(tile));
-            return tile;
-        }
-        Tile(0, 0, 0);
-    }
-
-    // Four tiles (top left, top right, bottom left, bottom right) averaged into one, with
-    // the colour weighted by alpha so transparent edges don't darken
-    private static Rgba Half(Rgba?[] children)
-    {
-        var half = new Rgba(TileSize, TileSize, new byte[TileSize * TileSize * 4]);
-        const int h = TileSize / 2;
-        for (var i = 0; i < 4; i++)
-        {
-            if (children[i] is not { } child)
-                continue;
-            int ox = i % 2 * h, oy = i / 2 * h;
-            var src = child.Pixels;
-            for (var y = 0; y < h; y++)
-            for (var x = 0; x < h; x++)
-            {
-                int r = 0, g = 0, b = 0, a = 0;
-                for (var k = 0; k < 4; k++)
-                {
-                    var s = ((y * 2 + k / 2) * TileSize + x * 2 + k % 2) * 4;
-                    int alpha = src[s + 3];
-                    r += src[s] * alpha;
-                    g += src[s + 1] * alpha;
-                    b += src[s + 2] * alpha;
-                    a += alpha;
-                }
-                var d = ((oy + y) * TileSize + ox + x) * 4;
-                if (a == 0)
-                    continue;
-                half.Pixels[d] = (byte)(r / a);
-                half.Pixels[d + 1] = (byte)(g / a);
-                half.Pixels[d + 2] = (byte)(b / a);
-                half.Pixels[d + 3] = (byte)((a + 2) / 4);
-            }
-        }
-        return half;
-    }
-
     // Draws `picture` over `tile` with its top left at (x, y), alpha blended
     private static void Draw(Rgba tile, Rgba picture, int x, int y)
     {
@@ -314,30 +198,6 @@ sealed class MapTiles(ClientFiles files, Output output)
             for (var c = 0; c < 3; c++)
                 tile.Pixels[d + c] = (byte)((picture.Pixels[s + c] * a + tile.Pixels[d + c] * da) / oa);
             tile.Pixels[d + 3] = (byte)oa;
-        }
-    }
-
-    private static bool Visible(Rgba tile)
-    {
-        for (var i = 3; i < tile.Pixels.Length; i += 4)
-            if (tile.Pixels[i] != 0)
-                return true;
-        return false;
-    }
-
-    private static byte[] Webp(Rgba tile)
-    {
-        var info = new SKImageInfo(tile.Width, tile.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul);
-        var handle = GCHandle.Alloc(tile.Pixels, GCHandleType.Pinned);
-        try
-        {
-            using var image = SKImage.FromPixels(info, handle.AddrOfPinnedObject(), tile.Width * 4);
-            using var encoded = image.Encode(SKEncodedImageFormat.Webp, 82);
-            return encoded.ToArray();
-        }
-        finally
-        {
-            handle.Free();
         }
     }
 

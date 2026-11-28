@@ -12,6 +12,7 @@ public sealed record MapSummary(
     string? File,
     string? Minimap,
     bool HasTiles,
+    string? TileKey,
     string[] Flags,
     MapCellPoint? Portal,
     uint? RebornMap,

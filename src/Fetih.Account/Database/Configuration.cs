@@ -9,6 +9,7 @@ namespace Fetih.Account.Database
         public NetworkConfiguration Network { get; set; }
         public LoggingConfiguration Logging { get; set; }
         public MetricsConfiguration Metrics { get; set; } = new MetricsConfiguration();
+        public string FirstAdminFile { get; set; }
 
         public class DatabaseConfiguration
         {

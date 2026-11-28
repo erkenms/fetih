@@ -1,5 +1,6 @@
 namespace Fetih.Web;
 
+using Fetih.Core.Database;
 using Fetih.Core.Logging;
 
 public class WebConfiguration
@@ -20,7 +21,7 @@ public class WebConfiguration
         public string Password { get; set; } = "";
 
         public string ConnectionString =>
-            $"server={this.Hostname};database={this.Schema};user={this.Username};password={this.Password}";
+            DatabaseConnection.Build(this.Hostname, this.Schema, this.Username, this.Password);
     }
 
     public class WebSection
@@ -57,6 +58,9 @@ public class WebConfiguration
         public string? DataDirectory { get; set; }
         public string? AssetsDirectory { get; set; }
         public string? ClientDirectory { get; set; }
+        public string? KeysDirectory { get; set; }
+        public string? TileCacheDirectory { get; set; }
+        public long TileCacheMaxBytes { get; set; } = 1024L * 1024 * 1024;
 
         public static string? Resolve(string? path) =>
             string.IsNullOrEmpty(path) ? null : Path.GetFullPath(path, AppContext.BaseDirectory);

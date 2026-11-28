@@ -5,6 +5,7 @@ using Fetih.Account.Database.Models;
 using Fetih.Web.Accounts;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 
 public static class AuthSetup
 {
@@ -15,6 +16,15 @@ public static class AuthSetup
 
     public static void AddWebAuth(this IServiceCollection services, WebConfiguration config)
     {
+        string? keysDir = WebConfiguration.PathsSection.Resolve(config.Paths.KeysDirectory);
+        if (keysDir != null)
+        {
+            Directory.CreateDirectory(keysDir);
+            services.AddDataProtection()
+                .PersistKeysToFileSystem(new DirectoryInfo(keysDir))
+                .SetApplicationName("Fetih.Web");
+        }
+
         services.AddAuthentication(Scheme).AddCookie(options =>
         {
             options.Cookie.Name = "fetih.session";

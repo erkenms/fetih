@@ -73,6 +73,31 @@
     }
     else
     {
+        @if (!string.IsNullOrEmpty(Model.CopyCommand))
+        {
+            <div class="form-row">
+                <button type="button" id="copy-apply-cmd">Komut olarak kopyala</button>
+                <span id="copy-apply-status" class="muted"></span>
+            </div>
+            <script id="apply-cmd-text" type="text/plain">@Html.Raw(Model.CopyCommand)</script>
+            <script>
+                (() => {
+                    const btn = document.getElementById('copy-apply-cmd');
+                    const status = document.getElementById('copy-apply-status');
+                    const src = document.getElementById('apply-cmd-text');
+                    if (!btn || !src) return;
+                    btn.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(src.textContent || '');
+                            status.textContent = 'Kopyalandı.';
+                        } catch {
+                            status.textContent = 'Kopyalanamadı.';
+                        }
+                    });
+                })();
+            </script>
+        }
+
         @foreach (var f in Model.ChangedFiles)
         {
             <div class="file-head">

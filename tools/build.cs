@@ -12,8 +12,8 @@
 //   extract <client> <path> [dest] Copy one client file (loose or .wdf), or convert to .png
 //
 // Paths:
-//   --base <dir>       Base 5619 client (default: _CLIENT/5619)
-//   --art <dir>        Old Turkish client with the launcher's Play/ art (default: _CLIENT/tr/app)
+//   --base <dir>       Base 5619 client (default: _CLIENT/co_5619)
+//   --art <dir>        Old Turkish client with the launcher's Play/ art (default: _CLIENT/fo_3105)
 //   --out <dir>        Built client (default: _CLIENT/fetih)
 //   --assets <dir>     Web assets output (default: web/assets)
 //   --patch <dir>      Patch output (default: _CLIENT/patch)
@@ -53,6 +53,7 @@
 #:include assets/Maps/MapFiles.cs
 #:include assets/Maps/MapTiles.cs
 #:include assets/Maps/TerrainNpcs.cs
+#:include ../src/Fetih.Web/Features/Maps/MapTileRenderer.cs
 using System.Runtime.CompilerServices;
 
 var root = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(ScriptPath())!, ".."));
@@ -82,7 +83,7 @@ string? assetsOverride = null;
 string? patchOverride = null;
 string? ip = Environment.GetEnvironmentVariable("FETIH_ACCOUNT_IP");
 string? url = Environment.GetEnvironmentVariable("FETIH_URL");
-HashSet<uint>? onlyMaps = [];
+HashSet<uint>? onlyMaps = null;
 var keepVersions = 10;
 var positionals = new List<string>();
 
@@ -137,8 +138,8 @@ for (var i = 0; i < rest.Length; i++)
     }
 }
 
-var baseDir = baseOverride ?? Path.Combine(root, "_CLIENT", "5619");
-var artDir = artOverride ?? Path.Combine(root, "_CLIENT", "tr", "app");
+var baseDir = baseOverride ?? Path.Combine(root, "_CLIENT", "co_5619");
+var artDir = artOverride ?? Path.Combine(root, "_CLIENT", "fo_3105");
 var outDir = outOverride ?? Path.Combine(root, "_CLIENT", "fetih");
 var assetsDir = assetsOverride ?? Path.Combine(root, "web", "assets");
 var patchDir = patchOverride ?? Path.Combine(root, "_CLIENT", "patch");

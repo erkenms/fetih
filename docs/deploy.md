@@ -1,71 +1,54 @@
 # Deploy
 
-One machine. `deploy/compose.yaml` is the shared part (db, account, Caddy, Loki, Alloy,
-Prometheus, Grafana). `deploy/compose.env.yaml` runs `game` + `web` per environment.
+NixOS host (`163.5.53.47`) that pulls and builds from git itself.
 
-| Env | Project | Realm | Port | Schema | Notes |
-|---|---|---|---|---|---|
-| prod | `fetih-prod` | Altay | 5816 | `fetih_game` | `STUDIO_READ_ONLY=true` |
-| test | `fetih-test` | Mihenk | 5826 | `fetih_game_test` | staff only, no registration |
+| Env | Realm | Port | Schema | Source |
+|---|---|---|---|---|
+| prod | Altay | 5816 | `fetih_game` | latest `v*` tag |
+| test | Mihenk | 5826 | `fetih_game_test` | `main` (staff only) |
 
-Open to the internet: 80, 443 (TCP+UDP), 5816, 5826, 9960 (account). Everything else is
-internal or `127.0.0.1`.
+Shared: `Fetih.Account` (`9960`), MariaDB (Unix socket only), Caddy (`80`, `443`), Loki, Alloy,
+Prometheus, Grafana (`/grafana/`, behind web sign-in). Open ports: `22`, `80`, `443` (TCP+UDP),
+`9960`, `5816`, `5826`. State lives under `/var/lib/fetih/`.
 
-## Needs
+## How updates deploy
 
-- Rootful Podman 5+ or Docker. Rootless hides player IPs (bans, limits break).
-- A checkout per env (`/srv/fetih/prod`, `/srv/fetih/test`): Studio edits land there.
-- DNS: `<domain>` and `mihenk.<domain>`.
+- Push to `main`: within 2 minutes `fetih-deploy` applies NixOS, resets `/var/lib/fetih/studio`
+  to `main`, and restarts test (`Mihenk`).
+- Push a `v*` tag: `fetih-deploy` builds prod + `Fetih.exe` + low-zoom map assets, runs a
+  60s `gm.shutdown` countdown on Altay, then restarts prod.
+- Studio on test edits `/var/lib/fetih/studio/src/Fetih.Game/Data` live; `/admin/studio/changes`
+  copies a `git apply --3way` command to commit and push.
 
-## Build the client and assets
+## Secrets (`deploy/secrets.sh`)
 
-```bash
-dotnet run tools/build.cs all --base /srv/fetih/base/5619 --art /srv/fetih/base/tr --out /srv/fetih/client \
-  --assets /srv/fetih/assets --patch /srv/fetih/patch --ip <public IP> --url https://<domain> --maps all
-FETIH_ACCOUNT_IP=<public IP> FETIH_URL=https://<domain> ./tools/build.sh all --maps all   # no SDK, same flags
-```
+Keep these three files in `~/.fetih-secrets/` (and in iCloud Passwords), never in git:
 
-`--ip` is IPv4 only (`Server.dat` fits 15 chars). `--url` is the production site
-(`launcher.json`). The launcher's art comes from the old Turkish client at `/srv/fetih/base/tr`.
-`--maps all` takes ~1h the first time.
+- `r2.env`: `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
+- `discord-webhook`: Discord webhook URL on one line
+- `first-admin`: email on line 1, temporary password on line 2 (change after first login)
 
-## First start
-
-```bash
-cp deploy/env.example deploy/.env                     # domains, passwords
-sudo podman compose -f deploy/compose.yaml --profile deploy up -d --build
-cp deploy/env.prod.example /srv/fetih/prod.env
-cp deploy/env.test.example /srv/fetih/test.env
-sudo podman compose -p fetih-prod -f deploy/compose.env.yaml --env-file /srv/fetih/prod.env up -d --build
-sudo podman compose -p fetih-test -f deploy/compose.env.yaml --env-file /srv/fetih/test.env up -d --build
-```
-
-Servers create and migrate their schemas. Then point the realms at the machine and add an
-admin:
+Upload the pinned client archives once, then push secrets anytime:
 
 ```bash
-sudo podman exec -i fetih-db mariadb -uroot -p<pw> fetih_account -e "
-  UPDATE realm SET GameIPAddress='<ip>', GamePort=5816, RpcIPAddress='fetih-prod-game', RpcPort=5817 WHERE Name='Altay';
-  UPDATE realm SET GameIPAddress='<ip>', GamePort=5826, RpcIPAddress='fetih-test-game', RpcPort=5817 WHERE Name='Mihenk';"
-sudo podman restart fetih-account
-sudo podman exec fetih-account dotnet Fetih.Account.dll create-account <email> <password>
-sudo podman exec -i fetih-db mariadb -uroot -p<pw> fetih_account -e "UPDATE account SET AuthorityID=5 WHERE Username='<email>'"
-./deploy/grafana-db.sh
+./deploy/upload-client-base.sh
+./deploy/secrets.sh 163.5.53.47
 ```
 
-## Update
+## Backups and restore
 
-`git pull`, then the three `up -d --build` lines again. Migrations apply at startup.
-
-## Grafana and logs
-
-Grafana is served under `/grafana/` behind the web sign-in (moderators and above); port 3000 is
-not published. Logs in the `fetih-logs` volume (`/logs/<env>/<server>/`) and in Loki with an
-`env` label.
-
-## Backup
+R2 lifecycle rules: expire `backups/hourly/` after 2 days, `backups/daily/` after 14 days.
+`fetih-backup-hourly` dumps `fetih_account` + `fetih_game`; `fetih-backup-daily` (04:00) adds
+`grafana.db` and `*-audit-*.jsonl`. Restore into a scratch schema to verify:
 
 ```bash
-sudo podman exec fetih-db mariadb-dump -uroot -p<pw> --single-transaction \
-  --databases fetih_account fetih_game fetih_game_test > fetih-$(date +%F).sql
+rclone copyto r2:<bucket>/backups/hourly/<file>.sql.gz /tmp/restore.sql.gz
+mariadb -e "CREATE DATABASE restore_scratch;"
+zcat /tmp/restore.sql.gz | sed 's/`fetih_game`/`restore_scratch`/g; s/`fetih_account`/`restore_scratch`/g' | mariadb restore_scratch
+mariadb -e "SHOW TABLES FROM restore_scratch; DROP DATABASE restore_scratch;"
 ```
+
+## Emergencies
+
+Boot the previous NixOS generation from the provider console, or run
+`nixos-rebuild switch --rollback` over SSH. A failed switch leaves the old generation running.

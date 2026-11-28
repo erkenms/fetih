@@ -1,7 +1,8 @@
 namespace Fetih.Game.Database
 {
-    using Microsoft.EntityFrameworkCore;
+    using Fetih.Core.Database;
     using Fetih.Game.Database.Models;
+    using Microsoft.EntityFrameworkCore;
 
     public partial class ServerDbContext : DbContext
     {
@@ -47,10 +48,10 @@ namespace Fetih.Game.Database
         protected override void OnConfiguring(DbContextOptionsBuilder options)
         {
             options.UseLazyLoadingProxies(false);
-            options.UseMySql(string.Format("server={0};database={1};user={2};password={3}",
-                ServerDbContext.Configuration.Hostname, 
+            options.UseMySql(DatabaseConnection.Build(
+                ServerDbContext.Configuration.Hostname,
                 ServerDbContext.Configuration.Schema,
-                ServerDbContext.Configuration.Username, 
+                ServerDbContext.Configuration.Username,
                 ServerDbContext.Configuration.Password),
                 MySqlServerVersion.LatestSupportedServerVersion);
         }

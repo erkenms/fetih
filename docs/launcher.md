@@ -38,7 +38,7 @@ Everything runs on the Mac; the VM reaches it at `172.16.60.1`. The dev proxy
 
 ```bash
 dotnet run tools/build.cs all --ip 172.16.60.1 --url http://172.16.60.1:8080
-podman compose -f deploy/compose.yaml up -d dev-proxy
+podman compose -f deploy/dev.yaml up -d dev-proxy
 cd src/Fetih.Web && dotnet run                                  # and Account, Game as usual
 ```
 

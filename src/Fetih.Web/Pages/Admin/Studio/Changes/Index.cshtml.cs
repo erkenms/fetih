@@ -23,6 +23,7 @@ public class IndexModel(
     public bool GitAvailable { get; private set; }
     public IntegrityReportResponse Integrity { get; private set; } = new("", false, 0, 0, 0, [], []);
     public ChangedFile[] ChangedFiles { get; private set; } = [];
+    public string? CopyCommand { get; private set; }
 
     public sealed record ChangedFile(
         string File,
@@ -61,6 +62,14 @@ public class IndexModel(
         }
 
         this.ChangedFiles = [.. changed];
+        if (this.ChangedFiles.Length > 0)
+        {
+            string cmd = await git.BuildApplyCommandAsync(
+                dataDir,
+                [.. this.ChangedFiles.Select(f => (f.File, f.GitStatus))],
+                ct);
+            this.CopyCommand = string.IsNullOrEmpty(cmd) ? null : cmd;
+        }
     }
 
     [Requires(Permission.Studio, StudioWrite = true)]

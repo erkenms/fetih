@@ -1,6 +1,7 @@
 namespace Fetih.Game.Database.Repositories
 {
     using System.Threading.Tasks;
+    using Fetih.Core.Database;
     using MySqlConnector;
 
     // The few writes the game server makes to the account database (bans and unbans). The
@@ -46,13 +47,11 @@ namespace Fetih.Game.Database.Repositories
 
         private static async Task<MySqlConnection> OpenAsync()
         {
-            var db = new MySqlConnection(new MySqlConnectionStringBuilder
-            {
-                Server = Configuration.Hostname,
-                Database = Configuration.Schema,
-                UserID = Configuration.Username,
-                Password = Configuration.Password,
-            }.ConnectionString);
+            var db = new MySqlConnection(DatabaseConnection.Build(
+                Configuration.Hostname,
+                Configuration.Schema,
+                Configuration.Username,
+                Configuration.Password));
             await db.OpenAsync();
             return db;
         }

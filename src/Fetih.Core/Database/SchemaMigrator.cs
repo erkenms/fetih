@@ -84,19 +84,24 @@ namespace Fetih.Core.Database
             string hostname, string schema, string username, string password,
             IReadOnlyList<Migration> migrations)
         {
-            var connection = new MySqlConnectionStringBuilder
-            {
-                Server = hostname, UserID = username, Password = password,
-                AllowUserVariables = true, Pooling = false
-            };
+            var connectionString = DatabaseConnection.Build(
+                hostname, schema: "", username, password,
+                allowUserVariables: true, pooling: false);
 
             try
             {
-                await using var db = new MySqlConnection(connection.ConnectionString);
+                await using var db = new MySqlConnection(connectionString);
                 await db.OpenAsync();
-                await Execute(db,
-                    $"CREATE DATABASE IF NOT EXISTS `{schema}` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin");
-                await db.ChangeDatabaseAsync(schema);
+                try
+                {
+                    await db.ChangeDatabaseAsync(schema);
+                }
+                catch (MySqlException)
+                {
+                    await Execute(db,
+                        $"CREATE DATABASE IF NOT EXISTS `{schema}` DEFAULT CHARACTER SET utf8 COLLATE utf8_bin");
+                    await db.ChangeDatabaseAsync(schema);
+                }
 
                 // Held until the connection closes, so two servers don't migrate one schema at once
                 var lockName = "fetih-migrate-" + schema;

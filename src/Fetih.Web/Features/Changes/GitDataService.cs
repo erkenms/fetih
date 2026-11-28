@@ -50,6 +50,82 @@ public sealed class GitDataService
         return result.Success;
     }
 
+    public async Task<string> BuildApplyCommandAsync(
+        string dataDir,
+        IReadOnlyList<(string File, string GitStatus)> files,
+        CancellationToken ct = default)
+    {
+        if (files.Count == 0)
+            return "";
+
+        var patch = new StringBuilder();
+        var tracked = files.Where(f => f.GitStatus != "untracked").Select(f => f.File).ToArray();
+        if (tracked.Length > 0)
+        {
+            var args = new List<string> { "diff", "--no-color", "HEAD", "--" };
+            args.AddRange(tracked);
+            var res = await RunGitAsync(dataDir, ct, [.. args]);
+            if (res.Success && !string.IsNullOrEmpty(res.Stdout))
+            {
+                patch.Append(res.Stdout);
+                if (!res.Stdout.EndsWith('\n'))
+                    patch.Append('\n');
+            }
+        }
+
+        foreach (var (file, status) in files)
+        {
+            if (status != "untracked")
+                continue;
+            string path = Path.Combine(dataDir, file);
+            if (!File.Exists(path))
+                continue;
+
+            string repoPath = $"src/Fetih.Game/Data/{file}";
+            string content = (await File.ReadAllTextAsync(path, ct)).Replace("\r\n", "\n");
+            bool endsWithNewline = content.EndsWith('\n');
+            if (endsWithNewline)
+                content = content[..^1];
+            var lines = content.Length == 0 ? [] : content.Split('\n');
+
+            patch.AppendLine($"diff --git a/{repoPath} b/{repoPath}");
+            patch.AppendLine("new file mode 100644");
+            patch.AppendLine("--- /dev/null");
+            patch.AppendLine($"+++ b/{repoPath}");
+            if (lines.Length > 0)
+            {
+                patch.AppendLine($"@@ -0,0 +1,{lines.Length} @@");
+                foreach (var line in lines)
+                    patch.AppendLine($"+{line}");
+                if (!endsWithNewline)
+                    patch.AppendLine("\\ No newline at end of file");
+            }
+        }
+
+        return FormatApplyCommand(patch.ToString(), [.. files.Select(f => f.File)]);
+    }
+
+    public static string FormatApplyCommand(string patch, IReadOnlyList<string> fileNames)
+    {
+        if (string.IsNullOrWhiteSpace(patch))
+            return "";
+
+        string delimiter = "FETIH_PATCH";
+        int suffix = 1;
+        while (patch.Contains(delimiter, StringComparison.Ordinal))
+            delimiter = $"FETIH_PATCH_{suffix++}";
+
+        if (!patch.EndsWith('\n'))
+            patch += "\n";
+
+        string summary = string.Join(", ", fileNames)
+            .Replace("\"", "\\\"")
+            .Replace("$", "\\$")
+            .Replace("`", "\\`");
+
+        return $"git apply --3way <<'{delimiter}'\n{patch}{delimiter}\ngit add src/Fetih.Game/Data && git commit -m \"Studio: {summary}\"";
+    }
+
     // `git status --porcelain=v1 -uall -- .` run with WorkingDirectory = dataDir still reports
     // paths relative to the repo root, so take the file name (Data/ has no subdirectories).
     public static Dictionary<string, string> ParseStatusPorcelain(string output)

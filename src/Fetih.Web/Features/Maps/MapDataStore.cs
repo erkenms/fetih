@@ -215,6 +215,7 @@ public sealed class MapDataStore
         int spawnCount = data.SpawnsByMap.TryGetValue(id, out var s) ? s.Count : 0;
         int portalCount = data.PortalsByMap.TryGetValue(id, out var p) ? p.Count : 0;
 
+        var meta = this.ReadTileMeta(id);
         return new MapSummary(
             Id: id,
             Name: catalog?.Name,
@@ -222,7 +223,8 @@ public sealed class MapDataStore
             Aliases: catalog?.Aliases ?? mapType?.Aliases?.ToArray() ?? [],
             File: catalog?.File,
             Minimap: catalog?.Minimap,
-            HasTiles: this.HasTileMeta(id),
+            HasTiles: meta != null,
+            TileKey: ExtractTileKey(meta),
             Flags: SplitFlags(mapType?.Flags),
             Portal: mapType?.Portal != null ? new MapCellPoint(mapType.Portal.X, mapType.Portal.Y) : null,
             RebornMap: mapType?.RebornMapID,
@@ -427,9 +429,16 @@ public sealed class MapDataStore
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
     }
 
-    private bool HasTileMeta(uint mapId) =>
-        !string.IsNullOrEmpty(this.AssetsDir)
-        && File.Exists(Path.Combine(this.AssetsDir, "maps", mapId.ToString(), "meta.json"));
+    private static string? ExtractTileKey(MapTileMeta? meta)
+    {
+        if (meta == null || string.IsNullOrEmpty(meta.Ground))
+            return null;
+        const string prefix = "maps/tiles/";
+        if (!meta.Ground.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+        int end = meta.Ground.IndexOf('/', prefix.Length);
+        return end > prefix.Length ? meta.Ground[prefix.Length..end] : null;
+    }
 
     private MapTileMeta? ReadTileMeta(uint mapId)
     {

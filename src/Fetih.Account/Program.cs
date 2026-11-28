@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Fetih.Account.Database;
@@ -63,6 +64,8 @@
                 return exitCode;
             }
 
+            await EnsureFirstAdminAsync(config.FirstAdminFile);
+
             var tasks = new List<Task>();
             tasks.Add(RealmsRepository.LoadAsync());
             await Task.WhenAll(tasks.ToArray());
@@ -119,6 +122,24 @@
             if (reason != null)
                 Console.WriteLine("  " + AccountRules.Explain(reason));
             return reason == null ? 0 : 1;
+        }
+
+        private static async Task EnsureFirstAdminAsync(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path))
+                return;
+
+            var lines = (await System.IO.File.ReadAllLinesAsync(path))
+                .Select(l => l.TrimEnd('\r'))
+                .Where(l => l.Length > 0)
+                .ToArray();
+            if (lines.Length < 2)
+            {
+                Log.Warning("First admin file {Path} must contain email on line 1 and password on line 2", path);
+                return;
+            }
+
+            await AccountsRepository.EnsureFirstAdminAsync(lines[0], lines[1]);
         }
     }
 }

@@ -64,6 +64,52 @@ namespace Fetih.Account.Database.Repositories
             return (null, error);
         }
 
+        // Creates the initial authority-5 admin account if it does not exist yet; never modifies an existing account.
+        public static async Task<bool> EnsureFirstAdminAsync(string username, string password)
+        {
+            using var db = new ServerDbContext();
+            return await EnsureFirstAdminAsync(db, username, password);
+        }
+
+        internal static async Task<bool> EnsureFirstAdminAsync(
+            ServerDbContext db, string username, string password)
+        {
+            username = username?.Trim().ToLowerInvariant();
+            string error = AccountRules.CheckUsername(username)
+                ?? AccountRules.CheckPassword(password);
+            if (error != null)
+            {
+                LogEvents.For(typeof(AccountsRepository), LogEvents.AccountCreateFailed)
+                    .Warning("First admin {Username} skipped: {Reason}", username, error);
+                return false;
+            }
+
+            if (await db.Accounts.AnyAsync(x => x.Username == username))
+                return false;
+
+            var account = new DbAccount
+            {
+                Username = username,
+                AuthorityID = 5,
+                StatusID = 1,
+                Registered = DateTime.UtcNow
+            };
+            SetPassword(account, password);
+            db.Accounts.Add(account);
+            try
+            {
+                await db.SaveChangesAsync();
+                LogEvents.For(typeof(AccountsRepository), LogEvents.AccountCreated)
+                    .Information("First admin {Username} created (account {AccountId})",
+                        username, account.AccountID);
+                return true;
+            }
+            catch (DbUpdateException e) when (IsDuplicateKey(e))
+            {
+                return false;
+            }
+        }
+
         public static async Task<string> SetPasswordAsync(string username, string password)
         {
             if (AccountRules.CheckPassword(password) is string error)

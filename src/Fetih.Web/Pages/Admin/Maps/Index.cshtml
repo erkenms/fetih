@@ -49,6 +49,10 @@
                 <tr>
                     <td><a href="/admin/maps/@m.Id">@m.Id</a></td>
                     <td>
+                        @if (m.TileKey != null)
+                        {
+                            <a href="/admin/maps/@m.Id"><img src="/assets/maps/tiles/@m.TileKey/ground/0/0/0.webp" loading="lazy" width="40" height="40" alt="" style="vertical-align: middle; margin-right: 6px; border-radius: 3px; background: #141210;"></a>
+                        }
                         <a href="/admin/maps/@m.Id">@m.DisplayName</a>
                         @if (m.ServerName != null || m.Aliases.Length > 0)
                         {

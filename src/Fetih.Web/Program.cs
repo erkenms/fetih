@@ -1,4 +1,6 @@
+using System.Net.Sockets;
 using Fetih.Core.Logging;
+using Fetih.Shared.Models.Admin;
 using Fetih.Web;
 using Fetih.Web.Accounts;
 using Fetih.Web.Audit;
@@ -11,6 +13,28 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Serilog;
+using StreamJsonRpc;
+
+if (args.Length >= 1 && args[0] == "shutdown-game")
+{
+    if (args.Length < 4 || !int.TryParse(args[2], out int port) || !int.TryParse(args[3], out int seconds))
+    {
+        Console.Error.WriteLine("Usage: Fetih.Web shutdown-game <host> <port> <seconds> [reason]");
+        return 2;
+    }
+
+    string host = args[1];
+    string? reason = args.Length >= 5 ? string.Join(' ', args[4..]) : null;
+    using var client = new TcpClient();
+    await client.ConnectAsync(host, port);
+    await using var stream = client.GetStream();
+    using var rpc = JsonRpc.Attach(stream);
+    await rpc.InvokeAsync("Connected", ["Deploy"]);
+    var result = await rpc.InvokeAsync<AdminResult>("StartShutdown",
+        [new ShutdownArgs { ActorAccountID = 0, Mode = ShutdownMode.Restart, Seconds = seconds, Reason = reason }]);
+    Console.WriteLine(result.Ok ? $"Shutdown scheduled ({seconds}s)" : $"Shutdown failed: {result.Error}");
+    return result.Ok ? 0 : 1;
+}
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {

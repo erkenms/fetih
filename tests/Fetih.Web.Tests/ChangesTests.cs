@@ -41,4 +41,14 @@ public class ChangesTests
         Assert.Equal(2, added);
         Assert.Equal(1, removed);
     }
+
+    [Fact]
+    public void FormatApplyCommand_AvoidsDelimiterCollisionAndFormatsCommit()
+    {
+        string patch = "diff --git a/src/Fetih.Game/Data/npcs.json b/src/Fetih.Game/Data/npcs.json\n+FETIH_PATCH\n";
+        string cmd = GitDataService.FormatApplyCommand(patch, ["npcs.json", "maps.json"]);
+
+        Assert.Contains("git apply --3way <<'FETIH_PATCH_1'", cmd);
+        Assert.Contains("\nFETIH_PATCH_1\ngit add src/Fetih.Game/Data && git commit -m \"Studio: npcs.json, maps.json\"", cmd);
+    }
 }
