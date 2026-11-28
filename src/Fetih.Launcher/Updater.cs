@@ -9,7 +9,7 @@ namespace Fetih.Launcher;
 enum Phase { Checking, Updating, Ready, Failed, Closing }
 
 // Every start: launcher.json, the manifest, self-update, the files, then the game
-sealed class Updater(string root, string selfPath, LauncherSettings settings, string channel, bool repair, string[] args)
+sealed class Updater(string root, string selfPath, LauncherSettings settings, bool repair, string[] args)
 {
     readonly HttpClient _http = new(new SocketsHttpHandler
     {
@@ -71,7 +71,7 @@ sealed class Updater(string root, string selfPath, LauncherSettings settings, st
         var ct = _stop.Token;
         try
         {
-            var patchBase = settings.PatchBase(channel);
+            var patchBase = settings.PatchBase;
             PatchManifest manifest;
             while (true)
             {
@@ -112,7 +112,7 @@ sealed class Updater(string root, string selfPath, LauncherSettings settings, st
                 this.Set(Phase.Closing, "");
                 return;
             }
-            state = state with { Launcher = self, Channel = channel };
+            state = state with { Launcher = self };
 
             if (checkAll)
                 this.Set(Phase.Checking, "Dosyalar denetleniyor...");
@@ -143,7 +143,7 @@ sealed class Updater(string root, string selfPath, LauncherSettings settings, st
                 state.Save(root);
             }
 
-            this.Set(Phase.Ready, channel == "prod" ? "Oyun hazır." : $"Oyun hazır ({channel}).");
+            this.Set(Phase.Ready, "Oyun hazır.");
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {

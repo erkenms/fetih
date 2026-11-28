@@ -20,12 +20,12 @@ internal or `127.0.0.1`.
 ## Build the client and assets
 
 ```bash
-dotnet run tools/build.cs all --env prod --ip <public IP> --url https://<domain> --maps all
-dotnet run tools/build.cs all --env test --ip <public IP> --url https://<domain> --maps all
-FETIH_ACCOUNT_IP=<public IP> FETIH_URL=https://<domain> ./tools/build.sh all --env prod --maps all   # no SDK
+dotnet run tools/build.cs all --base /srv/fetih/base/5619 --art /srv/fetih/base/tr --out /srv/fetih/client \
+  --assets /srv/fetih/assets --patch /srv/fetih/patch --ip <public IP> --url https://<domain> --maps all
+FETIH_ACCOUNT_IP=<public IP> FETIH_URL=https://<domain> ./tools/build.sh all --maps all   # no SDK, same flags
 ```
 
-`--ip` is IPv4 only (`Server.dat` fits 15 chars). `--url` is the production site for both envs
+`--ip` is IPv4 only (`Server.dat` fits 15 chars). `--url` is the production site
 (`launcher.json`). The launcher's art comes from the old Turkish client at `/srv/fetih/base/tr`.
 `--maps all` takes ~1h the first time.
 

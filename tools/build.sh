@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Run tools/build.cs inside the .NET 11 SDK container (for hosts without the .NET SDK).
-# Example: FETIH_ACCOUNT_IP=1.2.3.4 FETIH_URL=https://example.com ./tools/build.sh all --env test
+# Example: FETIH_ACCOUNT_IP=1.2.3.4 FETIH_URL=https://example.com ./tools/build.sh all
 set -eu
 
 repo="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"

@@ -11,10 +11,7 @@ public sealed record LauncherSettings
     [JsonPropertyName("url")]
     public required string Url { get; init; }
 
-    [JsonPropertyName("channel")]
-    public string Channel { get; init; } = "prod";
-
-    public Uri PatchBase(string channel) => new($"{this.Url.TrimEnd('/')}/patch/{channel}/");
+    public Uri PatchBase => new($"{this.Url.TrimEnd('/')}/patch/");
 
     public Uri News => new($"{this.Url.TrimEnd('/')}/haberler?handler=launcher");
 

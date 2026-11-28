@@ -14,9 +14,6 @@ public sealed record LocalState
     [JsonPropertyName("version")]
     public string? Version { get; init; }
 
-    [JsonPropertyName("channel")]
-    public string? Channel { get; init; }
-
     // Every file of that manifest the launcher keeps in line (not the player-owned ones)
     [JsonPropertyName("files")]
     public IReadOnlyList<LocalFile> Files { get; init; } = [];

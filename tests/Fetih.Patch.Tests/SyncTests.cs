@@ -36,16 +36,16 @@ public sealed class SyncTests : IDisposable
 
     string Installed(string path) => File.ReadAllText(Path.Combine(_install, path));
 
-    PatchManifest Publish(string channel = "prod") => PatchPublisher.Publish(new PatchPublishOptions
+    PatchManifest Publish() => PatchPublisher.Publish(new PatchPublishOptions
     {
         ClientDirectory = _client,
-        PatchDirectory = Path.Combine(_temp, "patch", channel),
+        PatchDirectory = Path.Combine(_temp, "patch"),
     }).Manifest;
 
-    async Task<(LocalState State, SyncPlan Plan, PatchSync Sync)> Sync(LocalState state, string channel = "prod", bool repair = false)
+    async Task<(LocalState State, SyncPlan Plan, PatchSync Sync)> Sync(LocalState state, bool repair = false)
     {
         var http = new HttpClient(_server);
-        var baseUri = new Uri($"http://fetih.test/{channel}/");
+        var baseUri = new Uri("http://fetih.test/");
         var manifest = await PatchSync.FetchManifestAsync(http, baseUri, CancellationToken.None);
         var plan = SyncPlan.Create(_install, manifest, state, repair);
         var sync = new PatchSync(http, baseUri, _install) { RetryDelay = TimeSpan.Zero };
@@ -69,7 +69,7 @@ public sealed class SyncTests : IDisposable
         Assert.Equal("", Installed("empty.txt"));
         Assert.NotNull(state.Version);
 
-        var again = SyncPlan.Create(_install, PatchManifestJson.LoadFile(Path.Combine(_temp, "patch", "prod", "manifest.json")), LocalState.Load(_install));
+        var again = SyncPlan.Create(_install, PatchManifestJson.LoadFile(Path.Combine(_temp, "patch", "manifest.json")), LocalState.Load(_install));
         Assert.False(again.HasWork);
         Assert.Equal(0, again.Hashed);
     }
@@ -134,29 +134,6 @@ public sealed class SyncTests : IDisposable
     }
 
     [Fact]
-    public async Task ChannelSwitchGoesBothWaysAndKeepsPlayerFiles()
-    {
-        Client("Conquer.exe", "prod");
-        Client("ini/GameSetUp.ini", "defaults");
-        Publish("prod");
-        Client("Conquer.exe", "test");
-        Client("test-only.dat", "t");
-        Publish("test");
-
-        var (state, _, _) = await Sync(new LocalState(), "prod");
-        File.WriteAllText(Path.Combine(_install, "ini/GameSetUp.ini"), "player");
-
-        (state, _, _) = await Sync(state, "test");
-        Assert.Equal("test", Installed("Conquer.exe"));
-        Assert.Equal("t", Installed("test-only.dat"));
-
-        (state, _, _) = await Sync(state, "prod");
-        Assert.Equal("prod", Installed("Conquer.exe"));
-        Assert.False(File.Exists(Path.Combine(_install, "test-only.dat")));
-        Assert.Equal("player", Installed("ini/GameSetUp.ini"));
-    }
-
-    [Fact]
     public async Task ADroppedConnectionOrAnErrorStartsTheFileOver()
     {
         var big = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(100_000));
@@ -214,7 +191,7 @@ public sealed class SyncTests : IDisposable
         Assert.False(SyncPlan.LauncherIsCurrent(exe, manifest, new LocalState { Launcher = local }, out _));
     }
 
-    // Serves <root>/<channel>/..., cut short or failing on demand
+    // Serves <root>/..., cut short or failing on demand
     sealed class FakeServer(string root) : HttpMessageHandler
     {
         public long CutAfter { get; set; } = long.MaxValue;

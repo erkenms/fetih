@@ -129,8 +129,7 @@ services:
       - "8080:8080"
     volumes:
       - ./Caddyfile.dev:/etc/caddy/Caddyfile:ro
-      - ${PATCH_PROD_DIR:-../_CLIENT/patch}:/srv/patch/prod:ro
-      - ${PATCH_TEST_DIR:-../_CLIENT/patch}:/srv/patch/test:ro
+      - ${PATCH_DIR:-../_CLIENT/patch}:/srv/patch:ro
       - ${DOWNLOAD_DIR:-../_CLIENT/patch/download}:/srv/download:ro
     extra_hosts:
       - "host.containers.internal:host-gateway"
@@ -178,8 +177,7 @@ services:
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ${PATCH_PROD_DIR:-../_CLIENT/patch}:/srv/patch/prod:ro
-      - ${PATCH_TEST_DIR:-../_CLIENT/patch}:/srv/patch/test:ro
+      - ${PATCH_DIR:-../_CLIENT/patch}:/srv/patch:ro
       - ${DOWNLOAD_DIR:-../_CLIENT/patch/download}:/srv/download:ro
       - caddy-data:/data
       - caddy-config:/config

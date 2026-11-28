@@ -5,7 +5,7 @@ using static Fetih.Launcher.Native;
 
 [assembly: System.Runtime.Versioning.SupportedOSPlatform("windows")]
 
-// Fetih.exe [--channel prod|test] [--repair] | --uninstall | --replace <pid> [args]
+// Fetih.exe [--repair] | --uninstall | --replace <pid> [args]
 var self = Environment.ProcessPath!;
 var root = Path.GetDirectoryName(self)!;
 
@@ -74,19 +74,9 @@ try
         ? File.ReadAllBytes(settingsPath)
         : embedded ?? throw new FileNotFoundException("launcher.json yok.", settingsPath));
 
-    var channel = settings.Channel;
-    var repair = false;
-    for (var i = 0; i < args.Length; i++)
-    {
-        if (args[i] == "--channel" && i + 1 < args.Length)
-            channel = args[++i];
-        else if (args[i] == "--repair")
-            repair = true;
-    }
-    if (channel is not ("prod" or "test"))
-        throw new ArgumentException($"Bilinmeyen kanal: {channel}");
+    var repair = args.Contains("--repair");
 
-    return LauncherWindow.Run(new Updater(root, self, settings, channel, repair, args));
+    return LauncherWindow.Run(new Updater(root, self, settings, repair, args));
 }
 catch (Exception ex)
 {

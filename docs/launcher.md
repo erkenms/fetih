@@ -11,14 +11,14 @@ keeps it in line with the server's manifest and starts it.
   Turkish client (`--art`, default `_CLIENT/fo_3105`), not from git. DPI-aware: it scales the art
   itself.
 - `tools/build.cs client` builds it into the client with `launcher.json` (`--url`, the
-  production site for both envs; channel `prod`). `patch` puts `Fetih.exe` in the manifest's
+  production site). `patch` puts `Fetih.exe` in the manifest's
   `launcher` entry and copies it to `download/`.
 
 ## What it does
 
 - First start, from anywhere: installs to `%LOCALAPPDATA%\Programs\Fetih`, adds desktop and
   Start menu shortcuts and an uninstall entry under HKCU, starts from there.
-- Every start: `{url}/patch/<channel>/manifest.json`, then self-update when its own entry
+- Every start: `{url}/patch/manifest.json`, then self-update when its own entry
   differs (`Fetih.new.exe --replace <pid>`), then the files: sizes and times against
   `.launcher/state.json`, a hash only on a mismatch (all with "Dosyaları onar" or `--repair`).
   16 objects at a time, each streamed into a temp file, verified, renamed; a failure starts that
@@ -28,8 +28,6 @@ keeps it in line with the server's manifest and starts it.
 - First sync: `ini/GameSetUp.ini` gets high quality, as `play.exe` set it, and the screen's
     size as `Conquer.exe` sees it, full screen. After that only Ayarlar writes `[ScreenMode]`
   (record 4: [client-notes.md](client-notes.md)).
-- `--channel test` (staff: a shortcut to `Fetih.exe --channel test`) syncs the same folder to
-  `/patch/test/` for that run; the next normal start syncs back.
 - News on the parchment: `/haberler?handler=launcher`.
 - `Conquer.exe`'s own restart runs `Fetih.exe` (`client/patches.json`).
 
@@ -46,7 +44,4 @@ cd src/Fetih.Web && dotnet run                                  # and Account, G
 
 In the VM open `http://172.16.60.1:8080/indir`.
 
-- A change on the server: edit a file in `_CLIENT/fetih`, then `dotnet run tools/build.cs patch`.
-- The test channel: `client --out _CLIENT/fetih-test` with the same `--ip` and `--url`, change
-  something in it, `patch --out _CLIENT/fetih-test --patch _CLIENT/patch-test`, and start the
-  proxy with `PATCH_TEST_DIR=../_CLIENT/patch-test`.
+- A client change: edit a file in `_CLIENT/fetih`, then `dotnet run tools/build.cs patch`.

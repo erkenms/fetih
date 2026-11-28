@@ -20,7 +20,7 @@ static class LauncherBuild
 
         var work = Path.Combine(repoRoot, "src", "Fetih.Launcher", "obj", "build");
         Directory.CreateDirectory(work);
-        var settings = new LauncherSettings { Url = url.TrimEnd('/'), Channel = "prod" }.ToJson();
+        var settings = new LauncherSettings { Url = url.TrimEnd('/') }.ToJson();
         var settingsPath = Path.Combine(work, LauncherSettings.FileName);
         File.WriteAllBytes(settingsPath, settings);
 

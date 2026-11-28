@@ -12,9 +12,7 @@
 //   extract <client> <path> [dest] Copy one client file (loose or .wdf), or convert to .png
 //
 // Paths:
-//   --env prod|test    Server layout: /srv/fetih/base/5619 -> /srv/fetih/<env>/client,
-//                      /srv/fetih/<env>/assets, /srv/fetih/<env>/patch
-//   --base <dir>       Base 5619 client (default: _CLIENT/co_5619)
+//   --base <dir>       Base 5619 client (default: _CLIENT/5619)
 //   --art <dir>        Old Turkish client with the launcher's Play/ art (default: _CLIENT/tr/app)
 //   --out <dir>        Built client (default: _CLIENT/fetih)
 //   --assets <dir>     Web assets output (default: web/assets)
@@ -22,7 +20,7 @@
 //   --ip <ipv4>        Account server IPv4 for Server.dat (or FETIH_ACCOUNT_IP; required
 //                      for client and all)
 //   --url <url>        The production site, baked into launcher.json (or FETIH_URL; required
-//                      for client and all, the same for both envs)
+//                      for client and all, used by every realm)
 //   --maps all|ids     Render map tiles (all, or comma-separated map IDs like 1002,1036)
 //   --keep <N>         Number of manifest versions to retain during GC (default: 10)
 //
@@ -77,7 +75,6 @@ if (command == "extract")
     return AssetsBuild.Extract(rest[0], rest[1], rest.Length > 2 ? rest[2] : null);
 }
 
-string? env = null;
 string? baseOverride = null;
 string? artOverride = null;
 string? outOverride = null;
@@ -96,11 +93,6 @@ for (var i = 0; i < rest.Length; i++)
     {
         switch (rest[i])
         {
-            case "--env":
-                env = Next("--env");
-                if (env is not ("prod" or "test"))
-                    return Fail($"--env must be 'prod' or 'test', got '{env}'");
-                break;
             case "--base":
                 baseOverride = Next("--base");
                 break;
@@ -145,17 +137,17 @@ for (var i = 0; i < rest.Length; i++)
     }
 }
 
-var baseDir = baseOverride ?? (env != null ? "/srv/fetih/base/5619" : Path.Combine(root, "_CLIENT", "5619"));
-var artDir = artOverride ?? (env != null ? "/srv/fetih/base/tr" : Path.Combine(root, "_CLIENT", "tr", "app"));
-var outDir = outOverride ?? (env != null ? $"/srv/fetih/{env}/client" : Path.Combine(root, "_CLIENT", "fetih"));
-var assetsDir = assetsOverride ?? (env != null ? $"/srv/fetih/{env}/assets" : Path.Combine(root, "web", "assets"));
-var patchDir = patchOverride ?? (env != null ? $"/srv/fetih/{env}/patch" : Path.Combine(root, "_CLIENT", "patch"));
+var baseDir = baseOverride ?? Path.Combine(root, "_CLIENT", "5619");
+var artDir = artOverride ?? Path.Combine(root, "_CLIENT", "tr", "app");
+var outDir = outOverride ?? Path.Combine(root, "_CLIENT", "fetih");
+var assetsDir = assetsOverride ?? Path.Combine(root, "web", "assets");
+var patchDir = patchOverride ?? Path.Combine(root, "_CLIENT", "patch");
 
 switch (command)
 {
     case "decrypt":
         if (positionals.Count != 1)
-            return Fail("Usage: dotnet run tools/build.cs decrypt <file> [--env prod|test | --base <dir>]");
+            return Fail("Usage: dotnet run tools/build.cs decrypt <file> [--base <dir>]");
         return ClientBuild.Decrypt(clientInputsDir, baseDir, positionals[0]);
 
     case "client":
@@ -208,9 +200,8 @@ static void PrintUsage()
           extract <client> <path> [dest] Copy one client file, or convert to .png
 
         Options:
-          --env prod|test                Use /srv/fetih layout
-          --base <dir>                   Base 5619 client (default: _CLIENT/co_5619)
-          --art <dir>                    Old Turkish client with Play/ (default: _CLIENT/fo_3105)
+          --base <dir>                   Base 5619 client (default: _CLIENT/5619)
+          --art <dir>                    Old Turkish client with Play/ (default: _CLIENT/tr/app)
           --out <dir>                    Built client (default: _CLIENT/fetih)
           --assets <dir>                 Web assets output (default: web/assets)
           --patch <dir>                  Patch output (default: _CLIENT/patch)
