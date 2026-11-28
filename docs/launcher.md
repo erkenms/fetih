@@ -8,7 +8,7 @@ keeps it in line with the server's manifest and starts it.
 - `src/Fetih.Launcher`: the Windows exe. Win32 by P/Invoke, self-contained, trimmed, one file;
   builds on Linux and macOS. The window is the old Play screen (`Play/Main.bmp`, the pirate
   `MainS.bmp`, the Oyna button, the game's own minimize and close); the art comes from the old
-  Turkish client (`--art`, default `_CLIENT/tr/app`), not from git. DPI-aware: it scales the art
+  Turkish client (`--art`, default `_CLIENT/fo_3105`), not from git. DPI-aware: it scales the art
   itself.
 - `tools/build.cs client` builds it into the client with `launcher.json` (`--url`, the
   production site for both envs; channel `prod`). `patch` puts `Fetih.exe` in the manifest's

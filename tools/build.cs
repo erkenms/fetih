@@ -14,7 +14,7 @@
 // Paths:
 //   --env prod|test    Server layout: /srv/fetih/base/5619 -> /srv/fetih/<env>/client,
 //                      /srv/fetih/<env>/assets, /srv/fetih/<env>/patch
-//   --base <dir>       Base 5619 client (default: _CLIENT/5619)
+//   --base <dir>       Base 5619 client (default: _CLIENT/co_5619)
 //   --art <dir>        Old Turkish client with the launcher's Play/ art (default: _CLIENT/tr/app)
 //   --out <dir>        Built client (default: _CLIENT/fetih)
 //   --assets <dir>     Web assets output (default: web/assets)
@@ -209,8 +209,8 @@ static void PrintUsage()
 
         Options:
           --env prod|test                Use /srv/fetih layout
-          --base <dir>                   Base 5619 client (default: _CLIENT/5619)
-          --art <dir>                    Old Turkish client with Play/ (default: _CLIENT/tr/app)
+          --base <dir>                   Base 5619 client (default: _CLIENT/co_5619)
+          --art <dir>                    Old Turkish client with Play/ (default: _CLIENT/fo_3105)
           --out <dir>                    Built client (default: _CLIENT/fetih)
           --assets <dir>                 Web assets output (default: web/assets)
           --patch <dir>                  Patch output (default: _CLIENT/patch)

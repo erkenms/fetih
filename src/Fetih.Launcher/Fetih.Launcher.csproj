@@ -23,7 +23,7 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <DebugType>none</DebugType>
     <Deterministic>true</Deterministic>
-    <FetihArt Condition="'$(FetihArt)' == ''">$(MSBuildThisFileDirectory)../../_CLIENT/tr/app</FetihArt>
+    <FetihArt Condition="'$(FetihArt)' == ''">$(MSBuildThisFileDirectory)../../_CLIENT/fo_3105</FetihArt>
     <ApplicationIcon Condition="Exists('$(FetihArt)/conquer.ico')">$(FetihArt)/conquer.ico</ApplicationIcon>
   </PropertyGroup>
 

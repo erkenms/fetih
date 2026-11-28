@@ -33,8 +33,8 @@ Settings: `.config` files, or env like `FETIH_GAME_Database__Hostname=db`.
 Strongest first:
 
 1. Help pages: `~/Developer/co_help_files/` (`INDEX.md`). Not in this repo.
-2. Strings: `iconv -f GBK -t UTF-8 _CLIENT/5619/ini/Cn_Res.ini | grep -i <word>`
-3. Data files: `_CLIENT/5619/ini/`. If one holds the numbers, read it (like `Shop.dat`).
+2. Strings: `iconv -f GBK -t UTF-8 _CLIENT/co_5619/ini/Cn_Res.ini | grep -i <word>`
+3. Data files: `_CLIENT/co_5619/ini/`. If one holds the numbers, read it (like `Shop.dat`).
 4. Binaries: [client-notes.md](client-notes.md)
 5. Other emulators, ideas only: `~/Developer/Albetros1.1`, `~/Developer/worldconqueronline`
 
