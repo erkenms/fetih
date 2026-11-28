@@ -29,7 +29,7 @@ public class MapsPageTests(WebFixture fixture)
     [Fact]
     public async Task PlayerIsForbidden()
     {
-        var client = await fixture.SignInAsync("test", "test");
+        var client = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/admin/maps")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/admin/maps/1002")).StatusCode);
     }

@@ -19,7 +19,7 @@ public class EnvironmentTests(WebFixture fixture)
             var client = fixture.Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
             var playerLogin = await WebFixture.PostFormAsync(client, "/giris",
-                new() { ["kullanici"] = "test", ["sifre"] = "test" });
+                new() { ["kullanici"] = WebFixture.Player, ["sifre"] = WebFixture.PlayerPassword });
             Assert.Equal(HttpStatusCode.OK, playerLogin.StatusCode);
             Assert.Contains("yetkili", await playerLogin.Content.ReadAsStringAsync());
 

@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using MySqlConnector;
 using Xunit;
 
-// The web app against its own copy of both schemas, migrated from sql/. The seed account
-// "test" (password "test") is there; tests add accounts with the account server's code.
+// The web app against its own copy of both schemas, migrated from sql/, with one player
+// account. Tests add other accounts with the account server's code.
 public sealed class WebFixture : IAsyncLifetime
 {
     private static readonly string DbHost = Env("FETIH_TEST_DB_HOST", "localhost");
@@ -51,6 +51,7 @@ public sealed class WebFixture : IAsyncLifetime
             Environment.SetEnvironmentVariable("FETIH_WEB_" + key.Replace(":", "__"), value);
         this.Factory = new WebApplicationFactory<Program>();
         _ = this.Factory.Server;
+        await this.CreateAccountAsync(Player, PlayerPassword, authority: 1);
     }
 
     public async Task DisposeAsync()
@@ -76,10 +77,15 @@ public sealed class WebFixture : IAsyncLifetime
             Fetih.Core.Database.SchemaMigrator.LoadFromDirectory(
                 Path.Combine(SqlRoot(), $"fetih_{server}.sql"), Path.Combine(SqlRoot(), "migrations", server)));
 
-    public async Task<string> CreateAccountAsync(ushort authority, ushort status = 2)
+    public const string Player = "oyuncu@fetihoyun.com";
+    public const string PlayerPassword = "hunter2";
+
+    public Task<string> CreateAccountAsync(ushort authority, ushort status = 2) =>
+        this.CreateAccountAsync($"web{Guid.NewGuid():N}"[..12] + "@test.local", "secret1", authority, status);
+
+    private async Task<string> CreateAccountAsync(string email, string password, ushort authority, ushort status = 2)
     {
-        string email = $"web{Guid.NewGuid():N}"[..12] + "@test.local";
-        var (account, error) = await AccountsRepository.CreateAsync(email, "secret1");
+        var (account, error) = await AccountsRepository.CreateAsync(email, password);
         Assert.Null(error);
         await using var db = new MySqlConnection(this.ConnectionString(this.AccountSchema));
         await db.OpenAsync();

@@ -63,7 +63,7 @@ public class AuthTests(WebFixture fixture)
         Assert.Equal(HttpStatusCode.Redirect, redirect.StatusCode);
         Assert.Equal("/giris?donus=%2Fgrafana%2Fd%2Ffetih-overview%2Foverview", redirect.Headers.Location?.ToString());
 
-        var player = await fixture.SignInAsync("test", "test");
+        var player = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Unauthorized, (await player.GetAsync("/auth/check")).StatusCode);
 
         string modEmail = await fixture.CreateAccountAsync(authority: 2);

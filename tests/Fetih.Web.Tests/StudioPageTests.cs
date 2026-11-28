@@ -22,7 +22,7 @@ public class StudioPageTests(WebFixture fixture)
     [Fact]
     public async Task ViewerWithoutStudioSeesMonstersReadOnly()
     {
-        var player = await fixture.SignInAsync("test", "test");
+        var player = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/admin/studio/changes")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/admin/studio/monsters")).StatusCode);
 

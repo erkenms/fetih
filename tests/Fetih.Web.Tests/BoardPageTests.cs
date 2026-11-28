@@ -35,7 +35,7 @@ public class BoardPageTests(WebFixture fixture)
     [Fact]
     public async Task PlayerIsForbiddenFromBoardAndDelete()
     {
-        var client = await fixture.SignInAsync("test", "test");
+        var client = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync("/admin/board")).StatusCode);
 
         string page = await client.GetStringAsync("/giris");

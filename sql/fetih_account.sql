@@ -30,19 +30,14 @@ CREATE TABLE `account` (
   KEY `fk_account_account_status_idx` (`StatusID`),
   CONSTRAINT `fk_account_account_authority` FOREIGN KEY (`AuthorityID`) REFERENCES `account_authority` (`authorityid`),
   CONSTRAINT `fk_account_account_status` FOREIGN KEY (`StatusID`) REFERENCES `account_status` (`statusid`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
--- The seed account "test" has the password "test". New accounts use an email address as
--- their name. Passwords are stored as an SRP6 salt and verifier, which can't be computed
--- in SQL: create accounts and set passwords with
+-- No accounts ship with the schema. Account names are email addresses. Passwords are stored
+-- as an SRP6 salt and verifier, which can't be computed in SQL: create accounts and set
+-- passwords with
 --   dotnet Fetih.Account.dll create-account <email> <password>
 --   dotnet Fetih.Account.dll set-password <email> <password>
-LOCK TABLES `account` WRITE;
-/*!40000 ALTER TABLE `account` DISABLE KEYS */;
-INSERT INTO `account` VALUES (1,'test','E662B6D5DDED2A085435284DA8C0269EBF6AA7AF669FDF2A757DC60D6394BB84','F01F1DFA5DD3BF010969829BE832E5B4F0CA392CF477888CED5F1A28E1368330',1,1,NULL,NULL,NULL,'2026-11-18 11:47:00');
-/*!40000 ALTER TABLE `account` ENABLE KEYS */;
-UNLOCK TABLES;
 
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
  SET character_set_client = utf8mb4 ;

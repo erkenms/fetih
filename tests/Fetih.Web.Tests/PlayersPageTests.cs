@@ -70,7 +70,7 @@ public class PlayersPageTests(WebFixture fixture)
         Assert.Equal(HttpStatusCode.Redirect, resp.StatusCode);
         Assert.Equal("/giris?donus=%2Fadmin%2Fplayers", resp.Headers.Location?.PathAndQuery);
 
-        var player = await fixture.SignInAsync("test", "test");
+        var player = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/admin/players")).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await player.GetAsync("/admin/players/1")).StatusCode);
     }

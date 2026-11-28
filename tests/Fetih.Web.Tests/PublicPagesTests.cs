@@ -266,7 +266,7 @@ public class PublicPagesTests(WebFixture fixture)
         Assert.DoesNotContain("Loncayı Dağıt", anonHtml);
 
         // Regular player doesn't see Disband and gets 403 on POST
-        var player = await fixture.SignInAsync("test", "test");
+        var player = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         string playerHtml = await player.GetStringAsync("/lonca/110");
         Assert.DoesNotContain("Loncayı Dağıt", playerHtml);
 

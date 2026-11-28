@@ -31,7 +31,7 @@ public class ReferencePagesTests(WebFixture fixture)
     [InlineData("/admin/catalogs/shops")]
     public async Task PlayerIsForbidden(string url)
     {
-        var client = await fixture.SignInAsync("test", "test");
+        var client = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         Assert.Equal(HttpStatusCode.Forbidden, (await client.GetAsync(url)).StatusCode);
     }
 

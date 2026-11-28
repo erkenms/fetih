@@ -35,7 +35,7 @@ public class GirisTests(WebFixture fixture)
     public async Task SignInRefusesAnOutsideReturnUrl()
     {
         var response = await WebFixture.PostFormAsync(this.Client(), "/giris",
-            new() { ["kullanici"] = "test", ["sifre"] = "test", ["donus"] = "https://example.com/" });
+            new() { ["kullanici"] = WebFixture.Player, ["sifre"] = WebFixture.PlayerPassword, ["donus"] = "https://example.com/" });
         Assert.Equal("/", response.Headers.Location?.OriginalString);
     }
 
@@ -44,7 +44,7 @@ public class GirisTests(WebFixture fixture)
     {
         var client = this.Client();
         var response = await WebFixture.PostFormAsync(client, "/giris",
-            new() { ["kullanici"] = "test", ["sifre"] = "wrong1" });
+            new() { ["kullanici"] = WebFixture.Player, ["sifre"] = "wrong1" });
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Contains("Hesap adı ya da şifre yanlış.", await response.Content.ReadAsStringAsync());
         Assert.Equal(HttpStatusCode.Redirect, (await client.GetAsync("/admin")).StatusCode);
@@ -54,7 +54,7 @@ public class GirisTests(WebFixture fixture)
     public async Task PostWithoutTheAntiForgeryTokenIsRefused()
     {
         var response = await this.Client().PostAsync("/giris",
-            new FormUrlEncodedContent(new Dictionary<string, string> { ["kullanici"] = "test", ["sifre"] = "test" }));
+            new FormUrlEncodedContent(new Dictionary<string, string> { ["kullanici"] = WebFixture.Player, ["sifre"] = WebFixture.PlayerPassword }));
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 

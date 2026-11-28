@@ -20,7 +20,7 @@ public class BroadcastsPageTests(WebFixture fixture)
     [Fact]
     public async Task PlayerIsForbidden()
     {
-        var client = await fixture.SignInAsync("test", "test");
+        var client = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         var response = await client.GetAsync("/admin/broadcasts");
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Contains("Yetkin yok", await response.Content.ReadAsStringAsync());
@@ -100,7 +100,7 @@ public class BroadcastsPageTests(WebFixture fixture)
     [Fact]
     public async Task PlayerCannotPost()
     {
-        var client = await fixture.SignInAsync("test", "test");
+        var client = await fixture.SignInAsync(WebFixture.Player, WebFixture.PlayerPassword);
         string page = await client.GetStringAsync("/giris");
         var token = System.Text.RegularExpressions.Regex.Match(page,
             "name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"").Groups[1].Value;
