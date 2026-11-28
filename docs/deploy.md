@@ -24,7 +24,7 @@ Prometheus, Grafana (`/grafana/`, behind web sign-in). Open ports: `22`, `80`, `
 
 Keep these three files in `~/.fetih-secrets/` (and in iCloud Passwords), never in git:
 
-- `r2.env`: `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
+- `r2.env`: `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (endpoint and bucket are in `deploy/nix/r2.nix`)
 - `discord-webhook`: Discord webhook URL on one line
 - `first-admin`: email on line 1, temporary password on line 2 (change after first login)
 
@@ -42,7 +42,7 @@ R2 lifecycle rules: expire `backups/hourly/` after 2 days, `backups/daily/` afte
 `grafana.db` and `*-audit-*.jsonl`. Restore into a scratch schema to verify:
 
 ```bash
-rclone copyto r2:<bucket>/backups/hourly/<file>.sql.gz /tmp/restore.sql.gz
+rclone copyto r2:fetih/backups/hourly/<file>.sql.gz /tmp/restore.sql.gz
 mariadb -e "CREATE DATABASE restore_scratch;"
 zcat /tmp/restore.sql.gz | sed 's/`fetih_game`/`restore_scratch`/g; s/`fetih_account`/`restore_scratch`/g' | mariadb restore_scratch
 mariadb -e "SHOW TABLES FROM restore_scratch; DROP DATABASE restore_scratch;"

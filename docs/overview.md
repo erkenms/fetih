@@ -8,14 +8,12 @@ Conquer Online server for the 5619 client.
 | `tests/` | .NET tests |
 | `client/`, `tools/build.cs` | Build the playable client with the launcher (`Fetih.Launcher`), web assets, patches |
 | `sql/` | Schemas and `migrations/` (applied at startup) |
-| `deploy/`, `observability/` | NixOS flake (`deploy/nix/`), local dev DB (`deploy/dev.yaml`), Loki, Prometheus, Grafana |
+| `deploy/`, `observability/` | NixOS flake (`deploy/nix/`), Grafana dashboards and alert rules |
 
 ## Run
 
 ```bash
-podman compose -f deploy/dev.yaml up -d db
 dotnet test Fetih.slnx
-cd src/Fetih.Game && dotnet run              # likewise Account, Web
 dotnet run tools/build.cs all --ip <ip> --url <site>   # client, web assets, patches
 ```
 

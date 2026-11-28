@@ -20,8 +20,8 @@ set -a
 source "$R2_ENV"
 set +a
 
-: "${R2_ENDPOINT:?Set R2_ENDPOINT in $R2_ENV}"
-: "${R2_BUCKET:?Set R2_BUCKET in $R2_ENV}"
+R2_ENDPOINT="${R2_ENDPOINT:-https://c5d0a890b5bb2397e192cef5873bdd90.r2.cloudflarestorage.com}"
+R2_BUCKET="${R2_BUCKET:-fetih}"
 : "${R2_ACCESS_KEY_ID:?Set R2_ACCESS_KEY_ID in $R2_ENV}"
 : "${R2_SECRET_ACCESS_KEY:?Set R2_SECRET_ACCESS_KEY in $R2_ENV}"
 

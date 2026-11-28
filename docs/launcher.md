@@ -33,15 +33,8 @@ keeps it in line with the server's manifest and starts it.
 
 ## Testing from a Windows VM
 
-Everything runs on the Mac; the VM reaches it at `172.16.60.1`. The dev proxy
-(`deploy/Caddyfile.dev`, port 8080) serves the web, `/patch/` and `/download/Fetih.exe`.
+Build the client pointing at the server or a local test build, then open `/indir` in the VM:
 
 ```bash
-dotnet run tools/build.cs all --ip 172.16.60.1 --url http://172.16.60.1:8080
-podman compose -f deploy/dev.yaml up -d dev-proxy
-cd src/Fetih.Web && dotnet run                                  # and Account, Game as usual
+dotnet run tools/build.cs all --ip <ip> --url https://<domain>
 ```
-
-In the VM open `http://172.16.60.1:8080/indir`.
-
-- A client change: edit a file in `_CLIENT/fetih`, then `dotnet run tools/build.cs patch`.

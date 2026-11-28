@@ -1,6 +1,7 @@
 { pkgs, ... }:
 let
   pins = import ./client-base.nix;
+  r2 = import ./r2.nix;
   repoUrl = "https://github.com/erkenms/fetih.git";
 in
 {
@@ -17,6 +18,8 @@ in
     script = ''
       set -euo pipefail
       source /run/credentials/fetih-client-base.service/r2
+      export R2_ENDPOINT="${r2.endpoint}"
+      export R2_BUCKET="${r2.bucket}"
       export RCLONE_CONFIG_R2_TYPE=s3
       export RCLONE_CONFIG_R2_PROVIDER=Cloudflare
       export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
